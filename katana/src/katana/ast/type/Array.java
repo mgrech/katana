@@ -12,4 +12,10 @@ public class Array extends Type
 
 	public int size;
 	public Type type;
+
+	@Override
+	public String toString()
+	{
+		return String.format("[%s]%s", size, type);
+	}
 }

@@ -16,10 +16,10 @@ public class Scanner
 
 	private Token doAdvance()
 	{
+		skipWhitespaceAndComments();
+
 		if(atEnd())
 			return Token.END;
-
-		skipWhitespaceAndComments();
 
 		tokenOffset = currentOffset;
 		tokenColumn = currentColumn;
@@ -39,7 +39,6 @@ public class Scanner
 		case ':': advanceColumn(); return Token.PUNCT_COLON;
 		case ';': advanceColumn(); return Token.PUNCT_SCOLON;
 		case '?': advanceColumn(); return Token.PUNCT_QMARK;
-		case '*': advanceColumn(); return Token.TYPE_PTR;
 
 		case '=':
 			advanceColumn();
@@ -144,14 +143,14 @@ public class Scanner
 	{
 		int d1 = (big ? hexDigit() : 0) << 20;
 		int d2 = (big ? hexDigit() : 0) << 16;
-		int d3 = hexDigit()             << 12;
-		int d4 = hexDigit()             <<  8;
-		int d5 = hexDigit()             <<  4;
-		int d6 = hexDigit()             <<  0;
+		int d3 = hexDigit() << 12;
+		int d4 = hexDigit() <<  8;
+		int d5 = hexDigit() <<  4;
+		int d6 = hexDigit();
 		int sum =  d1 | d2 | d3 | d4 | d5 | d6;
 
 		if(sum > 0x10FFFF)
-			throw new RuntimeException("invalid unicode codepoint");
+			throw new RuntimeException("invalid codepoint in unicode escape sequence");
 
 		return sum;
 	}
@@ -166,7 +165,7 @@ public class Scanner
 	private int hexDigit()
 	{
 		if(atEnd() || !CharClassifier.isHexDigit(here()))
-			throw new RuntimeException("expected hex digit");
+			throw new RuntimeException("expected hex digit in escape sequence");
 
 		int digit = fromHexDigit(here());
 		advanceColumn();
@@ -205,15 +204,14 @@ public class Scanner
 	{
 		switch(value)
 		{
-		case "uninitialized": return Token.LIT_UNINIT;
-		case "null":          return Token.LIT_NULL;
-		case "true":          return Token.LIT_BOOL_T;
-		case "false":         return Token.LIT_BOOL_F;
+		case "null":  return Token.LIT_NULL;
+		case "true":  return Token.LIT_BOOL_T;
+		case "false": return Token.LIT_BOOL_F;
 
 		case "export": return Token.DECL_EXPORT;
 		case "import": return Token.DECL_IMPORT;
 		case "module": return Token.DECL_MODULE;
-		case "var":    return Token.DECL_VAR;
+		case "global": return Token.DECL_GLOBAL;
 		case "fn":     return Token.DECL_FN;
 		case "data":   return Token.DECL_DATA;
 
@@ -237,15 +235,16 @@ public class Scanner
 		case "upint":   return Token.TYPE_UPINT;
 		case "float32": return Token.TYPE_FLOAT32;
 		case "float64": return Token.TYPE_FLOAT64;
+		case "ptr":     return Token.TYPE_PTR;
 		case "opaque":  return Token.TYPE_OPAQUE;
 
-		case "sizeof":      return Token.MISC_SIZEOF;
-		case "alignof":     return Token.MISC_ALIGNOF;
-		case "offsetof":    return Token.MISC_OFFSETOF;
-		case "intrinsic":   return Token.MISC_INTRINSIC;
-		case "inline":      return Token.MISC_INLINE;
-		case "addressof":   return Token.MISC_ADDRESSOF;
-		case "dereference": return Token.MISC_DEREFERENCE;
+		case "sizeof":    return Token.MISC_SIZEOF;
+		case "alignof":   return Token.MISC_ALIGNOF;
+		case "offsetof":  return Token.MISC_OFFSETOF;
+		case "inline":    return Token.MISC_INLINE;
+		case "addressof": return Token.MISC_ADDRESSOF;
+		case "deref":     return Token.MISC_DEREF;
+		case "builtin":   return Token.MISC_BUILTIN;
 
 		default: return Token.identifier(value);
 		}
@@ -266,12 +265,14 @@ public class Scanner
 
 		if(isFloatingPoint)
 		{
-			do
+			builder.append('.');
+			advanceColumn();
+
+			while(!atEnd() && CharClassifier.isDigit(here()))
 			{
 				builder.appendCodePoint(here());
 				advanceColumn();
 			}
-			while(!atEnd() && CharClassifier.isDigit(here()));
 		}
 
 		Token.Type type = isFloatingPoint ? Token.Type.LIT_FLOAT : Token.Type.LIT_INT;

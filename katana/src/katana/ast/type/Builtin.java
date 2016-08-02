@@ -21,23 +21,25 @@ public class Builtin extends Type
 		UPINT,
 		FLOAT32,
 		FLOAT64,
+		PTR,
 	}
 
-	public static final Builtin BOOL = new Builtin(Which.BOOL);
-	public static final Builtin INT8 = new Builtin(Which.INT8);
-	public static final Builtin INT16 = new Builtin(Which.INT16);
-	public static final Builtin INT32 = new Builtin(Which.INT32);
-	public static final Builtin INT64 = new Builtin(Which.INT64);
-	public static final Builtin INT = new Builtin(Which.INT);
-	public static final Builtin PINT = new Builtin(Which.PINT);
-	public static final Builtin UINT8 = new Builtin(Which.UINT8);
-	public static final Builtin UINT16 = new Builtin(Which.UINT16);
-	public static final Builtin UINT32 = new Builtin(Which.UINT32);
-	public static final Builtin UINT64 = new Builtin(Which.UINT64);
-	public static final Builtin UINT = new Builtin(Which.UINT);
-	public static final Builtin UPINT = new Builtin(Which.UPINT);
+	public static final Builtin BOOL    = new Builtin(Which.BOOL);
+	public static final Builtin INT8    = new Builtin(Which.INT8);
+	public static final Builtin INT16   = new Builtin(Which.INT16);
+	public static final Builtin INT32   = new Builtin(Which.INT32);
+	public static final Builtin INT64   = new Builtin(Which.INT64);
+	public static final Builtin INT     = new Builtin(Which.INT);
+	public static final Builtin PINT    = new Builtin(Which.PINT);
+	public static final Builtin UINT8   = new Builtin(Which.UINT8);
+	public static final Builtin UINT16  = new Builtin(Which.UINT16);
+	public static final Builtin UINT32  = new Builtin(Which.UINT32);
+	public static final Builtin UINT64  = new Builtin(Which.UINT64);
+	public static final Builtin UINT    = new Builtin(Which.UINT);
+	public static final Builtin UPINT   = new Builtin(Which.UPINT);
 	public static final Builtin FLOAT32 = new Builtin(Which.FLOAT32);
 	public static final Builtin FLOAT64 = new Builtin(Which.FLOAT64);
+	public static final Builtin PTR     = new Builtin(Which.PTR);
 
 	private Builtin(Which which)
 	{
@@ -45,4 +47,10 @@ public class Builtin extends Type
 	}
 
 	public final Which which;
+
+	@Override
+	public String toString()
+	{
+		return which.toString().toLowerCase();
+	}
 }

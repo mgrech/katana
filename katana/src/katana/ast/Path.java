@@ -10,4 +10,10 @@ public class Path
 	}
 
 	public ArrayList<String> components;
+
+	@Override
+	public String toString()
+	{
+		return String.join(".", components);
+	}
 }

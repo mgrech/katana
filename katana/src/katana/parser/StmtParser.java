@@ -12,19 +12,19 @@ public class StmtParser
 {
 	public static Stmt parse(Scanner scanner)
 	{
-		if(ParserTools.option(scanner, Token.Type.STMT_IF, true))
+		if(ParseTools.option(scanner, Token.Type.STMT_IF, true))
 			return parseIf(scanner);
 
-		if(ParserTools.option(scanner, Token.Type.STMT_GOTO, true))
+		if(ParseTools.option(scanner, Token.Type.STMT_GOTO, true))
 			return parseGoto(scanner);
 
-		if(ParserTools.option(scanner, Token.Type.STMT_RETURN, true))
+		if(ParseTools.option(scanner, Token.Type.STMT_RETURN, true))
 			return parseReturn(scanner);
 
-		if(ParserTools.option(scanner, Token.Type.STMT_LABEL, false))
+		if(ParseTools.option(scanner, Token.Type.STMT_LABEL, false))
 			return parseLabel(scanner);
 
-		if(ParserTools.option(scanner, Token.Type.PUNCT_LBRACE, true))
+		if(ParseTools.option(scanner, Token.Type.PUNCT_LBRACE, true))
 			return parseCompound(scanner);
 
 		return parseExprStmt(scanner);
@@ -32,12 +32,10 @@ public class StmtParser
 
 	private static If parseIf(Scanner scanner)
 	{
-		ParserTools.expect(scanner, Token.Type.PUNCT_LPAREN, true);
-		Expr condition = ExprParser.parse(scanner);
-		ParserTools.expect(scanner, Token.Type.PUNCT_RPAREN, true);
+		Expr condition = ParseTools.parenthesized(scanner, () -> ExprParser.parse(scanner));
 		Stmt then = parse(scanner);
 
-		boolean hasElse = ParserTools.option(scanner, Token.Type.STMT_ELSE, true);
+		boolean hasElse = ParseTools.option(scanner, Token.Type.STMT_ELSE, true);
 		Optional<Stmt> otherwise = hasElse ? Optional.of(parse(scanner)) : Optional.empty();
 
 		return new If(condition, then, otherwise);
@@ -45,22 +43,22 @@ public class StmtParser
 
 	private static Goto parseGoto(Scanner scanner)
 	{
-		String label = ParserTools.expectAndConsume(scanner, Token.Type.STMT_LABEL).value;
-		ParserTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
+		String label = ParseTools.consumeExpected(scanner, Token.Type.STMT_LABEL).value;
+		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
 		return new Goto(label);
 	}
 
 	private static Return parseReturn(Scanner scanner)
 	{
 		Expr expr = ExprParser.parse(scanner);
-		ParserTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
+		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
 		return new Return(expr);
 	}
 
 	private static Label parseLabel(Scanner scanner)
 	{
-		String label = ParserTools.consume(scanner).value;
-		ParserTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
+		String label = ParseTools.consume(scanner).value;
+		ParseTools.expect(scanner, Token.Type.PUNCT_COLON, true);
 		return new Label(label);
 	}
 
@@ -68,7 +66,7 @@ public class StmtParser
 	{
 		Compound comp = new Compound();
 
-		while(!ParserTools.option(scanner, Token.Type.PUNCT_RBRACE, true))
+		while(!ParseTools.option(scanner, Token.Type.PUNCT_RBRACE, true))
 			comp.body.add(parse(scanner));
 
 		return comp;
@@ -77,7 +75,7 @@ public class StmtParser
 	private static ExprStmt parseExprStmt(Scanner scanner)
 	{
 		Expr expr = ExprParser.parse(scanner);
-		ParserTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
+		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
 		return new ExprStmt(expr);
 	}
 }

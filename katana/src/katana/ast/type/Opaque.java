@@ -12,4 +12,10 @@ public class Opaque extends Type
 
 	public int size;
 	public int alignment;
+
+	@Override
+	public String toString()
+	{
+		return String.format("opaque(%s, %s)", size, alignment);
+	}
 }

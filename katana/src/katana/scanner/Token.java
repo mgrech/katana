@@ -20,7 +20,6 @@ public class Token
 	{
 		IDENT,
 
-		LIT_UNINIT,
 		LIT_NULL,
 		LIT_BOOL,
 		LIT_INT,
@@ -30,7 +29,7 @@ public class Token
 		DECL_EXPORT,
 		DECL_IMPORT,
 		DECL_MODULE,
-		DECL_VAR,
+		DECL_GLOBAL,
 		DECL_FN,
 		DECL_DATA,
 
@@ -69,30 +68,29 @@ public class Token
 		TYPE_UPINT,
 		TYPE_FLOAT32,
 		TYPE_FLOAT64,
-		TYPE_OPAQUE,
 		TYPE_PTR,
+		TYPE_OPAQUE,
 
 		MISC_SIZEOF,
 		MISC_ALIGNOF,
 		MISC_OFFSETOF,
-		MISC_INTRINSIC,
 		MISC_INLINE,
 		MISC_ADDRESSOF,
-		MISC_DEREFERENCE,
+		MISC_DEREF,
+		MISC_BUILTIN,
 
 		BEGIN,
 		END,
 	}
 
-	public static final Token LIT_UNINIT = new Token(Category.LIT, Type.LIT_UNINIT, "uninitialized");
-	public static final Token LIT_NULL   = new Token(Category.LIT, Type.LIT_NULL,   "null");
-	public static final Token LIT_BOOL_T = new Token(Category.LIT, Type.LIT_BOOL,   "true");
-	public static final Token LIT_BOOL_F = new Token(Category.LIT, Type.LIT_BOOL,   "false");
+	public static final Token LIT_NULL   = new Token(Category.LIT, Type.LIT_NULL, "null");
+	public static final Token LIT_BOOL_T = new Token(Category.LIT, Type.LIT_BOOL, "true");
+	public static final Token LIT_BOOL_F = new Token(Category.LIT, Type.LIT_BOOL, "false");
 
 	public static final Token DECL_EXPORT = new Token(Category.DECL, Type.DECL_EXPORT, "export");
 	public static final Token DECL_IMPORT = new Token(Category.DECL, Type.DECL_IMPORT, "import");
 	public static final Token DECL_MODULE = new Token(Category.DECL, Type.DECL_MODULE, "module");
-	public static final Token DECL_VAR    = new Token(Category.DECL, Type.DECL_VAR,    "var");
+	public static final Token DECL_GLOBAL = new Token(Category.DECL, Type.DECL_GLOBAL, "global");
 	public static final Token DECL_FN     = new Token(Category.DECL, Type.DECL_FN,     "fn");
 	public static final Token DECL_DATA   = new Token(Category.DECL, Type.DECL_DATA,   "data");
 
@@ -130,16 +128,16 @@ public class Token
 	public static final Token TYPE_UPINT   = new Token(Category.TYPE, Type.TYPE_UPINT,   "upint");
 	public static final Token TYPE_FLOAT32 = new Token(Category.TYPE, Type.TYPE_FLOAT32, "float32");
 	public static final Token TYPE_FLOAT64 = new Token(Category.TYPE, Type.TYPE_FLOAT64, "float64");
+	public static final Token TYPE_PTR     = new Token(Category.TYPE, Type.TYPE_PTR,     "ptr");
 	public static final Token TYPE_OPAQUE  = new Token(Category.TYPE, Type.TYPE_OPAQUE,  "opaque");
-	public static final Token TYPE_PTR     = new Token(Category.TYPE, Type.TYPE_PTR,     "*");
 
-	public static final Token MISC_SIZEOF      = new Token(Category.MISC, Type.MISC_SIZEOF,    "sizeof");
-	public static final Token MISC_ALIGNOF     = new Token(Category.MISC, Type.MISC_ALIGNOF,   "alignof");
-	public static final Token MISC_OFFSETOF    = new Token(Category.MISC, Type.MISC_OFFSETOF,  "offsetof");
-	public static final Token MISC_INTRINSIC   = new Token(Category.MISC, Type.MISC_INTRINSIC, "intrinsic");
-	public static final Token MISC_INLINE      = new Token(Category.MISC, Type.MISC_INLINE,    "inline");
-	public static final Token MISC_ADDRESSOF   = new Token(Category.MISC, Type.MISC_ADDRESSOF, "addressof");
-	public static final Token MISC_DEREFERENCE = new Token(Category.MISC, Type.MISC_DEREFERENCE, "dereference");
+	public static final Token MISC_SIZEOF    = new Token(Category.MISC, Type.MISC_SIZEOF,    "sizeof");
+	public static final Token MISC_ALIGNOF   = new Token(Category.MISC, Type.MISC_ALIGNOF,   "alignof");
+	public static final Token MISC_OFFSETOF  = new Token(Category.MISC, Type.MISC_OFFSETOF,  "offsetof");
+	public static final Token MISC_INLINE    = new Token(Category.MISC, Type.MISC_INLINE,    "inline");
+	public static final Token MISC_ADDRESSOF = new Token(Category.MISC, Type.MISC_ADDRESSOF, "addressof");
+	public static final Token MISC_DEREF     = new Token(Category.MISC, Type.MISC_DEREF,     "deref");
+	public static final Token MISC_BUILTIN   = new Token(Category.MISC, Type.MISC_BUILTIN,   "builtin");
 
 	public static final Token BEGIN = new Token(Category.BEGIN, Type.BEGIN, null);
 	public static final Token END   = new Token(Category.END,   Type.END,   null);
