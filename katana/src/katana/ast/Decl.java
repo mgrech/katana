@@ -1,6 +1,8 @@
 package katana.ast;
 
-public abstract class Decl
+import katana.ast.visitor.IVisitable;
+
+public abstract class Decl implements IVisitable
 {
 	protected Decl(boolean exported, boolean opaque)
 	{

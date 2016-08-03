@@ -1,6 +1,8 @@
 package katana.ast;
 
-public abstract class Stmt
+import katana.ast.visitor.IVisitable;
+
+public abstract class Stmt implements IVisitable
 {
 	@Override
 	public String toString()

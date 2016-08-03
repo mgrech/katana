@@ -1,26 +1,52 @@
 package katana.compiler;
 
 import katana.ast.Decl;
+import katana.ast.File;
 import katana.parser.FileParser;
-import katana.scanner.Scanner;
-import katana.scanner.Token;
+import katana.sema.*;
+import katana.sema.FileDeclVisitor;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 
 public class Main
 {
+	public static ArrayList<Path> discoverSourceFiles(Path root) throws IOException
+	{
+		ArrayList<Path> paths = new ArrayList<>();
+
+		Files.walkFileTree(root, new SimpleFileVisitor<Path>()
+		{
+			@Override
+			public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException
+			{
+				if(attrs.isRegularFile() && path.toString().endsWith(".kat"))
+					paths.add(path);
+
+				return FileVisitResult.CONTINUE;
+			}
+		});
+
+		return paths;
+	}
+
 	public static void main(String[] args) throws IOException
 	{
-		byte[] data = Files.readAllBytes(Paths.get(args[0]));
-		int[] codepoints = new String(data, StandardCharsets.UTF_8).codePoints().toArray();
+		Program program = new Program();
 
-		ArrayList<Decl> decls = FileParser.parse(codepoints);
+		ArrayList<Path> paths = discoverSourceFiles(Paths.get("."));
 
-		for(Decl decl : decls)
-			System.out.print(decl);
+		for(Path path : paths)
+		{
+			File file = FileParser.parse(path);
+			FileDeclVisitor visitor = new FileDeclVisitor(program);
+
+			for(Decl decl : file.decls)
+				decl.accept(visitor);
+
+			// todo: verify imports
+		}
 	}
 }

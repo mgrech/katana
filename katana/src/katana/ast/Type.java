@@ -1,5 +1,7 @@
 package katana.ast;
 
-public abstract class Type
+import katana.ast.visitor.IVisitable;
+
+public abstract class Type implements IVisitable
 {
 }
