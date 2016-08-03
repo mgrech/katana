@@ -1,11 +1,12 @@
 package katana.sema;
 
+import katana.ast.Path;
 import katana.ast.decl.*;
 import katana.ast.decl.Module;
 import katana.ast.visitor.IVisitor;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class FileDeclVisitor implements IVisitor
 {
@@ -16,19 +17,22 @@ public class FileDeclVisitor implements IVisitor
 
 	public void visit(Data data)
 	{
-		onDecl();
+		declsSeen = true;
+		requireModule();
 		currentModule.defineSymbol(data.name, data);
 	}
 
 	public void visit(Function function)
 	{
-		onDecl();
+		declsSeen = true;
+		requireModule();
 		currentModule.defineSymbol(function.name, function);
 	}
 
 	public void visit(Global global)
 	{
-		onDecl();
+		declsSeen = true;
+		requireModule();
 		currentModule.defineSymbol(global.name, global);
 	}
 
@@ -37,23 +41,23 @@ public class FileDeclVisitor implements IVisitor
 		if(declsSeen)
 			throw new RuntimeException("imports must go before other decls");
 
-		imports.add(import_);
+		if(!imports.add(import_.path))
+			throw new RuntimeException("duplicate import");
 	}
 
 	public void visit(Module module_)
 	{
+		declsSeen = true;
 		currentModule = program.findOrCreateModule(module_.path);
 	}
 
-	public List<Import> imports()
+	public Set<Path> imports()
 	{
 		return imports;
 	}
 
-	private void onDecl()
+	private void requireModule()
 	{
-		declsSeen = true;
-
 		if(currentModule == null)
 			throw new RuntimeException("no module defined");
 	}
@@ -61,5 +65,5 @@ public class FileDeclVisitor implements IVisitor
 	private Program program;
 	private katana.sema.Module currentModule = null;
 	private boolean declsSeen = false;
-	private List<Import> imports = new ArrayList<>();
+	private Set<Path> imports = new HashSet<>();
 }

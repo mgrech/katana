@@ -4,6 +4,7 @@ import katana.ast.Path;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class Program
 {
@@ -30,6 +31,21 @@ public class Program
 		}
 
 		return parent;
+	}
+
+	public Optional<Module> findModule(Path path)
+	{
+		Module current = root;
+
+		for(String component : path.components)
+		{
+			if(!current.children.containsKey(component))
+				return Optional.empty();
+
+			current = current.children.get(component);
+		}
+
+		return Optional.of(current);
 	}
 
 	public Module root = new Module("", new Path(), null);

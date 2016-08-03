@@ -1,6 +1,7 @@
 package katana.ast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Path
@@ -21,5 +22,17 @@ public class Path
 	public String toString()
 	{
 		return String.join(".", components);
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		return ((Path)obj).components.equals(components);
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return components.hashCode();
 	}
 }
