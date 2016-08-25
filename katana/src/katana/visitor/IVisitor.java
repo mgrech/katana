@@ -1,4 +1,4 @@
-package katana.ast.visitor;
+package katana.visitor;
 
 public interface IVisitor
 {

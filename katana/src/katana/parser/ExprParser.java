@@ -1,5 +1,6 @@
 package katana.parser;
 
+import katana.Maybe;
 import katana.ast.Expr;
 import katana.ast.Path;
 import katana.ast.Type;
@@ -10,7 +11,6 @@ import katana.scanner.Token;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Optional;
 
 public class ExprParser
 {
@@ -26,7 +26,7 @@ public class ExprParser
 			{
 			case PUNCT_LPAREN:
 				scanner.advance();
-				expr = parseFunctionCall(scanner, expr, Optional.empty());
+				expr = parseFunctionCall(scanner, expr, Maybe.none());
 				ParseTools.expect(scanner, Token.Type.PUNCT_RPAREN, true);
 				break;
 
@@ -102,7 +102,7 @@ public class ExprParser
 			String inline = ParseTools.parenthesized(scanner,
 				() -> ParseTools.consumeExpected(scanner, Token.Type.LIT_BOOL).value);
 			String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
-			return parseFunctionCall(scanner, new NamedValue(name), Optional.of(inline.equals("true")));
+			return parseFunctionCall(scanner, new NamedValue(name), Maybe.some(inline.equals("true")));
 
 		case MISC_ADDRESSOF:
 			Expr aexpr = ParseTools.parenthesized(scanner, () -> ExprParser.parse(scanner));
@@ -144,7 +144,7 @@ public class ExprParser
 		return new BuiltinCall(path, args);
 	}
 
-	private static FunctionCall parseFunctionCall(Scanner scanner, Expr expr, Optional<Boolean> inline)
+	private static FunctionCall parseFunctionCall(Scanner scanner, Expr expr, Maybe<Boolean> inline)
 	{
 		ArrayList<Expr> args = parseArguments(scanner);
 		return new FunctionCall(expr, args, inline);

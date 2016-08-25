@@ -1,12 +1,13 @@
 package katana.sema;
 
-import katana.ast.Decl;
+import katana.Maybe;
 import katana.ast.Path;
+import katana.sema.decl.Data;
+import katana.sema.decl.Function;
+import katana.sema.decl.Global;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class Module
 {
@@ -17,17 +18,113 @@ public class Module
 		this.parent = parent;
 	}
 
-	public void defineSymbol(String name, Decl decl)
+	public boolean defineData(Data data)
 	{
-		if(decls.containsKey(name))
-			throw new RuntimeException("redefinition of symbol '" + name + "'");
+		if(!defineSymbol(data))
+			return false;
 
-		decls.put(name, decl);
+		datas.put(data.name(), data);
+		return true;
 	}
 
-	public String name;
-	public Path path;
-	public Module parent;
-	public Map<String, Module> children = new HashMap<>();
-	public Map<String, Decl> decls = new HashMap<>();
+	public boolean defineGlobal(Global global)
+	{
+		if(!defineSymbol(global))
+			return false;
+
+		globals.put(global.name, global);
+		return true;
+	}
+
+	public boolean defineFunction(Function function)
+	{
+		if(!defineSymbol(function))
+			return false;
+
+		functions.put(function.name(), function);
+		return true;
+	}
+
+	private boolean defineSymbol(Decl decl)
+	{
+		if(decls.containsKey(decl.name()))
+			return false;
+
+		decls.put(decl.name(), decl);
+		return true;
+	}
+
+	public Maybe<Decl> findSymbol(String name)
+	{
+		Module current = this;
+		Decl decl;
+
+		do
+		{
+			decl = decls.get(name);
+			current = current.parent;
+		}
+
+		while(decl == null && current != null);
+
+		return Maybe.wrap(decl);
+	}
+
+	public Maybe<Module> findChild(String name)
+	{
+		Module module = children.get(name);
+		return Maybe.wrap(module);
+	}
+
+	public Module findOrCreateChild(String name)
+	{
+		Maybe<Module> child = findChild(name);
+
+		if(child.isSome())
+			return child.get();
+
+		Path path = new Path();
+		path.components.addAll(this.path.components);
+		path.components.add(name);
+
+		Module module = new Module(name, path, this);
+		children.put(name, module);
+
+		return module;
+	}
+
+	public Map<String, Module> children()
+	{
+		return children;
+	}
+
+	public Map<String, Data> datas()
+	{
+		return datas;
+	}
+
+	public Map<String, Global> globals()
+	{
+		return globals;
+	}
+
+	public Map<String, Function> functions()
+	{
+		return functions;
+	}
+
+	public Path path()
+	{
+		return path;
+	}
+
+	private String name;
+	private Path path;
+	private Module parent;
+	private Map<String, Module> children = new TreeMap<>();
+
+	private Map<String, Decl> decls = new TreeMap<>();
+	private Map<String, Data> datas = new TreeMap<>();
+	private Map<String, Global> globals = new TreeMap<>();
+	private Map<String, Function> functions = new TreeMap<>();
 }

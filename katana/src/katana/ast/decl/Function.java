@@ -1,17 +1,17 @@
 package katana.ast.decl;
 
+import katana.Maybe;
 import katana.ast.Decl;
 import katana.ast.Stmt;
 import katana.ast.Type;
 
 import java.util.ArrayList;
-import java.util.Optional;
 
 public class Function extends Decl
 {
-	public static class Parameter
+	public static class Param
 	{
-		public Parameter(Type type, String name)
+		public Param(Type type, String name)
 		{
 			this.type = type;
 			this.name = name;
@@ -33,7 +33,7 @@ public class Function extends Decl
 		public String name;
 	}
 
-	public Function(boolean exported, boolean opaque, String name, ArrayList<Parameter> params, Optional<Type> ret, ArrayList<Local> locals, ArrayList<Stmt> body)
+	public Function(boolean exported, boolean opaque, String name, ArrayList<Param> params, Maybe<Type> ret, ArrayList<Local> locals, ArrayList<Stmt> body)
 	{
 		super(exported, opaque);
 		this.name = name;
@@ -44,8 +44,8 @@ public class Function extends Decl
 	}
 
 	public String name;
-	public ArrayList<Parameter> params;
-	public Optional<Type> ret;
+	public ArrayList<Param> params;
+	public Maybe<Type> ret;
 	public ArrayList<Local> locals;
 	public ArrayList<Stmt> body;
 
@@ -54,7 +54,7 @@ public class Function extends Decl
 	{
 		StringBuilder params = new StringBuilder();
 
-		for(Parameter param : this.params)
+		for(Param param : this.params)
 		{
 			params.append("\t\t");
 			params.append(param.name);
@@ -63,7 +63,7 @@ public class Function extends Decl
 			params.append(")\n");
 		}
 
-		String ret = this.ret.isPresent() ? "\tret: " + this.ret.get() + '\n' : "";
+		String ret = this.ret.isSome() ? "\tret: " + this.ret.unwrap() + '\n' : "";
 
 		StringBuilder locals = new StringBuilder();
 

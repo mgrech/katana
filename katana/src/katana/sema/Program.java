@@ -1,10 +1,7 @@
 package katana.sema;
 
+import katana.Maybe;
 import katana.ast.Path;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 public class Program
 {
@@ -13,39 +10,26 @@ public class Program
 		Module parent = root;
 
 		for(String component : path.components)
-		{
-			Module child = parent.children.get(component);
-
-			if(child == null)
-			{
-				List<String> childComponents = new ArrayList<>();
-				childComponents.addAll(parent.path.components);
-				childComponents.add(component);
-				Path childPath = new Path(childComponents);
-
-				child = new Module(component, childPath, parent);
-				parent.children.put(component, child);
-			}
-
-			parent = child;
-		}
+			parent = parent.findOrCreateChild(component);
 
 		return parent;
 	}
 
-	public Optional<Module> findModule(Path path)
+	public Maybe<Module> findModule(Path path)
 	{
 		Module current = root;
 
 		for(String component : path.components)
 		{
-			if(!current.children.containsKey(component))
-				return Optional.empty();
+			Maybe<Module> child = current.findChild(component);
 
-			current = current.children.get(component);
+			if(child.isNone())
+				return child;
+
+			current = child.get();
 		}
 
-		return Optional.of(current);
+		return Maybe.some(current);
 	}
 
 	public Module root = new Module("", new Path(), null);

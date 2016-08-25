@@ -1,12 +1,12 @@
 package katana.parser;
 
+import katana.Maybe;
 import katana.ast.Type;
 import katana.ast.type.*;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
 
 import java.util.ArrayList;
-import java.util.Optional;
 
 public class TypeParser
 {
@@ -37,10 +37,10 @@ public class TypeParser
 	private static Function parseFunction(Scanner scanner)
 	{
 		ArrayList<Type> params = parseParameters(scanner);
-		Optional<Type> ret = Optional.empty();
+		Maybe<Type> ret = Maybe.none();
 
 		if(ParseTools.option(scanner, Token.Type.PUNCT_RET, true))
-			ret = Optional.of(parse(scanner));
+			ret = Maybe.some(parse(scanner));
 
 		return new Function(ret, params);
 	}

@@ -1,17 +1,21 @@
 package katana.compiler;
 
-import katana.ast.*;
-import katana.ast.decl.Import;
+import katana.ast.Decl;
+import katana.ast.File;
+import katana.backend.PlatformContext;
+import katana.backend.llvm.ProgramCodeGen;
+import katana.backend.llvm.x86_64.PlatformContextLlvmX86;
 import katana.parser.FileParser;
-import katana.sema.FileDeclVisitor;
+import katana.sema.FileValidator;
 import katana.sema.Program;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -39,21 +43,22 @@ public class Main
 	private static void validateImports(Program program, Set<katana.ast.Path> imports)
 	{
 		for(katana.ast.Path path : imports)
-			if(!program.findModule(path).isPresent())
+			if(program.findModule(path).isNone())
 				throw new RuntimeException("import of unknown module '" + path + "'");
 	}
 
-	public static void main(String[] args) throws IOException
+	public static void buildCommand() throws IOException
 	{
+		PlatformContext context = new PlatformContextLlvmX86();
 		Program program = new Program();
 
-		ArrayList<Path> paths = discoverSourceFiles(Paths.get("."));
+		ArrayList<Path> paths = discoverSourceFiles(Paths.get("./source"));
 		Set<katana.ast.Path> imports = new HashSet<>();
 
 		for(Path path : paths)
 		{
 			File file = FileParser.parse(path);
-			FileDeclVisitor visitor = new FileDeclVisitor(program);
+			FileValidator visitor = new FileValidator(context, program);
 
 			for(Decl decl : file.decls)
 				decl.accept(visitor);
@@ -62,5 +67,51 @@ public class Main
 		}
 
 		validateImports(program, imports);
+
+		String output = ProgramCodeGen.generate(program, context);
+
+		try(OutputStream stream = new FileOutputStream("output/program.ll"))
+		{
+			stream.write(output.getBytes(StandardCharsets.UTF_8));
+		}
+	}
+
+	public static void initCommand() throws IOException
+	{
+		Files.createDirectories(Paths.get("./source"));
+		Files.createDirectories(Paths.get("./output"));
+	}
+
+	public static void main(String[] args) throws IOException
+	{
+		if(args.length != 1)
+		{
+			System.err.println("invalid number of arguments");
+			System.exit(1);
+		}
+
+		try
+		{
+			switch(args[0])
+			{
+			case "init":
+				initCommand();
+				return;
+
+			case "build":
+				buildCommand();
+				break;
+
+			default:
+				System.err.println("invalid command");
+				System.exit(1);
+			}
+		}
+
+		catch(IOException e)
+		{
+			e.printStackTrace();
+			System.exit(1);
+		}
 	}
 }

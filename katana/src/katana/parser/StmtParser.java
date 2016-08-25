@@ -1,12 +1,11 @@
 package katana.parser;
 
+import katana.Maybe;
 import katana.ast.Expr;
 import katana.ast.Stmt;
 import katana.ast.stmt.*;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
-
-import java.util.Optional;
 
 public class StmtParser
 {
@@ -36,7 +35,7 @@ public class StmtParser
 		Stmt then = parse(scanner);
 
 		boolean hasElse = ParseTools.option(scanner, Token.Type.STMT_ELSE, true);
-		Optional<Stmt> otherwise = hasElse ? Optional.of(parse(scanner)) : Optional.empty();
+		Maybe<Stmt> otherwise = hasElse ? Maybe.some(parse(scanner)) : Maybe.none();
 
 		return new If(condition, then, otherwise);
 	}
@@ -50,9 +49,12 @@ public class StmtParser
 
 	private static Return parseReturn(Scanner scanner)
 	{
+		if(ParseTools.option(scanner, Token.Type.PUNCT_SCOLON, true))
+			return new Return(Maybe.none());
+
 		Expr expr = ExprParser.parse(scanner);
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-		return new Return(expr);
+		return new Return(Maybe.some(expr));
 	}
 
 	private static Label parseLabel(Scanner scanner)

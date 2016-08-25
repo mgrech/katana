@@ -1,5 +1,6 @@
 package katana.parser;
 
+import katana.Maybe;
 import katana.ast.Decl;
 import katana.ast.Path;
 import katana.ast.Stmt;
@@ -9,7 +10,6 @@ import katana.scanner.Scanner;
 import katana.scanner.Token;
 
 import java.util.ArrayList;
-import java.util.Optional;
 
 public class DeclParser
 {
@@ -51,23 +51,23 @@ public class DeclParser
 		scanner.advance();
 
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
-		ArrayList<Function.Parameter> params = parseParameterList(scanner);
+		ArrayList<Function.Param> params = parseParameterList(scanner);
 
-		Optional<Type> ret = Optional.empty();
+		Maybe<Type> ret = Maybe.none();
 
 		if(ParseTools.option(scanner, Token.Type.PUNCT_RET, true))
-			ret = Optional.of(TypeParser.parse(scanner));
+			ret = Maybe.some(TypeParser.parse(scanner));
 
 		ArrayList<Function.Local> locals = parseLocalList(scanner);
 		ArrayList<Stmt> body = parseBody(scanner);
 		return new Function(exported, opaque, name, params, ret, locals, body);
 	}
 
-	private static ArrayList<Function.Parameter> parseParameterList(Scanner scanner)
+	private static ArrayList<Function.Param> parseParameterList(Scanner scanner)
 	{
 		ParseTools.expect(scanner, Token.Type.PUNCT_LPAREN, true);
 
-		ArrayList<Function.Parameter> params = new ArrayList<>();
+		ArrayList<Function.Param> params = new ArrayList<>();
 
 		if(!ParseTools.option(scanner, Token.Type.PUNCT_RPAREN, true))
 		{
@@ -78,11 +78,11 @@ public class DeclParser
 		return params;
 	}
 
-	private static Function.Parameter parseParameter(Scanner scanner)
+	private static Function.Param parseParameter(Scanner scanner)
 	{
 		Type type = TypeParser.parse(scanner);
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
-		return new Function.Parameter(type, name);
+		return new Function.Param(type, name);
 	}
 
 	private static ArrayList<Function.Local> parseLocalList(Scanner scanner)
@@ -157,12 +157,12 @@ public class DeclParser
 		scanner.advance();
 
 		Path path = ParseTools.path(scanner);
-		Optional<String> rename = Optional.empty();
+		Maybe<String> rename = Maybe.none();
 
 		if(ParseTools.option(scanner, Token.Type.IDENT, false))
 		{
 			String name = ParseTools.consume(scanner).value;
-			rename = Optional.of(name);
+			rename = Maybe.some(name);
 		}
 
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);

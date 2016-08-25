@@ -11,6 +11,11 @@ public class Path
 		this.components = new ArrayList<>();
 	}
 
+	public Path(String... components)
+	{
+		this.components = Arrays.asList(components);
+	}
+
 	public Path(List<String> components)
 	{
 		this.components = components;
@@ -27,7 +32,8 @@ public class Path
 	@Override
 	public boolean equals(Object obj)
 	{
-		return ((Path)obj).components.equals(components);
+		Path other = (Path)obj;
+		return components.equals(other.components);
 	}
 
 	@Override

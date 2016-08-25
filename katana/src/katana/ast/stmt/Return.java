@@ -1,14 +1,15 @@
 package katana.ast.stmt;
 
-import katana.ast.Stmt;
+import katana.Maybe;
 import katana.ast.Expr;
+import katana.ast.Stmt;
 
 public class Return extends Stmt
 {
-	public Return(Expr value)
+	public Return(Maybe<Expr> value)
 	{
 		this.value = value;
 	}
 
-	public Expr value;
+	public Maybe<Expr> value;
 }

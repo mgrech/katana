@@ -1,4 +1,4 @@
-package katana.ast.visitor;
+package katana.visitor;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -19,11 +19,12 @@ public interface IVisitable
 
 		try
 		{
-			Method visit = visitor.getClass().getMethod("visit", classes);
+			Method visit = ReflectionUtils.findMatchingMethod(visitor.getClass(), "visit", classes);
+			visit.setAccessible(true);
 			return visit.invoke(visitor, invoke);
 		}
 
-		catch(NoSuchMethodException | IllegalAccessException e)
+		catch(IllegalAccessException e)
 		{
 			throw new RuntimeException(e);
 		}

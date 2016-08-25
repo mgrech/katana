@@ -1,13 +1,12 @@
 package katana.ast.stmt;
 
-import katana.ast.Stmt;
+import katana.Maybe;
 import katana.ast.Expr;
-
-import java.util.Optional;
+import katana.ast.Stmt;
 
 public class If extends Stmt
 {
-	public If(Expr condition, Stmt then, Optional<Stmt> otherwise)
+	public If(Expr condition, Stmt then, Maybe<Stmt> otherwise)
 	{
 		this.condition = condition;
 		this.then = then;
@@ -16,5 +15,5 @@ public class If extends Stmt
 
 	public Expr condition;
 	public Stmt then;
-	public Optional<Stmt> otherwise;
+	public Maybe<Stmt> otherwise;
 }

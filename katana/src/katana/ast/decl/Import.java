@@ -1,13 +1,12 @@
 package katana.ast.decl;
 
+import katana.Maybe;
 import katana.ast.Decl;
 import katana.ast.Path;
 
-import java.util.Optional;
-
 public class Import extends Decl
 {
-	public Import(Path path, Optional<String> rename)
+	public Import(Path path, Maybe<String> rename)
 	{
 		super(false, false);
 		this.path = path;
@@ -15,12 +14,12 @@ public class Import extends Decl
 	}
 
 	public Path path;
-	public Optional<String> rename;
+	public Maybe<String> rename;
 
 	@Override
 	public String toString()
 	{
-		String rename = this.rename.orElse("<none>");
+		String rename = this.rename.or("<none>");
 		return String.format("%s\tmodule: %s\n\trename: %s\n", super.toString(), path, rename);
 	}
 }
