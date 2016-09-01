@@ -4,7 +4,7 @@ import katana.Maybe;
 import katana.sema.Expr;
 import katana.sema.Type;
 
-public class Assign extends LValueExpr
+public class Assign extends SimpleLValueExpr
 {
 
 	public Assign(Expr left, Expr right)

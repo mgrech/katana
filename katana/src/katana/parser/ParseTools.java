@@ -85,15 +85,17 @@ public class ParseTools
 	{
 		expect(scanner, type, false);
 		return consume(scanner);
-	}
+}
 
 	public static <T> void unexpectedToken(Scanner scanner, T expected)
 	{
-		throw new RuntimeException(String.format("unexpected token %s, expected %s", scanner.token(), expected));
+		String fmt = "unexpected token %s, expected %s on line %s, column %s";
+		throw new RuntimeException(String.format(fmt, scanner.token(), expected, scanner.line(), scanner.column()));
 	}
 
 	public static void unexpectedToken(Scanner scanner)
 	{
-		throw new RuntimeException("unexpected token " + scanner.token());
+		String fmt = "unexpected token %s on line %s, column %s";
+		throw new RuntimeException(String.format(fmt, scanner.token(), scanner.line(), scanner.column()));
 	}
 }

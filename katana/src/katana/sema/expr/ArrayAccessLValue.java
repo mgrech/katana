@@ -5,12 +5,24 @@ import katana.sema.Expr;
 import katana.sema.Type;
 import katana.sema.type.Array;
 
-public class ArrayAccess extends LValueExpr
+public class ArrayAccessLValue extends LValueExpr
 {
-	public ArrayAccess(Expr value, Expr index)
+	public ArrayAccessLValue(LValueExpr value, Expr index)
 	{
 		this.value = value;
 		this.index = index;
+	}
+
+	@Override
+	public void useAsLValue(boolean use)
+	{
+		value.useAsLValue(use);
+	}
+
+	@Override
+	public boolean isUsedAsLValue()
+	{
+		return value.isUsedAsLValue();
 	}
 
 	@Override
@@ -19,6 +31,6 @@ public class ArrayAccess extends LValueExpr
 		return Maybe.some(((Array)value.type().unwrap()).type);
 	}
 
-	public Expr value;
+	public LValueExpr value;
 	public Expr index;
 }

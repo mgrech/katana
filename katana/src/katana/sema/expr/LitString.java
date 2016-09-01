@@ -5,7 +5,10 @@ import katana.sema.Type;
 import katana.sema.type.Array;
 import katana.sema.type.Builtin;
 
-public class LitString extends LValueExpr
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+
+public class LitString extends SimpleLValueExpr
 {
 	public LitString(String value)
 	{
@@ -15,7 +18,7 @@ public class LitString extends LValueExpr
 	@Override
 	public Maybe<Type> type()
 	{
-		return Maybe.some(new Array(value.length(), Builtin.UINT8));
+		return Maybe.some(new Array(value.getBytes(StandardCharsets.UTF_8).length, Builtin.UINT8));
 	}
 
 	public String value;

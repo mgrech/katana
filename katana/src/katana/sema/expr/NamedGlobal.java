@@ -4,7 +4,7 @@ import katana.Maybe;
 import katana.sema.Type;
 import katana.sema.decl.Global;
 
-public class NamedGlobal extends LValueExpr
+public class NamedGlobal extends SimpleLValueExpr
 {
 	public NamedGlobal(Global global)
 	{

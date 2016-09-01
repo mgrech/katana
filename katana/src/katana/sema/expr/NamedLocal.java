@@ -4,7 +4,7 @@ import katana.Maybe;
 import katana.sema.Type;
 import katana.sema.decl.Function;
 
-public class NamedLocal extends LValueExpr
+public class NamedLocal extends SimpleLValueExpr
 {
 	public NamedLocal(Function.Local local)
 	{

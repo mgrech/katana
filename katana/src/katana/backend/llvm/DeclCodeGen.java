@@ -59,7 +59,7 @@ public class DeclCodeGen implements IVisitor
 			Function.Param first = function.params.get(0);
 
 			builder.append(TypeCodeGen.apply(first.type, context));
-			builder.append(" %");
+			builder.append(" %p$");
 			builder.append(first.name);
 
 			for(int i = 1; i != function.params.size(); ++i)
@@ -68,12 +68,23 @@ public class DeclCodeGen implements IVisitor
 
 				Function.Param param = function.params.get(i);
 				builder.append(TypeCodeGen.apply(param.type, context));
-				builder.append(" %");
+				builder.append(" %p$");
 				builder.append(param.name);
 			}
 		}
 
 		builder.append(")\n{\n");
+
+		for(Function.Param param : function.params)
+		{
+			String typeString = TypeCodeGen.apply(param.type, context);
+			int alignment = param.type.alignof(context);
+			builder.append(String.format("\t%%%s = alloca %s, align %s\n", param.name, typeString, alignment));
+			builder.append(String.format("\tstore %s %%p$%s, %s* %s\n", typeString, param.name, typeString, param.name));
+		}
+
+		if(!function.params.isEmpty())
+			builder.append('\n');
 
 		FunctionContext fcontext = new FunctionContext();
 
@@ -96,11 +107,9 @@ public class DeclCodeGen implements IVisitor
 
 	private void visit(Global global, StringBuilder builder, PlatformContext context)
 	{
-		builder.append('@');
-		builder.append(qualifiedName(global));
-		builder.append(" = private global ");
-		builder.append(TypeCodeGen.apply(global.type, context));
-		builder.append('\n');
+		String qualifiedName = qualifiedName(global);
+		String typeString = TypeCodeGen.apply(global.type, context);
+		builder.append(String.format("@%s = private global %s\n", qualifiedName, typeString));
 	}
 
 	public static void apply(Decl decl, StringBuilder builder, PlatformContext context)

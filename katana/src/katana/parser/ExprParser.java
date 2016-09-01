@@ -102,7 +102,10 @@ public class ExprParser
 			String inline = ParseTools.parenthesized(scanner,
 				() -> ParseTools.consumeExpected(scanner, Token.Type.LIT_BOOL).value);
 			String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
-			return parseFunctionCall(scanner, new NamedValue(name), Maybe.some(inline.equals("true")));
+			ParseTools.expect(scanner, Token.Type.PUNCT_LPAREN, true);
+			Expr call = parseFunctionCall(scanner, new NamedValue(name), Maybe.some(inline.equals("true")));
+			ParseTools.expect(scanner, Token.Type.PUNCT_RPAREN, true);
+			return call;
 
 		case MISC_ADDRESSOF:
 			Expr aexpr = ParseTools.parenthesized(scanner, () -> ExprParser.parse(scanner));

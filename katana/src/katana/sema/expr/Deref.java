@@ -4,7 +4,7 @@ import katana.Maybe;
 import katana.sema.Expr;
 import katana.sema.Type;
 
-public class Deref extends LValueExpr
+public class Deref extends SimpleLValueExpr
 {
 	public Deref(Type type, Expr expr)
 	{

@@ -4,7 +4,7 @@ import katana.Maybe;
 import katana.sema.Type;
 import katana.sema.decl.Function;
 
-public class NamedParam extends LValueExpr
+public class NamedParam extends SimpleLValueExpr
 {
 	public NamedParam(Function.Param param)
 	{

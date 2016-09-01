@@ -7,7 +7,7 @@ import katana.sema.decl.Function;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NamedFunc extends LValueExpr
+public class NamedFunc extends SimpleLValueExpr
 {
 	public NamedFunc(Function func)
 	{

@@ -2,10 +2,10 @@ package katana.backend.llvm;
 
 public class FunctionContext
 {
-	public int nextTemporary()
+	public String allocateSSA()
 	{
-		return temporaryCounter++;
+		return "%" + ssaCounter++;
 	}
 
-	private int temporaryCounter = 1;
+	private int ssaCounter = 1;
 }

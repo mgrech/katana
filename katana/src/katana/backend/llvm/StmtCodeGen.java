@@ -25,37 +25,37 @@ public class StmtCodeGen implements IVisitor
 	private void visit(Goto goto_, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
 	{
 		builder.append(String.format("\tbr label %%%s\n\n", goto_.target.name));
-		int after = fcontext.nextTemporary();
-		builder.append(String.format("; %%%s:\n", after));
+		String afterSSA = fcontext.allocateSSA();
+		builder.append(String.format("; %s:\n", afterSSA));
 	}
 
 	private void visit(If if_, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
 	{
-		String expr = ExprCodeGen.apply(if_.condition, builder, context, fcontext);
-		int then = fcontext.nextTemporary();
+		String expr = ExprCodeGen.apply(if_.condition, builder, context, fcontext).unwrap();
+		String thenSSA = fcontext.allocateSSA();
 
 		StringBuilder tempThen = new StringBuilder();
-		tempThen.append(String.format("; %%%s:\n", then));
+		tempThen.append(String.format("; %s:\n", thenSSA));
 		StmtCodeGen.apply(if_.then, tempThen, context, fcontext);
 
-		int afterThen = fcontext.nextTemporary();
-		int afterIfElse = afterThen;
+		String afterThenSSA = fcontext.allocateSSA();
+		String afterIfElseSSA = afterThenSSA;
 
 		StringBuilder tempOtherwise = new StringBuilder();
 
 		if(if_.otherwise.isSome())
 		{
-			tempOtherwise.append(String.format("; %%%s:\n", afterThen));
+			tempOtherwise.append(String.format("; %s:\n", afterThenSSA));
 			StmtCodeGen.apply(if_.otherwise.unwrap(), tempOtherwise, context, fcontext);
-			int afterOtherwise = fcontext.nextTemporary();
-			tempThen.append(String.format("\tbr label %%%s\n\n", afterOtherwise));
-			afterIfElse = afterOtherwise;
+			String afterOtherwiseSSA = fcontext.allocateSSA();
+			tempThen.append(String.format("\tbr label %s\n\n", afterOtherwiseSSA));
+			afterIfElseSSA = afterOtherwiseSSA;
 		}
 
-		builder.append(String.format("\tbr i1 %s, label %%%s, label %%%s\n\n", expr, then, afterThen));
+		builder.append(String.format("\tbr i1 %s, label %s, label %s\n\n", expr, thenSSA, afterThenSSA));
 		builder.append(tempThen.toString());
 		builder.append(tempOtherwise.toString());
-		builder.append(String.format("; %%%s:\n", afterIfElse));
+		builder.append(String.format("; %s:\n", afterIfElseSSA));
 	}
 
 	private void visit(Label label, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
@@ -72,7 +72,7 @@ public class StmtCodeGen implements IVisitor
 			return;
 		}
 
-		String expr = ExprCodeGen.apply(ret.ret.unwrap(), builder, context, fcontext);
+		String expr = ExprCodeGen.apply(ret.ret.unwrap(), builder, context, fcontext).unwrap();
 		Type type = ret.ret.unwrap().type().unwrap();
 		String llvmType = TypeCodeGen.apply(type, context);
 		builder.append(String.format("\tret %s %s\n\n", llvmType, expr));

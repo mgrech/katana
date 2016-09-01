@@ -61,7 +61,7 @@ public class TypeCodeGen implements IVisitor
 			}
 		}
 
-		return String.format("%s (%s)", ret, params.toString());
+		return String.format("%s(%s)", ret, params.toString());
 	}
 
 	private String visit(UserDefined type, PlatformContext context)

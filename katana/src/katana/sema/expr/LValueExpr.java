@@ -4,5 +4,6 @@ import katana.sema.Expr;
 
 public abstract class LValueExpr extends Expr
 {
-	public boolean usedAsLValue = false;
+	public abstract boolean isUsedAsLValue();
+	public abstract void useAsLValue(boolean use);
 }

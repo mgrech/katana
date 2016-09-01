@@ -6,6 +6,7 @@ import katana.sema.decl.Data;
 import katana.sema.decl.Function;
 import katana.sema.decl.Global;
 import katana.sema.expr.*;
+import katana.sema.type.Array;
 import katana.sema.type.Builtin;
 import katana.sema.type.UserDefined;
 import katana.visitor.IVisitor;
@@ -59,7 +60,7 @@ public class ExprValidator implements IVisitor
 		if(!(expr instanceof LValueExpr))
 			throw new RuntimeException("addressof() requires lvalue operand");
 
-		((LValueExpr)expr).usedAsLValue = true;
+		((LValueExpr)expr).useAsLValue(true);
 		return new Addressof(expr);
 	}
 
@@ -75,9 +76,15 @@ public class ExprValidator implements IVisitor
 		Maybe<Type> indexType = index.type();
 
 		if(indexType.isNone() || indexType.unwrap() != Builtin.INT)
-			throw new RuntimeException("array access requires int argument");
+			throw new RuntimeException("array access requires index of type int");
 
-		return new ArrayAccess(value, index);
+		if(value.type().isNone() || !(value.type().unwrap() instanceof Array))
+			throw new RuntimeException("array access requires expression yielding array type");
+
+		if(value instanceof LValueExpr)
+			return new ArrayAccessLValue((LValueExpr)value, index);
+
+		return new ArrayAccessRValue(value, index);
 	}
 
 	private Expr visit(katana.ast.expr.Assign assign, Function function, PlatformContext context)
@@ -100,7 +107,7 @@ public class ExprValidator implements IVisitor
 		if(left.type().unwrap() instanceof katana.sema.type.Function)
 			throw new RuntimeException("cannot assign to function");
 
-		((LValueExpr)left).usedAsLValue = true;
+		((LValueExpr)left).useAsLValue(true);
 		return new Assign(left, right);
 	}
 
@@ -199,9 +206,9 @@ public class ExprValidator implements IVisitor
 		}
 
 		if(expr instanceof LValueExpr)
-			((LValueExpr)expr).usedAsLValue = true;
+			return new FieldAccessLValue((LValueExpr)expr, field.unwrap());
 
-		return new FieldAccess(expr, field.unwrap());
+		return new FieldAccessRValue(expr, field.unwrap());
 	}
 
 	private Expr visit(katana.ast.expr.NamedValue namedValue, Function function, PlatformContext context)
