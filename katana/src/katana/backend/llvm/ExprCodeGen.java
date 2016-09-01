@@ -4,8 +4,10 @@ import katana.Maybe;
 import katana.backend.PlatformContext;
 import katana.sema.Expr;
 import katana.sema.Type;
+import katana.sema.decl.Data;
 import katana.sema.expr.*;
 import katana.sema.type.Function;
+import katana.sema.type.UserDefined;
 import katana.visitor.IVisitor;
 
 import java.nio.charset.StandardCharsets;
@@ -283,7 +285,15 @@ public class ExprCodeGen implements IVisitor
 
 	private Maybe<String> visit(Offsetof offsetof, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
 	{
-		throw new RuntimeException("codegen for 'offset' not yet implemented");
+		String offsetPtrSSA = fcontext.allocateSSA();
+		Data.Field field = offsetof.field;
+		String typeString = TypeCodeGen.apply(new UserDefined(field.data()), context);
+		builder.append(String.format("\t%s = getelementptr %s null, i32 %s\n", offsetPtrSSA, typeString, field.index));
+
+		String offsetSSA = fcontext.allocateSSA();
+		String offsetTypeString = TypeCodeGen.apply(offsetof.type().unwrap(), context);
+		builder.append(String.format("\t%s = ptrtoint %s* %s to %s\n", offsetSSA, typeString, offsetPtrSSA, offsetTypeString));
+		return Maybe.some(offsetSSA);
 	}
 
 	private Maybe<String> visit(Sizeof sizeof, StringBuilder builder, PlatformContext context, FunctionContext fcontext)

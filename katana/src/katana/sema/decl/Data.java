@@ -18,6 +18,11 @@ public class Data extends Decl
 			this.index = index;
 		}
 
+		public Data data()
+		{
+			return Data.this;
+		}
+
 		public String name;
 		public Type type;
 		public int index;

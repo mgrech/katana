@@ -16,7 +16,7 @@ public class Offsetof extends Expr
 	@Override
 	public Maybe<Type> type()
 	{
-		return Maybe.some(Builtin.INT);
+		return Maybe.some(Builtin.PINT);
 	}
 
 	public Data.Field field;
