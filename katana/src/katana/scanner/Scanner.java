@@ -212,11 +212,11 @@ public class Scanner
 		case "import": return Token.DECL_IMPORT;
 		case "module": return Token.DECL_MODULE;
 		case "global": return Token.DECL_GLOBAL;
+		case "extern": return Token.DECL_EXTERN;
 		case "fn":     return Token.DECL_FN;
 		case "data":   return Token.DECL_DATA;
 
 		case "if":     return Token.STMT_IF;
-		case "else":   return Token.STMT_ELSE;
 		case "goto":   return Token.STMT_GOTO;
 		case "return": return Token.STMT_RETURN;
 

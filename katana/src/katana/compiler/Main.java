@@ -103,7 +103,7 @@ public class Main
 				break;
 
 			default:
-				System.err.println("invalid command");
+				System.err.println("invalid command, commands: init, build");
 				System.exit(1);
 			}
 		}

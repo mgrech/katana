@@ -33,7 +33,11 @@ public class ExprCodeGen implements IVisitor
 
 	private Maybe<String> visit(Addressof addressof, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
 	{
-		return apply(addressof.expr, builder, context, fcontext);
+		String ptrSSA = apply(addressof.expr, builder, context, fcontext).unwrap();
+		String castedPtrSSA = fcontext.allocateSSA();
+		String typeString = TypeCodeGen.apply(addressof.expr.type().unwrap(), context);
+		builder.append(String.format("\t%s = bitcast %s* %s to i8*\n", castedPtrSSA, typeString, ptrSSA));
+		return Maybe.some(castedPtrSSA);
 	}
 
 	private Maybe<String> visit(Alignof alignof, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
@@ -41,15 +45,15 @@ public class ExprCodeGen implements IVisitor
 		return Maybe.some("" + alignof.type.alignof(context));
 	}
 
-	private String generateArrayAccess(boolean usedAsLValue, String arraySSA, Type fieldType, Expr index, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
+	private String generateArrayAccess(boolean usedAsLValue, String arraySSA, Type arrayType, Type fieldType, Expr index, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
 	{
 		Type indexType = index.type().unwrap();
 		String indexTypeString = TypeCodeGen.apply(indexType, context);
 		String indexSSA = apply(index, builder, context, fcontext).unwrap();
 		String fieldTypeString = TypeCodeGen.apply(fieldType, context);
-
+		String arrayTypeString = TypeCodeGen.apply(arrayType, context);
 		String elemSSA = fcontext.allocateSSA();
-		builder.append(String.format("\t%s = getelementptr %s, %s* %s, %s %s\n", elemSSA, fieldTypeString, fieldTypeString, arraySSA, indexTypeString, indexSSA));
+		builder.append(String.format("\t%s = getelementptr %s, %s* %s, i64 0, %s %s\n", elemSSA, arrayTypeString, arrayTypeString, arraySSA, indexTypeString, indexSSA));
 
 		if(usedAsLValue)
 			return elemSSA;
@@ -64,7 +68,7 @@ public class ExprCodeGen implements IVisitor
 		String arraySSA = apply(arrayAccess.value, builder, context, fcontext).unwrap();
 		arrayAccess.useAsLValue(isUsedAsLValue);
 		Type fieldType = arrayAccess.type().unwrap();
-		return Maybe.some(generateArrayAccess(isUsedAsLValue, arraySSA, fieldType, arrayAccess.index, builder, context, fcontext));
+		return Maybe.some(generateArrayAccess(isUsedAsLValue, arraySSA, arrayAccess.value.type().unwrap(), fieldType, arrayAccess.index, builder, context, fcontext));
 	}
 
 	private Maybe<String> visit(ArrayAccessRValue arrayAccess, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
@@ -80,7 +84,7 @@ public class ExprCodeGen implements IVisitor
 
 		Type fieldType = arrayAccess.type().unwrap();
 		Type indexType = arrayAccess.index.type().unwrap();
-		return Maybe.some(generateArrayAccess(false, tmpSSA, fieldType, arrayAccess.index, builder, context, fcontext));
+		return Maybe.some(generateArrayAccess(false, tmpSSA, arrayAccess.expr.type().unwrap(), fieldType, arrayAccess.index, builder, context, fcontext));
 	}
 
 	private Maybe<String> visit(Assign assign, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
@@ -180,7 +184,8 @@ public class ExprCodeGen implements IVisitor
 		Type fieldType = fieldAccess.type().unwrap();
 		String fieldTypeString = TypeCodeGen.apply(fieldType, context);
 		int fieldIndex = fieldAccess.field.index;
-		builder.append(String.format("\t%s = getelementptr %s, %s* %s, i32 %s\n", fieldPtrSSA, fieldTypeString, fieldTypeString, objectSSA, fieldIndex));
+		String objectTypeString = TypeCodeGen.apply(fieldAccess.expr.type().unwrap(), context);
+		builder.append(String.format("\t%s = getelementptr %s, %s* %s, i32 0, i32 %s\n", fieldPtrSSA, objectTypeString, objectTypeString, objectSSA, fieldIndex));
 
 		if(fieldAccess.isUsedAsLValue())
 			return Maybe.some(fieldPtrSSA);
@@ -259,6 +264,11 @@ public class ExprCodeGen implements IVisitor
 		return Maybe.some("@" + namedFunc.func.qualifiedName());
 	}
 
+	private Maybe<String> visit(NamedExternFunc namedFunc, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
+	{
+		return Maybe.some("@" + namedFunc.func.externName);
+	}
+
 	private String visitNamedValue(char prefix, boolean usedAsLValue, Type type, String name, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
 	{
 		if(usedAsLValue)
@@ -270,7 +280,7 @@ public class ExprCodeGen implements IVisitor
 
 	private Maybe<String> visit(NamedGlobal namedGlobal, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
 	{
-		return Maybe.some(visitNamedValue('@', namedGlobal.isUsedAsLValue(), namedGlobal.global.type, namedGlobal.global.name, builder, context, fcontext));
+		return Maybe.some(visitNamedValue('@', namedGlobal.isUsedAsLValue(), namedGlobal.global.type, namedGlobal.global.qualifiedName().toString(), builder, context, fcontext));
 	}
 
 	private Maybe<String> visit(NamedLocal namedLocal, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
@@ -288,7 +298,7 @@ public class ExprCodeGen implements IVisitor
 		String offsetPtrSSA = fcontext.allocateSSA();
 		Data.Field field = offsetof.field;
 		String typeString = TypeCodeGen.apply(new UserDefined(field.data()), context);
-		builder.append(String.format("\t%s = getelementptr %s null, i32 %s\n", offsetPtrSSA, typeString, field.index));
+		builder.append(String.format("\t%s = getelementptr %s, %s* null, i32 %s\n", offsetPtrSSA, typeString, typeString, field.index));
 
 		String offsetSSA = fcontext.allocateSSA();
 		String offsetTypeString = TypeCodeGen.apply(offsetof.type().unwrap(), context);

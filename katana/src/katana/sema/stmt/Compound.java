@@ -3,8 +3,9 @@ package katana.sema.stmt;
 import katana.sema.Stmt;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Compound extends Stmt
 {
-	public ArrayList<Stmt> body;
+	public List<Stmt> body = new ArrayList<>();
 }

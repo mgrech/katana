@@ -6,6 +6,7 @@ import katana.sema.Decl;
 import katana.sema.Stmt;
 import katana.sema.Type;
 import katana.sema.decl.Data;
+import katana.sema.decl.ExternFunction;
 import katana.sema.decl.Function;
 import katana.sema.decl.Global;
 import katana.visitor.IVisitor;
@@ -80,7 +81,7 @@ public class DeclCodeGen implements IVisitor
 			String typeString = TypeCodeGen.apply(param.type, context);
 			int alignment = param.type.alignof(context);
 			builder.append(String.format("\t%%%s = alloca %s, align %s\n", param.name, typeString, alignment));
-			builder.append(String.format("\tstore %s %%p$%s, %s* %s\n", typeString, param.name, typeString, param.name));
+			builder.append(String.format("\tstore %s %%p$%s, %s* %%%s\n", typeString, param.name, typeString, param.name));
 		}
 
 		if(!function.params.isEmpty())
@@ -99,17 +100,39 @@ public class DeclCodeGen implements IVisitor
 		if(!function.locals.isEmpty())
 			builder.append('\n');
 
+		StmtCodeGen stmtCodeGen = new StmtCodeGen();
+
 		for(Stmt stmt : function.body)
-			StmtCodeGen.apply(stmt, builder, context, fcontext);
+			stmtCodeGen.apply(stmt, builder, context, fcontext);
 
 		builder.append("}\n");
+	}
+
+	private void visit(ExternFunction externFunction, StringBuilder builder, PlatformContext context)
+	{
+		String retTypeString = externFunction.ret.map((t) -> TypeCodeGen.apply(t, context)).or("void");
+		builder.append(String.format("declare %s @%s(", retTypeString, externFunction.externName));
+
+		if(!externFunction.params.isEmpty())
+		{
+			builder.append(TypeCodeGen.apply(externFunction.params.get(0).type, context));
+
+			for(int i = 1; i != externFunction.params.size(); ++i)
+			{
+				String typeString = TypeCodeGen.apply(externFunction.params.get(i).type, context);
+				builder.append(", ");
+				builder.append(typeString);
+			}
+		}
+
+		builder.append(")\n");
 	}
 
 	private void visit(Global global, StringBuilder builder, PlatformContext context)
 	{
 		String qualifiedName = qualifiedName(global);
 		String typeString = TypeCodeGen.apply(global.type, context);
-		builder.append(String.format("@%s = private global %s\n", qualifiedName, typeString));
+		builder.append(String.format("@%s = private global %s zeroinitializer\n", qualifiedName, typeString));
 	}
 
 	public static void apply(Decl decl, StringBuilder builder, PlatformContext context)

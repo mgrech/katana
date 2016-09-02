@@ -33,11 +33,7 @@ public class StmtParser
 	{
 		Expr condition = ParseTools.parenthesized(scanner, () -> ExprParser.parse(scanner));
 		Stmt then = parse(scanner);
-
-		boolean hasElse = ParseTools.option(scanner, Token.Type.STMT_ELSE, true);
-		Maybe<Stmt> otherwise = hasElse ? Maybe.some(parse(scanner)) : Maybe.none();
-
-		return new If(condition, then, otherwise);
+		return new If(condition, then);
 	}
 
 	private static Goto parseGoto(Scanner scanner)

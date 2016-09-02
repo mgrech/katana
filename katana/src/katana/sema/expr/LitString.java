@@ -5,7 +5,6 @@ import katana.sema.Type;
 import katana.sema.type.Array;
 import katana.sema.type.Builtin;
 
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 public class LitString extends SimpleLValueExpr

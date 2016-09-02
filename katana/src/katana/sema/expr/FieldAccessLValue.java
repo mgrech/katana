@@ -1,7 +1,6 @@
 package katana.sema.expr;
 
 import katana.Maybe;
-import katana.sema.Expr;
 import katana.sema.Type;
 import katana.sema.decl.Data;
 

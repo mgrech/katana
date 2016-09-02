@@ -4,6 +4,7 @@ import katana.Maybe;
 import katana.ast.Path;
 import katana.backend.PlatformContext;
 import katana.sema.decl.Data;
+import katana.sema.decl.ExternFunction;
 import katana.sema.decl.Function;
 import katana.sema.decl.Global;
 import katana.visitor.IVisitor;
@@ -37,6 +38,26 @@ public class FileValidator implements IVisitor
 
 		if(!currentModule.defineData(semaData))
 			throw new RuntimeException("redefinition of symbol '" + data.name + "'");
+	}
+
+	public void visit(katana.ast.decl.ExternFunction function)
+	{
+		declsSeen = true;
+		requireModule();
+
+		Maybe<Type> ret = function.ret.map((type) -> TypeLookup.find(currentModule, type));
+		ExternFunction semaFunction = new ExternFunction(currentModule, function.externName, function.name, ret);
+
+		for(katana.ast.decl.Function.Param param : function.params)
+		{
+			Type type = TypeLookup.find(currentModule, param.type);
+
+			if(!semaFunction.defineParam(type, param.name))
+				throw new RuntimeException("duplicate parameter '" + param.name + "' in function '" + function.name + "'");
+		}
+
+		if(!currentModule.defineExternFunction(semaFunction))
+			throw new RuntimeException("redefinition of symbol '" + function.name + "'");
 	}
 
 	public void visit(katana.ast.decl.Function function)

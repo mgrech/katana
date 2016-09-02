@@ -21,9 +21,17 @@ public class DeclParser
 		if(opaque && !exported)
 			throw new RuntimeException("'opaque' must go after 'export'");
 
+		Maybe<String> extern = Maybe.none();
+
+		if(ParseTools.option(scanner, Token.Type.DECL_EXTERN, true))
+			extern = Maybe.some(ParseTools.consumeExpected(scanner, Token.Type.LIT_STRING).value);
+
+		if(extern.isSome() && scanner.token().type != Token.Type.DECL_FN)
+			throw new RuntimeException("extern can only be applied to functions");
+
 		switch(scanner.token().type)
 		{
-		case DECL_FN:     return parseFunction(scanner, exported, opaque);
+		case DECL_FN:     return parseFunction(scanner, exported, opaque, extern);
 		case DECL_DATA:   return parseData(scanner, exported, opaque);
 		case DECL_GLOBAL: return parseGlobal(scanner, exported, opaque);
 
@@ -46,7 +54,7 @@ public class DeclParser
 		throw new AssertionError("unreachable");
 	}
 
-	private static Function parseFunction(Scanner scanner, boolean exported, boolean opaque)
+	private static Decl parseFunction(Scanner scanner, boolean exported, boolean opaque, Maybe<String> extern)
 	{
 		scanner.advance();
 
@@ -57,6 +65,12 @@ public class DeclParser
 
 		if(ParseTools.option(scanner, Token.Type.PUNCT_RET, true))
 			ret = Maybe.some(TypeParser.parse(scanner));
+
+		if(extern.isSome())
+		{
+			ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
+			return new ExternFunction(exported, opaque, extern.unwrap(), name, params, ret);
+		}
 
 		ArrayList<Function.Local> locals = parseLocalList(scanner);
 		ArrayList<Stmt> body = parseBody(scanner);

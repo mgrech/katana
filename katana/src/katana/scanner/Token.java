@@ -30,11 +30,11 @@ public class Token
 		DECL_IMPORT,
 		DECL_MODULE,
 		DECL_GLOBAL,
+		DECL_EXTERN,
 		DECL_FN,
 		DECL_DATA,
 
 		STMT_IF,
-		STMT_ELSE,
 		STMT_GOTO,
 		STMT_RETURN,
 		STMT_LABEL,
@@ -91,11 +91,11 @@ public class Token
 	public static final Token DECL_IMPORT = new Token(Category.DECL, Type.DECL_IMPORT, "import");
 	public static final Token DECL_MODULE = new Token(Category.DECL, Type.DECL_MODULE, "module");
 	public static final Token DECL_GLOBAL = new Token(Category.DECL, Type.DECL_GLOBAL, "global");
+	public static final Token DECL_EXTERN = new Token(Category.DECL, Type.DECL_EXTERN, "extern");
 	public static final Token DECL_FN     = new Token(Category.DECL, Type.DECL_FN,     "fn");
 	public static final Token DECL_DATA   = new Token(Category.DECL, Type.DECL_DATA,   "data");
 
 	public static final Token STMT_IF     = new Token(Category.STMT, Type.STMT_IF,     "if");
-	public static final Token STMT_ELSE   = new Token(Category.STMT, Type.STMT_ELSE,   "else");
 	public static final Token STMT_GOTO   = new Token(Category.STMT, Type.STMT_GOTO,   "goto");
 	public static final Token STMT_RETURN = new Token(Category.STMT, Type.STMT_RETURN, "return");
 

@@ -50,8 +50,7 @@ public class StmtValidator implements IVisitor
 			throw new RuntimeException("if requires condition of type bool");
 
 		Stmt then = validate(if_.then, function, context);
-		Maybe<Stmt> otherwise = if_.otherwise.map((o) -> validate(o, function, context));
-		return new If(condition, then, otherwise);
+		return new If(condition, then);
 	}
 
 	public Stmt visit(katana.ast.stmt.Return return_, Function function, PlatformContext context)

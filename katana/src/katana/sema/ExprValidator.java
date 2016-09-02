@@ -3,6 +3,7 @@ package katana.sema;
 import katana.Maybe;
 import katana.backend.PlatformContext;
 import katana.sema.decl.Data;
+import katana.sema.decl.ExternFunction;
 import katana.sema.decl.Function;
 import katana.sema.decl.Global;
 import katana.sema.expr.*;
@@ -229,6 +230,9 @@ public class ExprValidator implements IVisitor
 			throw new RuntimeException("unknown symbol '" + namedValue.name + "'");
 
 		Decl decl = maybeDecl.unwrap();
+
+		if(decl instanceof ExternFunction)
+			return new NamedExternFunc((ExternFunction)decl);
 
 		if(decl instanceof Function)
 			return new NamedFunc((Function)decl);

@@ -3,6 +3,7 @@ package katana.sema;
 import katana.Maybe;
 import katana.ast.Path;
 import katana.sema.decl.Data;
+import katana.sema.decl.ExternFunction;
 import katana.sema.decl.Function;
 import katana.sema.decl.Global;
 
@@ -42,6 +43,15 @@ public class Module
 			return false;
 
 		functions.put(function.name(), function);
+		return true;
+	}
+
+	public boolean defineExternFunction(ExternFunction function)
+	{
+		if(!defineSymbol(function))
+			return false;
+
+		externFunctions.put(function.name(), function);
 		return true;
 	}
 
@@ -113,6 +123,11 @@ public class Module
 		return functions;
 	}
 
+	public Map<String, ExternFunction> externFunctions()
+	{
+		return externFunctions;
+	}
+
 	public Path path()
 	{
 		return path;
@@ -127,4 +142,5 @@ public class Module
 	private Map<String, Data> datas = new TreeMap<>();
 	private Map<String, Global> globals = new TreeMap<>();
 	private Map<String, Function> functions = new TreeMap<>();
+	private Map<String, ExternFunction> externFunctions = new TreeMap<>();
 }

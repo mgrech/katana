@@ -4,6 +4,7 @@ import katana.backend.PlatformContext;
 import katana.sema.Module;
 import katana.sema.Program;
 import katana.sema.decl.Data;
+import katana.sema.decl.ExternFunction;
 import katana.sema.decl.Function;
 import katana.sema.decl.Global;
 
@@ -19,6 +20,9 @@ public class ProgramCodeGen
 
 		for(Global global : module.globals().values())
 			DeclCodeGen.apply(global, builder, context);
+
+		for(ExternFunction externFunction : module.externFunctions().values())
+			DeclCodeGen.apply(externFunction, builder, context);
 
 		for(Function function : module.functions().values())
 			DeclCodeGen.apply(function, builder, context);
