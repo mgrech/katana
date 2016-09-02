@@ -1,23 +1,28 @@
 package katana.compiler.commands;
 
+import katana.Maybe;
+import katana.ast.*;
 import katana.ast.Decl;
-import katana.ast.File;
 import katana.backend.PlatformContext;
 import katana.backend.llvm.ProgramCodeGen;
 import katana.backend.llvm.x86_64.PlatformContextLlvmX86;
 import katana.compiler.Command;
+import katana.compiler.CommandException;
 import katana.parser.FileParser;
-import katana.sema.FileValidator;
-import katana.sema.Program;
+import katana.sema.*;
+import katana.sema.decl.ExternFunction;
+import katana.sema.decl.Function;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Command(name = "build", desc = "builds project in working directory")
@@ -49,8 +54,40 @@ public class Build
 				throw new RuntimeException("import of unknown module '" + path + "'");
 	}
 
+	private static katana.sema.Decl findMainFunction(Program program, String name)
+	{
+		String[] pathComponents = name.split("\\.");
+		String function = pathComponents[pathComponents.length - 1];
+
+		List<String> modulePath = new ArrayList<>();
+
+		for(int i = 0; i != pathComponents.length - 1; ++i)
+			modulePath.add(pathComponents[i]);
+
+		katana.ast.Path path = new katana.ast.Path(modulePath);
+		Maybe<Module> maybeModule = program.findModule(path);
+
+		if(maybeModule.isNone())
+			throw new RuntimeException("main function not found -- unknown module");
+
+		Maybe<katana.sema.Decl> maybeDecl = maybeModule.unwrap().findSymbol(function);
+
+		if(maybeDecl.isNone())
+			throw new RuntimeException("main function not found -- unknown symbol");
+
+		katana.sema.Decl decl = maybeDecl.unwrap();
+
+		if(!(decl instanceof Function) && !(decl instanceof ExternFunction))
+			throw new RuntimeException("specified symbol is not a function");
+
+		return decl;
+	}
+
 	public static void run(String[] args) throws IOException
 	{
+		if(args.length > 1)
+			throw new CommandException("invalid number of arguments, usage: build [main-func]");
+
 		PlatformContext context = new PlatformContextLlvmX86();
 		Program program = new Program();
 
@@ -70,7 +107,12 @@ public class Build
 
 		validateImports(program, imports);
 
-		String output = ProgramCodeGen.generate(program, context);
+		Maybe<katana.sema.Decl> main = Maybe.none();
+
+		if(args.length == 1)
+			main = Maybe.some(findMainFunction(program, args[0]));
+
+		String output = ProgramCodeGen.generate(program, context, main);
 
 		try(OutputStream stream = new FileOutputStream("output/program.ll"))
 		{

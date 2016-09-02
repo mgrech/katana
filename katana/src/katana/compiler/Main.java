@@ -5,6 +5,7 @@ import katana.compiler.commands.Help;
 import katana.compiler.commands.Init;
 import katana.compiler.commands.Version;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.TreeMap;
@@ -30,7 +31,7 @@ public class Main
 
 		if(args.length < 1)
 		{
-			System.err.println("invalid arguments, need at least one");
+			System.err.println("missing command argument");
 			System.exit(1);
 		}
 
@@ -50,6 +51,19 @@ public class Main
 		{
 			Method run = command.getMethod("run", String[].class);
 			run.invoke(null, (Object)commandArgs);
+		}
+
+		catch(InvocationTargetException ex)
+		{
+			try
+			{
+				throw (RuntimeException)ex.getTargetException();
+			}
+
+			catch(ClassCastException e)
+			{
+				throw new RuntimeException(ex.getTargetException());
+			}
 		}
 
 		catch(CommandException ex)
