@@ -105,6 +105,8 @@ public class DeclCodeGen implements IVisitor
 		for(Stmt stmt : function.body)
 			stmtCodeGen.apply(stmt, builder, context, fcontext);
 
+		stmtCodeGen.finish(function, builder);
+
 		builder.append("}\n");
 	}
 

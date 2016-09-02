@@ -3,6 +3,7 @@ package katana.backend.llvm;
 import katana.backend.PlatformContext;
 import katana.sema.Stmt;
 import katana.sema.Type;
+import katana.sema.decl.Function;
 import katana.sema.stmt.*;
 import katana.visitor.IVisitor;
 
@@ -74,6 +75,15 @@ public class StmtCodeGen implements IVisitor
 	public void apply(Stmt stmt, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
 	{
 		stmt.accept(this, builder, context, fcontext);
+	}
+
+	public void finish(Function func, StringBuilder builder)
+	{
+		if(!preceededByTerminator)
+			if(func.ret.isNone())
+				builder.append("\tret void\n");
+			else
+				throw new RuntimeException(String.format("at least one path in '%s' returns no value", func.qualifiedName()));
 	}
 
 	private boolean preceededByTerminator = false;
