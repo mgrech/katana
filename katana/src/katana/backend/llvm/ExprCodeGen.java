@@ -99,7 +99,7 @@ public class ExprCodeGen implements IVisitor
 
 	private Maybe<String> visit(BuiltinCall builtinCall, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
 	{
-		return Maybe.some(BuiltinCodeGen.apply(builtinCall, builder, context, fcontext));
+		return builtinCall.func.generateCall(builtinCall, builder, context, fcontext);
 	}
 
 	private Maybe<String> visit(Deref deref, StringBuilder builder, PlatformContext context, FunctionContext fcontext)

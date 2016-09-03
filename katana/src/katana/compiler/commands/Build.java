@@ -1,15 +1,17 @@
 package katana.compiler.commands;
 
 import katana.Maybe;
-import katana.ast.*;
 import katana.ast.Decl;
+import katana.ast.File;
 import katana.backend.PlatformContext;
 import katana.backend.llvm.ProgramCodeGen;
 import katana.backend.llvm.x86_64.PlatformContextLlvmX86;
 import katana.compiler.Command;
 import katana.compiler.CommandException;
 import katana.parser.FileParser;
-import katana.sema.*;
+import katana.sema.FileValidator;
+import katana.sema.Module;
+import katana.sema.Program;
 import katana.sema.decl.ExternFunction;
 import katana.sema.decl.Function;
 
@@ -18,7 +20,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashSet;

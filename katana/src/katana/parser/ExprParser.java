@@ -144,7 +144,7 @@ public class ExprParser
 	{
 		Path path = ParseTools.path(scanner);
 		ArrayList<Expr> args = ParseTools.parenthesized(scanner, () -> parseArguments(scanner));
-		return new BuiltinCall(path, args);
+		return new BuiltinCall(path.toString(), args);
 	}
 
 	private static FunctionCall parseFunctionCall(Scanner scanner, Expr expr, Maybe<Boolean> inline)

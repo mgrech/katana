@@ -1,20 +1,21 @@
 package katana.sema;
 
 import katana.Maybe;
-import katana.ast.Path;
+import katana.backend.PlatformContext;
+import katana.backend.llvm.FunctionContext;
+import katana.sema.expr.BuiltinCall;
 
 import java.util.List;
 
-public class BuiltinFunc
+public abstract class BuiltinFunc
 {
-	public BuiltinFunc(Path name, Maybe<Type> ret, List<Type> params)
+	public BuiltinFunc(String name)
 	{
 		this.name = name;
-		this.ret = ret;
-		this.params = params;
 	}
 
-	public Path name;
-	public Maybe<Type> ret;
-	public List<Type> params;
+	public abstract Maybe<Type> validateCall(List<Type> args);
+	public abstract Maybe<String> generateCall(BuiltinCall call, StringBuilder builder, PlatformContext context, FunctionContext fcontext);
+
+	public String name;
 }

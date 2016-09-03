@@ -39,7 +39,7 @@ public class TypeLookup implements IVisitor
 		default: break;
 		}
 
-		throw new RuntimeException("unreachable");
+		throw new AssertionError("unreachable");
 	}
 
 	private Type visit(katana.ast.type.Opaque opaque)

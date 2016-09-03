@@ -36,7 +36,7 @@ public class TypeCodeGen implements IVisitor
 		default: break;
 		}
 
-		throw new RuntimeException("unreachable");
+		throw new AssertionError("unreachable");
 	}
 
 	private String visit(Opaque type, PlatformContext context)

@@ -114,19 +114,32 @@ public class ExprValidator implements IVisitor
 
 	private Expr visit(katana.ast.expr.BuiltinCall builtinCall, Function function, PlatformContext context)
 	{
-		Maybe<BuiltinFunc> maybeFunc = context.findBuiltin(builtinCall.path);
+		Maybe<BuiltinFunc> maybeFunc = context.findBuiltin(builtinCall.name);
 
 		if(maybeFunc.isNone())
-			throw new RuntimeException("builtin '" + builtinCall.path + "' not found");
+			throw new RuntimeException(String.format("builtin %s not found", builtinCall.name));
 
 		List<Expr> args = new ArrayList<>();
+		List<Type> types = new ArrayList<>();
 
-		for(katana.ast.Expr expr : builtinCall.args)
-			args.add(validate(expr, function, context));
+		for(int i = 0; i != builtinCall.args.size(); ++i)
+		{
+			Expr semaExpr = validate(builtinCall.args.get(i), function, context);
+			Maybe<Type> type = semaExpr.type();
+
+			if(type.isNone())
+			{
+				String fmt = "expression passed to builtin %s as argument %s yields no value";
+				throw new RuntimeException(String.format(fmt, builtinCall.name, i + 1));
+			}
+
+			args.add(semaExpr);
+			types.add(type.unwrap());
+		}
 
 		BuiltinFunc func = maybeFunc.unwrap();
-		checkArguments(func.params, args);
-		return new BuiltinCall(func, args);
+		Maybe<Type> ret = func.validateCall(types);
+		return new BuiltinCall(func, args, ret);
 	}
 
 	private Expr visit(katana.ast.expr.Deref deref, Function function, PlatformContext context)

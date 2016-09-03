@@ -43,7 +43,7 @@ public class PlatformContextLlvmX86 extends PlatformContextLlvm
 		default: break;
 		}
 
-		throw new RuntimeException("unreachable");
+		throw new AssertionError("unreachable");
 	}
 
 	@Override
