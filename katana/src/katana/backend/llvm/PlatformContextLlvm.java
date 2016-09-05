@@ -17,6 +17,11 @@ public abstract class PlatformContextLlvm implements PlatformContext
 		BUILTINS.put(name, new BinaryOp(name, Maybe.wrap(boolInstr), Maybe.wrap(sintInstr), Maybe.wrap(uintInstr), Maybe.wrap(floatInstr), Maybe.wrap(ptrInstr), Maybe.wrap(ret)));
 	}
 
+	private static void registerPointerIntegerConversion(String name, PointerIntegerConversion.Which which)
+	{
+		BUILTINS.put(name, new PointerIntegerConversion(name, which));
+	}
+
 	static
 	{
 		registerBinaryOp("katana.eq",   "icmp eq", "icmp eq",  "icmp eq",  "fcmp oeq", "icmp eq", Builtin.BOOL);
@@ -38,6 +43,10 @@ public abstract class PlatformContextLlvm implements PlatformContext
 		registerBinaryOp("katana.and",  "and", "and",  "and",  null, null, null);
 		registerBinaryOp("katana.or",   "or",  "or",   "or",   null, null, null);
 		registerBinaryOp("katana.xor",  "xor", "xor",  "xor",  null, null, null);
+
+		registerPointerIntegerConversion("katana.ptrtou", PointerIntegerConversion.Which.PTR2UPINT);
+		registerPointerIntegerConversion("katana.ptrtoi", PointerIntegerConversion.Which.PTR2PINT);
+		registerPointerIntegerConversion("katana.inttoptr", PointerIntegerConversion.Which.INT2PTR);
 	}
 
 	@Override

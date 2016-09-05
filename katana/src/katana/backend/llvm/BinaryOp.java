@@ -67,17 +67,16 @@ public class BinaryOp extends BuiltinFunc
 		if(args.size() != 2)
 			throw new RuntimeException(String.format("builtin %s expects 2 arguments", name));
 
-		if(!Type.same(args.get(0), args.get(1)))
+		Type argType = args.get(0);
+
+		if(!Type.same(argType, args.get(1)))
 			throw new RuntimeException(String.format("arguments to builtin %s must be of same type", name));
 
-		Type type = ret.or(args.get(0));
+		if(!(argType instanceof Builtin))
+			throw new RuntimeException(String.format("builtin %s requires arguments of builtin type", name));
 
-		if(!(type instanceof Builtin))
-			throw new RuntimeException(String.format("builtin %s requires built-in type", name));
-
-		Builtin builtin = (Builtin)type;
-		checkTypeSupport(builtin.which);
-		return Maybe.some(type);
+		checkTypeSupport(((Builtin)argType).which);
+		return Maybe.some(ret.or(argType));
 	}
 
 	private String instrForType(Builtin type)
