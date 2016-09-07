@@ -12,32 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema.expr;
+package katana;
 
-import katana.Maybe;
-import katana.sema.Type;
-import katana.sema.decl.Function;
-
-import java.util.ArrayList;
-import java.util.List;
-
-public class NamedFunc extends SimpleLValueExpr
+public class Version
 {
-	public NamedFunc(Function func)
+	public static final int MAJOR = 0;
+	public static final int MINOR = 2;
+
+	public static final String AUTHOR = "Markus Grech";
+
+	public static String asString()
 	{
-		this.func = func;
+		return String.format("%s.%s", MAJOR, MINOR);
 	}
-
-	@Override
-	public Maybe<Type> type()
-	{
-		List<Type> params = new ArrayList<>();
-
-		for(Function.Param param : func.params)
-			params.add(param.type);
-
-		return Maybe.some(new katana.sema.type.Function(func.ret, params));
-	}
-
-	public Function func;
 }
