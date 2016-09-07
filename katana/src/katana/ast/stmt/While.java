@@ -3,16 +3,16 @@ package katana.ast.stmt;
 import katana.ast.Expr;
 import katana.ast.Stmt;
 
-public class If extends Stmt
+public class While extends Stmt
 {
-	public If(boolean negated, Expr condition, Stmt then)
+	public While(boolean negated, Expr condition, Stmt body)
 	{
 		this.negated = negated;
 		this.condition = condition;
-		this.then = then;
+		this.body = body;
 	}
 
 	public boolean negated;
 	public Expr condition;
-	public Stmt then;
+	public Stmt body;
 }

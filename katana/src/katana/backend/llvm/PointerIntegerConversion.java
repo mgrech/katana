@@ -76,7 +76,7 @@ public class PointerIntegerConversion extends BuiltinFunc
 				String argTypeString = TypeCodeGen.apply(arg.type().unwrap(), context);
 				String resultSSA = fcontext.allocateSSA();
 				builder.append(String.format("\t%s = inttoptr %s %s to i8*\n", resultSSA, argTypeString, argSSA));
-				return Maybe.some(fcontext.allocateSSA());
+				return Maybe.some(resultSSA);
 			}
 
 		default: break;

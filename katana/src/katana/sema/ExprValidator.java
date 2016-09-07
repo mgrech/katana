@@ -67,7 +67,7 @@ public class ExprValidator implements IVisitor
 
 	private Expr visit(katana.ast.expr.Alignof alignof, Function function, PlatformContext context)
 	{
-		return new Alignof(TypeLookup.find(function.module(), alignof.type));
+		return new Alignof(TypeLookup.find(function.module(), alignof.type, function, context));
 	}
 
 	private Expr visit(katana.ast.expr.ArrayAccess arrayAccess, Function function, PlatformContext context)
@@ -149,7 +149,7 @@ public class ExprValidator implements IVisitor
 		if(expr.type().isNone() || expr.type().unwrap() != Builtin.PTR)
 			throw new RuntimeException("expression of type ptr expected in deref");
 
-		return new Deref(TypeLookup.find(function.module(), deref.type), expr);
+		return new Deref(TypeLookup.find(function.module(), deref.type, function, context), expr);
 	}
 
 	private Expr visit(katana.ast.expr.FunctionCall call, Function function, PlatformContext context)
@@ -278,7 +278,7 @@ public class ExprValidator implements IVisitor
 
 	private Expr visit(katana.ast.expr.Sizeof sizeof, Function function, PlatformContext context)
 	{
-		return new Sizeof(TypeLookup.find(function.module(), sizeof.type));
+		return new Sizeof(TypeLookup.find(function.module(), sizeof.type, function, context));
 	}
 
 	public static Expr validate(katana.ast.Expr expr, Function function, PlatformContext context)

@@ -50,7 +50,35 @@ public class StmtValidator implements IVisitor
 			throw new RuntimeException("if requires condition of type bool");
 
 		Stmt then = validate(if_.then, function, context);
-		return new If(condition, then);
+		return new If(if_.negated, condition, then);
+	}
+
+	public Stmt visit(katana.ast.stmt.IfElse ifelse, Function function, PlatformContext context)
+	{
+		Expr condition = ExprValidator.validate(ifelse.condition, function, context);
+
+		if(condition.type().isNone() || !Type.same(condition.type().unwrap(), Builtin.BOOL))
+			throw new RuntimeException("if requires condition of type bool");
+
+		Stmt then = validate(ifelse.then, function, context);
+		Stmt else_ = validate(ifelse.else_, function, context);
+		return new IfElse(ifelse.negated, condition, then, else_);
+	}
+
+	public Stmt visit(katana.ast.stmt.Loop loop, Function function, PlatformContext fcontext)
+	{
+		return new Loop(validate(loop.body, function, fcontext));
+	}
+
+	public Stmt visit(katana.ast.stmt.While while_, Function function, PlatformContext context)
+	{
+		Expr condition = ExprValidator.validate(while_.condition, function, context);
+
+		if(condition.type().isNone() || !Type.same(condition.type().unwrap(), Builtin.BOOL))
+			throw new RuntimeException("while requires condition of type bool");
+
+		Stmt body = validate(while_.body, function, context);
+		return new While(while_.negated, condition, body);
 	}
 
 	public Stmt visit(katana.ast.stmt.Return return_, Function function, PlatformContext context)

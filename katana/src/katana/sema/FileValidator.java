@@ -30,7 +30,7 @@ public class FileValidator implements IVisitor
 
 		for(katana.ast.decl.Data.Field field : data.fields)
 		{
-			Type type = TypeLookup.find(currentModule, field.type);
+			Type type = TypeLookup.find(currentModule, field.type, null, null);
 
 			if(!semaData.defineField(field.name, type))
 				throw new RuntimeException("duplicate field '" + field.name + "' in data '" + data.name + "'");
@@ -45,12 +45,12 @@ public class FileValidator implements IVisitor
 		declsSeen = true;
 		requireModule();
 
-		Maybe<Type> ret = function.ret.map((type) -> TypeLookup.find(currentModule, type));
+		Maybe<Type> ret = function.ret.map((type) -> TypeLookup.find(currentModule, type, null, null));
 		ExternFunction semaFunction = new ExternFunction(currentModule, function.externName, function.name, ret);
 
 		for(katana.ast.decl.Function.Param param : function.params)
 		{
-			Type type = TypeLookup.find(currentModule, param.type);
+			Type type = TypeLookup.find(currentModule, param.type, null, null);
 
 			if(!semaFunction.defineParam(type, param.name))
 				throw new RuntimeException("duplicate parameter '" + param.name + "' in function '" + function.name + "'");
@@ -65,12 +65,12 @@ public class FileValidator implements IVisitor
 		declsSeen = true;
 		requireModule();
 
-		Maybe<Type> ret = function.ret.map((type) -> TypeLookup.find(currentModule, type));
+		Maybe<Type> ret = function.ret.map((type) -> TypeLookup.find(currentModule, type, null, null));
 		Function semaFunction = new Function(currentModule, function.name, ret);
 
 		for(katana.ast.decl.Function.Param param : function.params)
 		{
-			Type type = TypeLookup.find(currentModule, param.type);
+			Type type = TypeLookup.find(currentModule, param.type, null, null);
 
 			if(!semaFunction.defineParam(param.name, type))
 				throw new RuntimeException("duplicate parameter '" + param.name + "' in function '" + function.name + "'");
@@ -81,7 +81,7 @@ public class FileValidator implements IVisitor
 			if(semaFunction.paramsByName.get(local.name) != null)
 				throw new RuntimeException("redefinition of local '" + local.name + "'");
 
-			Type type = TypeLookup.find(currentModule, local.type);
+			Type type = TypeLookup.find(currentModule, local.type, null, null);
 
 			if(!semaFunction.defineLocal(local.name, type))
 				throw new RuntimeException("duplicate local '" + local.name + "' in function '" + function.name + "'");
@@ -102,7 +102,7 @@ public class FileValidator implements IVisitor
 		declsSeen = true;
 		requireModule();
 
-		Type type = TypeLookup.find(currentModule, global.type);
+		Type type = TypeLookup.find(currentModule, global.type, null, null);
 		Global semaGlobal = new Global(currentModule, global.name, type);
 
 		if(!currentModule.defineGlobal(semaGlobal))

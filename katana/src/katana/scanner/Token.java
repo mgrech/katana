@@ -35,9 +35,13 @@ public class Token
 		DECL_DATA,
 
 		STMT_IF,
+		STMT_ELSE,
 		STMT_GOTO,
 		STMT_RETURN,
 		STMT_LABEL,
+		STMT_LOOP,
+		STMT_WHILE,
+		STMT_NEGATE,
 
 		PUNCT_LPAREN,
 		PUNCT_RPAREN,
@@ -70,6 +74,7 @@ public class Token
 		TYPE_FLOAT64,
 		TYPE_PTR,
 		TYPE_OPAQUE,
+		TYPE_TYPEOF,
 
 		MISC_SIZEOF,
 		MISC_ALIGNOF,
@@ -96,8 +101,12 @@ public class Token
 	public static final Token DECL_DATA   = new Token(Category.DECL, Type.DECL_DATA,   "data");
 
 	public static final Token STMT_IF     = new Token(Category.STMT, Type.STMT_IF,     "if");
+	public static final Token STMT_ELSE   = new Token(Category.STMT, Type.STMT_ELSE,   "else");
 	public static final Token STMT_GOTO   = new Token(Category.STMT, Type.STMT_GOTO,   "goto");
 	public static final Token STMT_RETURN = new Token(Category.STMT, Type.STMT_RETURN, "return");
+	public static final Token STMT_LOOP   = new Token(Category.STMT, Type.STMT_LOOP,   "loop");
+	public static final Token STMT_WHILE  = new Token(Category.STMT, Type.STMT_WHILE,  "while");
+	public static final Token STMT_NEGATE = new Token(Category.STMT, Type.STMT_NEGATE, "!");
 
 	public static final Token PUNCT_LPAREN   = new Token(Category.PUNCT, Type.PUNCT_LPAREN,   "(");
 	public static final Token PUNCT_RPAREN   = new Token(Category.PUNCT, Type.PUNCT_RPAREN,   ")");
@@ -130,6 +139,7 @@ public class Token
 	public static final Token TYPE_FLOAT64 = new Token(Category.TYPE, Type.TYPE_FLOAT64, "float64");
 	public static final Token TYPE_PTR     = new Token(Category.TYPE, Type.TYPE_PTR,     "ptr");
 	public static final Token TYPE_OPAQUE  = new Token(Category.TYPE, Type.TYPE_OPAQUE,  "opaque");
+	public static final Token TYPE_TYPEOF  = new Token(Category.TYPE, Type.TYPE_TYPEOF,  "typeof");
 
 	public static final Token MISC_SIZEOF    = new Token(Category.MISC, Type.MISC_SIZEOF,    "sizeof");
 	public static final Token MISC_ALIGNOF   = new Token(Category.MISC, Type.MISC_ALIGNOF,   "alignof");

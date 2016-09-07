@@ -7,6 +7,9 @@ import katana.sema.decl.Function;
 import katana.sema.stmt.*;
 import katana.visitor.IVisitor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @SuppressWarnings("unused")
 public class StmtCodeGen implements IVisitor
 {
@@ -24,36 +27,94 @@ public class StmtCodeGen implements IVisitor
 		ExprCodeGen.apply(stmt.expr, builder, context, fcontext);
 	}
 
-	private void visit(Goto goto_, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
+	private void generateGoto(String label, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
 	{
 		preceededByTerminator = true;
-		builder.append(String.format("\tbr label %%%s\n\n", goto_.target.name));
+		builder.append(String.format("\tbr label %%%s\n\n", label));
+	}
+
+	private void visit(Goto goto_, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
+	{
+		generateGoto("ul$" + goto_.target.name, builder, context, fcontext);
+	}
+
+	private void visit(GeneratedGoto goto_, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
+	{
+		generateGoto(goto_.label.name, builder, context, fcontext);
 	}
 
 	private void visit(If if_, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
 	{
+		String condSSA = ExprCodeGen.apply(if_.condition, builder, context, fcontext).unwrap();
+
+		GeneratedLabel thenLabel = fcontext.allocateLabel("if.then");
+		GeneratedLabel afterLabel = fcontext.allocateLabel("if.after");
+
+		GeneratedLabel firstLabel = if_.negated ? afterLabel : thenLabel;
+		GeneratedLabel secondLabel = if_.negated ? thenLabel : afterLabel;
+
+		builder.append(String.format("\tbr i1 %s, label %%%s, label %%%s\n\n", condSSA, firstLabel.name, secondLabel.name));
+		preceededByTerminator = true;
+
+		apply(thenLabel, builder, context, fcontext);
+
+		apply(if_.then, builder, context, fcontext);
+		apply(afterLabel, builder, context, fcontext);
+
 		preceededByTerminator = false;
+	}
 
-		String exprSSA = ExprCodeGen.apply(if_.condition, builder, context, fcontext).unwrap();
-		String thenSSA = fcontext.allocateSSA();
+	private void visit(IfElse ifelse, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
+	{
+		GeneratedLabel after = fcontext.allocateLabel("ifelse.after");
 
-		StringBuilder tempThen = new StringBuilder();
-		tempThen.append(String.format("; %s:\n", thenSSA));
-		apply(if_.then, tempThen, context, fcontext);
+		List<Stmt> then = new ArrayList<>();
+		then.add(ifelse.then);
+		then.add(new GeneratedGoto(after));
 
-		String afterThenSSA = fcontext.allocateSSA();
+		visit(new If(ifelse.negated, ifelse.condition, new Compound(then)), builder, context, fcontext);
+		apply(ifelse.else_, builder, context, fcontext);
+		visit(after, builder, context, fcontext);
+	}
 
-		builder.append(String.format("\tbr i1 %s, label %s, label %s\n\n", exprSSA, thenSSA, afterThenSSA));
-		builder.append(tempThen.toString());
-		builder.append(String.format("; %s:\n", afterThenSSA));
+	private void visit(Loop loop, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
+	{
+		GeneratedLabel label = fcontext.allocateLabel("loop");
+
+		visit(label, builder, context, fcontext);
+		apply(loop.body, builder, context, fcontext);
+		visit(new GeneratedGoto(label), builder, context, fcontext);
+	}
+
+	private void visit(While while_, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
+	{
+		GeneratedLabel afterLabel = fcontext.allocateLabel("while.after");
+
+		List<Stmt> body = new ArrayList<>();
+		body.add(new If(!while_.negated, while_.condition, new GeneratedGoto(afterLabel)));
+		body.add(while_.body);
+
+		visit(new Loop(new Compound(body)), builder, context, fcontext);
+		visit(afterLabel, builder, context, fcontext);
+	}
+
+	private void generateLabel(String name, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
+	{
+		if(!preceededByTerminator)
+			builder.append(String.format("\tbr label %%%s\n\n", name));
+
+		builder.append(String.format("%s:\n", name));
+		preceededByTerminator = false;
 	}
 
 	private void visit(Label label, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
 	{
-		if(!preceededByTerminator)
-			builder.append(String.format("\tbr label %%%s\n\n", label.name));
+		generateLabel("ul$" + label.name, builder, context, fcontext);
+	}
 
-		builder.append(String.format("%s:\n", label.name));
+	private void visit(GeneratedLabel label, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
+	{
+		generateLabel(label.name, builder, context, fcontext);
 	}
 
 	private void visit(Return ret, StringBuilder builder, PlatformContext context, FunctionContext fcontext)

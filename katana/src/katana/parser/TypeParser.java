@@ -1,6 +1,7 @@
 package katana.parser;
 
 import katana.Maybe;
+import katana.ast.Expr;
 import katana.ast.Type;
 import katana.ast.type.*;
 import katana.scanner.Scanner;
@@ -20,6 +21,9 @@ public class TypeParser
 
 		if(ParseTools.option(scanner, Token.Type.TYPE_OPAQUE, true))
 			return parseOpaque(scanner);
+
+		if(ParseTools.option(scanner, Token.Type.TYPE_TYPEOF, true))
+			return parseTypeof(scanner);
 
 		if(ParseTools.option(scanner, Token.Category.TYPE, false))
 			return parseBuiltin(scanner);
@@ -79,6 +83,11 @@ public class TypeParser
 			String alignment = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT).value;
 			return new Opaque(Integer.parseInt(size), Integer.parseInt(alignment));
 		});
+	}
+
+	private static Typeof parseTypeof(Scanner scanner)
+	{
+		return ParseTools.parenthesized(scanner, () -> new Typeof(ExprParser.parse(scanner)));
 	}
 
 	private static Builtin parseBuiltin(Scanner scanner)

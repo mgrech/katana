@@ -20,6 +20,12 @@ public class StmtParser
 		if(ParseTools.option(scanner, Token.Type.STMT_RETURN, true))
 			return parseReturn(scanner);
 
+		if(ParseTools.option(scanner, Token.Type.STMT_LOOP, true))
+			return parseLoop(scanner);
+
+		if(ParseTools.option(scanner, Token.Type.STMT_WHILE, true))
+			return parseWhile(scanner);
+
 		if(ParseTools.option(scanner, Token.Type.STMT_LABEL, false))
 			return parseLabel(scanner);
 
@@ -29,11 +35,21 @@ public class StmtParser
 		return parseExprStmt(scanner);
 	}
 
-	private static If parseIf(Scanner scanner)
+	private static Stmt parseIf(Scanner scanner)
 	{
+		boolean negated = ParseTools.option(scanner, Token.Type.STMT_NEGATE, true);
 		Expr condition = ParseTools.parenthesized(scanner, () -> ExprParser.parse(scanner));
 		Stmt then = parse(scanner);
-		return new If(condition, then);
+
+		Maybe<Stmt> else_ = Maybe.none();
+
+		if(ParseTools.option(scanner, Token.Type.STMT_ELSE, true))
+			else_ = Maybe.some(parse(scanner));
+
+		if(else_.isNone())
+			return new If(negated, condition, then);
+
+		return new IfElse(negated, condition, then, else_.unwrap());
 	}
 
 	private static Goto parseGoto(Scanner scanner)
@@ -51,6 +67,21 @@ public class StmtParser
 		Expr expr = ExprParser.parse(scanner);
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
 		return new Return(Maybe.some(expr));
+	}
+
+	private static Loop parseLoop(Scanner scanner)
+	{
+		return new Loop(parse(scanner));
+	}
+
+	private static While parseWhile(Scanner scanner)
+	{
+		boolean negated = ParseTools.option(scanner, Token.Type.STMT_NEGATE, true);
+		ParseTools.expect(scanner, Token.Type.PUNCT_LPAREN, true);
+		Expr condition = ExprParser.parse(scanner);
+		ParseTools.expect(scanner, Token.Type.PUNCT_RPAREN, true);
+		Stmt body = StmtParser.parse(scanner);
+		return new While(negated, condition, body);
 	}
 
 	private static Label parseLabel(Scanner scanner)

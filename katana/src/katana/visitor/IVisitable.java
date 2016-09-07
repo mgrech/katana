@@ -11,7 +11,7 @@ public interface IVisitable
 		classes[0] = getClass();
 
 		for(int i = 0; i != args.length; ++i)
-			classes[i + 1] = args[i].getClass();
+			classes[i + 1] = args[i] == null ? null : args[i].getClass();
 
 		Object[] invoke = new Object[args.length + 1];
 		invoke[0] = this;

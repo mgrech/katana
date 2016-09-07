@@ -23,10 +23,10 @@ public class ReflectionUtils
 				matches.add(method);
 
 		if(matches.isEmpty())
-			throw new RuntimeException("no matching method found");
+			throw new RuntimeException("no matching method found in " + clazz.getName());
 
 		if(matches.size() > 1)
-			throw new RuntimeException("ambiguous method call");
+			throw new RuntimeException("ambiguous method call in " + clazz.getName());
 
 		return matches.get(0);
 	}
@@ -36,7 +36,7 @@ public class ReflectionUtils
 		Class<?>[] params = method.getParameterTypes();
 
 		for(int i = 0; i != args.length; ++i)
-			if(!params[i].isAssignableFrom(args[i]))
+			if(args[i] != null && !params[i].isAssignableFrom(args[i]))
 				return false;
 
 		return true;

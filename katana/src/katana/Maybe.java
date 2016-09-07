@@ -1,6 +1,7 @@
 package katana;
 
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class Maybe<T>
 {
@@ -66,6 +67,11 @@ public class Maybe<T>
 	public T or(T value)
 	{
 		return this.value == null ? value : this.value;
+	}
+
+	public T or(Supplier<T> func)
+	{
+		return this.value == null ? value : func.get();
 	}
 
 	private T value;

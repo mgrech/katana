@@ -54,6 +54,8 @@ public class Scanner
 		case '@': advanceColumn(); return label();
 		case '"': advanceColumn(); return stringLiteral();
 
+		case '!': advanceColumn(); return Token.STMT_NEGATE;
+
 		default: break;
 		}
 
@@ -217,8 +219,11 @@ public class Scanner
 		case "data":   return Token.DECL_DATA;
 
 		case "if":     return Token.STMT_IF;
+		case "else":   return Token.STMT_ELSE;
 		case "goto":   return Token.STMT_GOTO;
 		case "return": return Token.STMT_RETURN;
+		case "loop":   return Token.STMT_LOOP;
+		case "while":  return Token.STMT_WHILE;
 
 		case "bool":    return Token.TYPE_BOOL;
 		case "int8":    return Token.TYPE_INT8;
@@ -237,6 +242,7 @@ public class Scanner
 		case "float64": return Token.TYPE_FLOAT64;
 		case "ptr":     return Token.TYPE_PTR;
 		case "opaque":  return Token.TYPE_OPAQUE;
+		case "typeof":  return Token.TYPE_TYPEOF;
 
 		case "sizeof":    return Token.MISC_SIZEOF;
 		case "alignof":   return Token.MISC_ALIGNOF;

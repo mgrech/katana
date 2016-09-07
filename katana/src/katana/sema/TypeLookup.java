@@ -1,8 +1,10 @@
 package katana.sema;
 
 import katana.Maybe;
-import katana.sema.decl.Data;
+import katana.backend.PlatformContext;
+import katana.sema.decl.*;
 import katana.sema.type.*;
+import katana.sema.type.Function;
 import katana.visitor.IVisitor;
 
 import java.util.ArrayList;
@@ -15,7 +17,7 @@ public class TypeLookup implements IVisitor
 		this.currentModule = currentModule;
 	}
 
-	private Type visit(katana.ast.type.Builtin builtin)
+	private Type visit(katana.ast.type.Builtin builtin, katana.sema.decl.Function function, PlatformContext context)
 	{
 		switch(builtin.which)
 		{
@@ -42,29 +44,28 @@ public class TypeLookup implements IVisitor
 		throw new AssertionError("unreachable");
 	}
 
-	private Type visit(katana.ast.type.Opaque opaque)
+	private Type visit(katana.ast.type.Opaque opaque, katana.sema.decl.Function function, PlatformContext context)
 	{
 		return new Opaque(opaque.size, opaque.alignment);
 	}
 
-	private Type visit(katana.ast.type.Array array)
+	private Type visit(katana.ast.type.Array array, katana.sema.decl.Function function, PlatformContext context)
 	{
-		return new Array(array.size, find(currentModule, array.type));
+		return new Array(array.size, find(currentModule, array.type, function, context));
 	}
 
-	private Type visit(katana.ast.type.Function function)
+	private Type visit(katana.ast.type.Function functionType, katana.sema.decl.Function function, PlatformContext context)
 	{
 		ArrayList<Type> params = new ArrayList<>();
 
-		for(katana.ast.Type param : function.params)
-			params.add(find(currentModule, param));
+		for(katana.ast.Type param : functionType.params)
+			params.add(find(currentModule, param, function, context));
 
-		Maybe<Type> ret = function.ret.map((type) -> find(currentModule, type));
-
+		Maybe<Type> ret = functionType.ret.map((type) -> find(currentModule, type, function, context));
 		return new Function(ret, params);
 	}
 
-	private Type visit(katana.ast.type.UserDefined user)
+	private Type visit(katana.ast.type.UserDefined user, katana.sema.decl.Function function, PlatformContext context)
 	{
 		Maybe<Decl> decl = currentModule.findSymbol(user.name);
 
@@ -77,11 +78,20 @@ public class TypeLookup implements IVisitor
 		return new UserDefined((Data)decl.get());
 	}
 
+	private Type visit(katana.ast.type.Typeof typeof, katana.sema.decl.Function function, PlatformContext context)
+	{
+		if(function == null || context == null)
+			throw new RuntimeException("typeof is not valid in this context");
+
+		Expr expr = ExprValidator.validate(typeof.expr, function, context);
+		return new Typeof(expr);
+	}
+
 	private Module currentModule;
 
-	public static Type find(Module currentModule, katana.ast.Type type)
+	public static Type find(Module currentModule, katana.ast.Type type, katana.sema.decl.Function function, PlatformContext context)
 	{
 		TypeLookup translator = new TypeLookup(currentModule);
-		return (Type)type.accept(translator);
+		return (Type)type.accept(translator, function, context);
 	}
 }

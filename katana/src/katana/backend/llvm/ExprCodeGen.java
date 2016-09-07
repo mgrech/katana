@@ -311,6 +311,11 @@ public class ExprCodeGen implements IVisitor
 		return Maybe.some("" + sizeof.type.sizeof(context));
 	}
 
+	private Maybe<String> visit(SSAExpr ssa, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
+	{
+		return Maybe.some(ssa.name);
+	}
+
 	public static Maybe<String> apply(Expr expr, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
 	{
 		ExprCodeGen visitor = new ExprCodeGen();
