@@ -1,7 +1,6 @@
 package katana.parser;
 
 import katana.Maybe;
-import katana.ast.Expr;
 import katana.ast.Type;
 import katana.ast.type.*;
 import katana.scanner.Scanner;

@@ -2,9 +2,8 @@ package katana.sema;
 
 import katana.Maybe;
 import katana.backend.PlatformContext;
-import katana.sema.decl.*;
+import katana.sema.decl.Data;
 import katana.sema.type.*;
-import katana.sema.type.Function;
 import katana.visitor.IVisitor;
 
 import java.util.ArrayList;

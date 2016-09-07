@@ -1,11 +1,10 @@
 package katana.compiler.commands;
 
 import katana.Maybe;
-import katana.ast.Decl;
 import katana.ast.File;
 import katana.backend.PlatformContext;
 import katana.backend.llvm.ProgramCodeGen;
-import katana.backend.llvm.x86_64.PlatformContextLlvmX86;
+import katana.backend.llvm.amd64.PlatformContextLlvmAmd64;
 import katana.compiler.Command;
 import katana.compiler.CommandException;
 import katana.parser.FileParser;
@@ -89,7 +88,7 @@ public class Build
 		if(args.length > 1)
 			throw new CommandException("invalid number of arguments, usage: build [main-func]");
 
-		PlatformContext context = new PlatformContextLlvmX86();
+		PlatformContext context = new PlatformContextLlvmAmd64();
 		Program program = new Program();
 
 		ArrayList<Path> paths = discoverSourceFiles(Paths.get("./source"));
@@ -98,12 +97,10 @@ public class Build
 		for(Path path : paths)
 		{
 			File file = FileParser.parse(path);
-			FileValidator visitor = new FileValidator(context, program);
-
-			for(Decl decl : file.decls)
-				decl.accept(visitor);
-
-			imports.addAll(visitor.imports());
+			FileValidator validator = new FileValidator(context, program);
+			validator.validate(file);
+			validator.finalizeValidation();
+			imports.addAll(validator.imports());
 		}
 
 		validateImports(program, imports);

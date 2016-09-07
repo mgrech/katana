@@ -1,4 +1,4 @@
-package katana.backend.llvm.x86_64;
+package katana.backend.llvm.amd64;
 
 import katana.backend.llvm.PlatformContextLlvm;
 import katana.sema.decl.Data;
@@ -6,7 +6,7 @@ import katana.sema.type.Builtin;
 
 import java.util.List;
 
-public class PlatformContextLlvmX86 extends PlatformContextLlvm
+public class PlatformContextLlvmAmd64 extends PlatformContextLlvm
 {
 	@Override
 	public int sizeof(Builtin builtin)

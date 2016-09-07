@@ -26,12 +26,11 @@ public class ExternFunction extends Decl
 		public int index;
 	}
 
-	public ExternFunction(Module module, String externName, String name, Maybe<Type> ret)
+	public ExternFunction(Module module, String externName, String name)
 	{
 		super(module);
 		this.externName = externName;
 		this.name = name;
-		this.ret = ret;
 	}
 
 	public boolean defineParam(Type type, String name)

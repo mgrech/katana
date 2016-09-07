@@ -6,11 +6,10 @@ import katana.sema.Type;
 
 public class Global extends Decl
 {
-	public Global(Module module, String name, Type type)
+	public Global(Module module, String name)
 	{
 		super(module);
 		this.name = name;
-		this.type = type;
 	}
 
 	@Override

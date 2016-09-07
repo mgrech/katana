@@ -42,11 +42,10 @@ public class Function extends Decl
 		public int index;
 	}
 
-	public Function(Module module, String name, Maybe<Type> ret)
+	public Function(Module module, String name)
 	{
 		super(module);
 		this.name = name;
-		this.ret = ret;
 	}
 
 	public boolean defineParam(String name, Type type)

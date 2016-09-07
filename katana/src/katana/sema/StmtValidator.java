@@ -7,22 +7,29 @@ import katana.sema.stmt.*;
 import katana.sema.type.Builtin;
 import katana.visitor.IVisitor;
 
+import java.util.IdentityHashMap;
+import java.util.Map;
+
 @SuppressWarnings("unused")
 public class StmtValidator implements IVisitor
 {
-	private StmtValidator() {}
+	public StmtValidator(Function function, PlatformContext context)
+	{
+		this.function = function;
+		this.context = context;
+	}
 
-	private Stmt visit(katana.ast.stmt.Compound compound, Function function, PlatformContext context)
+	private Stmt visit(katana.ast.stmt.Compound compound)
 	{
 		Compound semaCompound = new Compound();
 
 		for(katana.ast.Stmt stmt : compound.body)
-			semaCompound.body.add(validate(stmt, function, context));
+			semaCompound.body.add(validate(stmt));
 
 		return semaCompound;
 	}
 
-	private Stmt visit(katana.ast.stmt.Label label, Function function, PlatformContext context)
+	private Stmt visit(katana.ast.stmt.Label label)
 	{
 		Label semaLabel = new Label(label.name);
 
@@ -32,56 +39,49 @@ public class StmtValidator implements IVisitor
 		return semaLabel;
 	}
 
-	private Stmt visit(katana.ast.stmt.Goto goto_, Function function, PlatformContext context)
+	private Stmt visit(katana.ast.stmt.Goto goto_)
 	{
-		Label label = function.labels.get(goto_.label);
-
-		if(label == null)
-			throw new RuntimeException("unknown label '@" + goto_.label + "'");
-
-		return new Goto(label);
+		Goto semaGoto = new Goto(null);
+		gotos.put(semaGoto, goto_.label);
+		return semaGoto;
 	}
 
-	public Stmt visit(katana.ast.stmt.If if_, Function function, PlatformContext context)
+	public Stmt visit(katana.ast.stmt.If if_)
 	{
 		Expr condition = ExprValidator.validate(if_.condition, function, context);
 
 		if(condition.type().isNone() || !Type.same(condition.type().unwrap(), Builtin.BOOL))
 			throw new RuntimeException("if requires condition of type bool");
 
-		Stmt then = validate(if_.then, function, context);
-		return new If(if_.negated, condition, then);
+		return new If(if_.negated, condition, validate(if_.then));
 	}
 
-	public Stmt visit(katana.ast.stmt.IfElse ifelse, Function function, PlatformContext context)
+	public Stmt visit(katana.ast.stmt.IfElse ifelse)
 	{
 		Expr condition = ExprValidator.validate(ifelse.condition, function, context);
 
 		if(condition.type().isNone() || !Type.same(condition.type().unwrap(), Builtin.BOOL))
 			throw new RuntimeException("if requires condition of type bool");
 
-		Stmt then = validate(ifelse.then, function, context);
-		Stmt else_ = validate(ifelse.else_, function, context);
-		return new IfElse(ifelse.negated, condition, then, else_);
+		return new IfElse(ifelse.negated, condition, validate(ifelse.then), validate(ifelse.else_));
 	}
 
-	public Stmt visit(katana.ast.stmt.Loop loop, Function function, PlatformContext fcontext)
+	public Stmt visit(katana.ast.stmt.Loop loop)
 	{
-		return new Loop(validate(loop.body, function, fcontext));
+		return new Loop(validate(loop.body));
 	}
 
-	public Stmt visit(katana.ast.stmt.While while_, Function function, PlatformContext context)
+	public Stmt visit(katana.ast.stmt.While while_)
 	{
 		Expr condition = ExprValidator.validate(while_.condition, function, context);
 
 		if(condition.type().isNone() || !Type.same(condition.type().unwrap(), Builtin.BOOL))
 			throw new RuntimeException("while requires condition of type bool");
 
-		Stmt body = validate(while_.body, function, context);
-		return new While(while_.negated, condition, body);
+		return new While(while_.negated, condition, validate(while_.body));
 	}
 
-	public Stmt visit(katana.ast.stmt.Return return_, Function function, PlatformContext context)
+	public Stmt visit(katana.ast.stmt.Return return_)
 	{
 		Maybe<Expr> value = return_.value.map((v) -> ExprValidator.validate(v, function, context));
 
@@ -119,15 +119,32 @@ public class StmtValidator implements IVisitor
 		return new Return(value);
 	}
 
-	public Stmt visit(katana.ast.stmt.ExprStmt exprStmt, Function function, PlatformContext context)
+	private Stmt visit(katana.ast.stmt.ExprStmt exprStmt)
 	{
 		Expr expr = ExprValidator.validate(exprStmt.expr, function, context);
 		return new ExprStmt(expr);
 	}
 
-	public static Stmt validate(katana.ast.Stmt stmt, Function function, PlatformContext context)
+	public Stmt validate(katana.ast.Stmt stmt)
 	{
-		StmtValidator validator = new StmtValidator();
-		return (Stmt)stmt.accept(validator, function, context);
+		return (Stmt)stmt.accept(this);
 	}
+
+	public void finalizeValidation()
+	{
+		for(Map.Entry<Goto, String> entry : gotos.entrySet())
+		{
+			String labelName = entry.getValue();
+			Label label = function.labels.get(labelName);
+
+			if(label == null)
+				throw new RuntimeException("unknown label '@" + labelName + "'");
+
+			entry.getKey().target = label;
+		}
+	}
+
+	private IdentityHashMap<Goto, String> gotos = new IdentityHashMap<>();
+	private Function function;
+	private PlatformContext context;
 }
