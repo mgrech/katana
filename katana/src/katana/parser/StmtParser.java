@@ -14,7 +14,7 @@
 
 package katana.parser;
 
-import katana.Maybe;
+import katana.utils.Maybe;
 import katana.ast.Expr;
 import katana.ast.Stmt;
 import katana.ast.stmt.*;

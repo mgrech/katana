@@ -14,7 +14,7 @@
 
 package katana.ast.expr;
 
-import katana.Maybe;
+import katana.utils.Maybe;
 import katana.ast.Expr;
 
 import java.util.ArrayList;

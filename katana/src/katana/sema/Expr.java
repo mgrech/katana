@@ -14,7 +14,7 @@
 
 package katana.sema;
 
-import katana.Maybe;
+import katana.utils.Maybe;
 import katana.visitor.IVisitable;
 
 public abstract class Expr implements IVisitable

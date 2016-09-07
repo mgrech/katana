@@ -14,7 +14,7 @@
 
 package katana.sema.type;
 
-import katana.Maybe;
+import katana.utils.Maybe;
 import katana.backend.PlatformContext;
 import katana.sema.Type;
 

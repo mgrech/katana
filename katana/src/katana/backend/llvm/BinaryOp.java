@@ -15,7 +15,7 @@
 package katana.backend.llvm;
 
 import katana.BuiltinType;
-import katana.Maybe;
+import katana.utils.Maybe;
 import katana.backend.PlatformContext;
 import katana.sema.BuiltinFunc;
 import katana.sema.Type;

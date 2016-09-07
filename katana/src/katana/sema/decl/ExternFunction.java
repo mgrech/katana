@@ -14,7 +14,7 @@
 
 package katana.sema.decl;
 
-import katana.Maybe;
+import katana.utils.Maybe;
 import katana.sema.Decl;
 import katana.sema.Module;
 import katana.sema.Type;

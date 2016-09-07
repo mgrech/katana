@@ -12,18 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.ast.stmt;
+package katana.utils;
 
-import katana.utils.Maybe;
-import katana.ast.Expr;
-import katana.ast.Stmt;
+import katana.compiler.commands.CHeader;
 
-public class Return extends Stmt
+import java.io.InputStream;
+import java.util.Scanner;
+
+public class JarUtils
 {
-	public Return(Maybe<Expr> value)
+	public static byte[] read(String location)
 	{
-		this.value = value;
+		InputStream stream = CHeader.class.getClassLoader().getResourceAsStream(location);
+		Scanner scanner = new Scanner(stream).useDelimiter("\\A");
+		return scanner.hasNext() ? scanner.next().getBytes() : new byte[0];
 	}
-
-	public Maybe<Expr> value;
 }

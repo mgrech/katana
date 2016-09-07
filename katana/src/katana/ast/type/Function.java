@@ -14,7 +14,7 @@
 
 package katana.ast.type;
 
-import katana.Maybe;
+import katana.utils.Maybe;
 import katana.ast.Type;
 
 import java.util.ArrayList;

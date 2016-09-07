@@ -14,10 +14,7 @@
 
 package katana.compiler;
 
-import katana.compiler.commands.Build;
-import katana.compiler.commands.Help;
-import katana.compiler.commands.Init;
-import katana.compiler.commands.Version;
+import katana.compiler.commands.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -30,7 +27,7 @@ public class Main
 
 	private static void registerCommands()
 	{
-		Class<?>[] commands = new Class<?>[]{ Build.class, Help.class, Init.class, Version.class };
+		Class<?>[] commands = new Class<?>[]{ Build.class, CHeader.class, Help.class, Init.class, Version.class };
 
 		for(Class<?> clazz : commands)
 		{

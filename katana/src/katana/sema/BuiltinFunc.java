@@ -14,7 +14,7 @@
 
 package katana.sema;
 
-import katana.Maybe;
+import katana.utils.Maybe;
 import katana.backend.PlatformContext;
 import katana.backend.llvm.FunctionContext;
 import katana.sema.expr.BuiltinCall;

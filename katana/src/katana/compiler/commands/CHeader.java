@@ -12,18 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.ast.stmt;
+package katana.compiler.commands;
 
-import katana.utils.Maybe;
-import katana.ast.Expr;
-import katana.ast.Stmt;
+import katana.compiler.Command;
+import katana.utils.JarUtils;
 
-public class Return extends Stmt
+import java.nio.charset.StandardCharsets;
+
+@Command(name = "cheader", desc = "prints out C header file for use with katana")
+public class CHeader
 {
-	public Return(Maybe<Expr> value)
+	public static void run(String[] args)
 	{
-		this.value = value;
+		byte[] header = JarUtils.read("katana.h");
+		System.out.println(new String(header, StandardCharsets.UTF_8));
 	}
-
-	public Maybe<Expr> value;
 }

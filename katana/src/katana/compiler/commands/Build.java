@@ -14,7 +14,7 @@
 
 package katana.compiler.commands;
 
-import katana.Maybe;
+import katana.utils.Maybe;
 import katana.ast.File;
 import katana.backend.PlatformContext;
 import katana.backend.llvm.ProgramCodeGen;

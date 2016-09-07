@@ -14,7 +14,7 @@
 
 package katana.sema;
 
-import katana.Maybe;
+import katana.utils.Maybe;
 import katana.ast.Path;
 import katana.sema.decl.Data;
 import katana.sema.decl.ExternFunction;

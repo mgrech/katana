@@ -14,7 +14,7 @@
 
 package katana.parser;
 
-import katana.Maybe;
+import katana.utils.Maybe;
 import katana.ast.Decl;
 import katana.ast.Path;
 import katana.ast.Stmt;

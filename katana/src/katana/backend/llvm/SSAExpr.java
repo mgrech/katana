@@ -14,7 +14,7 @@
 
 package katana.backend.llvm;
 
-import katana.Maybe;
+import katana.utils.Maybe;
 import katana.sema.Expr;
 import katana.sema.Type;
 

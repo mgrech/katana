@@ -14,7 +14,7 @@
 
 package katana.ast.decl;
 
-import katana.Maybe;
+import katana.utils.Maybe;
 import katana.ast.Decl;
 import katana.ast.Type;
 

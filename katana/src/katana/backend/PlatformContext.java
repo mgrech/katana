@@ -14,7 +14,7 @@
 
 package katana.backend;
 
-import katana.Maybe;
+import katana.utils.Maybe;
 import katana.sema.BuiltinFunc;
 import katana.sema.decl.Data;
 import katana.sema.type.Builtin;
