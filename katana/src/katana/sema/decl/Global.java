@@ -20,9 +20,9 @@ import katana.sema.Type;
 
 public class Global extends Decl
 {
-	public Global(Module module, String name)
+	public Global(Module module, boolean exported, boolean opaque, String name)
 	{
-		super(module);
+		super(module, exported, opaque);
 		this.name = name;
 	}
 

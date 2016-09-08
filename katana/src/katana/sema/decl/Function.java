@@ -56,9 +56,9 @@ public class Function extends Decl
 		public int index;
 	}
 
-	public Function(Module module, String name)
+	public Function(Module module, boolean exported, boolean opaque, String name)
 	{
-		super(module);
+		super(module, exported, opaque);
 		this.name = name;
 	}
 

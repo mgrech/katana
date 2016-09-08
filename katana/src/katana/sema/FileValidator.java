@@ -80,7 +80,7 @@ public class FileValidator implements IVisitor
 		{
 			T semaDecl = entry.getKey();
 			U decl = entry.getValue();
-			DeclValidator.validate(semaDecl, decl, currentModule, context);
+			DeclValidator.validate(semaDecl, decl, semaDecl.module(), context);
 		}
 	}
 
@@ -89,7 +89,7 @@ public class FileValidator implements IVisitor
 		declsSeen = true;
 		requireModule();
 
-		Data semaData = new Data(currentModule, data.name);
+		Data semaData = new Data(currentModule, data.exported, data.opaque, data.name);
 
 		if(!currentModule.defineData(semaData))
 			throw new RuntimeException("redefinition of symbol '" + data.name + "'");
@@ -102,7 +102,7 @@ public class FileValidator implements IVisitor
 		declsSeen = true;
 		requireModule();
 
-		ExternFunction semaFunction = new ExternFunction(currentModule, function.externName, function.name);
+		ExternFunction semaFunction = new ExternFunction(currentModule, function.exported, function.opaque, function.externName, function.name);
 
 		if(!currentModule.defineExternFunction(semaFunction))
 			throw new RuntimeException("redefinition of symbol '" + function.name + "'");
@@ -115,7 +115,7 @@ public class FileValidator implements IVisitor
 		declsSeen = true;
 		requireModule();
 
-		Function semaFunction = new Function(currentModule, function.name);
+		Function semaFunction = new Function(currentModule, function.exported, function.opaque, function.name);
 
 		if(!currentModule.defineFunction(semaFunction))
 			throw new RuntimeException("redefinition of symbol '" + function.name + "'");
@@ -128,7 +128,7 @@ public class FileValidator implements IVisitor
 		declsSeen = true;
 		requireModule();
 
-		Global semaGlobal = new Global(currentModule, global.name);
+		Global semaGlobal = new Global(currentModule, global.exported, global.opaque, global.name);
 
 		if(!currentModule.defineGlobal(semaGlobal))
 			throw new RuntimeException("redefinition of symbol '" + global.name + "'");

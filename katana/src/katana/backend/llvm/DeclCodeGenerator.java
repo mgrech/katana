@@ -75,7 +75,7 @@ public class DeclCodeGenerator implements IVisitor
 
 	private void visit(Function function)
 	{
-		builder.append("define ");
+		builder.append("define private ");
 		builder.append(function.ret.map((type) -> TypeCodeGenerator.generate(type, context)).or("void"));
 		builder.append(" @");
 		builder.append(qualifiedName(function));

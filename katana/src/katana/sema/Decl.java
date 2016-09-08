@@ -19,9 +19,11 @@ import katana.visitor.IVisitable;
 
 public abstract class Decl implements IVisitable
 {
-	protected Decl(Module module)
+	protected Decl(Module module, boolean exported, boolean opaque)
 	{
 		this.module = module;
+		this.exported = exported;
+		this.opaque = opaque;
 	}
 
 	public abstract String name();
@@ -40,4 +42,6 @@ public abstract class Decl implements IVisitable
 	}
 
 	private Module module;
+	public boolean exported;
+	public boolean opaque;
 }

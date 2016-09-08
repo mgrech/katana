@@ -42,9 +42,9 @@ public class Data extends Decl
 		public int index;
 	}
 
-	public Data(Module module, String name)
+	public Data(Module module, boolean exported, boolean opaque,String name)
 	{
-		super(module);
+		super(module, exported, opaque);
 		this.name = name;
 	}
 

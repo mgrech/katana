@@ -40,9 +40,9 @@ public class ExternFunction extends Decl
 		public int index;
 	}
 
-	public ExternFunction(Module module, String externName, String name)
+	public ExternFunction(Module module, boolean exported, boolean opaque, String externName, String name)
 	{
-		super(module);
+		super(module, exported, opaque);
 		this.externName = externName;
 		this.name = name;
 	}
