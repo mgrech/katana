@@ -20,11 +20,22 @@ import katana.sema.type.*;
 import katana.visitor.IVisitor;
 
 @SuppressWarnings("unused")
-public class TypeCodeGen implements IVisitor
+public class TypeCodeGenerator implements IVisitor
 {
-	private TypeCodeGen() {}
+	private PlatformContext context;
 
-	private String visit(Builtin type, PlatformContext context)
+	private TypeCodeGenerator(PlatformContext context)
+	{
+		this.context = context;
+	}
+
+	public static String generate(Type type, PlatformContext context)
+	{
+		TypeCodeGenerator visitor = new TypeCodeGenerator(context);
+		return (String)type.accept(visitor);
+	}
+
+	private String visit(Builtin type)
 	{
 		switch(type.which)
 		{
@@ -53,44 +64,38 @@ public class TypeCodeGen implements IVisitor
 		throw new AssertionError("unreachable");
 	}
 
-	private String visit(Opaque type, PlatformContext context)
+	private String visit(Opaque type)
 	{
 		return String.format("[%s x i8]", type.sizeof(context));
 	}
 
-	private String visit(Function type, PlatformContext context)
+	private String visit(Function type)
 	{
-		String ret = type.ret.isSome() ? TypeCodeGen.apply(type.ret.get(), context) : "void";
+		String ret = type.ret.isSome() ? TypeCodeGenerator.generate(type.ret.get(), context) : "void";
 
 		StringBuilder params = new StringBuilder();
 
 		if(!type.params.isEmpty())
 		{
-			params.append(TypeCodeGen.apply(type.params.get(0), context));
+			params.append(TypeCodeGenerator.generate(type.params.get(0), context));
 
 			for(int i = 1; i != type.params.size(); ++i)
 			{
 				params.append(", ");
-				params.append(TypeCodeGen.apply(type.params.get(i), context));
+				params.append(TypeCodeGenerator.generate(type.params.get(i), context));
 			}
 		}
 
 		return String.format("%s(%s)", ret, params.toString());
 	}
 
-	private String visit(UserDefined type, PlatformContext context)
+	private String visit(UserDefined type)
 	{
 		return '%' + type.data.qualifiedName().toString();
 	}
 
-	private String visit(Array type, PlatformContext context)
+	private String visit(Array type)
 	{
-		return String.format("[%s x %s]", type.sizeof(context), TypeCodeGen.apply(type.type, context));
-	}
-
-	public static String apply(Type type, PlatformContext context)
-	{
-		TypeCodeGen visitor = new TypeCodeGen();
-		return (String)type.accept(visitor, context);
+		return String.format("[%s x %s]", type.sizeof(context), TypeCodeGenerator.generate(type.type, context));
 	}
 }

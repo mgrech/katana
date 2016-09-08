@@ -27,10 +27,33 @@ import java.util.Map;
 @SuppressWarnings("unused")
 public class StmtValidator implements IVisitor
 {
+	private IdentityHashMap<Goto, String> gotos = new IdentityHashMap<>();
+	private Function function;
+	private PlatformContext context;
+
 	public StmtValidator(Function function, PlatformContext context)
 	{
 		this.function = function;
 		this.context = context;
+	}
+
+	public Stmt validate(katana.ast.Stmt stmt)
+	{
+		return (Stmt)stmt.accept(this);
+	}
+
+	public void finalizeValidation()
+	{
+		for(Map.Entry<Goto, String> entry : gotos.entrySet())
+		{
+			String labelName = entry.getValue();
+			Label label = function.labels.get(labelName);
+
+			if(label == null)
+				throw new RuntimeException("unknown label '@" + labelName + "'");
+
+			entry.getKey().target = label;
+		}
 	}
 
 	private Stmt visit(katana.ast.stmt.Compound compound)
@@ -60,7 +83,7 @@ public class StmtValidator implements IVisitor
 		return semaGoto;
 	}
 
-	public Stmt visit(katana.ast.stmt.If if_)
+	private Stmt visit(katana.ast.stmt.If if_)
 	{
 		Expr condition = ExprValidator.validate(if_.condition, function, context);
 
@@ -70,7 +93,7 @@ public class StmtValidator implements IVisitor
 		return new If(if_.negated, condition, validate(if_.then));
 	}
 
-	public Stmt visit(katana.ast.stmt.IfElse ifelse)
+	private Stmt visit(katana.ast.stmt.IfElse ifelse)
 	{
 		Expr condition = ExprValidator.validate(ifelse.condition, function, context);
 
@@ -80,12 +103,12 @@ public class StmtValidator implements IVisitor
 		return new IfElse(ifelse.negated, condition, validate(ifelse.then), validate(ifelse.else_));
 	}
 
-	public Stmt visit(katana.ast.stmt.Loop loop)
+	private Stmt visit(katana.ast.stmt.Loop loop)
 	{
 		return new Loop(validate(loop.body));
 	}
 
-	public Stmt visit(katana.ast.stmt.While while_)
+	private Stmt visit(katana.ast.stmt.While while_)
 	{
 		Expr condition = ExprValidator.validate(while_.condition, function, context);
 
@@ -95,7 +118,7 @@ public class StmtValidator implements IVisitor
 		return new While(while_.negated, condition, validate(while_.body));
 	}
 
-	public Stmt visit(katana.ast.stmt.Return return_)
+	private Stmt visit(katana.ast.stmt.Return return_)
 	{
 		Maybe<Expr> value = return_.value.map((v) -> ExprValidator.validate(v, function, context));
 
@@ -138,27 +161,4 @@ public class StmtValidator implements IVisitor
 		Expr expr = ExprValidator.validate(exprStmt.expr, function, context);
 		return new ExprStmt(expr);
 	}
-
-	public Stmt validate(katana.ast.Stmt stmt)
-	{
-		return (Stmt)stmt.accept(this);
-	}
-
-	public void finalizeValidation()
-	{
-		for(Map.Entry<Goto, String> entry : gotos.entrySet())
-		{
-			String labelName = entry.getValue();
-			Label label = function.labels.get(labelName);
-
-			if(label == null)
-				throw new RuntimeException("unknown label '@" + labelName + "'");
-
-			entry.getKey().target = label;
-		}
-	}
-
-	private IdentityHashMap<Goto, String> gotos = new IdentityHashMap<>();
-	private Function function;
-	private PlatformContext context;
 }

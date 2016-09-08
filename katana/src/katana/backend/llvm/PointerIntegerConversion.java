@@ -76,8 +76,8 @@ public class PointerIntegerConversion extends BuiltinFunc
 		case PTR2PINT:
 		case PTR2UPINT:
 			{
-				String argSSA = ExprCodeGen.apply(call.args.get(0), builder, context, fcontext).unwrap();
-				String resultTypeString = TypeCodeGen.apply(which == Which.PTR2PINT ? Builtin.PINT : Builtin.UPINT, context);
+				String argSSA = ExprCodeGenerator.generate(call.args.get(0), builder, context, fcontext).unwrap();
+				String resultTypeString = TypeCodeGenerator.generate(which == Which.PTR2PINT ? Builtin.PINT : Builtin.UPINT, context);
 				String resultSSA = fcontext.allocateSSA();
 				builder.append(String.format("\t%s = ptrtoint i8* %s to %s\n", resultSSA, argSSA, resultTypeString));
 				return Maybe.some(resultSSA);
@@ -86,8 +86,8 @@ public class PointerIntegerConversion extends BuiltinFunc
 		case INT2PTR:
 			{
 				Expr arg = call.args.get(0);
-				String argSSA = ExprCodeGen.apply(arg, builder, context, fcontext).unwrap();
-				String argTypeString = TypeCodeGen.apply(arg.type().unwrap(), context);
+				String argSSA = ExprCodeGenerator.generate(arg, builder, context, fcontext).unwrap();
+				String argTypeString = TypeCodeGenerator.generate(arg.type().unwrap(), context);
 				String resultSSA = fcontext.allocateSSA();
 				builder.append(String.format("\t%s = inttoptr %s %s to i8*\n", resultSSA, argTypeString, argSSA));
 				return Maybe.some(resultSSA);

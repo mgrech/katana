@@ -17,7 +17,7 @@ package katana.compiler.commands;
 import katana.utils.Maybe;
 import katana.ast.File;
 import katana.backend.PlatformContext;
-import katana.backend.llvm.ProgramCodeGen;
+import katana.backend.llvm.ProgramCodeGenerator;
 import katana.backend.llvm.amd64.PlatformContextLlvmAmd64;
 import katana.compiler.Command;
 import katana.compiler.CommandException;
@@ -124,7 +124,7 @@ public class Build
 		if(args.length == 1)
 			main = Maybe.some(findMainFunction(program, args[0]));
 
-		String output = ProgramCodeGen.generate(program, context, main);
+		String output = ProgramCodeGenerator.generate(program, context, main);
 
 		try(OutputStream stream = new FileOutputStream("output/program.ll"))
 		{

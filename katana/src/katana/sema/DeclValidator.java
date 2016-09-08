@@ -24,10 +24,19 @@ import katana.visitor.IVisitor;
 @SuppressWarnings("unused")
 public class DeclValidator implements IVisitor
 {
+	private Module module;
+	private PlatformContext context;
+
 	private DeclValidator(Module module, PlatformContext context)
 	{
 		this.module = module;
 		this.context = context;
+	}
+
+	public static void validate(Decl semaDecl, katana.ast.Decl decl, Module module, PlatformContext context)
+	{
+		DeclValidator validator = new DeclValidator(module, context);
+		semaDecl.accept(validator, decl);
 	}
 
 	private void visit(Data semaData, katana.ast.decl.Data data)
@@ -92,13 +101,4 @@ public class DeclValidator implements IVisitor
 	{
 		semaGlobal.type = TypeLookup.find(module, global.type, null, null);
 	}
-
-	public static void apply(Decl semaDecl, katana.ast.Decl decl, Module module, PlatformContext context)
-	{
-		DeclValidator validator = new DeclValidator(module, context);
-		semaDecl.accept(validator, decl);
-	}
-
-	private Module module;
-	private PlatformContext context;
 }

@@ -33,7 +33,20 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class ExprValidator implements IVisitor
 {
-	private ExprValidator() {}
+	private Function function;
+	private PlatformContext context;
+
+	private ExprValidator(Function function, PlatformContext context)
+	{
+		this.function = function;
+		this.context = context;
+	}
+
+	public static Expr validate(katana.ast.Expr expr, Function function, PlatformContext context)
+	{
+		ExprValidator validator = new ExprValidator(function, context);
+		return (Expr)expr.accept(validator);
+	}
 
 	private void checkArguments(List<Type> params, List<Expr> args)
 	{
@@ -68,7 +81,7 @@ public class ExprValidator implements IVisitor
 		}
 	}
 
-	private Expr visit(katana.ast.expr.Addressof addressof, Function function, PlatformContext context)
+	private Expr visit(katana.ast.expr.Addressof addressof)
 	{
 		Expr expr = validate(addressof.expr, function, context);
 
@@ -79,12 +92,12 @@ public class ExprValidator implements IVisitor
 		return new Addressof(expr);
 	}
 
-	private Expr visit(katana.ast.expr.Alignof alignof, Function function, PlatformContext context)
+	private Expr visit(katana.ast.expr.Alignof alignof)
 	{
 		return new Alignof(TypeLookup.find(function.module(), alignof.type, function, context));
 	}
 
-	private Expr visit(katana.ast.expr.ArrayAccess arrayAccess, Function function, PlatformContext context)
+	private Expr visit(katana.ast.expr.ArrayAccess arrayAccess)
 	{
 		Expr value = validate(arrayAccess.value, function, context);
 		Expr index = validate(arrayAccess.index, function, context);
@@ -102,7 +115,7 @@ public class ExprValidator implements IVisitor
 		return new ArrayAccessRValue(value, index);
 	}
 
-	private Expr visit(katana.ast.expr.Assign assign, Function function, PlatformContext context)
+	private Expr visit(katana.ast.expr.Assign assign)
 	{
 		Expr left = validate(assign.left, function, context);
 		Expr right = validate(assign.right, function, context);
@@ -126,7 +139,7 @@ public class ExprValidator implements IVisitor
 		return new Assign(left, right);
 	}
 
-	private Expr visit(katana.ast.expr.BuiltinCall builtinCall, Function function, PlatformContext context)
+	private Expr visit(katana.ast.expr.BuiltinCall builtinCall)
 	{
 		Maybe<BuiltinFunc> maybeFunc = context.findBuiltin(builtinCall.name);
 
@@ -156,7 +169,7 @@ public class ExprValidator implements IVisitor
 		return new BuiltinCall(func, args, ret);
 	}
 
-	private Expr visit(katana.ast.expr.Deref deref, Function function, PlatformContext context)
+	private Expr visit(katana.ast.expr.Deref deref)
 	{
 		Expr expr = validate(deref.expr, function, context);
 
@@ -166,7 +179,7 @@ public class ExprValidator implements IVisitor
 		return new Deref(TypeLookup.find(function.module(), deref.type, function, context), expr);
 	}
 
-	private Expr visit(katana.ast.expr.FunctionCall call, Function function, PlatformContext context)
+	private Expr visit(katana.ast.expr.FunctionCall call)
 	{
 		Expr expr = validate(call.expr, function, context);
 
@@ -187,32 +200,32 @@ public class ExprValidator implements IVisitor
 		return new IndirectFunctionCall(expr, args);
 	}
 
-	private Expr visit(katana.ast.expr.LitBool litBool, Function function, PlatformContext context)
+	private Expr visit(katana.ast.expr.LitBool litBool)
 	{
 		return new LitBool(litBool.value);
 	}
 
-	private Expr visit(katana.ast.expr.LitFloat litFloat, Function function, PlatformContext context)
+	private Expr visit(katana.ast.expr.LitFloat litFloat)
 	{
 		return new LitFloat(litFloat.value, litFloat.type);
 	}
 
-	private Expr visit(katana.ast.expr.LitInt litInt, Function function, PlatformContext context)
+	private Expr visit(katana.ast.expr.LitInt litInt)
 	{
 		return new LitInt(litInt.value, litInt.type);
 	}
 
-	private Expr visit(katana.ast.expr.LitNull litNull, Function function, PlatformContext context)
+	private Expr visit(katana.ast.expr.LitNull litNull)
 	{
 		return new LitNull();
 	}
 
-	private Expr visit(katana.ast.expr.LitString litString, Function function, PlatformContext context)
+	private Expr visit(katana.ast.expr.LitString litString)
 	{
 		return new LitString(litString.value);
 	}
 
-	private Expr visit(katana.ast.expr.MemberAccess memberAccess, Function function, PlatformContext context)
+	private Expr visit(katana.ast.expr.MemberAccess memberAccess)
 	{
 		Expr expr = validate(memberAccess.expr, function, context);
 
@@ -239,7 +252,7 @@ public class ExprValidator implements IVisitor
 		return new FieldAccessRValue(expr, field.unwrap());
 	}
 
-	private Expr visit(katana.ast.expr.NamedValue namedValue, Function function, PlatformContext context)
+	private Expr visit(katana.ast.expr.NamedValue namedValue)
 	{
 		Maybe<Function.Local> maybeLocal = function.findLocal(namedValue.name);
 
@@ -270,7 +283,7 @@ public class ExprValidator implements IVisitor
 		throw new RuntimeException("symbol '" + namedValue.name + "' does not refer to a value");
 	}
 
-	private Expr visit(katana.ast.expr.Offsetof offsetof, Function function, PlatformContext context)
+	private Expr visit(katana.ast.expr.Offsetof offsetof)
 	{
 		Maybe<Decl> decl = function.module().findSymbol(offsetof.type);
 
@@ -290,14 +303,8 @@ public class ExprValidator implements IVisitor
 		return new Offsetof(field.unwrap());
 	}
 
-	private Expr visit(katana.ast.expr.Sizeof sizeof, Function function, PlatformContext context)
+	private Expr visit(katana.ast.expr.Sizeof sizeof)
 	{
 		return new Sizeof(TypeLookup.find(function.module(), sizeof.type, function, context));
-	}
-
-	public static Expr validate(katana.ast.Expr expr, Function function, PlatformContext context)
-	{
-		ExprValidator validator = new ExprValidator();
-		return (Expr)expr.accept(validator, function, context);
 	}
 }

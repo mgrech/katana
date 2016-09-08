@@ -112,9 +112,9 @@ public class BinaryOp extends BuiltinFunc
 	public Maybe<String> generateCall(BuiltinCall call, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
 	{
 		Builtin type = (Builtin)call.args.get(0).type().unwrap();
-		String typeString = TypeCodeGen.apply(type, context);
-		String leftSSA = ExprCodeGen.apply(call.args.get(0), builder, context, fcontext).unwrap();
-		String rightSSA = ExprCodeGen.apply(call.args.get(1), builder, context, fcontext).unwrap();
+		String typeString = TypeCodeGenerator.generate(type, context);
+		String leftSSA = ExprCodeGenerator.generate(call.args.get(0), builder, context, fcontext).unwrap();
+		String rightSSA = ExprCodeGenerator.generate(call.args.get(1), builder, context, fcontext).unwrap();
 		String instr = instrForType(type);
 		String resultSSA = fcontext.allocateSSA();
 		builder.append(String.format("\t%s = %s %s %s, %s\n", resultSSA, instr, typeString, leftSSA, rightSSA));

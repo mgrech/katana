@@ -31,10 +31,57 @@ import java.util.Set;
 @SuppressWarnings("unused")
 public class FileValidator implements IVisitor
 {
+	private IdentityHashMap<Data, katana.ast.decl.Data> datas = new IdentityHashMap<>();
+	private IdentityHashMap<Function, katana.ast.decl.Function> funcs = new IdentityHashMap<>();
+	private IdentityHashMap<ExternFunction, katana.ast.decl.ExternFunction> extfuncs = new IdentityHashMap<>();
+	private IdentityHashMap<Global, katana.ast.decl.Global> globals = new IdentityHashMap<>();
+
+	private PlatformContext context;
+	private Program program;
+	private Module currentModule = null;
+	private boolean declsSeen = false;
+	private Set<Path> imports = new HashSet<>();
+
 	public FileValidator(PlatformContext context, Program program)
 	{
 		this.context = context;
 		this.program = program;
+	}
+
+	public void validate(File file)
+	{
+		for(katana.ast.Decl decl : file.decls)
+			decl.accept(this);
+	}
+
+	public void finalizeValidation()
+	{
+		doFinalize(datas);
+		doFinalize(globals);
+		doFinalize(extfuncs);
+		doFinalize(funcs);
+	}
+
+	public Set<Path> imports()
+	{
+		return imports;
+	}
+
+	private void requireModule()
+	{
+		if(currentModule == null)
+			throw new RuntimeException("no module defined");
+	}
+
+	private <T extends Decl, U extends katana.ast.Decl>
+	void doFinalize(IdentityHashMap<T, U> decls)
+	{
+		for(Map.Entry<T, U> entry : decls.entrySet())
+		{
+			T semaDecl = entry.getKey();
+			U decl = entry.getValue();
+			DeclValidator.validate(semaDecl, decl, currentModule, context);
+		}
 	}
 
 	private void visit(katana.ast.decl.Data data)
@@ -103,51 +150,4 @@ public class FileValidator implements IVisitor
 		declsSeen = true;
 		currentModule = program.findOrCreateModule(module_.path);
 	}
-
-	private void requireModule()
-	{
-		if(currentModule == null)
-			throw new RuntimeException("no module defined");
-	}
-
-	public void validate(File file)
-	{
-		for(katana.ast.Decl decl : file.decls)
-			decl.accept(this);
-	}
-
-	private <T extends Decl, U extends katana.ast.Decl>
-	void doFinalize(IdentityHashMap<T, U> decls)
-	{
-		for(Map.Entry<T, U> entry : decls.entrySet())
-		{
-			T semaDecl = entry.getKey();
-			U decl = entry.getValue();
-			DeclValidator.apply(semaDecl, decl, currentModule, context);
-		}
-	}
-
-	public void finalizeValidation()
-	{
-		doFinalize(datas);
-		doFinalize(globals);
-		doFinalize(extfuncs);
-		doFinalize(funcs);
-	}
-
-	public Set<Path> imports()
-	{
-		return imports;
-	}
-
-	private IdentityHashMap<Data, katana.ast.decl.Data> datas = new IdentityHashMap<>();
-	private IdentityHashMap<Function, katana.ast.decl.Function> funcs = new IdentityHashMap<>();
-	private IdentityHashMap<ExternFunction, katana.ast.decl.ExternFunction> extfuncs = new IdentityHashMap<>();
-	private IdentityHashMap<Global, katana.ast.decl.Global> globals = new IdentityHashMap<>();
-
-	private PlatformContext context;
-	private Program program;
-	private Module currentModule = null;
-	private boolean declsSeen = false;
-	private Set<Path> imports = new HashSet<>();
 }

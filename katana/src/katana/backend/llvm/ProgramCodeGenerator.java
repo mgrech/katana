@@ -27,24 +27,24 @@ import katana.sema.decl.Function;
 import katana.sema.decl.Global;
 import katana.sema.type.Builtin;
 
-public class ProgramCodeGen
+public class ProgramCodeGenerator
 {
-	private static void generate(StringBuilder builder, Module module, PlatformContext context)
+	private static void generate(DeclCodeGenerator generator, Module module)
 	{
 		for(Module child : module.children().values())
-			generate(builder, child, context);
+			generate(generator, child);
 
 		for(Data data : module.datas().values())
-			DeclCodeGen.apply(data, builder, context);
+			generator.generate(data);
 
 		for(Global global : module.globals().values())
-			DeclCodeGen.apply(global, builder, context);
+			generator.generate(global);
 
 		for(ExternFunction externFunction : module.externFunctions().values())
-			DeclCodeGen.apply(externFunction, builder, context);
+			generator.generate(externFunction);
 
 		for(Function function : module.functions().values())
-			DeclCodeGen.apply(function, builder, context);
+			generator.generate(function);
 	}
 
 	private static void generateMainWrapper(StringBuilder builder, Decl func)
@@ -74,7 +74,7 @@ public class ProgramCodeGen
 	public static String generate(Program program, PlatformContext context, Maybe<Decl> main)
 	{
 		StringBuilder builder = new StringBuilder();
-		generate(builder, program.root, context);
+		generate(new DeclCodeGenerator(builder, context), program.root);
 
 		if(main.isSome())
 			generateMainWrapper(builder, main.unwrap());
