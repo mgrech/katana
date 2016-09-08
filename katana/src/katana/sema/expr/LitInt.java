@@ -14,25 +14,48 @@
 
 package katana.sema.expr;
 
-import katana.utils.Maybe;
+import katana.BuiltinType;
 import katana.sema.Expr;
 import katana.sema.Type;
 import katana.sema.type.Builtin;
+import katana.utils.Maybe;
 
 import java.math.BigInteger;
 
 public class LitInt extends Expr
 {
-	public LitInt(BigInteger value)
+	public LitInt(BigInteger value, BuiltinType type)
 	{
 		this.value = value;
+		this.type = type;
+
+		switch(type)
+		{
+		case INT:   cachedType = Builtin.INT;   break;
+		case PINT:  cachedType = Builtin.PINT;  break;
+		case INT8:  cachedType = Builtin.INT8;  break;
+		case INT16: cachedType = Builtin.INT16; break;
+		case INT32: cachedType = Builtin.INT32; break;
+		case INT64: cachedType = Builtin.INT64; break;
+
+		case UINT:   cachedType = Builtin.UINT;   break;
+		case UPINT:  cachedType = Builtin.UPINT;  break;
+		case UINT8:  cachedType = Builtin.UINT8;  break;
+		case UINT16: cachedType = Builtin.UINT16; break;
+		case UINT32: cachedType = Builtin.UINT32; break;
+		case UINT64: cachedType = Builtin.UINT64; break;
+
+		default: throw new AssertionError("unreachable");
+		}
 	}
 
 	@Override
 	public Maybe<Type> type()
 	{
-		return Maybe.some(Builtin.INT);
+		return Maybe.some(cachedType);
 	}
 
 	public BigInteger value;
+	public BuiltinType type;
+	private Type cachedType;
 }

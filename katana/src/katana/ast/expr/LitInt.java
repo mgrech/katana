@@ -14,16 +14,19 @@
 
 package katana.ast.expr;
 
+import katana.BuiltinType;
 import katana.ast.Expr;
 
 import java.math.BigInteger;
 
 public class LitInt extends Expr
 {
-	public LitInt(BigInteger value)
+	public LitInt(BigInteger value, BuiltinType type)
 	{
 		this.value = value;
+		this.type = type;
 	}
 
 	public BigInteger value;
+	public BuiltinType type;
 }

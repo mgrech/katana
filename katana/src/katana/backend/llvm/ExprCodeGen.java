@@ -14,6 +14,7 @@
 
 package katana.backend.llvm;
 
+import katana.BuiltinType;
 import katana.utils.Maybe;
 import katana.backend.PlatformContext;
 import katana.sema.Expr;
@@ -24,6 +25,7 @@ import katana.sema.type.Function;
 import katana.sema.type.UserDefined;
 import katana.visitor.IVisitor;
 
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -223,9 +225,27 @@ public class ExprCodeGen implements IVisitor
 		return Maybe.some("" + litBool.value);
 	}
 
+	private String toFloatHexString(BigDecimal bd)
+	{
+		float f = bd.floatValue();
+		int i = Float.floatToRawIntBits(f);
+		return String.format("0x%x", i);
+	}
+
+	private String toDoubleHexString(BigDecimal bd)
+	{
+		double d = bd.doubleValue();
+		long l = Double.doubleToRawLongBits(d);
+		return String.format("0x%x", l);
+	}
+
 	private Maybe<String> visit(LitFloat litFloat, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
 	{
-		throw new RuntimeException("codegen for floating point literals not yet implemented");
+		String s = litFloat.type == BuiltinType.FLOAT32
+			? toFloatHexString(litFloat.value)
+			: toDoubleHexString(litFloat.value);
+
+		return Maybe.some(s);
 	}
 
 	private Maybe<String> visit(LitInt litInt, StringBuilder builder, PlatformContext context, FunctionContext fcontext)

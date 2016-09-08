@@ -194,12 +194,12 @@ public class ExprValidator implements IVisitor
 
 	private Expr visit(katana.ast.expr.LitFloat litFloat, Function function, PlatformContext context)
 	{
-		return new LitFloat(litFloat.value);
+		return new LitFloat(litFloat.value, litFloat.type);
 	}
 
 	private Expr visit(katana.ast.expr.LitInt litInt, Function function, PlatformContext context)
 	{
-		return new LitInt(litInt.value);
+		return new LitInt(litInt.value, litInt.type);
 	}
 
 	private Expr visit(katana.ast.expr.LitNull litNull, Function function, PlatformContext context)

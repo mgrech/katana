@@ -14,25 +14,37 @@
 
 package katana.sema.expr;
 
+import katana.BuiltinType;
+import katana.sema.type.Builtin;
 import katana.utils.Maybe;
 import katana.sema.Expr;
 import katana.sema.Type;
-import katana.sema.type.Builtin;
 
 import java.math.BigDecimal;
 
 public class LitFloat extends Expr
 {
-	public LitFloat(BigDecimal value)
+	public LitFloat(BigDecimal value, BuiltinType type)
 	{
 		this.value = value;
+		this.type = type;
+
+		switch(type)
+		{
+		case FLOAT32: cachedType = Builtin.FLOAT32; break;
+		case FLOAT64: cachedType = Builtin.FLOAT64; break;
+
+		default: throw new AssertionError("unreachable");
+		}
 	}
 
 	@Override
 	public Maybe<Type> type()
 	{
-		return Maybe.some(Builtin.FLOAT64);
+		return Maybe.some(cachedType);
 	}
 
 	public BigDecimal value;
+	public BuiltinType type;
+	private Type cachedType;
 }

@@ -52,7 +52,7 @@ public class ProgramCodeGen
 		Maybe<Type> ret = func instanceof Function ? ((Function)func).ret : ((ExternFunction)func).ret;
 
 		if(ret.isSome() && (!(ret.unwrap() instanceof Builtin) || ((Builtin)ret.unwrap()).which != BuiltinType.INT32))
-			throw new RuntimeException("main function must return i32 or nothing");
+			throw new RuntimeException("main function must return int32 or nothing");
 
 		builder.append("define i32 @main()\n{\n");
 

@@ -14,16 +14,19 @@
 
 package katana.ast.expr;
 
+import katana.BuiltinType;
 import katana.ast.Expr;
 
 import java.math.BigDecimal;
 
 public class LitFloat extends Expr
 {
-	public LitFloat(BigDecimal value)
+	public LitFloat(BigDecimal value, BuiltinType type)
 	{
 		this.value = value;
+		this.type = type;
 	}
 
 	public BigDecimal value;
+	public BuiltinType type;
 }

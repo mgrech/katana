@@ -73,13 +73,14 @@ public class Scanner
 		default: break;
 		}
 
-		if(CharClassifier.isDigit(cp))
+		if(cp == '-' || CharClassifier.isDigit(cp))
 			return numericLiteral();
 
 		if(CharClassifier.isIdentifierStart(cp))
 			return identifierOrKeyword();
 
-		throw new RuntimeException("invalid character encountered: " + formatCodepoint(cp));
+		error("invalid character encountered: " + formatCodepoint(cp));
+		throw new AssertionError("unreachable");
 	}
 
 	private Token label()
@@ -105,13 +106,15 @@ public class Scanner
 
 	private Token stringLiteral()
 	{
+		int line = line();
+
 		StringBuilder builder = new StringBuilder();
 
 		while(!atEnd() && here() != '"')
 			builder.appendCodePoint(stringCodepoint());
 
 		if(atEnd())
-			throw new RuntimeException("unterminated string literal");
+			throw new RuntimeException("unterminated string literal on line " + line);
 
 		advanceColumn();
 
@@ -146,7 +149,7 @@ public class Scanner
 			case '"': return '"';
 			case '\\': return '\\';
 
-			default: throw new RuntimeException("invalid escape sequence \\" + formatCodepoint(here()));
+			default: error("invalid escape sequence \\" + formatCodepoint(here()));
 			}
 		}
 
@@ -166,7 +169,7 @@ public class Scanner
 		int sum =  d1 | d2 | d3 | d4 | d5 | d6;
 
 		if(sum > 0x10FFFF)
-			throw new RuntimeException("invalid codepoint in unicode escape sequence");
+			error("invalid codepoint in unicode escape sequence");
 
 		return sum;
 	}
@@ -181,7 +184,7 @@ public class Scanner
 	private int hexDigit()
 	{
 		if(atEnd() || !CharClassifier.isHexDigit(here()))
-			throw new RuntimeException("expected hex digit in escape sequence");
+			error("expected hex digit in escape sequence");
 
 		int digit = fromHexDigit(here());
 		advanceColumn();
@@ -272,31 +275,74 @@ public class Scanner
 
 	private Token numericLiteral()
 	{
-		StringBuilder builder = new StringBuilder();
+		StringBuilder literal = new StringBuilder();
+
+		boolean isNegativeLiteral = here() == '-';
 
 		do
 		{
-			builder.appendCodePoint(here());
+			literal.appendCodePoint(here());
 			advanceColumn();
 		}
 		while(!atEnd() && CharClassifier.isDigit(here()));
 
-		boolean isFloatingPoint = !atEnd() && here() == '.';
+		boolean isFloatingPointLiteral = !atEnd() && here() == '.';
 
-		if(isFloatingPoint)
+		if(isFloatingPointLiteral)
 		{
-			builder.append('.');
+			literal.append('.');
 			advanceColumn();
 
 			while(!atEnd() && CharClassifier.isDigit(here()))
 			{
-				builder.appendCodePoint(here());
+				literal.appendCodePoint(here());
 				advanceColumn();
 			}
 		}
 
-		Token.Type type = isFloatingPoint ? Token.Type.LIT_FLOAT : Token.Type.LIT_INT;
-		return Token.literal(type, builder.toString());
+		StringBuilder suffix = new StringBuilder();
+
+		while(!atEnd() && (CharClassifier.isIdentifierChar(here()) || CharClassifier.isDigit(here())))
+		{
+			suffix.appendCodePoint(here());
+			advanceColumn();
+		}
+
+		Token.Type type = null;
+
+		boolean isFloatingPointSuffix = false;
+		boolean isUnsignedSuffix = false;
+
+		switch(suffix.toString())
+		{
+		case "i":   type = Token.Type.LIT_INT;   break;
+		case "pi":  type = Token.Type.LIT_PINT;  break;
+		case "i8":  type = Token.Type.LIT_INT8;  break;
+		case "i16": type = Token.Type.LIT_INT16; break;
+		case "i32": type = Token.Type.LIT_INT32; break;
+		case "i64": type = Token.Type.LIT_INT64; break;
+
+		case "u":   type = Token.Type.LIT_UINT;   isUnsignedSuffix = true; break;
+		case "pu":  type = Token.Type.LIT_UPINT;  isUnsignedSuffix = true; break;
+		case "u8":  type = Token.Type.LIT_UINT8;  isUnsignedSuffix = true; break;
+		case "u16": type = Token.Type.LIT_UINT16; isUnsignedSuffix = true; break;
+		case "u32": type = Token.Type.LIT_UINT32; isUnsignedSuffix = true; break;
+		case "u64": type = Token.Type.LIT_UINT64; isUnsignedSuffix = true; break;
+
+		case "f32": type = Token.Type.LIT_FLOAT32; isFloatingPointSuffix = true; break;
+		case "f64": type = Token.Type.LIT_FLOAT64; isFloatingPointSuffix = true; break;
+
+		case "": error("numeric literal without suffix");
+		default: error("unknown literal suffix '" + suffix + "'");
+		}
+
+		if(isFloatingPointLiteral && !isFloatingPointSuffix)
+			error("integer suffix used on floating point literal");
+
+		if(isNegativeLiteral && isUnsignedSuffix)
+			error("unsigned integer suffix used on signed number literal");
+
+		return Token.literal(type, literal.toString());
 	}
 
 	private void skipWhitespaceAndComments()
@@ -358,6 +404,11 @@ public class Scanner
 	{
 		++currentOffset;
 		++currentColumn;
+	}
+
+	private void error(String message)
+	{
+		throw new RuntimeException(message + " on line " + line());
 	}
 
 	private int[] source;
