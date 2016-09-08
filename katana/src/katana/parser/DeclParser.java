@@ -14,7 +14,6 @@
 
 package katana.parser;
 
-import katana.utils.Maybe;
 import katana.ast.Decl;
 import katana.ast.Path;
 import katana.ast.Stmt;
@@ -22,6 +21,7 @@ import katana.ast.Type;
 import katana.ast.decl.*;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
+import katana.utils.Maybe;
 
 import java.util.ArrayList;
 

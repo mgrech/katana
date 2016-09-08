@@ -15,13 +15,13 @@
 package katana.parser;
 
 import katana.BuiltinType;
-import katana.utils.Maybe;
 import katana.ast.Expr;
 import katana.ast.Path;
 import katana.ast.Type;
 import katana.ast.expr.*;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
+import katana.utils.Maybe;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

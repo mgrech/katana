@@ -14,12 +14,12 @@
 
 package katana.sema;
 
-import katana.utils.Maybe;
 import katana.ast.Path;
 import katana.sema.decl.Data;
 import katana.sema.decl.ExternFunction;
 import katana.sema.decl.Function;
 import katana.sema.decl.Global;
+import katana.utils.Maybe;
 
 import java.util.Map;
 import java.util.TreeMap;

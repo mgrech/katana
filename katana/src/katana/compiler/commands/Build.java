@@ -14,7 +14,6 @@
 
 package katana.compiler.commands;
 
-import katana.utils.Maybe;
 import katana.ast.File;
 import katana.backend.PlatformContext;
 import katana.backend.llvm.ProgramCodeGenerator;
@@ -27,6 +26,7 @@ import katana.sema.Module;
 import katana.sema.Program;
 import katana.sema.decl.ExternFunction;
 import katana.sema.decl.Function;
+import katana.utils.Maybe;
 
 import java.io.FileOutputStream;
 import java.io.IOException;

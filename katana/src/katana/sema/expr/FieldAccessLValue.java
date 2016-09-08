@@ -14,9 +14,9 @@
 
 package katana.sema.expr;
 
-import katana.utils.Maybe;
 import katana.sema.Type;
 import katana.sema.decl.Data;
+import katana.utils.Maybe;
 
 public class FieldAccessLValue extends LValueExpr
 {

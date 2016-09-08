@@ -14,11 +14,10 @@
 
 package katana.sema;
 
-import katana.sema.decl.*;
-import katana.sema.type.Function;
-import katana.utils.Maybe;
 import katana.backend.PlatformContext;
+import katana.sema.decl.Data;
 import katana.sema.type.*;
+import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
 import java.util.ArrayList;

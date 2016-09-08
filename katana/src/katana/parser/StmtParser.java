@@ -14,12 +14,12 @@
 
 package katana.parser;
 
-import katana.utils.Maybe;
 import katana.ast.Expr;
 import katana.ast.Stmt;
 import katana.ast.stmt.*;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
+import katana.utils.Maybe;
 
 public class StmtParser
 {

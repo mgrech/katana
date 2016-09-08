@@ -14,7 +14,6 @@
 
 package katana.sema;
 
-import katana.utils.Maybe;
 import katana.backend.PlatformContext;
 import katana.sema.decl.Data;
 import katana.sema.decl.ExternFunction;
@@ -24,6 +23,7 @@ import katana.sema.expr.*;
 import katana.sema.type.Array;
 import katana.sema.type.Builtin;
 import katana.sema.type.UserDefined;
+import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
 import java.util.ArrayList;

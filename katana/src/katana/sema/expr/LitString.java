@@ -14,10 +14,10 @@
 
 package katana.sema.expr;
 
-import katana.utils.Maybe;
 import katana.sema.Type;
 import katana.sema.type.Array;
 import katana.sema.type.Builtin;
+import katana.utils.Maybe;
 
 import java.nio.charset.StandardCharsets;
 

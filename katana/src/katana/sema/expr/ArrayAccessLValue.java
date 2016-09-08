@@ -14,10 +14,10 @@
 
 package katana.sema.expr;
 
-import katana.utils.Maybe;
 import katana.sema.Expr;
 import katana.sema.Type;
 import katana.sema.type.Array;
+import katana.utils.Maybe;
 
 public class ArrayAccessLValue extends LValueExpr
 {

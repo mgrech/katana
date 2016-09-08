@@ -14,10 +14,10 @@
 
 package katana.sema.expr;
 
-import katana.utils.Maybe;
 import katana.sema.Expr;
 import katana.sema.Type;
 import katana.sema.decl.Function;
+import katana.utils.Maybe;
 
 import java.util.List;
 

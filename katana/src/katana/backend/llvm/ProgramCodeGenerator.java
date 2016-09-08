@@ -15,7 +15,6 @@
 package katana.backend.llvm;
 
 import katana.BuiltinType;
-import katana.utils.Maybe;
 import katana.backend.PlatformContext;
 import katana.sema.Decl;
 import katana.sema.Module;
@@ -26,6 +25,7 @@ import katana.sema.decl.ExternFunction;
 import katana.sema.decl.Function;
 import katana.sema.decl.Global;
 import katana.sema.type.Builtin;
+import katana.utils.Maybe;
 
 public class ProgramCodeGenerator
 {

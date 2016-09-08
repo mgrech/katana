@@ -14,8 +14,8 @@
 
 package katana.sema;
 
-import katana.utils.Maybe;
 import katana.ast.Path;
+import katana.utils.Maybe;
 
 public class Program
 {

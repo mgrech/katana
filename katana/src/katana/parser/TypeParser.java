@@ -14,11 +14,11 @@
 
 package katana.parser;
 
-import katana.utils.Maybe;
 import katana.ast.Type;
 import katana.ast.type.*;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
+import katana.utils.Maybe;
 
 import java.util.ArrayList;
 

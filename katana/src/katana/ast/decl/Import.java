@@ -14,9 +14,9 @@
 
 package katana.ast.decl;
 
-import katana.utils.Maybe;
 import katana.ast.Decl;
 import katana.ast.Path;
+import katana.utils.Maybe;
 
 public class Import extends Decl
 {

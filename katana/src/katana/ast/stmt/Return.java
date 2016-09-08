@@ -14,9 +14,9 @@
 
 package katana.ast.stmt;
 
-import katana.utils.Maybe;
 import katana.ast.Expr;
 import katana.ast.Stmt;
+import katana.utils.Maybe;
 
 public class Return extends Stmt
 {

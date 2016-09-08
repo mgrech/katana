@@ -14,9 +14,9 @@
 
 package katana.sema.type;
 
-import katana.utils.Maybe;
 import katana.backend.PlatformContext;
 import katana.sema.Type;
+import katana.utils.Maybe;
 
 import java.util.Iterator;
 import java.util.List;

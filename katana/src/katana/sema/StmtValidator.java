@@ -14,11 +14,11 @@
 
 package katana.sema;
 
-import katana.utils.Maybe;
 import katana.backend.PlatformContext;
 import katana.sema.decl.Function;
 import katana.sema.stmt.*;
 import katana.sema.type.Builtin;
+import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
 import java.util.IdentityHashMap;

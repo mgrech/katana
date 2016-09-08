@@ -14,10 +14,10 @@
 
 package katana.ast.decl;
 
-import katana.utils.Maybe;
 import katana.ast.Decl;
 import katana.ast.Stmt;
 import katana.ast.Type;
+import katana.utils.Maybe;
 
 import java.util.ArrayList;
 

@@ -14,9 +14,9 @@
 
 package katana.sema.expr;
 
-import katana.utils.Maybe;
 import katana.sema.Type;
 import katana.sema.decl.Global;
+import katana.utils.Maybe;
 
 public class NamedGlobal extends SimpleLValueExpr
 {

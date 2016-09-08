@@ -14,12 +14,12 @@
 
 package katana.sema.decl;
 
-import katana.utils.Maybe;
 import katana.sema.Decl;
 import katana.sema.Module;
 import katana.sema.Stmt;
 import katana.sema.Type;
 import katana.sema.stmt.Label;
+import katana.utils.Maybe;
 
 import java.util.ArrayList;
 import java.util.List;
