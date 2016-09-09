@@ -21,7 +21,7 @@ import katana.utils.Maybe;
 
 public class Addressof extends Expr
 {
-	public Addressof(Expr expr)
+	public Addressof(LValueExpr expr)
 	{
 		this.expr = expr;
 	}
@@ -32,5 +32,5 @@ public class Addressof extends Expr
 		return Maybe.some(Builtin.PTR);
 	}
 
-	public Expr expr;
+	public LValueExpr expr;
 }

@@ -88,8 +88,9 @@ public class ExprValidator implements IVisitor
 		if(!(expr instanceof LValueExpr))
 			throw new RuntimeException("addressof() requires lvalue operand");
 
-		((LValueExpr)expr).useAsLValue(true);
-		return new Addressof(expr);
+		LValueExpr lvalue = (LValueExpr)expr;
+		lvalue.useAsLValue(true);
+		return new Addressof(lvalue);
 	}
 
 	private Expr visit(katana.ast.expr.Alignof alignof)
@@ -135,8 +136,9 @@ public class ExprValidator implements IVisitor
 		if(left.type().unwrap() instanceof katana.sema.type.Function)
 			throw new RuntimeException("cannot assign to function");
 
-		((LValueExpr)left).useAsLValue(true);
-		return new Assign(left, right);
+		LValueExpr leftAsLvalue = (LValueExpr)left;
+		leftAsLvalue.useAsLValue(true);
+		return new Assign(leftAsLvalue, right);
 	}
 
 	private Expr visit(katana.ast.expr.BuiltinCall builtinCall)
@@ -200,29 +202,29 @@ public class ExprValidator implements IVisitor
 		return new IndirectFunctionCall(expr, args);
 	}
 
-	private Expr visit(katana.ast.expr.LitBool litBool)
+	private Expr visit(katana.ast.expr.LitBool lit)
 	{
-		return new LitBool(litBool.value);
+		return new LitBool(lit.value);
 	}
 
-	private Expr visit(katana.ast.expr.LitFloat litFloat)
+	private Expr visit(katana.ast.expr.LitFloat lit)
 	{
-		return new LitFloat(litFloat.value, litFloat.type);
+		return new LitFloat(lit.value, lit.type);
 	}
 
-	private Expr visit(katana.ast.expr.LitInt litInt)
+	private Expr visit(katana.ast.expr.LitInt lit)
 	{
-		return new LitInt(litInt.value, litInt.type);
+		return new LitInt(lit.value, lit.type);
 	}
 
-	private Expr visit(katana.ast.expr.LitNull litNull)
+	private Expr visit(katana.ast.expr.LitNull lit)
 	{
 		return new LitNull();
 	}
 
-	private Expr visit(katana.ast.expr.LitString litString)
+	private Expr visit(katana.ast.expr.LitString lit)
 	{
-		return new LitString(litString.value);
+		return new LitString(lit.value);
 	}
 
 	private Expr visit(katana.ast.expr.MemberAccess memberAccess)

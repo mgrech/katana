@@ -21,7 +21,7 @@ import katana.utils.Maybe;
 public class Assign extends SimpleLValueExpr
 {
 
-	public Assign(Expr left, Expr right)
+	public Assign(LValueExpr left, Expr right)
 	{
 		this.left = left;
 		this.right = right;
@@ -33,6 +33,6 @@ public class Assign extends SimpleLValueExpr
 		return left.type();
 	}
 
-	public Expr left;
+	public LValueExpr left;
 	public Expr right;
 }
