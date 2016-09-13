@@ -25,6 +25,9 @@ public class StmtParser
 {
 	public static Stmt parse(Scanner scanner)
 	{
+		if(ParseTools.option(scanner, Token.Type.STMT_VAR, true))
+			return parseVar(scanner);
+
 		if(ParseTools.option(scanner, Token.Type.STMT_IF, true))
 			return parseIf(scanner);
 
@@ -47,6 +50,15 @@ public class StmtParser
 			return parseCompound(scanner);
 
 		return parseExprStmt(scanner);
+	}
+
+	private static Stmt parseVar(Scanner scanner)
+	{
+		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
+		ParseTools.expect(scanner, Token.Type.PUNCT_ASSIGN, true);
+		Expr init = ExprParser.parse(scanner);
+		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
+		return new VarDef(name, init);
 	}
 
 	private static Stmt parseIf(Scanner scanner)

@@ -16,6 +16,8 @@ package katana.sema;
 
 import katana.backend.PlatformContext;
 import katana.sema.decl.Function;
+import katana.sema.expr.Assign;
+import katana.sema.expr.NamedLocal;
 import katana.sema.stmt.*;
 import katana.sema.type.Builtin;
 import katana.utils.Maybe;
@@ -160,5 +162,21 @@ public class StmtValidator implements IVisitor
 	{
 		Expr expr = ExprValidator.validate(exprStmt.expr, function, context);
 		return new ExprStmt(expr);
+	}
+
+	private Stmt visit(katana.ast.stmt.VarDef varDef)
+	{
+		String name = varDef.name;
+		Expr init = ExprValidator.validate(varDef.init, function, context);
+		Maybe<Type> maybeType = init.type();
+
+		if(maybeType.isNone())
+			throw new RuntimeException(String.format("initializer for var '%s' yields void", name));
+
+		if(!function.defineLocal(name, maybeType.unwrap()))
+			throw new RuntimeException(String.format("redefinition of variable '%s'", name));
+
+		Function.Local local = function.localsByName.get(name);
+		return new ExprStmt(new Assign(new NamedLocal(local), init));
 	}
 }

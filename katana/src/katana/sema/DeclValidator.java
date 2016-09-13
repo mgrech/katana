@@ -62,17 +62,6 @@ public class DeclValidator implements IVisitor
 				throw new RuntimeException("duplicate parameter '" + param.name + "' in function '" + function.name + "'");
 		}
 
-		for(katana.ast.decl.Function.Local local : function.locals)
-		{
-			if(semaFunction.paramsByName.get(local.name) != null)
-				throw new RuntimeException("redefinition of local '" + local.name + "'");
-
-			Type type = TypeLookup.find(module, local.type, null, null);
-
-			if(!semaFunction.defineLocal(local.name, type))
-				throw new RuntimeException("duplicate local '" + local.name + "' in function '" + function.name + "'");
-		}
-
 		StmtValidator validator = new StmtValidator(semaFunction, context);
 
 		for(katana.ast.Stmt stmt : function.body)

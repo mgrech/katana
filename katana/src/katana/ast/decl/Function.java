@@ -47,20 +47,18 @@ public class Function extends Decl
 		public String name;
 	}
 
-	public Function(boolean exported, boolean opaque, String name, ArrayList<Param> params, Maybe<Type> ret, ArrayList<Local> locals, ArrayList<Stmt> body)
+	public Function(boolean exported, boolean opaque, String name, ArrayList<Param> params, Maybe<Type> ret, ArrayList<Stmt> body)
 	{
 		super(exported, opaque);
 		this.name = name;
 		this.params = params;
 		this.ret = ret;
-		this.locals = locals;
 		this.body = body;
 	}
 
 	public String name;
 	public ArrayList<Param> params;
 	public Maybe<Type> ret;
-	public ArrayList<Local> locals;
 	public ArrayList<Stmt> body;
 
 	@Override
@@ -79,17 +77,6 @@ public class Function extends Decl
 
 		String ret = this.ret.isSome() ? "\tret: " + this.ret.unwrap() + '\n' : "";
 
-		StringBuilder locals = new StringBuilder();
-
-		for(Local local : this.locals)
-		{
-			locals.append("\t\t");
-			locals.append(local.name);
-			locals.append(" (");
-			locals.append(local.type);
-			locals.append(")\n");
-		}
-
 		StringBuilder body = new StringBuilder();
 
 		for(Stmt stmt : this.body)
@@ -99,6 +86,6 @@ public class Function extends Decl
 			body.append('\n');
 		}
 
-		return String.format("%sname: %s\n\tparams:\n%s%s\tlocals:\n%s\tbody:\n%s", super.toString(), name, params, ret, locals, body);
+		return String.format("%sname: %s\n\tparams:\n%s%s\tbody:\n%s", super.toString(), name, params, ret, body);
 	}
 }

@@ -86,9 +86,8 @@ public class DeclParser
 			return new ExternFunction(exported, opaque, extern.unwrap(), name, params, ret);
 		}
 
-		ArrayList<Function.Local> locals = parseLocalList(scanner);
 		ArrayList<Stmt> body = parseBody(scanner);
-		return new Function(exported, opaque, name, params, ret, locals, body);
+		return new Function(exported, opaque, name, params, ret, body);
 	}
 
 	private static ArrayList<Function.Param> parseParameterList(Scanner scanner)
@@ -111,24 +110,6 @@ public class DeclParser
 		Type type = TypeParser.parse(scanner);
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
 		return new Function.Param(type, name);
-	}
-
-	private static ArrayList<Function.Local> parseLocalList(Scanner scanner)
-	{
-		ArrayList<Function.Local> locals = new ArrayList<>();
-
-		while(!ParseTools.option(scanner, Token.Type.PUNCT_LBRACE, false))
-			locals.add(parseLocal(scanner));
-
-		return locals;
-	}
-
-	private static Function.Local parseLocal(Scanner scanner)
-	{
-		Type type = TypeParser.parse(scanner);
-		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
-		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-		return new Function.Local(type, name);
 	}
 
 	private static ArrayList<Stmt> parseBody(Scanner scanner)

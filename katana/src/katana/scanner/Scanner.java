@@ -235,6 +235,7 @@ public class Scanner
 		case "fn":     return Token.DECL_FN;
 		case "data":   return Token.DECL_DATA;
 
+		case "var":    return Token.STMT_VAR;
 		case "if":     return Token.STMT_IF;
 		case "else":   return Token.STMT_ELSE;
 		case "goto":   return Token.STMT_GOTO;
