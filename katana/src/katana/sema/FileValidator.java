@@ -79,6 +79,11 @@ public class FileValidator implements IVisitor
 			throw new RuntimeException("no module defined");
 	}
 
+	private void redefinitionError(Symbol symbol)
+	{
+		throw new RuntimeException(String.format("redefinition of symbol '%s'", symbol.name()));
+	}
+
 	private Maybe<Decl> visit(katana.ast.decl.Data data)
 	{
 		declsSeen = true;
@@ -87,7 +92,7 @@ public class FileValidator implements IVisitor
 		Data semaData = new Data(currentModule, data.exported, data.opaque, data.name);
 
 		if(!currentModule.defineData(semaData))
-			throw new RuntimeException("redefinition of symbol '" + data.name + "'");
+			redefinitionError(semaData);
 
 		decls.put(semaData, data);
 		scope.defineSymbol(semaData);
@@ -103,7 +108,7 @@ public class FileValidator implements IVisitor
 		ExternFunction semaFunction = new ExternFunction(currentModule, function.exported, function.opaque, function.externName, function.name);
 
 		if(!currentModule.defineExternFunction(semaFunction))
-			throw new RuntimeException("redefinition of symbol '" + function.name + "'");
+			redefinitionError(semaFunction);
 
 		decls.put(semaFunction, function);
 		scope.defineSymbol(semaFunction);
@@ -119,7 +124,7 @@ public class FileValidator implements IVisitor
 		Function semaFunction = new Function(currentModule, function.exported, function.opaque, function.name);
 
 		if(!currentModule.defineFunction(semaFunction))
-			throw new RuntimeException("redefinition of symbol '" + function.name + "'");
+			redefinitionError(semaFunction);
 
 		decls.put(semaFunction, function);
 		scope.defineSymbol(semaFunction);
@@ -135,7 +140,7 @@ public class FileValidator implements IVisitor
 		Global semaGlobal = new Global(currentModule, global.exported, global.opaque, global.name);
 
 		if(!currentModule.defineGlobal(semaGlobal))
-			throw new RuntimeException("redefinition of symbol '" + global.name + "'");
+			redefinitionError(semaGlobal);
 
 		decls.put(semaGlobal, global);
 		scope.defineSymbol(semaGlobal);
