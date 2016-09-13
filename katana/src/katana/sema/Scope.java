@@ -14,21 +14,9 @@
 
 package katana.sema;
 
-import katana.backend.PlatformContext;
-import katana.visitor.IVisitable;
+import java.util.List;
 
-public abstract class Type implements IVisitable
+public interface Scope
 {
-	public abstract int sizeof(PlatformContext context);
-	public abstract int alignof(PlatformContext context);
-
-	protected abstract boolean same(Type other);
-
-	public static boolean same(Type first, Type second)
-	{
-		if(first.getClass() != second.getClass())
-			return false;
-
-		return first.same(second);
-	}
+	List<Symbol> find(String name);
 }

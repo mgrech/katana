@@ -14,7 +14,6 @@
 
 package katana.ast.decl;
 
-import katana.ast.Decl;
 import katana.ast.Path;
 import katana.utils.Maybe;
 

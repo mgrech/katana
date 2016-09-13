@@ -12,38 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema.type;
+package katana.sema.decl;
 
-import katana.backend.PlatformContext;
-import katana.sema.Expr;
-import katana.sema.Type;
+import katana.ast.Path;
+import katana.sema.Module;
+import katana.sema.Symbol;
+import katana.visitor.IVisitable;
 
-public class Typeof extends Type
+public abstract class Decl implements Symbol, IVisitable
 {
-	public Typeof(Expr expr)
+	protected Decl(Module module, boolean exported, boolean opaque)
 	{
-		this.expr = expr;
+		this.module = module;
+		this.exported = exported;
+		this.opaque = opaque;
 	}
 
-	@Override
-	public int sizeof(PlatformContext context)
+	public Path qualifiedName()
 	{
-		return expr.type().unwrap().sizeof(context);
+		Path path = new Path();
+		path.components.addAll(module.path().components);
+		path.components.add(name());
+		return path;
 	}
 
-	@Override
-	public int alignof(PlatformContext context)
+	public Module module()
 	{
-		return expr.type().unwrap().alignof(context);
+		return module;
 	}
 
-	@Override
-	protected boolean same(Type other)
-	{
-		Type first = expr.type().unwrap();
-		Type second = ((Typeof)other).expr.type().unwrap();
-		return Type.same(first, second);
-	}
-
-	public Expr expr;
+	private Module module;
+	public boolean exported;
+	public boolean opaque;
 }

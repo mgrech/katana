@@ -16,29 +16,33 @@ package katana.sema;
 
 import katana.backend.PlatformContext;
 import katana.sema.decl.Data;
+import katana.sema.decl.Decl;
+import katana.sema.expr.Expr;
 import katana.sema.type.*;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class TypeLookup implements IVisitor
+public class TypeValidator implements IVisitor
 {
-	private Module currentModule;
-	private katana.sema.decl.Function function;
+	private Scope scope;
 	private PlatformContext context;
+	private Consumer<Decl> validateDecl;
 
-	private TypeLookup(Module currentModule, katana.sema.decl.Function function, PlatformContext context)
+	private TypeValidator(Scope scope, PlatformContext context, Consumer<Decl> validateDecl)
 	{
-		this.currentModule = currentModule;
-		this.function = function;
+		this.scope = scope;
 		this.context = context;
+		this.validateDecl = validateDecl;
 	}
 
-	public static Type find(Module currentModule, katana.ast.Type type, katana.sema.decl.Function function, PlatformContext context)
+	public static Type validate(katana.ast.type.Type type, Scope scope, PlatformContext context, Consumer<Decl> validateDecl)
 	{
-		TypeLookup translator = new TypeLookup(currentModule, function, context);
+		TypeValidator translator = new TypeValidator(scope, context, validateDecl);
 		return (Type)type.accept(translator);
 	}
 
@@ -76,39 +80,52 @@ public class TypeLookup implements IVisitor
 
 	private Type visit(katana.ast.type.Array array)
 	{
-		return new Array(array.size, find(currentModule, array.type, function, context));
+		return new Array(array.size, validate(array.type, scope, context, validateDecl));
 	}
 
 	private Type visit(katana.ast.type.Function functionType)
 	{
 		ArrayList<Type> params = new ArrayList<>();
 
-		for(katana.ast.Type param : functionType.params)
-			params.add(find(currentModule, param, function, context));
+		for(katana.ast.type.Type param : functionType.params)
+			params.add(validate(param, scope, context, validateDecl));
 
-		Maybe<Type> ret = functionType.ret.map((type) -> find(currentModule, type, function, context));
+		Maybe<Type> ret = functionType.ret.map((type) -> validate(type, scope, context, validateDecl));
 		return new Function(ret, params);
 	}
 
 	private Type visit(katana.ast.type.UserDefined user)
 	{
-		Maybe<Decl> decl = currentModule.findSymbol(user.name);
+		List<Symbol> candidates = scope.find(user.name);
 
-		if(decl.isNone())
-			throw new RuntimeException("undeclared type '" + user.name + "'");
+		if(candidates.isEmpty())
+			throw new RuntimeException(String.format("use of unknown type '%s'", user.name));
 
-		if(!(decl.get() instanceof Data))
-			throw new RuntimeException("symbol '" + user.name + "' is not a data");
+		if(candidates.size() > 1)
+			throw new RuntimeException(String.format("ambiguous reference to symbol '%s'", user.name));
 
-		return new UserDefined((Data)decl.get());
+		Symbol symbol = candidates.get(0);
+
+		if(symbol instanceof Decl)
+			validateDecl.accept((Decl)symbol);
+
+		if(!(symbol instanceof Data))
+			throw new RuntimeException(String.format("symbol '%s' does not refer to a type"));
+
+		return new UserDefined((Data)symbol);
 	}
 
 	private Type visit(katana.ast.type.Typeof typeof)
 	{
-		if(function == null || context == null)
+		if(scope == null)
 			throw new RuntimeException("typeof is not valid in this context");
 
-		Expr expr = ExprValidator.validate(typeof.expr, function, context);
-		return new Typeof(expr);
+		Expr expr = ExprValidator.validate(typeof.expr, scope, context, validateDecl);
+		Maybe<Type> type = expr.type();
+
+		if(type.isNone())
+			throw new RuntimeException("expression passed to typeof yields no type");
+
+		return type.unwrap();
 	}
 }

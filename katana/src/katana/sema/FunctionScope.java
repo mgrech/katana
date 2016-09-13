@@ -14,34 +14,35 @@
 
 package katana.sema;
 
-import katana.ast.Path;
-import katana.visitor.IVisitable;
+import katana.sema.decl.Function;
 
-public abstract class Decl implements IVisitable
+import java.util.Collections;
+import java.util.List;
+
+public class FunctionScope implements Scope
 {
-	protected Decl(Module module, boolean exported, boolean opaque)
+	public FunctionScope(FileScope parent, Function function)
 	{
-		this.module = module;
-		this.exported = exported;
-		this.opaque = opaque;
+		this.parent = parent;
+		this.function = function;
 	}
 
-	public abstract String name();
-
-	public Path qualifiedName()
+	@Override
+	public List<Symbol> find(String name)
 	{
-		Path path = new Path();
-		path.components.addAll(module.path().components);
-		path.components.add(name());
-		return path;
+		Function.Local local = function.localsByName.get(name);
+
+		if(local != null)
+			return Collections.singletonList(local);
+
+		Function.Param param = function.paramsByName.get(name);
+
+		if(param != null)
+			return Collections.singletonList(param);
+
+		return parent.find(name);
 	}
 
-	public Module module()
-	{
-		return module;
-	}
-
-	private Module module;
-	public boolean exported;
-	public boolean opaque;
+	private FileScope parent;
+	private Function function;
 }

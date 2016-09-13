@@ -14,8 +14,6 @@
 
 package katana.ast.expr;
 
-import katana.ast.Expr;
-
 public class ArrayAccess extends Expr
 {
 	public ArrayAccess(Expr value, Expr index)

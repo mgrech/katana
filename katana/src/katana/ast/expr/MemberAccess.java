@@ -14,8 +14,6 @@
 
 package katana.ast.expr;
 
-import katana.ast.Expr;
-
 public class MemberAccess extends Expr
 {
 	public MemberAccess(Expr expr, String name)

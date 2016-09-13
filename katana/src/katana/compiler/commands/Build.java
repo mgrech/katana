@@ -14,16 +14,15 @@
 
 package katana.compiler.commands;
 
-import katana.ast.File;
 import katana.backend.PlatformContext;
 import katana.backend.llvm.ProgramCodeGenerator;
 import katana.backend.llvm.amd64.PlatformContextLlvmAmd64;
 import katana.compiler.Command;
 import katana.compiler.CommandException;
-import katana.parser.FileParser;
-import katana.sema.FileValidator;
 import katana.sema.Module;
 import katana.sema.Program;
+import katana.sema.ProgramValidator;
+import katana.sema.decl.Decl;
 import katana.sema.decl.ExternFunction;
 import katana.sema.decl.Function;
 import katana.utils.Maybe;
@@ -35,9 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Command(name = "build", desc = "builds project in working directory")
 public class Build
@@ -61,35 +58,29 @@ public class Build
 		return paths;
 	}
 
-	private static void validateImports(Program program, Set<katana.ast.Path> imports)
+	private static Maybe<Decl> resolvePath(Program program, String pathString)
 	{
-		for(katana.ast.Path path : imports)
-			if(program.findModule(path).isNone())
-				throw new RuntimeException("import of unknown module '" + path + "'");
+		katana.ast.Path path = katana.ast.Path.fromString(pathString);
+		int last = path.components.size() - 1;
+		String symbol = path.components.get(last);
+		path.components.remove(last);
+
+		Maybe<Module> module = program.findModule(path);
+
+		if(module.isNone())
+			return Maybe.none();
+
+		return module.unwrap().findSymbol(symbol);
 	}
 
-	private static katana.sema.Decl findMainFunction(Program program, String name)
+	private static Decl findMainFunction(Program program, String name)
 	{
-		String[] pathComponents = name.split("\\.");
-		String function = pathComponents[pathComponents.length - 1];
+		Maybe<Decl> main = resolvePath(program, name);
 
-		List<String> modulePath = new ArrayList<>();
+		if(main.isNone())
+			throw new RuntimeException("main function not found");
 
-		for(int i = 0; i != pathComponents.length - 1; ++i)
-			modulePath.add(pathComponents[i]);
-
-		katana.ast.Path path = new katana.ast.Path(modulePath);
-		Maybe<Module> maybeModule = program.findModule(path);
-
-		if(maybeModule.isNone())
-			throw new RuntimeException("main function not found -- unknown module");
-
-		Maybe<katana.sema.Decl> maybeDecl = maybeModule.unwrap().findSymbol(function);
-
-		if(maybeDecl.isNone())
-			throw new RuntimeException("main function not found -- unknown symbol");
-
-		katana.sema.Decl decl = maybeDecl.unwrap();
+		Decl decl = main.unwrap();
 
 		if(!(decl instanceof Function) && !(decl instanceof ExternFunction))
 			throw new RuntimeException("specified symbol is not a function");
@@ -103,23 +94,11 @@ public class Build
 			throw new CommandException("invalid number of arguments, usage: build [main-func]");
 
 		PlatformContext context = new PlatformContextLlvmAmd64();
-		Program program = new Program();
+		List<Path> filePaths = discoverSourceFiles(Paths.get("./source"));
 
-		ArrayList<Path> paths = discoverSourceFiles(Paths.get("./source"));
-		Set<katana.ast.Path> imports = new HashSet<>();
+		Program program = ProgramValidator.validate(filePaths, context);
 
-		for(Path path : paths)
-		{
-			File file = FileParser.parse(path);
-			FileValidator validator = new FileValidator(context, program);
-			validator.validate(file);
-			validator.finalizeValidation();
-			imports.addAll(validator.imports());
-		}
-
-		validateImports(program, imports);
-
-		Maybe<katana.sema.Decl> main = Maybe.none();
+		Maybe<Decl> main = Maybe.none();
 
 		if(args.length == 1)
 			main = Maybe.some(findMainFunction(program, args[0]));

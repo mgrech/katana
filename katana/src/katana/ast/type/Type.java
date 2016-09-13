@@ -12,12 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema;
+package katana.ast.type;
 
-import katana.utils.Maybe;
 import katana.visitor.IVisitable;
 
-public abstract class Expr implements IVisitable
+public abstract class Type implements IVisitable
 {
-	public abstract Maybe<Type> type();
 }

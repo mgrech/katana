@@ -12,16 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema.stmt;
+package katana.sema.type;
 
-import katana.sema.expr.Expr;
+import katana.backend.PlatformContext;
+import katana.visitor.IVisitable;
 
-public class ExprStmt extends Stmt
+public abstract class Type implements IVisitable
 {
-	public ExprStmt(Expr expr)
-	{
-		this.expr = expr;
-	}
+	public abstract int sizeof(PlatformContext context);
+	public abstract int alignof(PlatformContext context);
 
-	public Expr expr;
+	protected abstract boolean same(Type other);
+
+	public static boolean same(Type first, Type second)
+	{
+		if(first.getClass() != second.getClass())
+			return false;
+
+		return first.same(second);
+	}
 }

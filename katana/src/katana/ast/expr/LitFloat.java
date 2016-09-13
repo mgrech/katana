@@ -15,7 +15,6 @@
 package katana.ast.expr;
 
 import katana.BuiltinType;
-import katana.ast.Expr;
 
 import java.math.BigDecimal;
 

@@ -14,6 +14,8 @@
 
 package katana.ast;
 
+import katana.ast.decl.Decl;
+
 import java.util.ArrayList;
 
 public class File

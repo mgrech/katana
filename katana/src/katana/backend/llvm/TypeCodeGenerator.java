@@ -15,7 +15,6 @@
 package katana.backend.llvm;
 
 import katana.backend.PlatformContext;
-import katana.sema.Type;
 import katana.sema.type.*;
 import katana.visitor.IVisitor;
 

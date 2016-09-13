@@ -16,15 +16,11 @@ package katana.backend.llvm;
 
 import katana.BuiltinType;
 import katana.backend.PlatformContext;
-import katana.sema.Decl;
 import katana.sema.Module;
 import katana.sema.Program;
-import katana.sema.Type;
-import katana.sema.decl.Data;
-import katana.sema.decl.ExternFunction;
-import katana.sema.decl.Function;
-import katana.sema.decl.Global;
+import katana.sema.decl.*;
 import katana.sema.type.Builtin;
+import katana.sema.type.Type;
 import katana.utils.Maybe;
 
 public class ProgramCodeGenerator

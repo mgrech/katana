@@ -14,9 +14,8 @@
 
 package katana.sema.decl;
 
-import katana.sema.Decl;
 import katana.sema.Module;
-import katana.sema.Type;
+import katana.sema.type.Type;
 
 public class Global extends Decl
 {

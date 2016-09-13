@@ -14,9 +14,8 @@
 
 package katana.sema.expr;
 
-import katana.sema.Expr;
-import katana.sema.Type;
 import katana.sema.type.Function;
+import katana.sema.type.Type;
 import katana.utils.Maybe;
 
 import java.util.List;

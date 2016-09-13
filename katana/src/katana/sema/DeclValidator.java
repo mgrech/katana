@@ -15,27 +15,30 @@
 package katana.sema;
 
 import katana.backend.PlatformContext;
-import katana.sema.decl.Data;
-import katana.sema.decl.ExternFunction;
-import katana.sema.decl.Function;
-import katana.sema.decl.Global;
+import katana.sema.decl.*;
+import katana.sema.stmt.Stmt;
+import katana.sema.type.Type;
 import katana.visitor.IVisitor;
+
+import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class DeclValidator implements IVisitor
 {
-	private Module module;
+	private FileScope scope;
 	private PlatformContext context;
+	private Consumer<Decl> validateDecl;
 
-	private DeclValidator(Module module, PlatformContext context)
+	private DeclValidator(FileScope scope, PlatformContext context, Consumer<Decl> validateDecl)
 	{
-		this.module = module;
+		this.scope = scope;
 		this.context = context;
+		this.validateDecl = validateDecl;
 	}
 
-	public static void validate(Decl semaDecl, katana.ast.Decl decl, Module module, PlatformContext context)
+	public static void validate(Decl semaDecl, katana.ast.decl.Decl decl, FileScope scope, PlatformContext context, Consumer<Decl> validateDecl)
 	{
-		DeclValidator validator = new DeclValidator(module, context);
+		DeclValidator validator = new DeclValidator(scope, context, validateDecl);
 		semaDecl.accept(validator, decl);
 	}
 
@@ -43,7 +46,7 @@ public class DeclValidator implements IVisitor
 	{
 		for(katana.ast.decl.Data.Field field : data.fields)
 		{
-			Type type = TypeLookup.find(module, field.type, null, null);
+			Type type = TypeValidator.validate(field.type, scope, context, validateDecl);
 
 			if(!semaData.defineField(field.name, type))
 				throw new RuntimeException("duplicate field '" + field.name + "' in data '" + semaData.name() + "'");
@@ -52,19 +55,21 @@ public class DeclValidator implements IVisitor
 
 	private void visit(Function semaFunction, katana.ast.decl.Function function)
 	{
-		semaFunction.ret = function.ret.map((type) -> TypeLookup.find(module, type, null, null));
-
 		for(katana.ast.decl.Function.Param param : function.params)
 		{
-			Type type = TypeLookup.find(module, param.type, null, null);
+			Type type = TypeValidator.validate(param.type, scope, context, validateDecl);
 
 			if(!semaFunction.defineParam(param.name, type))
 				throw new RuntimeException("duplicate parameter '" + param.name + "' in function '" + function.name + "'");
 		}
 
-		StmtValidator validator = new StmtValidator(semaFunction, context);
+		FunctionScope fscope = new FunctionScope(scope, semaFunction);
 
-		for(katana.ast.Stmt stmt : function.body)
+		semaFunction.ret = function.ret.map((type) -> TypeValidator.validate(type, fscope, context, validateDecl));
+
+		StmtValidator validator = new StmtValidator(semaFunction, fscope, context, validateDecl);
+
+		for(katana.ast.stmt.Stmt stmt : function.body)
 		{
 			Stmt semaStmt = validator.validate(stmt);
 			semaFunction.add(semaStmt);
@@ -75,19 +80,19 @@ public class DeclValidator implements IVisitor
 
 	private void visit(ExternFunction semaFunction, katana.ast.decl.ExternFunction function)
 	{
-		semaFunction.ret = function.ret.map((type) -> TypeLookup.find(module, type, null, null));
-
 		for(katana.ast.decl.Function.Param param : function.params)
 		{
-			Type type = TypeLookup.find(module, param.type, null, null);
+			Type type = TypeValidator.validate(param.type, scope, context, validateDecl);
 
 			if(!semaFunction.defineParam(type, param.name))
 				throw new RuntimeException("duplicate parameter '" + param.name + "' in function '" + function.name + "'");
 		}
+
+		semaFunction.ret = function.ret.map((type) -> TypeValidator.validate(type, scope, context, validateDecl));
 	}
 
 	private void visit(Global semaGlobal, katana.ast.decl.Global global)
 	{
-		semaGlobal.type = TypeLookup.find(module, global.type, null, null);
+		semaGlobal.type = TypeValidator.validate(global.type, scope, context, validateDecl);
 	}
 }

@@ -14,7 +14,6 @@
 
 package katana.parser;
 
-import katana.ast.Type;
 import katana.ast.type.*;
 import katana.scanner.Scanner;
 import katana.scanner.Token;

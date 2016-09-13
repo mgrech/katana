@@ -14,11 +14,11 @@
 
 package katana.sema.decl;
 
-import katana.sema.Decl;
 import katana.sema.Module;
-import katana.sema.Stmt;
-import katana.sema.Type;
+import katana.sema.Symbol;
 import katana.sema.stmt.Label;
+import katana.sema.stmt.Stmt;
+import katana.sema.type.Type;
 import katana.utils.Maybe;
 
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ import java.util.TreeMap;
 
 public class Function extends Decl
 {
-	public class Param
+	public class Param implements Symbol
 	{
 		public Param(String name, Type type, int index)
 		{
@@ -37,18 +37,30 @@ public class Function extends Decl
 			this.index = index;
 		}
 
+		@Override
+		public String name()
+		{
+			return name;
+		}
+
 		public String name;
 		public Type type;
 		public int index;
 	}
 
-	public class Local
+	public class Local implements Symbol
 	{
 		public Local(String name, Type type, int index)
 		{
 			this.name = name;
 			this.type = type;
 			this.index = index;
+		}
+
+		@Override
+		public String name()
+		{
+			return name;
 		}
 
 		public String name;

@@ -37,6 +37,11 @@ public class Path
 
 	public List<String> components;
 
+	public static Path fromString(String s)
+	{
+		return new Path(Arrays.asList(s.split("\\.")));
+	}
+
 	@Override
 	public String toString()
 	{

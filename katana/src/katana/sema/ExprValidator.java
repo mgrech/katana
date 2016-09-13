@@ -15,13 +15,11 @@
 package katana.sema;
 
 import katana.backend.PlatformContext;
-import katana.sema.decl.Data;
-import katana.sema.decl.ExternFunction;
-import katana.sema.decl.Function;
-import katana.sema.decl.Global;
+import katana.sema.decl.*;
 import katana.sema.expr.*;
 import katana.sema.type.Array;
 import katana.sema.type.Builtin;
+import katana.sema.type.Type;
 import katana.sema.type.UserDefined;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
@@ -29,22 +27,25 @@ import katana.visitor.IVisitor;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class ExprValidator implements IVisitor
 {
-	private Function function;
+	private Scope scope;
 	private PlatformContext context;
+	private Consumer<Decl> validateDecl;
 
-	private ExprValidator(Function function, PlatformContext context)
+	private ExprValidator(Scope scope, PlatformContext context, Consumer<Decl> validateDecl)
 	{
-		this.function = function;
+		this.scope = scope;
 		this.context = context;
+		this.validateDecl = validateDecl;
 	}
 
-	public static Expr validate(katana.ast.Expr expr, Function function, PlatformContext context)
+	public static Expr validate(katana.ast.expr.Expr expr, Scope scope, PlatformContext context, Consumer<Decl> validateDecl)
 	{
-		ExprValidator validator = new ExprValidator(function, context);
+		ExprValidator validator = new ExprValidator(scope, context, validateDecl);
 		return (Expr)expr.accept(validator);
 	}
 
@@ -83,7 +84,7 @@ public class ExprValidator implements IVisitor
 
 	private Expr visit(katana.ast.expr.Addressof addressof)
 	{
-		Expr expr = validate(addressof.expr, function, context);
+		Expr expr = validate(addressof.expr, scope, context, validateDecl);
 
 		if(!(expr instanceof LValueExpr))
 			throw new RuntimeException("addressof() requires lvalue operand");
@@ -95,13 +96,13 @@ public class ExprValidator implements IVisitor
 
 	private Expr visit(katana.ast.expr.Alignof alignof)
 	{
-		return new Alignof(TypeLookup.find(function.module(), alignof.type, function, context));
+		return new Alignof(TypeValidator.validate(alignof.type, scope, context, validateDecl));
 	}
 
 	private Expr visit(katana.ast.expr.ArrayAccess arrayAccess)
 	{
-		Expr value = validate(arrayAccess.value, function, context);
-		Expr index = validate(arrayAccess.index, function, context);
+		Expr value = validate(arrayAccess.value, scope, context, validateDecl);
+		Expr index = validate(arrayAccess.index, scope, context, validateDecl);
 		Maybe<Type> indexType = index.type();
 
 		if(indexType.isNone() || indexType.unwrap() != Builtin.INT)
@@ -118,8 +119,8 @@ public class ExprValidator implements IVisitor
 
 	private Expr visit(katana.ast.expr.Assign assign)
 	{
-		Expr left = validate(assign.left, function, context);
-		Expr right = validate(assign.right, function, context);
+		Expr left = validate(assign.left, scope, context, validateDecl);
+		Expr right = validate(assign.right, scope, context, validateDecl);
 
 		if(left.type().isNone())
 			throw new RuntimeException("value expected on left side of assignment");
@@ -153,7 +154,7 @@ public class ExprValidator implements IVisitor
 
 		for(int i = 0; i != builtinCall.args.size(); ++i)
 		{
-			Expr semaExpr = validate(builtinCall.args.get(i), function, context);
+			Expr semaExpr = validate(builtinCall.args.get(i), scope, context, validateDecl);
 			Maybe<Type> type = semaExpr.type();
 
 			if(type.isNone())
@@ -173,25 +174,25 @@ public class ExprValidator implements IVisitor
 
 	private Expr visit(katana.ast.expr.Deref deref)
 	{
-		Expr expr = validate(deref.expr, function, context);
+		Expr expr = validate(deref.expr, scope, context, validateDecl);
 
 		if(expr.type().isNone() || expr.type().unwrap() != Builtin.PTR)
 			throw new RuntimeException("expression of type ptr expected in deref");
 
-		return new Deref(TypeLookup.find(function.module(), deref.type, function, context), expr);
+		return new Deref(TypeValidator.validate(deref.type, scope, context, validateDecl), expr);
 	}
 
 	private Expr visit(katana.ast.expr.FunctionCall call)
 	{
-		Expr expr = validate(call.expr, function, context);
+		Expr expr = validate(call.expr, scope, context, validateDecl);
 
 		if(expr.type().isNone() || !(expr.type().unwrap() instanceof katana.sema.type.Function))
 			throw new RuntimeException("expression does not result in function type");
 
 		List<Expr> args = new ArrayList<>();
 
-		for(katana.ast.Expr e : call.args)
-			args.add(validate(e, function, context));
+		for(katana.ast.expr.Expr e : call.args)
+			args.add(validate(e, scope, context, validateDecl));
 
 		katana.sema.type.Function type = (katana.sema.type.Function)expr.type().unwrap();
 		checkArguments(type.params, args);
@@ -229,7 +230,7 @@ public class ExprValidator implements IVisitor
 
 	private Expr visit(katana.ast.expr.MemberAccess memberAccess)
 	{
-		Expr expr = validate(memberAccess.expr, function, context);
+		Expr expr = validate(memberAccess.expr, scope, context, validateDecl);
 
 		if(expr.type().isNone())
 			throw new RuntimeException("expression does not result in a value");
@@ -256,57 +257,62 @@ public class ExprValidator implements IVisitor
 
 	private Expr visit(katana.ast.expr.NamedValue namedValue)
 	{
-		Maybe<Function.Local> maybeLocal = function.findLocal(namedValue.name);
+		List<Symbol> candidates = scope.find(namedValue.name);
 
-		if(maybeLocal.isSome())
-			return new NamedLocal(maybeLocal.unwrap());
+		if(candidates.isEmpty())
+			throw new RuntimeException(String.format("use of unknown symbol '%s'", namedValue.name));
 
-		Maybe<Function.Param> maybeParam = function.findParam(namedValue.name);
+		if(candidates.size() > 1)
+			throw new RuntimeException(String.format("ambiguous reference to symbol '%s'", namedValue.name));
 
-		if(maybeParam.isSome())
-			return new NamedParam(maybeParam.unwrap());
+		Symbol symbol = candidates.get(0);
 
-		Maybe<Decl> maybeDecl = function.module().findSymbol(namedValue.name);
+		if(symbol instanceof Decl)
+			validateDecl.accept((Decl)symbol);
 
-		if(maybeDecl.isNone())
-			throw new RuntimeException("unknown symbol '" + namedValue.name + "'");
+		if(symbol instanceof Function.Local)
+			return new NamedLocal((Function.Local)symbol);
 
-		Decl decl = maybeDecl.unwrap();
+		if(symbol instanceof Function.Param)
+			return new NamedParam((Function.Param)symbol);
 
-		if(decl instanceof ExternFunction)
-			return new NamedExternFunc((ExternFunction)decl);
+		if(symbol instanceof ExternFunction)
+			return new NamedExternFunc((ExternFunction)symbol);
 
-		if(decl instanceof Function)
-			return new NamedFunc((Function)decl);
+		if(symbol instanceof Function)
+			return new NamedFunc((Function)symbol);
 
-		if(decl instanceof Global)
-			return new NamedGlobal((Global)decl);
+		if(symbol instanceof Global)
+			return new NamedGlobal((Global)symbol);
 
-		throw new RuntimeException("symbol '" + namedValue.name + "' does not refer to a value");
+		throw new RuntimeException(String.format("symbol '%s' does not refer to a value", namedValue.name));
 	}
 
 	private Expr visit(katana.ast.expr.Offsetof offsetof)
 	{
-		Maybe<Decl> decl = function.module().findSymbol(offsetof.type);
+		List<Symbol> candidates = scope.find(offsetof.type);
 
-		if(decl.isNone())
-			throw new RuntimeException("type '" + offsetof.type + "' not found");
+		if(candidates.isEmpty())
+			throw new RuntimeException(String.format("use of unknown type '%s'", offsetof.type));
 
-		Decl d = decl.unwrap();
+		if(candidates.size() > 1)
+			throw new RuntimeException(String.format("ambiguous reference to symbol '%s'", offsetof.type));
 
-		if(!(d instanceof Data))
-			throw new RuntimeException("'" + offsetof.type + "' is not a data");
+		Symbol symbol = candidates.get(0);
 
-		Maybe<Data.Field> field = ((Data)d).findField(offsetof.field);
+		if(!(symbol instanceof Data))
+			throw new RuntimeException(String.format("symbol '%s' does not refer to a type", offsetof.type));
+
+		Maybe<Data.Field> field = ((Data)symbol).findField(offsetof.field);
 
 		if(field.isNone())
-			throw new RuntimeException("field '" + offsetof.field + "' not found");
+			throw new RuntimeException(String.format("data '%s' has no field named '%s'", offsetof.type, offsetof.field));
 
 		return new Offsetof(field.unwrap());
 	}
 
 	private Expr visit(katana.ast.expr.Sizeof sizeof)
 	{
-		return new Sizeof(TypeLookup.find(function.module(), sizeof.type, function, context));
+		return new Sizeof(TypeValidator.validate(sizeof.type, scope, context, validateDecl));
 	}
 }

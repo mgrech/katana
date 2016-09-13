@@ -16,13 +16,9 @@ package katana.backend.llvm;
 
 import katana.ast.Path;
 import katana.backend.PlatformContext;
-import katana.sema.Decl;
-import katana.sema.Stmt;
-import katana.sema.Type;
-import katana.sema.decl.Data;
-import katana.sema.decl.ExternFunction;
-import katana.sema.decl.Function;
-import katana.sema.decl.Global;
+import katana.sema.decl.*;
+import katana.sema.stmt.Stmt;
+import katana.sema.type.Type;
 import katana.visitor.IVisitor;
 
 import java.util.List;

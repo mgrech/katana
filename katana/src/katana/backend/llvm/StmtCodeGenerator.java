@@ -15,10 +15,9 @@
 package katana.backend.llvm;
 
 import katana.backend.PlatformContext;
-import katana.sema.Stmt;
-import katana.sema.Type;
 import katana.sema.decl.Function;
 import katana.sema.stmt.*;
+import katana.sema.type.Type;
 import katana.visitor.IVisitor;
 
 import java.util.ArrayList;

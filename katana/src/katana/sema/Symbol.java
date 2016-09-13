@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.ast;
+package katana.sema;
 
-import katana.visitor.IVisitable;
-
-public abstract class Expr implements IVisitable
+public interface Symbol
 {
+	String name();
 }

@@ -14,8 +14,7 @@
 
 package katana.parser;
 
-import katana.ast.Expr;
-import katana.ast.Stmt;
+import katana.ast.expr.Expr;
 import katana.ast.stmt.*;
 import katana.scanner.Scanner;
 import katana.scanner.Token;

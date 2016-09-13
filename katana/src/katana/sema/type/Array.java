@@ -15,7 +15,6 @@
 package katana.sema.type;
 
 import katana.backend.PlatformContext;
-import katana.sema.Type;
 
 public class Array extends Type
 {

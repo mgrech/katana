@@ -16,7 +16,6 @@ package katana.sema.type;
 
 import katana.BuiltinType;
 import katana.backend.PlatformContext;
-import katana.sema.Type;
 
 public class Builtin extends Type
 {

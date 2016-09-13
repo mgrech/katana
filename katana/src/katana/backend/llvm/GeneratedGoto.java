@@ -14,7 +14,7 @@
 
 package katana.backend.llvm;
 
-import katana.sema.Stmt;
+import katana.sema.stmt.Stmt;
 
 public class GeneratedGoto extends Stmt
 {

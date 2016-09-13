@@ -14,8 +14,6 @@
 
 package katana.sema.stmt;
 
-import katana.sema.Stmt;
-
 public class Goto extends Stmt
 {
 	public Goto(Label target)

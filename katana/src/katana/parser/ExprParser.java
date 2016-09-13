@@ -15,10 +15,9 @@
 package katana.parser;
 
 import katana.BuiltinType;
-import katana.ast.Expr;
 import katana.ast.Path;
-import katana.ast.Type;
 import katana.ast.expr.*;
+import katana.ast.type.Type;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
 import katana.utils.Maybe;

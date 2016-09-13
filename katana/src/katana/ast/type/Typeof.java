@@ -14,8 +14,7 @@
 
 package katana.ast.type;
 
-import katana.ast.Expr;
-import katana.ast.Type;
+import katana.ast.expr.Expr;
 
 public class Typeof extends Type
 {

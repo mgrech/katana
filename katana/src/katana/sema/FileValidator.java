@@ -14,57 +14,63 @@
 
 package katana.sema;
 
-import katana.ast.File;
 import katana.ast.Path;
+import katana.ast.decl.Import;
 import katana.backend.PlatformContext;
-import katana.sema.decl.Data;
-import katana.sema.decl.ExternFunction;
-import katana.sema.decl.Function;
-import katana.sema.decl.Global;
+import katana.sema.decl.*;
+import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.Set;
+import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class FileValidator implements IVisitor
 {
-	private IdentityHashMap<Data, katana.ast.decl.Data> datas = new IdentityHashMap<>();
-	private IdentityHashMap<Function, katana.ast.decl.Function> funcs = new IdentityHashMap<>();
-	private IdentityHashMap<ExternFunction, katana.ast.decl.ExternFunction> extfuncs = new IdentityHashMap<>();
-	private IdentityHashMap<Global, katana.ast.decl.Global> globals = new IdentityHashMap<>();
-
 	private PlatformContext context;
 	private Program program;
+	private Consumer<Decl> validateDecl;
+
+	private IdentityHashMap<Decl, katana.ast.decl.Decl> decls = new IdentityHashMap<>();
 	private Module currentModule = null;
 	private boolean declsSeen = false;
-	private Set<Path> imports = new HashSet<>();
+	private Map<Path, Import> imports = new HashMap<>();
+	private FileScope scope = new FileScope();
 
-	public FileValidator(PlatformContext context, Program program)
+	public FileValidator(PlatformContext context, Program program, Consumer<Decl> validateDecl)
 	{
 		this.context = context;
 		this.program = program;
+		this.validateDecl = validateDecl;
 	}
 
-	public void validate(File file)
+	public Maybe<Decl> beginValidation(katana.ast.decl.Decl decl)
 	{
-		for(katana.ast.Decl decl : file.decls)
-			decl.accept(this);
+		return (Maybe<Decl>)decl.accept(this);
 	}
 
-	public void finalizeValidation()
+	public void validateImports()
 	{
-		doFinalize(datas);
-		doFinalize(globals);
-		doFinalize(extfuncs);
-		doFinalize(funcs);
+		for(Import import_ : imports.values())
+		{
+			Maybe<Module> module = program.findModule(import_.path);
+
+			if(module.isNone())
+				throw new RuntimeException(String.format("import of unknown module '%s'", import_.path));
+
+			if(import_.rename.isNone())
+			{
+				for(Decl decl : module.unwrap().decls().values())
+					scope.defineSymbol(decl);
+			}
+		}
 	}
 
-	public Set<Path> imports()
+	public void finalizeValidation(Decl decl)
 	{
-		return imports;
+		DeclValidator.validate(decl, decls.get(decl), scope, context, validateDecl);
 	}
 
 	private void requireModule()
@@ -73,18 +79,7 @@ public class FileValidator implements IVisitor
 			throw new RuntimeException("no module defined");
 	}
 
-	private <T extends Decl, U extends katana.ast.Decl>
-	void doFinalize(IdentityHashMap<T, U> decls)
-	{
-		for(Map.Entry<T, U> entry : decls.entrySet())
-		{
-			T semaDecl = entry.getKey();
-			U decl = entry.getValue();
-			DeclValidator.validate(semaDecl, decl, semaDecl.module(), context);
-		}
-	}
-
-	private void visit(katana.ast.decl.Data data)
+	private Maybe<Decl> visit(katana.ast.decl.Data data)
 	{
 		declsSeen = true;
 		requireModule();
@@ -94,10 +89,13 @@ public class FileValidator implements IVisitor
 		if(!currentModule.defineData(semaData))
 			throw new RuntimeException("redefinition of symbol '" + data.name + "'");
 
-		datas.put(semaData, data);
+		decls.put(semaData, data);
+		scope.defineSymbol(semaData);
+
+		return Maybe.some(semaData);
 	}
 
-	private void visit(katana.ast.decl.ExternFunction function)
+	private Maybe<Decl> visit(katana.ast.decl.ExternFunction function)
 	{
 		declsSeen = true;
 		requireModule();
@@ -107,10 +105,13 @@ public class FileValidator implements IVisitor
 		if(!currentModule.defineExternFunction(semaFunction))
 			throw new RuntimeException("redefinition of symbol '" + function.name + "'");
 
-		extfuncs.put(semaFunction, function);
+		decls.put(semaFunction, function);
+		scope.defineSymbol(semaFunction);
+
+		return Maybe.some(semaFunction);
 	}
 
-	private void visit(katana.ast.decl.Function function)
+	private Maybe<Decl> visit(katana.ast.decl.Function function)
 	{
 		declsSeen = true;
 		requireModule();
@@ -120,10 +121,13 @@ public class FileValidator implements IVisitor
 		if(!currentModule.defineFunction(semaFunction))
 			throw new RuntimeException("redefinition of symbol '" + function.name + "'");
 
-		funcs.put(semaFunction, function);
+		decls.put(semaFunction, function);
+		scope.defineSymbol(semaFunction);
+
+		return Maybe.some(semaFunction);
 	}
 
-	private void visit(katana.ast.decl.Global global)
+	private Maybe<Decl> visit(katana.ast.decl.Global global)
 	{
 		declsSeen = true;
 		requireModule();
@@ -133,21 +137,29 @@ public class FileValidator implements IVisitor
 		if(!currentModule.defineGlobal(semaGlobal))
 			throw new RuntimeException("redefinition of symbol '" + global.name + "'");
 
-		globals.put(semaGlobal, global);
+		decls.put(semaGlobal, global);
+		scope.defineSymbol(semaGlobal);
+
+		return Maybe.some(semaGlobal);
 	}
 
-	private void visit(katana.ast.decl.Import import_)
+	private Maybe<Decl> visit(katana.ast.decl.Import import_)
 	{
 		if(declsSeen)
 			throw new RuntimeException("imports must go before other decls");
 
-		if(!imports.add(import_.path))
+		if(imports.containsKey(import_.path))
 			throw new RuntimeException("duplicate import '" + import_.path + "'");
+
+		imports.put(import_.path, import_);
+
+		return Maybe.none();
 	}
 
-	private void visit(katana.ast.decl.Module module_)
+	private Maybe<Decl> visit(katana.ast.decl.Module module_)
 	{
 		declsSeen = true;
 		currentModule = program.findOrCreateModule(module_.path);
+		return Maybe.none();
 	}
 }

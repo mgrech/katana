@@ -14,11 +14,10 @@
 
 package katana.parser;
 
-import katana.ast.Decl;
 import katana.ast.Path;
-import katana.ast.Stmt;
-import katana.ast.Type;
 import katana.ast.decl.*;
+import katana.ast.stmt.Stmt;
+import katana.ast.type.Type;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
 import katana.utils.Maybe;

@@ -14,9 +14,8 @@
 
 package katana.sema.decl;
 
-import katana.sema.Decl;
 import katana.sema.Module;
-import katana.sema.Type;
+import katana.sema.type.Type;
 import katana.utils.Maybe;
 
 import java.util.*;

@@ -14,8 +14,6 @@
 
 package katana.ast.type;
 
-import katana.ast.Type;
-
 public class Opaque extends Type
 {
 	public Opaque(int size, int alignment)

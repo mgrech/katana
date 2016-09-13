@@ -17,6 +17,7 @@ package katana.sema;
 import katana.backend.PlatformContext;
 import katana.backend.llvm.FunctionContext;
 import katana.sema.expr.BuiltinCall;
+import katana.sema.type.Type;
 import katana.utils.Maybe;
 
 import java.util.List;

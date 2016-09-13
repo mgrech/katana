@@ -14,8 +14,8 @@
 
 package katana.backend.llvm;
 
-import katana.sema.Expr;
-import katana.sema.Type;
+import katana.sema.expr.Expr;
+import katana.sema.type.Type;
 import katana.utils.Maybe;
 
 public class SSAExpr extends Expr

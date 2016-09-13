@@ -12,16 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema.stmt;
+package katana.sema;
 
-import katana.sema.expr.Expr;
+import java.util.*;
 
-public class ExprStmt extends Stmt
+public class FileScope implements Scope
 {
-	public ExprStmt(Expr expr)
+	public void defineSymbol(Symbol symbol)
 	{
-		this.expr = expr;
+		String name = symbol.name();
+
+		if(!symbols.containsKey(name))
+			symbols.put(name, new ArrayList<>());
+
+		symbols.get(name).add(symbol);
 	}
 
-	public Expr expr;
+	@Override
+	public List<Symbol> find(String name)
+	{
+		List<Symbol> symbolList = symbols.get(name);
+		return symbolList == null ? Collections.emptyList() : symbolList;
+	}
+
+	private Map<String, List<Symbol>> symbols = new HashMap<>();
 }

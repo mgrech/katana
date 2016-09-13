@@ -12,15 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.ast;
+package katana.ast.expr;
 
 import katana.visitor.IVisitable;
 
-public abstract class Stmt implements IVisitable
+public abstract class Expr implements IVisitable
 {
-	@Override
-	public String toString()
-	{
-		return getClass().getName();
-	}
 }

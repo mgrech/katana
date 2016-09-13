@@ -12,16 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema.stmt;
+package katana.ast.stmt;
 
-import katana.sema.expr.Expr;
+import katana.visitor.IVisitable;
 
-public class ExprStmt extends Stmt
+public abstract class Stmt implements IVisitable
 {
-	public ExprStmt(Expr expr)
+	@Override
+	public String toString()
 	{
-		this.expr = expr;
+		return getClass().getName();
 	}
-
-	public Expr expr;
 }

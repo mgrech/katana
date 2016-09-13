@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.ast;
+package katana.sema;
 
-import katana.visitor.IVisitable;
-
-public abstract class Type implements IVisitable
+public enum ValidationState
 {
+	ONGOING,
+	FINISHED,
 }

@@ -14,8 +14,6 @@
 
 package katana.ast.expr;
 
-import katana.ast.Expr;
-
 import java.util.ArrayList;
 
 public class BuiltinCall extends Expr

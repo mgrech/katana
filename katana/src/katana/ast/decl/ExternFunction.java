@@ -14,8 +14,7 @@
 
 package katana.ast.decl;
 
-import katana.ast.Decl;
-import katana.ast.Type;
+import katana.ast.type.Type;
 import katana.utils.Maybe;
 
 import java.util.List;

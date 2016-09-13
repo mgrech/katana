@@ -14,8 +14,7 @@
 
 package katana.ast.expr;
 
-import katana.ast.Expr;
-import katana.ast.Type;
+import katana.ast.type.Type;
 
 public class Sizeof extends Expr
 {

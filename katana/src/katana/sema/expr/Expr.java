@@ -12,16 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema.stmt;
+package katana.sema.expr;
 
-import katana.sema.expr.Expr;
+import katana.sema.type.Type;
+import katana.utils.Maybe;
+import katana.visitor.IVisitable;
 
-public class ExprStmt extends Stmt
+public abstract class Expr implements IVisitable
 {
-	public ExprStmt(Expr expr)
-	{
-		this.expr = expr;
-	}
-
-	public Expr expr;
+	public abstract Maybe<Type> type();
 }

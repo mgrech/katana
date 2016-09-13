@@ -14,8 +14,7 @@
 
 package katana.ast.decl;
 
-import katana.ast.Decl;
-import katana.ast.Type;
+import katana.ast.type.Type;
 
 public class Global extends Decl
 {

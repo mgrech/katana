@@ -15,16 +15,13 @@
 package katana.sema;
 
 import katana.ast.Path;
-import katana.sema.decl.Data;
-import katana.sema.decl.ExternFunction;
-import katana.sema.decl.Function;
-import katana.sema.decl.Global;
+import katana.sema.decl.*;
 import katana.utils.Maybe;
 
 import java.util.Map;
 import java.util.TreeMap;
 
-public class Module
+public class Module implements Symbol
 {
 	public Module(String name, Path path, Module parent)
 	{
@@ -122,6 +119,8 @@ public class Module
 		return children;
 	}
 
+	public Map<String, Decl> decls() { return decls; }
+
 	public Map<String, Data> datas()
 	{
 		return datas;
@@ -145,6 +144,12 @@ public class Module
 	public Path path()
 	{
 		return path;
+	}
+
+	@Override
+	public String name()
+	{
+		return name;
 	}
 
 	private String name;

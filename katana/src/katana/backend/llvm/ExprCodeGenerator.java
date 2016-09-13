@@ -16,11 +16,10 @@ package katana.backend.llvm;
 
 import katana.BuiltinType;
 import katana.backend.PlatformContext;
-import katana.sema.Expr;
-import katana.sema.Type;
 import katana.sema.decl.Data;
 import katana.sema.expr.*;
 import katana.sema.type.Function;
+import katana.sema.type.Type;
 import katana.sema.type.UserDefined;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;

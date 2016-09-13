@@ -14,8 +14,7 @@
 
 package katana.sema.stmt;
 
-import katana.sema.Expr;
-import katana.sema.Stmt;
+import katana.sema.expr.Expr;
 
 public class IfElse extends Stmt
 {

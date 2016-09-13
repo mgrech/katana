@@ -15,8 +15,7 @@
 package katana.sema.expr;
 
 import katana.sema.BuiltinFunc;
-import katana.sema.Expr;
-import katana.sema.Type;
+import katana.sema.type.Type;
 import katana.utils.Maybe;
 
 import java.util.List;

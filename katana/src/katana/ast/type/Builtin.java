@@ -15,7 +15,6 @@
 package katana.ast.type;
 
 import katana.BuiltinType;
-import katana.ast.Type;
 
 public class Builtin extends Type
 {

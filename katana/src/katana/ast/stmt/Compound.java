@@ -14,8 +14,6 @@
 
 package katana.ast.stmt;
 
-import katana.ast.Stmt;
-
 import java.util.ArrayList;
 import java.util.List;
 

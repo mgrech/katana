@@ -14,8 +14,7 @@
 
 package katana.ast.stmt;
 
-import katana.ast.Expr;
-import katana.ast.Stmt;
+import katana.ast.expr.Expr;
 
 public class ExprStmt extends Stmt
 {

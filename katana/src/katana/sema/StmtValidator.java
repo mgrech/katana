@@ -15,31 +15,39 @@
 package katana.sema;
 
 import katana.backend.PlatformContext;
+import katana.sema.decl.Decl;
 import katana.sema.decl.Function;
 import katana.sema.expr.Assign;
+import katana.sema.expr.Expr;
 import katana.sema.expr.NamedLocal;
 import katana.sema.stmt.*;
 import katana.sema.type.Builtin;
+import katana.sema.type.Type;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class StmtValidator implements IVisitor
 {
 	private IdentityHashMap<Goto, String> gotos = new IdentityHashMap<>();
 	private Function function;
+	private FunctionScope scope;
 	private PlatformContext context;
+	private Consumer<Decl> validateDecl;
 
-	public StmtValidator(Function function, PlatformContext context)
+	public StmtValidator(Function function, FunctionScope scope, PlatformContext context, Consumer<Decl> validateDecl)
 	{
 		this.function = function;
+		this.scope = scope;
 		this.context = context;
+		this.validateDecl = validateDecl;
 	}
 
-	public Stmt validate(katana.ast.Stmt stmt)
+	public Stmt validate(katana.ast.stmt.Stmt stmt)
 	{
 		return (Stmt)stmt.accept(this);
 	}
@@ -62,7 +70,7 @@ public class StmtValidator implements IVisitor
 	{
 		Compound semaCompound = new Compound();
 
-		for(katana.ast.Stmt stmt : compound.body)
+		for(katana.ast.stmt.Stmt stmt : compound.body)
 			semaCompound.body.add(validate(stmt));
 
 		return semaCompound;
@@ -87,7 +95,7 @@ public class StmtValidator implements IVisitor
 
 	private Stmt visit(katana.ast.stmt.If if_)
 	{
-		Expr condition = ExprValidator.validate(if_.condition, function, context);
+		Expr condition = ExprValidator.validate(if_.condition, scope, context, validateDecl);
 
 		if(condition.type().isNone() || !Type.same(condition.type().unwrap(), Builtin.BOOL))
 			throw new RuntimeException("if requires condition of type bool");
@@ -97,7 +105,7 @@ public class StmtValidator implements IVisitor
 
 	private Stmt visit(katana.ast.stmt.IfElse ifelse)
 	{
-		Expr condition = ExprValidator.validate(ifelse.condition, function, context);
+		Expr condition = ExprValidator.validate(ifelse.condition, scope, context, validateDecl);
 
 		if(condition.type().isNone() || !Type.same(condition.type().unwrap(), Builtin.BOOL))
 			throw new RuntimeException("if requires condition of type bool");
@@ -112,7 +120,7 @@ public class StmtValidator implements IVisitor
 
 	private Stmt visit(katana.ast.stmt.While while_)
 	{
-		Expr condition = ExprValidator.validate(while_.condition, function, context);
+		Expr condition = ExprValidator.validate(while_.condition, scope, context, validateDecl);
 
 		if(condition.type().isNone() || !Type.same(condition.type().unwrap(), Builtin.BOOL))
 			throw new RuntimeException("while requires condition of type bool");
@@ -122,7 +130,7 @@ public class StmtValidator implements IVisitor
 
 	private Stmt visit(katana.ast.stmt.Return return_)
 	{
-		Maybe<Expr> value = return_.value.map((v) -> ExprValidator.validate(v, function, context));
+		Maybe<Expr> value = return_.value.map((v) -> ExprValidator.validate(v, scope, context, validateDecl));
 
 		if(function.ret.isNone() && value.isSome())
 		{
@@ -160,14 +168,14 @@ public class StmtValidator implements IVisitor
 
 	private Stmt visit(katana.ast.stmt.ExprStmt exprStmt)
 	{
-		Expr expr = ExprValidator.validate(exprStmt.expr, function, context);
+		Expr expr = ExprValidator.validate(exprStmt.expr, scope, context, validateDecl);
 		return new ExprStmt(expr);
 	}
 
 	private Stmt visit(katana.ast.stmt.VarDef varDef)
 	{
 		String name = varDef.name;
-		Expr init = ExprValidator.validate(varDef.init, function, context);
+		Expr init = ExprValidator.validate(varDef.init, scope, context, validateDecl);
 		Maybe<Type> maybeType = init.type();
 
 		if(maybeType.isNone())

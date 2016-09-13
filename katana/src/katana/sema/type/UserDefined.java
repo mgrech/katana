@@ -15,7 +15,6 @@
 package katana.sema.type;
 
 import katana.backend.PlatformContext;
-import katana.sema.Type;
 import katana.sema.decl.Data;
 
 public class UserDefined extends Type
