@@ -80,6 +80,9 @@ public class TypeValidator implements IVisitor
 
 	private Type visit(katana.ast.type.Array array)
 	{
+		if(array.size < 0)
+			throw new RuntimeException(String.format("invalid array size %s", array.size));
+
 		return new Array(array.size, validate(array.type, scope, context, validateDecl));
 	}
 
