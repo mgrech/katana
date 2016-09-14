@@ -120,7 +120,7 @@ public class TypeValidator implements IVisitor
 		if(scope == null)
 			throw new RuntimeException("typeof is not valid in this context");
 
-		Expr expr = ExprValidator.validate(typeof.expr, scope, context, validateDecl);
+		Expr expr = ExprValidator.validate(typeof.expr, scope, context, validateDecl, Maybe.none());
 		Maybe<Type> type = expr.type();
 
 		if(type.isNone())

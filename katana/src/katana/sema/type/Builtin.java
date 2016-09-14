@@ -44,13 +44,13 @@ public class Builtin extends Type
 	@Override
 	public int sizeof(PlatformContext context)
 	{
-		return context.sizeof(this);
+		return context.sizeof(which);
 	}
 
 	@Override
 	public int alignof(PlatformContext context)
 	{
-		return context.alignof(this);
+		return context.alignof(which);
 	}
 
 	@Override

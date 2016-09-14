@@ -95,7 +95,7 @@ public class StmtValidator implements IVisitor
 
 	private Stmt visit(katana.ast.stmt.If if_)
 	{
-		Expr condition = ExprValidator.validate(if_.condition, scope, context, validateDecl);
+		Expr condition = ExprValidator.validate(if_.condition, scope, context, validateDecl, Maybe.some(Builtin.BOOL));
 
 		if(condition.type().isNone() || !Type.same(condition.type().unwrap(), Builtin.BOOL))
 			throw new RuntimeException("if requires condition of type bool");
@@ -105,7 +105,7 @@ public class StmtValidator implements IVisitor
 
 	private Stmt visit(katana.ast.stmt.IfElse ifelse)
 	{
-		Expr condition = ExprValidator.validate(ifelse.condition, scope, context, validateDecl);
+		Expr condition = ExprValidator.validate(ifelse.condition, scope, context, validateDecl, Maybe.some(Builtin.BOOL));
 
 		if(condition.type().isNone() || !Type.same(condition.type().unwrap(), Builtin.BOOL))
 			throw new RuntimeException("if requires condition of type bool");
@@ -120,7 +120,7 @@ public class StmtValidator implements IVisitor
 
 	private Stmt visit(katana.ast.stmt.While while_)
 	{
-		Expr condition = ExprValidator.validate(while_.condition, scope, context, validateDecl);
+		Expr condition = ExprValidator.validate(while_.condition, scope, context, validateDecl, Maybe.some(Builtin.BOOL));
 
 		if(condition.type().isNone() || !Type.same(condition.type().unwrap(), Builtin.BOOL))
 			throw new RuntimeException("while requires condition of type bool");
@@ -130,7 +130,7 @@ public class StmtValidator implements IVisitor
 
 	private Stmt visit(katana.ast.stmt.Return return_)
 	{
-		Maybe<Expr> value = return_.value.map((v) -> ExprValidator.validate(v, scope, context, validateDecl));
+		Maybe<Expr> value = return_.value.map((v) -> ExprValidator.validate(v, scope, context, validateDecl, function.ret));
 
 		if(function.ret.isNone() && value.isSome())
 		{
@@ -168,14 +168,14 @@ public class StmtValidator implements IVisitor
 
 	private Stmt visit(katana.ast.stmt.ExprStmt exprStmt)
 	{
-		Expr expr = ExprValidator.validate(exprStmt.expr, scope, context, validateDecl);
+		Expr expr = ExprValidator.validate(exprStmt.expr, scope, context, validateDecl, Maybe.none());
 		return new ExprStmt(expr);
 	}
 
 	private Stmt visit(katana.ast.stmt.VarDef varDef)
 	{
 		String name = varDef.name;
-		Expr init = ExprValidator.validate(varDef.init, scope, context, validateDecl);
+		Expr init = ExprValidator.validate(varDef.init, scope, context, validateDecl, Maybe.none());
 		Maybe<Type> maybeType = init.type();
 
 		if(maybeType.isNone())

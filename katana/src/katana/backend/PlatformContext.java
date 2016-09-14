@@ -14,18 +14,18 @@
 
 package katana.backend;
 
+import katana.BuiltinType;
 import katana.sema.BuiltinFunc;
 import katana.sema.decl.Data;
-import katana.sema.type.Builtin;
 import katana.utils.Maybe;
 
 public interface PlatformContext
 {
 	Maybe<BuiltinFunc> findBuiltin(String name);
 
-	int sizeof(Builtin builtin);
+	int sizeof(BuiltinType builtin);
 	int sizeof(Data data);
 
-	int alignof(Builtin builtin);
+	int alignof(BuiltinType builtin);
 	int alignof(Data data);
 }

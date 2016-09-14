@@ -333,7 +333,14 @@ public class Scanner
 		case "f32": type = Token.Type.LIT_FLOAT32; isFloatingPointSuffix = true; break;
 		case "f64": type = Token.Type.LIT_FLOAT64; isFloatingPointSuffix = true; break;
 
-		case "": error("numeric literal without suffix");
+		case "":
+			type = isFloatingPointLiteral
+				? Token.Type.LIT_FLOAT_DEDUCE
+				: Token.Type.LIT_INT_DEDUCE;
+
+			isFloatingPointSuffix = isFloatingPointLiteral;
+			break;
+
 		default: error("unknown literal suffix '" + suffix + "'");
 		}
 

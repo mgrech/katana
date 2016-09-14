@@ -147,24 +147,27 @@ public class ExprParser
 		case LIT_NULL: return new LitNull();
 		case LIT_BOOL: return new LitBool(token.value.equals("true"));
 
-		case LIT_INT:   return new LitInt(new BigInteger(token.value), BuiltinType.INT);
-		case LIT_PINT:  return new LitInt(new BigInteger(token.value), BuiltinType.PINT);
-		case LIT_INT8:  return new LitInt(new BigInteger(token.value), BuiltinType.INT8);
-		case LIT_INT16: return new LitInt(new BigInteger(token.value), BuiltinType.INT16);
-		case LIT_INT32: return new LitInt(new BigInteger(token.value), BuiltinType.INT32);
-		case LIT_INT64: return new LitInt(new BigInteger(token.value), BuiltinType.INT64);
+		case LIT_INT:   return new LitInt(new BigInteger(token.value), Maybe.some(BuiltinType.INT));
+		case LIT_PINT:  return new LitInt(new BigInteger(token.value), Maybe.some(BuiltinType.PINT));
+		case LIT_INT8:  return new LitInt(new BigInteger(token.value), Maybe.some(BuiltinType.INT8));
+		case LIT_INT16: return new LitInt(new BigInteger(token.value), Maybe.some(BuiltinType.INT16));
+		case LIT_INT32: return new LitInt(new BigInteger(token.value), Maybe.some(BuiltinType.INT32));
+		case LIT_INT64: return new LitInt(new BigInteger(token.value), Maybe.some(BuiltinType.INT64));
 
-		case LIT_UINT:   return new LitInt(new BigInteger(token.value), BuiltinType.UINT);
-		case LIT_UPINT:  return new LitInt(new BigInteger(token.value), BuiltinType.UPINT);
-		case LIT_UINT8:  return new LitInt(new BigInteger(token.value), BuiltinType.UINT8);
-		case LIT_UINT16: return new LitInt(new BigInteger(token.value), BuiltinType.UINT16);
-		case LIT_UINT32: return new LitInt(new BigInteger(token.value), BuiltinType.UINT32);
-		case LIT_UINT64: return new LitInt(new BigInteger(token.value), BuiltinType.UINT64);
+		case LIT_UINT:   return new LitInt(new BigInteger(token.value), Maybe.some(BuiltinType.UINT));
+		case LIT_UPINT:  return new LitInt(new BigInteger(token.value), Maybe.some(BuiltinType.UPINT));
+		case LIT_UINT8:  return new LitInt(new BigInteger(token.value), Maybe.some(BuiltinType.UINT8));
+		case LIT_UINT16: return new LitInt(new BigInteger(token.value), Maybe.some(BuiltinType.UINT16));
+		case LIT_UINT32: return new LitInt(new BigInteger(token.value), Maybe.some(BuiltinType.UINT32));
+		case LIT_UINT64: return new LitInt(new BigInteger(token.value), Maybe.some(BuiltinType.UINT64));
 
-		case LIT_FLOAT32: return new LitFloat(new BigDecimal(token.value), BuiltinType.FLOAT32);
-		case LIT_FLOAT64: return new LitFloat(new BigDecimal(token.value), BuiltinType.FLOAT64);
+		case LIT_FLOAT32: return new LitFloat(new BigDecimal(token.value), Maybe.some(BuiltinType.FLOAT32));
+		case LIT_FLOAT64: return new LitFloat(new BigDecimal(token.value), Maybe.some(BuiltinType.FLOAT64));
 
 		case LIT_STRING: return new LitString(token.value);
+
+		case LIT_INT_DEDUCE:   return new LitInt(new BigInteger(token.value), Maybe.none());
+		case LIT_FLOAT_DEDUCE: return new LitFloat(new BigDecimal(token.value), Maybe.none());
 
 		default: throw new AssertionError("unreachable");
 		}

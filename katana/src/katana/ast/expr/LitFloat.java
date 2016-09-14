@@ -15,17 +15,18 @@
 package katana.ast.expr;
 
 import katana.BuiltinType;
+import katana.utils.Maybe;
 
 import java.math.BigDecimal;
 
 public class LitFloat extends Expr
 {
-	public LitFloat(BigDecimal value, BuiltinType type)
+	public LitFloat(BigDecimal value, Maybe<BuiltinType> type)
 	{
 		this.value = value;
 		this.type = type;
 	}
 
 	public BigDecimal value;
-	public BuiltinType type;
+	public Maybe<BuiltinType> type;
 }

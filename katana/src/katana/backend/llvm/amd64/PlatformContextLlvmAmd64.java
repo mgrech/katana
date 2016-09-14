@@ -14,6 +14,7 @@
 
 package katana.backend.llvm.amd64;
 
+import katana.BuiltinType;
 import katana.backend.llvm.PlatformContextLlvm;
 import katana.sema.decl.Data;
 import katana.sema.type.Builtin;
@@ -23,9 +24,9 @@ import java.util.List;
 public class PlatformContextLlvmAmd64 extends PlatformContextLlvm
 {
 	@Override
-	public int sizeof(Builtin builtin)
+	public int sizeof(BuiltinType builtin)
 	{
-		switch(builtin.which)
+		switch(builtin)
 		{
 		case INT8:
 		case UINT8:
@@ -61,7 +62,7 @@ public class PlatformContextLlvmAmd64 extends PlatformContextLlvm
 	}
 
 	@Override
-	public int alignof(Builtin builtin)
+	public int alignof(BuiltinType builtin)
 	{
 		return sizeof(builtin);
 	}

@@ -15,17 +15,18 @@
 package katana.ast.expr;
 
 import katana.BuiltinType;
+import katana.utils.Maybe;
 
 import java.math.BigInteger;
 
 public class LitInt extends Expr
 {
-	public LitInt(BigInteger value, BuiltinType type)
+	public LitInt(BigInteger value, Maybe<BuiltinType> type)
 	{
 		this.value = value;
 		this.type = type;
 	}
 
 	public BigInteger value;
-	public BuiltinType type;
+	public Maybe<BuiltinType> type;
 }

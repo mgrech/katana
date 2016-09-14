@@ -14,16 +14,17 @@
 
 package katana.sema;
 
+import katana.BuiltinType;
+import katana.Limits;
 import katana.backend.PlatformContext;
 import katana.sema.decl.*;
+import katana.sema.decl.Function;
 import katana.sema.expr.*;
-import katana.sema.type.Array;
-import katana.sema.type.Builtin;
-import katana.sema.type.Type;
-import katana.sema.type.UserDefined;
+import katana.sema.type.*;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -43,10 +44,10 @@ public class ExprValidator implements IVisitor
 		this.validateDecl = validateDecl;
 	}
 
-	public static Expr validate(katana.ast.expr.Expr expr, Scope scope, PlatformContext context, Consumer<Decl> validateDecl)
+	public static Expr validate(katana.ast.expr.Expr expr, Scope scope, PlatformContext context, Consumer<Decl> validateDecl, Maybe<Type> deduce)
 	{
 		ExprValidator validator = new ExprValidator(scope, context, validateDecl);
-		return (Expr)expr.accept(validator);
+		return (Expr)expr.accept(validator, deduce);
 	}
 
 	private void checkArguments(List<Type> params, List<Expr> args)
@@ -82,9 +83,9 @@ public class ExprValidator implements IVisitor
 		}
 	}
 
-	private Expr visit(katana.ast.expr.Addressof addressof)
+	private Expr visit(katana.ast.expr.Addressof addressof, Maybe<Type> deduce)
 	{
-		Expr expr = validate(addressof.expr, scope, context, validateDecl);
+		Expr expr = validate(addressof.expr, scope, context, validateDecl, Maybe.none());
 
 		if(!(expr instanceof LValueExpr))
 			throw new RuntimeException("addressof() requires lvalue operand");
@@ -94,15 +95,15 @@ public class ExprValidator implements IVisitor
 		return new Addressof(lvalue);
 	}
 
-	private Expr visit(katana.ast.expr.Alignof alignof)
+	private Expr visit(katana.ast.expr.Alignof alignof, Maybe<Type> deduce)
 	{
 		return new Alignof(TypeValidator.validate(alignof.type, scope, context, validateDecl));
 	}
 
-	private Expr visit(katana.ast.expr.ArrayAccess arrayAccess)
+	private Expr visit(katana.ast.expr.ArrayAccess arrayAccess, Maybe<Type> deduce)
 	{
-		Expr value = validate(arrayAccess.value, scope, context, validateDecl);
-		Expr index = validate(arrayAccess.index, scope, context, validateDecl);
+		Expr value = validate(arrayAccess.value, scope, context, validateDecl, Maybe.none());
+		Expr index = validate(arrayAccess.index, scope, context, validateDecl, Maybe.some(Builtin.INT));
 		Maybe<Type> indexType = index.type();
 
 		if(indexType.isNone() || indexType.unwrap() != Builtin.INT)
@@ -117,24 +118,28 @@ public class ExprValidator implements IVisitor
 		return new ArrayAccessRValue(value, index);
 	}
 
-	private Expr visit(katana.ast.expr.Assign assign)
+	private Expr visit(katana.ast.expr.Assign assign, Maybe<Type> deduce)
 	{
-		Expr left = validate(assign.left, scope, context, validateDecl);
-		Expr right = validate(assign.right, scope, context, validateDecl);
+		Expr left = validate(assign.left, scope, context, validateDecl, Maybe.none());
 
 		if(left.type().isNone())
 			throw new RuntimeException("value expected on left side of assignment");
 
+		Type leftType = left.type().unwrap();
+		Expr right = validate(assign.right, scope, context, validateDecl, Maybe.some(leftType));
+
 		if(right.type().isNone())
 			throw new RuntimeException("value expected on right side of assignment");
+
+		Type rightType = right.type().unwrap();
 
 		if(!(left instanceof LValueExpr))
 			throw new RuntimeException("assignment requires lvalue operand on left side");
 
-		if(!Type.same(left.type().unwrap(), right.type().unwrap()))
+		if(!Type.same(leftType, rightType))
 			throw new RuntimeException("same types expected in assignment");
 
-		if(left.type().unwrap() instanceof katana.sema.type.Function)
+		if(leftType instanceof katana.sema.type.Function)
 			throw new RuntimeException("cannot assign to function");
 
 		LValueExpr leftAsLvalue = (LValueExpr)left;
@@ -142,7 +147,7 @@ public class ExprValidator implements IVisitor
 		return new Assign(leftAsLvalue, right);
 	}
 
-	private Expr visit(katana.ast.expr.BuiltinCall builtinCall)
+	private Expr visit(katana.ast.expr.BuiltinCall builtinCall, Maybe<Type> deduce)
 	{
 		Maybe<BuiltinFunc> maybeFunc = context.findBuiltin(builtinCall.name);
 
@@ -154,7 +159,7 @@ public class ExprValidator implements IVisitor
 
 		for(int i = 0; i != builtinCall.args.size(); ++i)
 		{
-			Expr semaExpr = validate(builtinCall.args.get(i), scope, context, validateDecl);
+			Expr semaExpr = validate(builtinCall.args.get(i), scope, context, validateDecl, Maybe.none());
 			Maybe<Type> type = semaExpr.type();
 
 			if(type.isNone())
@@ -172,9 +177,9 @@ public class ExprValidator implements IVisitor
 		return new BuiltinCall(func, args, ret);
 	}
 
-	private Expr visit(katana.ast.expr.Deref deref)
+	private Expr visit(katana.ast.expr.Deref deref, Maybe<Type> deduce)
 	{
-		Expr expr = validate(deref.expr, scope, context, validateDecl);
+		Expr expr = validate(deref.expr, scope, context, validateDecl, Maybe.some(Builtin.PTR));
 
 		if(expr.type().isNone() || expr.type().unwrap() != Builtin.PTR)
 			throw new RuntimeException("expression of type ptr expected in deref");
@@ -182,20 +187,24 @@ public class ExprValidator implements IVisitor
 		return new Deref(TypeValidator.validate(deref.type, scope, context, validateDecl), expr);
 	}
 
-	private Expr visit(katana.ast.expr.FunctionCall call)
+	private Expr visit(katana.ast.expr.FunctionCall call, Maybe<Type> deduce)
 	{
-		Expr expr = validate(call.expr, scope, context, validateDecl);
+		Expr expr = validate(call.expr, scope, context, validateDecl, Maybe.none());
 
 		if(expr.type().isNone() || !(expr.type().unwrap() instanceof katana.sema.type.Function))
 			throw new RuntimeException("expression does not result in function type");
 
+		katana.sema.type.Function ftype = (katana.sema.type.Function)expr.type().unwrap();
 		List<Expr> args = new ArrayList<>();
 
-		for(katana.ast.expr.Expr e : call.args)
-			args.add(validate(e, scope, context, validateDecl));
+		for(int i = 0; i != call.args.size(); ++i)
+		{
+			katana.ast.expr.Expr arg = call.args.get(i);
+			Type type = ftype.params.get(i);
+			args.add(validate(call.args.get(i), scope, context, validateDecl, Maybe.some(type)));
+		}
 
-		katana.sema.type.Function type = (katana.sema.type.Function)expr.type().unwrap();
-		checkArguments(type.params, args);
+		checkArguments(ftype.params, args);
 
 		if(expr instanceof NamedFunc)
 			return new DirectFunctionCall(((NamedFunc)expr).func, args, call.inline);
@@ -203,34 +212,73 @@ public class ExprValidator implements IVisitor
 		return new IndirectFunctionCall(expr, args);
 	}
 
-	private Expr visit(katana.ast.expr.LitBool lit)
+	private Expr visit(katana.ast.expr.LitBool lit, Maybe<Type> deduce)
 	{
 		return new LitBool(lit.value);
 	}
 
-	private Expr visit(katana.ast.expr.LitFloat lit)
+	private void errorLiteralTypeDeduction()
 	{
-		return new LitFloat(lit.value, lit.type);
+		throw new RuntimeException("type of literal could not be deduced");
 	}
 
-	private Expr visit(katana.ast.expr.LitInt lit)
+	BuiltinType deduceLiteralType(Maybe<Type> type, boolean floatingPoint)
 	{
-		return new LitInt(lit.value, lit.type);
+		if(type.isNone() || !(type.unwrap() instanceof Builtin))
+			errorLiteralTypeDeduction();
+
+		Builtin builtin = (Builtin)type.unwrap();
+
+		if(floatingPoint)
+		{
+			if(builtin.which.kind != BuiltinType.Kind.FLOAT)
+				errorLiteralTypeDeduction();
+		}
+
+		else
+		{
+			if(builtin.which.kind != BuiltinType.Kind.INT && builtin.which.kind != BuiltinType.Kind.UINT)
+				errorLiteralTypeDeduction();
+		}
+
+		return builtin.which;
 	}
 
-	private Expr visit(katana.ast.expr.LitNull lit)
+	private Expr visit(katana.ast.expr.LitFloat lit, Maybe<Type> deduce)
+	{
+		if(lit.type.isNone())
+			lit.type = Maybe.some(deduceLiteralType(deduce, true));
+
+		if(!Limits.inRange(lit.value, lit.type.unwrap()))
+			throw new RuntimeException("floating point literal value is out of range");
+
+		return new LitFloat(lit.value, lit.type.unwrap());
+	}
+
+	private Expr visit(katana.ast.expr.LitInt lit, Maybe<Type> deduce)
+	{
+		if(lit.type.isNone())
+			lit.type = Maybe.some(deduceLiteralType(deduce, false));
+
+		if(!Limits.inRange(lit.value, lit.type.unwrap(), context))
+			throw new RuntimeException("integer literal value is out of range");
+
+		return new LitInt(lit.value, lit.type.unwrap());
+	}
+
+	private Expr visit(katana.ast.expr.LitNull lit, Maybe<Type> deduce)
 	{
 		return new LitNull();
 	}
 
-	private Expr visit(katana.ast.expr.LitString lit)
+	private Expr visit(katana.ast.expr.LitString lit, Maybe<Type> deduce)
 	{
 		return new LitString(lit.value);
 	}
 
-	private Expr visit(katana.ast.expr.MemberAccess memberAccess)
+	private Expr visit(katana.ast.expr.MemberAccess memberAccess, Maybe<Type> deduce)
 	{
-		Expr expr = validate(memberAccess.expr, scope, context, validateDecl);
+		Expr expr = validate(memberAccess.expr, scope, context, validateDecl, Maybe.none());
 
 		if(expr.type().isNone())
 			throw new RuntimeException("expression does not result in a value");
@@ -255,7 +303,7 @@ public class ExprValidator implements IVisitor
 		return new FieldAccessRValue(expr, field.unwrap());
 	}
 
-	private Expr visit(katana.ast.expr.NamedValue namedValue)
+	private Expr visit(katana.ast.expr.NamedValue namedValue, Maybe<Type> deduce)
 	{
 		List<Symbol> candidates = scope.find(namedValue.name);
 
@@ -288,7 +336,7 @@ public class ExprValidator implements IVisitor
 		throw new RuntimeException(String.format("symbol '%s' does not refer to a value", namedValue.name));
 	}
 
-	private Expr visit(katana.ast.expr.Offsetof offsetof)
+	private Expr visit(katana.ast.expr.Offsetof offsetof, Maybe<Type> deduce)
 	{
 		List<Symbol> candidates = scope.find(offsetof.type);
 
@@ -311,7 +359,7 @@ public class ExprValidator implements IVisitor
 		return new Offsetof(field.unwrap());
 	}
 
-	private Expr visit(katana.ast.expr.Sizeof sizeof)
+	private Expr visit(katana.ast.expr.Sizeof sizeof, Maybe<Type> deduce)
 	{
 		return new Sizeof(TypeValidator.validate(sizeof.type, scope, context, validateDecl));
 	}
