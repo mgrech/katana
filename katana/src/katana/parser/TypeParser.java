@@ -81,7 +81,7 @@ public class TypeParser
 
 	private static Array parseArray(Scanner scanner)
 	{
-		String size = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT).value;
+		String size = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT_DEDUCE).value;
 		ParseTools.expect(scanner, Token.Type.PUNCT_RBRACKET, true);
 		return new Array(Integer.parseInt(size), TypeParser.parse(scanner));
 	}
@@ -90,9 +90,9 @@ public class TypeParser
 	{
 		return ParseTools.parenthesized(scanner, () ->
 		{
-			String size = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT).value;
+			String size = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT_DEDUCE).value;
 			ParseTools.expect(scanner, Token.Type.PUNCT_COMMA, true);
-			String alignment = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT).value;
+			String alignment = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT_DEDUCE).value;
 			return new Opaque(Integer.parseInt(size), Integer.parseInt(alignment));
 		});
 	}
