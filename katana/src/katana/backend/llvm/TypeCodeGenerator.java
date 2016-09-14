@@ -95,6 +95,6 @@ public class TypeCodeGenerator implements IVisitor
 
 	private String visit(Array type)
 	{
-		return String.format("[%s x %s]", type.sizeof(context), TypeCodeGenerator.generate(type.type, context));
+		return String.format("[%s x %s]", type.length, TypeCodeGenerator.generate(type.type, context));
 	}
 }
