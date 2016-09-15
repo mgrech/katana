@@ -15,7 +15,7 @@
 package katana.sema;
 
 import katana.ast.Path;
-import katana.sema.decl.*;
+import katana.sema.decl.Decl;
 import katana.utils.Maybe;
 
 import java.util.Map;

@@ -17,7 +17,6 @@ package katana.backend.llvm.amd64;
 import katana.BuiltinType;
 import katana.backend.llvm.PlatformContextLlvm;
 import katana.sema.decl.Data;
-import katana.sema.type.Builtin;
 
 import java.util.List;
 

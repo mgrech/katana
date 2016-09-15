@@ -18,13 +18,14 @@ import katana.BuiltinType;
 import katana.Limits;
 import katana.backend.PlatformContext;
 import katana.sema.decl.*;
-import katana.sema.decl.Function;
 import katana.sema.expr.*;
-import katana.sema.type.*;
+import katana.sema.type.Array;
+import katana.sema.type.Builtin;
+import katana.sema.type.Type;
+import katana.sema.type.UserDefined;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;

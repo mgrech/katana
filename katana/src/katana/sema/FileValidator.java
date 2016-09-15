@@ -15,15 +15,9 @@
 package katana.sema;
 
 import katana.ast.Path;
-import katana.ast.decl.*;
+import katana.ast.decl.Import;
 import katana.backend.PlatformContext;
 import katana.sema.decl.*;
-import katana.sema.decl.Data;
-import katana.sema.decl.Decl;
-import katana.sema.decl.ExternFunction;
-import katana.sema.decl.Function;
-import katana.sema.decl.Global;
-import katana.sema.decl.TypeAlias;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
