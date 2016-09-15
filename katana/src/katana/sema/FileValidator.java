@@ -15,9 +15,15 @@
 package katana.sema;
 
 import katana.ast.Path;
-import katana.ast.decl.Import;
+import katana.ast.decl.*;
 import katana.backend.PlatformContext;
 import katana.sema.decl.*;
+import katana.sema.decl.Data;
+import katana.sema.decl.Decl;
+import katana.sema.decl.ExternFunction;
+import katana.sema.decl.Function;
+import katana.sema.decl.Global;
+import katana.sema.decl.TypeAlias;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
@@ -146,6 +152,22 @@ public class FileValidator implements IVisitor
 		scope.defineSymbol(semaGlobal);
 
 		return Maybe.some(semaGlobal);
+	}
+
+	private Maybe<Decl> visit(katana.ast.decl.TypeAlias alias)
+	{
+		declsSeen = true;
+		requireModule();
+
+		TypeAlias semaAlias = new TypeAlias(currentModule, alias.exported, alias.name);
+
+		if(!currentModule.defineTypeAlias(semaAlias))
+			redefinitionError(semaAlias);
+
+		decls.put(semaAlias, alias);
+		scope.defineSymbol(semaAlias);
+
+		return Maybe.some(semaAlias);
 	}
 
 	private Maybe<Decl> visit(katana.ast.decl.Import import_)

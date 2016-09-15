@@ -95,4 +95,9 @@ public class DeclValidator implements IVisitor
 	{
 		semaGlobal.type = TypeValidator.validate(global.type, scope, context, validateDecl);
 	}
+
+	private void visit(TypeAlias semaAlias, katana.ast.decl.TypeAlias alias)
+	{
+		semaAlias.type = TypeValidator.validate(alias.type, scope, context, validateDecl);
+	}
 }

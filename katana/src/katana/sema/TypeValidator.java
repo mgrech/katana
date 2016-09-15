@@ -17,6 +17,7 @@ package katana.sema;
 import katana.backend.PlatformContext;
 import katana.sema.decl.Data;
 import katana.sema.decl.Decl;
+import katana.sema.decl.TypeAlias;
 import katana.sema.expr.Expr;
 import katana.sema.type.*;
 import katana.utils.Maybe;
@@ -112,10 +113,13 @@ public class TypeValidator implements IVisitor
 		if(symbol instanceof Decl)
 			validateDecl.accept((Decl)symbol);
 
-		if(!(symbol instanceof Data))
-			throw new RuntimeException(String.format("symbol '%s' does not refer to a type"));
+		if(symbol instanceof TypeAlias)
+			return ((TypeAlias)symbol).type;
 
-		return new UserDefined((Data)symbol);
+		if(symbol instanceof Data)
+			return new UserDefined((Data)symbol);
+
+		throw new RuntimeException(String.format("symbol '%s' does not refer to a type"));
 	}
 
 	private Type visit(katana.ast.type.Typeof typeof)

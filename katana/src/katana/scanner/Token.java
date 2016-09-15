@@ -61,6 +61,7 @@ public class Token
 		DECL_EXTERN,
 		DECL_FN,
 		DECL_DATA,
+		DECL_TYPE,
 
 		STMT_VAR,
 		STMT_IF,
@@ -128,6 +129,7 @@ public class Token
 	public static final Token DECL_EXTERN = new Token(Category.DECL, Type.DECL_EXTERN, "extern");
 	public static final Token DECL_FN     = new Token(Category.DECL, Type.DECL_FN,     "fn");
 	public static final Token DECL_DATA   = new Token(Category.DECL, Type.DECL_DATA,   "data");
+	public static final Token DECL_TYPE   = new Token(Category.DECL, Type.DECL_TYPE,   "type");
 
 	public static final Token STMT_VAR    = new Token(Category.STMT, Type.STMT_VAR,    "var");
 	public static final Token STMT_IF     = new Token(Category.STMT, Type.STMT_IF,     "if");

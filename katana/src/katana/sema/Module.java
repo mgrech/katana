@@ -66,6 +66,15 @@ public class Module implements Symbol
 		return true;
 	}
 
+	public boolean defineTypeAlias(TypeAlias alias)
+	{
+		if(!defineSymbol(alias))
+			return false;
+
+		aliases.put(alias.name(), alias);
+		return true;
+	}
+
 	private boolean defineSymbol(Decl decl)
 	{
 		if(decls.containsKey(decl.name()))
@@ -162,4 +171,5 @@ public class Module implements Symbol
 	private Map<String, Global> globals = new TreeMap<>();
 	private Map<String, Function> functions = new TreeMap<>();
 	private Map<String, ExternFunction> externFunctions = new TreeMap<>();
+	private Map<String, TypeAlias> aliases = new TreeMap<>();
 }

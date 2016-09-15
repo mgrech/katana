@@ -234,6 +234,7 @@ public class Scanner
 		case "extern": return Token.DECL_EXTERN;
 		case "fn":     return Token.DECL_FN;
 		case "data":   return Token.DECL_DATA;
+		case "type":   return Token.DECL_TYPE;
 
 		case "var":    return Token.STMT_VAR;
 		case "if":     return Token.STMT_IF;

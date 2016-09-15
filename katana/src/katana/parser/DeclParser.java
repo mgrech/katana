@@ -60,6 +60,12 @@ public class DeclParser
 
 			return parseModule(scanner);
 
+		case DECL_TYPE:
+			if(opaque)
+				throw new RuntimeException("type aliases cannot be exported opaquely");
+
+			return parseTypeAlias(scanner, exported);
+
 		default: break;
 		}
 
@@ -185,5 +191,15 @@ public class DeclParser
 		Path path = ParseTools.path(scanner);
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
 		return new Module(path);
+	}
+
+	private static TypeAlias parseTypeAlias(Scanner scanner, boolean exported)
+	{
+		scanner.advance();
+		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
+		ParseTools.expect(scanner, Token.Type.PUNCT_ASSIGN, true);
+		Type type = TypeParser.parse(scanner);
+		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
+		return new TypeAlias(exported, name, type);
 	}
 }
