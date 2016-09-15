@@ -6,11 +6,12 @@
 
     <groupId>katana</groupId>
     <artifactId>katana</artifactId>
-    <version>0.2</version>
+    <version>0.3</version>
 
     <packaging>jar</packaging>
 
     <build>
+        <sourceDirectory>src</sourceDirectory>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

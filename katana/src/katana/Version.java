@@ -14,15 +14,30 @@
 
 package katana;
 
+import java.io.InputStream;
+import java.util.Properties;
+
 public class Version
 {
-	public static final int MAJOR = 0;
-	public static final int MINOR = 3;
-
+	public static final String GROUP_ID = "katana";
+	public static final String ARTIFACT_ID = "katana";
 	public static final String AUTHOR = "Markus Grech";
 
 	public static String asString()
 	{
-		return String.format("%s.%s", MAJOR, MINOR);
+		try {
+			InputStream is = Version.class.getClassLoader().getResourceAsStream(String.format("META-INF/maven/%s/%s/pom.properties", GROUP_ID, ARTIFACT_ID));
+
+			if (is != null) {
+				Properties properties = new Properties();
+				properties.load(is);
+
+				return properties.getProperty("version", "development");
+			} else {
+				return "development";
+			}
+		} catch (Exception ex) {
+			return "SomethingIsVeryWrong-Version";
+		}
 	}
 }
