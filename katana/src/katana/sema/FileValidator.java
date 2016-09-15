@@ -69,7 +69,8 @@ public class FileValidator implements IVisitor
 			if(import_.rename.isNone())
 			{
 				for(Decl decl : module.unwrap().decls().values())
-					scope.defineSymbol(decl);
+					if(decl.exported)
+						scope.defineSymbol(decl);
 			}
 		}
 	}
