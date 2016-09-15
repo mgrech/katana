@@ -30,17 +30,8 @@ public class ProgramCodeGenerator
 		for(Module child : module.children().values())
 			generate(generator, child);
 
-		for(Data data : module.datas().values())
-			generator.generate(data);
-
-		for(Global global : module.globals().values())
-			generator.generate(global);
-
-		for(ExternFunction externFunction : module.externFunctions().values())
-			generator.generate(externFunction);
-
-		for(Function function : module.functions().values())
-			generator.generate(function);
+		for(Decl decl : module.decls().values())
+			generator.generate(decl);
 	}
 
 	private static void generateMainWrapper(StringBuilder builder, Decl func)

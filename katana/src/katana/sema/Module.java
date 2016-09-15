@@ -30,52 +30,7 @@ public class Module implements Symbol
 		this.parent = parent;
 	}
 
-	public boolean defineData(Data data)
-	{
-		if(!defineSymbol(data))
-			return false;
-
-		datas.put(data.name(), data);
-		return true;
-	}
-
-	public boolean defineGlobal(Global global)
-	{
-		if(!defineSymbol(global))
-			return false;
-
-		globals.put(global.name, global);
-		return true;
-	}
-
-	public boolean defineFunction(Function function)
-	{
-		if(!defineSymbol(function))
-			return false;
-
-		functions.put(function.name(), function);
-		return true;
-	}
-
-	public boolean defineExternFunction(ExternFunction function)
-	{
-		if(!defineSymbol(function))
-			return false;
-
-		externFunctions.put(function.name(), function);
-		return true;
-	}
-
-	public boolean defineTypeAlias(TypeAlias alias)
-	{
-		if(!defineSymbol(alias))
-			return false;
-
-		aliases.put(alias.name(), alias);
-		return true;
-	}
-
-	private boolean defineSymbol(Decl decl)
+	public boolean declare(Decl decl)
 	{
 		if(decls.containsKey(decl.name()))
 			return false;
@@ -84,7 +39,7 @@ public class Module implements Symbol
 		return true;
 	}
 
-	public Maybe<Decl> findSymbol(String name)
+	public Maybe<Decl> findDecl(String name)
 	{
 		Module current = this;
 		Decl decl;
@@ -130,26 +85,6 @@ public class Module implements Symbol
 
 	public Map<String, Decl> decls() { return decls; }
 
-	public Map<String, Data> datas()
-	{
-		return datas;
-	}
-
-	public Map<String, Global> globals()
-	{
-		return globals;
-	}
-
-	public Map<String, Function> functions()
-	{
-		return functions;
-	}
-
-	public Map<String, ExternFunction> externFunctions()
-	{
-		return externFunctions;
-	}
-
 	public Path path()
 	{
 		return path;
@@ -165,11 +100,5 @@ public class Module implements Symbol
 	private Path path;
 	private Module parent;
 	private Map<String, Module> children = new TreeMap<>();
-
 	private Map<String, Decl> decls = new TreeMap<>();
-	private Map<String, Data> datas = new TreeMap<>();
-	private Map<String, Global> globals = new TreeMap<>();
-	private Map<String, Function> functions = new TreeMap<>();
-	private Map<String, ExternFunction> externFunctions = new TreeMap<>();
-	private Map<String, TypeAlias> aliases = new TreeMap<>();
 }

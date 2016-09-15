@@ -91,84 +91,48 @@ public class FileValidator implements IVisitor
 		throw new RuntimeException(String.format("redefinition of symbol '%s'", symbol.name()));
 	}
 
-	private Maybe<Decl> visit(katana.ast.decl.Data data)
+	private Maybe<Decl> handleModuleDecl(Decl semaDecl, katana.ast.decl.Decl decl)
 	{
 		declsSeen = true;
 		requireModule();
 
+		if(!currentModule.declare(semaDecl))
+			redefinitionError(semaDecl);
+
+		decls.put(semaDecl, decl);
+		scope.defineSymbol(semaDecl);
+
+		return Maybe.some(semaDecl);
+	}
+
+	private Maybe<Decl> visit(katana.ast.decl.Data data)
+	{
 		Data semaData = new Data(currentModule, data.exported, data.opaque, data.name);
-
-		if(!currentModule.defineData(semaData))
-			redefinitionError(semaData);
-
-		decls.put(semaData, data);
-		scope.defineSymbol(semaData);
-
-		return Maybe.some(semaData);
+		return handleModuleDecl(semaData, data);
 	}
 
 	private Maybe<Decl> visit(katana.ast.decl.ExternFunction function)
 	{
-		declsSeen = true;
-		requireModule();
-
 		ExternFunction semaFunction = new ExternFunction(currentModule, function.exported, function.opaque, function.externName, function.name);
-
-		if(!currentModule.defineExternFunction(semaFunction))
-			redefinitionError(semaFunction);
-
-		decls.put(semaFunction, function);
-		scope.defineSymbol(semaFunction);
-
-		return Maybe.some(semaFunction);
+		return handleModuleDecl(semaFunction, function);
 	}
 
 	private Maybe<Decl> visit(katana.ast.decl.Function function)
 	{
-		declsSeen = true;
-		requireModule();
-
 		Function semaFunction = new Function(currentModule, function.exported, function.opaque, function.name);
-
-		if(!currentModule.defineFunction(semaFunction))
-			redefinitionError(semaFunction);
-
-		decls.put(semaFunction, function);
-		scope.defineSymbol(semaFunction);
-
-		return Maybe.some(semaFunction);
+		return handleModuleDecl(semaFunction, function);
 	}
 
 	private Maybe<Decl> visit(katana.ast.decl.Global global)
 	{
-		declsSeen = true;
-		requireModule();
-
 		Global semaGlobal = new Global(currentModule, global.exported, global.opaque, global.name);
-
-		if(!currentModule.defineGlobal(semaGlobal))
-			redefinitionError(semaGlobal);
-
-		decls.put(semaGlobal, global);
-		scope.defineSymbol(semaGlobal);
-
-		return Maybe.some(semaGlobal);
+		return handleModuleDecl(semaGlobal, global);
 	}
 
 	private Maybe<Decl> visit(katana.ast.decl.TypeAlias alias)
 	{
-		declsSeen = true;
-		requireModule();
-
 		TypeAlias semaAlias = new TypeAlias(currentModule, alias.exported, alias.name);
-
-		if(!currentModule.defineTypeAlias(semaAlias))
-			redefinitionError(semaAlias);
-
-		decls.put(semaAlias, alias);
-		scope.defineSymbol(semaAlias);
-
-		return Maybe.some(semaAlias);
+		return handleModuleDecl(semaAlias, alias);
 	}
 
 	private Maybe<Decl> visit(katana.ast.decl.Import import_)

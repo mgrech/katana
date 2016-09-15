@@ -158,4 +158,7 @@ public class DeclCodeGenerator implements IVisitor
 		String typeString = TypeCodeGenerator.generate(global.type, context);
 		builder.append(String.format("@%s = private global %s zeroinitializer\n", qualifiedName, typeString));
 	}
+
+	private void visit(TypeAlias alias)
+	{}
 }

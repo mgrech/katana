@@ -70,7 +70,7 @@ public class Build
 		if(module.isNone())
 			return Maybe.none();
 
-		return module.unwrap().findSymbol(symbol);
+		return module.unwrap().findDecl(symbol);
 	}
 
 	private static Decl findMainFunction(Program program, String name)
