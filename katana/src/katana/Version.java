@@ -14,6 +14,7 @@
 
 package katana;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
@@ -23,21 +24,36 @@ public class Version
 	public static final String ARTIFACT_ID = "katana";
 	public static final String AUTHOR = "Markus Grech";
 
+	private static final String VERSION_STRING = loadVersion();
+
+	private static String loadVersion()
+	{
+		try
+		{
+			String path = String.format("META-INF/maven/%s/%s/pom.properties", GROUP_ID, ARTIFACT_ID);
+			InputStream is = Version.class.getClassLoader().getResourceAsStream(path);
+
+			if(is == null)
+				return "development";
+
+			Properties properties = new Properties();
+			properties.load(is);
+			String version = properties.getProperty("version");
+
+			if(version == null)
+				throw new RuntimeException("property 'version' not found -- pom.properties corrupt?");
+
+			return version;
+		}
+
+		catch(IOException ex)
+		{
+			throw new RuntimeException(ex);
+		}
+	}
+
 	public static String asString()
 	{
-		try {
-			InputStream is = Version.class.getClassLoader().getResourceAsStream(String.format("META-INF/maven/%s/%s/pom.properties", GROUP_ID, ARTIFACT_ID));
-
-			if (is != null) {
-				Properties properties = new Properties();
-				properties.load(is);
-
-				return properties.getProperty("version", "development");
-			} else {
-				return "development";
-			}
-		} catch (Exception ex) {
-			return "SomethingIsVeryWrong-Version";
-		}
+		return VERSION_STRING;
 	}
 }
