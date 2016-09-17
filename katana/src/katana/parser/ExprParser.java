@@ -70,6 +70,12 @@ public class ExprParser
 
 	private static Expr parseInitialExpr(Scanner scanner)
 	{
+		if(ParseTools.option(scanner, Token.Type.DECL_GLOBAL, true))
+		{
+			String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
+			return new NamedGlobal(name);
+		}
+
 		if(ParseTools.option(scanner, Token.Type.IDENT, false))
 		{
 			String name = ParseTools.consume(scanner).value;

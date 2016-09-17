@@ -304,6 +304,24 @@ public class ExprValidator implements IVisitor
 		return new FieldAccessRValue(expr, field.unwrap());
 	}
 
+	private Expr visit(katana.ast.expr.NamedGlobal namedGlobal, Maybe<Type> deduce)
+	{
+		List<Symbol> candidates = scope.find(namedGlobal.name);
+
+		if(candidates.isEmpty())
+			throw new RuntimeException(String.format("use of unknown symbol '%s'", namedGlobal.name));
+
+		if(candidates.size() > 1)
+			throw new RuntimeException(String.format("ambiguos reference to symbol '%s'", namedGlobal.name));
+
+		Symbol symbol = candidates.get(0);
+
+		if(!(symbol instanceof Global))
+			throw new RuntimeException(String.format("symbol '%s' does not refer to a global", namedGlobal.name));
+
+		return new NamedGlobal((Global)symbol);
+	}
+
 	private Expr visit(katana.ast.expr.NamedValue namedValue, Maybe<Type> deduce)
 	{
 		List<Symbol> candidates = scope.find(namedValue.name);
@@ -332,7 +350,7 @@ public class ExprValidator implements IVisitor
 			return new NamedFunc((Function)symbol);
 
 		if(symbol instanceof Global)
-			return new NamedGlobal((Global)symbol);
+			throw new RuntimeException("referencing global requires 'global' keyword");
 
 		throw new RuntimeException(String.format("symbol '%s' does not refer to a value", namedValue.name));
 	}
