@@ -283,10 +283,12 @@ public class Scanner
 
 		do
 		{
-			literal.appendCodePoint(here());
+			if(here() != '\'')
+				literal.appendCodePoint(here());
+
 			advanceColumn();
 		}
-		while(!atEnd() && CharClassifier.isDigit(here()));
+		while(!atEnd() && (CharClassifier.isDigit(here()) || here() == '\''));
 
 		boolean isFloatingPointLiteral = !atEnd() && here() == '.';
 
@@ -295,9 +297,11 @@ public class Scanner
 			literal.append('.');
 			advanceColumn();
 
-			while(!atEnd() && CharClassifier.isDigit(here()))
+			while(!atEnd() && (CharClassifier.isDigit(here()) || here() == '\''))
 			{
-				literal.appendCodePoint(here());
+				if(here() != '\'')
+					literal.appendCodePoint(here());
+
 				advanceColumn();
 			}
 		}
