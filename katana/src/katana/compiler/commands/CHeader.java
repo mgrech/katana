@@ -15,7 +15,7 @@
 package katana.compiler.commands;
 
 import katana.compiler.Command;
-import katana.utils.JarUtils;
+import katana.utils.ResourceLoader;
 
 import java.nio.charset.StandardCharsets;
 
@@ -24,7 +24,7 @@ public class CHeader
 {
 	public static void run(String[] args)
 	{
-		byte[] header = JarUtils.read("katana.h");
+		byte[] header = ResourceLoader.load("katana.h");
 		System.out.println(new String(header, StandardCharsets.UTF_8));
 	}
 }

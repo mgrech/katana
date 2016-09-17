@@ -20,30 +20,16 @@ import java.util.Properties;
 
 public class Version
 {
-	public static final String GROUP_ID = "katana";
-	public static final String ARTIFACT_ID = "katana";
-	public static final String AUTHOR = "Markus Grech";
-
 	private static final String VERSION_STRING = loadVersion();
 
 	private static String loadVersion()
 	{
 		try
 		{
-			String path = String.format("META-INF/maven/%s/%s/pom.properties", GROUP_ID, ARTIFACT_ID);
-			InputStream is = Version.class.getClassLoader().getResourceAsStream(path);
-
-			if(is == null)
-				return "development";
-
+			InputStream is = Version.class.getClassLoader().getResourceAsStream("version.txt");
 			Properties properties = new Properties();
 			properties.load(is);
-			String version = properties.getProperty("version");
-
-			if(version == null)
-				throw new RuntimeException("property 'version' not found -- pom.properties corrupt?");
-
-			return version;
+			return properties.getProperty("version");
 		}
 
 		catch(IOException ex)

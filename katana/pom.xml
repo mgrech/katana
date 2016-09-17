@@ -4,14 +4,33 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <name>katana</name>
+
     <groupId>katana</groupId>
     <artifactId>katana</artifactId>
-    <version>0.3</version>
+    <version>0.4-SNAPSHOT</version>
 
     <packaging>jar</packaging>
 
+    <developers>
+        <developer>
+            <name>Markus Grech</name>
+        </developer>
+    </developers>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
     <build>
+        <finalName>katana</finalName>
         <sourceDirectory>src</sourceDirectory>
+        <resources>
+            <resource>
+                <directory>resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -30,7 +49,8 @@
                 <version>3.0.2</version>
                 <configuration>
                     <archive>
-                        <manifestFile>${project.basedir}/src/META-INF/MANIFEST.MF</manifestFile>
+                        <manifestFile>resources/META-INF/MANIFEST.MF</manifestFile>
+                        <addMavenDescriptor>false</addMavenDescriptor>
                     </archive>
                 </configuration>
             </plugin>

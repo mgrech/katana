@@ -21,6 +21,6 @@ public class Version
 {
 	public static void run(String[] args)
 	{
-		System.out.println(String.format("katana version %s\nby %s\n", katana.Version.asString(), katana.Version.AUTHOR));
+		System.out.println(katana.Version.asString());
 	}
 }
