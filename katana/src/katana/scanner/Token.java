@@ -119,8 +119,8 @@ public class Token
 	}
 
 	public static final Token LIT_NULL   = new Token(Category.LIT, Type.LIT_NULL, "null");
-	public static final Token LIT_BOOL_T = new Token(Category.LIT, Type.LIT_BOOL, "true");
-	public static final Token LIT_BOOL_F = new Token(Category.LIT, Type.LIT_BOOL, "false");
+	public static final Token LIT_BOOL_T = new Token(Category.LIT, Type.LIT_BOOL, "true",  true);
+	public static final Token LIT_BOOL_F = new Token(Category.LIT, Type.LIT_BOOL, "false", false);
 
 	public static final Token DECL_EXPORT = new Token(Category.DECL, Type.DECL_EXPORT, "export");
 	public static final Token DECL_IMPORT = new Token(Category.DECL, Type.DECL_IMPORT, "import");
@@ -181,26 +181,32 @@ public class Token
 	public static final Token MISC_DEREF     = new Token(Category.MISC, Type.MISC_DEREF,     "deref");
 	public static final Token MISC_BUILTIN   = new Token(Category.MISC, Type.MISC_BUILTIN,   "builtin");
 
-	public static final Token BEGIN = new Token(Category.BEGIN, Type.BEGIN, null);
-	public static final Token END   = new Token(Category.END,   Type.END,   null);
+	public static final Token BEGIN = new Token(Category.BEGIN, Type.BEGIN, null, null);
+	public static final Token END   = new Token(Category.END,   Type.END,   null, null);
 
 	public final Category category;
 	public final Type type;
 	public final String value;
+	public final Object data;
 
 	public static Token identifier(String value)
 	{
-		return new Token(Category.IDENT, Type.IDENT, value);
+		return new Token(Category.IDENT, Type.IDENT, value, null);
 	}
 
-	public static Token literal(Type type, String value)
+	public static Token numericLiteral(Type type, String value, int base)
 	{
-		return new Token(Category.LIT, type, value);
+		return new Token(Category.LIT, type, value, base);
+	}
+
+	public static Token stringLiteral(String value)
+	{
+		return new Token(Category.LIT, Type.LIT_STRING, value);
 	}
 
 	public static Token label(String value)
 	{
-		return new Token(Category.STMT, Type.STMT_LABEL, value);
+		return new Token(Category.STMT, Type.STMT_LABEL, value, null);
 	}
 
 	@Override
@@ -211,8 +217,14 @@ public class Token
 
 	private Token(Category category, Type type, String value)
 	{
+		this(category, type, value, null);
+	}
+
+	private Token(Category category, Type type, String value, Object data)
+	{
 		this.category = category;
 		this.type = type;
 		this.value = value;
+		this.data = data;
 	}
 }

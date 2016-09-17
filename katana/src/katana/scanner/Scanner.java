@@ -118,7 +118,7 @@ public class Scanner
 
 		advanceColumn();
 
-		return Token.literal(Token.Type.LIT_STRING, builder.toString());
+		return Token.stringLiteral(builder.toString());
 	}
 
 	private int stringCodepoint()
@@ -275,29 +275,72 @@ public class Scanner
 		}
 	}
 
+	private boolean isDigit(int cp, int base)
+	{
+		int index = "0123456789abcdef".indexOf(Character.toLowerCase(cp));
+		return index != -1 && index < base;
+	}
+
 	private Token numericLiteral()
 	{
 		StringBuilder literal = new StringBuilder();
 
 		boolean isNegativeLiteral = here() == '-';
 
-		do
+		if(isNegativeLiteral)
+		{
+			literal.append('-');
+			advanceColumn();
+		}
+
+		int base = 10;
+
+		if(!atEnd() && here() == '0')
+		{
+			advanceColumn();
+
+			if(atEnd())
+				literal.append('0');
+
+			else
+			{
+				if(here() == 'b')
+					base = 2;
+				else if(here() == 'o')
+					base = 8;
+				else if(here() == 'x')
+					base = 16;
+				else if(CharClassifier.isDigit(here()))
+					throw new RuntimeException("numeric literals must start with digit 1-9 or base prefix");
+				else
+					throw new RuntimeException("invalid base prefix in numeric literal");
+
+				advanceColumn();
+			}
+		}
+
+		if(atEnd() || here() == '0' || here() == '\'')
+			throw new RuntimeException("numeric literals must start with digit 1-9 or base prefix");
+
+		while(!atEnd() && (isDigit(here(), base) || here() == '\''))
 		{
 			if(here() != '\'')
 				literal.appendCodePoint(here());
 
 			advanceColumn();
 		}
-		while(!atEnd() && (CharClassifier.isDigit(here()) || here() == '\''));
 
 		boolean isFloatingPointLiteral = !atEnd() && here() == '.';
+
+		if(isFloatingPointLiteral && base != 10)
+			throw new RuntimeException("base prefixes are not supported with floating point literals");
 
 		if(isFloatingPointLiteral)
 		{
 			literal.append('.');
 			advanceColumn();
 
-			while(!atEnd() && (CharClassifier.isDigit(here()) || here() == '\''))
+			while(!atEnd() && (isDigit(here(), base) || here() == '\''))
 			{
 				if(here() != '\'')
 					literal.appendCodePoint(here());
@@ -355,7 +398,7 @@ public class Scanner
 		if(isNegativeLiteral && isUnsignedSuffix)
 			error("unsigned integer suffix used on signed number literal");
 
-		return Token.literal(type, literal.toString());
+		return Token.numericLiteral(type, literal.toString(), base);
 	}
 
 	private void skipWhitespaceAndComments()
