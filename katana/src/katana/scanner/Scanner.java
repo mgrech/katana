@@ -302,25 +302,40 @@ public class Scanner
 			if(atEnd())
 				literal.append('0');
 
-			else
+			else if(here() == 'b')
 			{
-				if(here() == 'b')
-					base = 2;
-				else if(here() == 'o')
-					base = 8;
-				else if(here() == 'x')
-					base = 16;
-				else if(CharClassifier.isDigit(here()))
-					throw new RuntimeException("numeric literals must start with digit 1-9 or base prefix");
-				else
-					throw new RuntimeException("invalid base prefix in numeric literal");
-
+				base = 2;
 				advanceColumn();
+
+				if(!isDigit(here(), base))
+					throw new RuntimeException("numeric literal with base prefix requires at least one digit");
 			}
+
+			else if(here() == 'o')
+			{
+				base = 8;
+				advanceColumn();
+
+				if(!isDigit(here(), base))
+					throw new RuntimeException("numeric literal with base prefix requires at least one digit");
+			}
+
+			else if(here() == 'x')
+			{
+				base = 16;
+				advanceColumn();
+
+				if(!isDigit(here(), base))
+					throw new RuntimeException("numeric literal with base prefix requires at least one digit");
+			}
+
+			else if(CharClassifier.isDigit(here()))
+				throw new RuntimeException("numeric literals must start with digit 1-9 or base prefix");
+
+			else
+				literal.append('0');
 		}
 
-		if(atEnd() || here() == '0' || here() == '\'')
-			throw new RuntimeException("numeric literals must start with digit 1-9 or base prefix");
 
 		while(!atEnd() && (isDigit(here(), base) || here() == '\''))
 		{
