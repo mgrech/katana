@@ -23,6 +23,7 @@ import katana.sema.type.*;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -81,10 +82,10 @@ public class TypeValidator implements IVisitor
 
 	private Type visit(katana.ast.type.Array array)
 	{
-		if(array.size < 0)
-			throw new RuntimeException(String.format("invalid array size %s", array.size));
+		if(array.length.compareTo(BigInteger.ZERO) == -1)
+			throw new RuntimeException(String.format("invalid array length %s", array.length));
 
-		return new Array(array.size, validate(array.type, scope, context, validateDecl));
+		return new Array(array.length, validate(array.type, scope, context, validateDecl));
 	}
 
 	private Type visit(katana.ast.type.Function functionType)

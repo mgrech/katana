@@ -17,10 +17,12 @@ package katana.sema.type;
 import katana.backend.PlatformContext;
 import katana.visitor.IVisitable;
 
+import java.math.BigInteger;
+
 public abstract class Type implements IVisitable
 {
-	public abstract int sizeof(PlatformContext context);
-	public abstract int alignof(PlatformContext context);
+	public abstract BigInteger sizeof(PlatformContext context);
+	public abstract BigInteger alignof(PlatformContext context);
 
 	protected abstract boolean same(Type other);
 

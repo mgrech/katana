@@ -18,41 +18,42 @@ import katana.BuiltinType;
 import katana.backend.llvm.PlatformContextLlvm;
 import katana.sema.decl.Data;
 
+import java.math.BigInteger;
 import java.util.List;
 
 public class PlatformContextLlvmAmd64 extends PlatformContextLlvm
 {
 	@Override
-	public int sizeof(BuiltinType builtin)
+	public BigInteger sizeof(BuiltinType builtin)
 	{
 		switch(builtin)
 		{
 		case INT8:
 		case UINT8:
-			return 1;
+			return BigInteger.ONE;
 
 		case INT16:
 		case UINT16:
-			return 2;
+			return BigInteger.valueOf(2);
 
 		case INT32:
 		case UINT32:
-			return 4;
+			return BigInteger.valueOf(4);
 
 		case INT64:
 		case UINT64:
-			return 8;
+			return BigInteger.valueOf(8);
 
 		case INT:
 		case UINT:
 		case PINT:
 		case UPINT:
 		case PTR:
-			return 8;
+			return BigInteger.valueOf(8);
 
-		case BOOL:    return 1;
-		case FLOAT32: return 4;
-		case FLOAT64: return 8;
+		case BOOL:    return BigInteger.ONE;
+		case FLOAT32: return BigInteger.valueOf(4);
+		case FLOAT64: return BigInteger.valueOf(8);
 
 		default: break;
 		}
@@ -61,32 +62,32 @@ public class PlatformContextLlvmAmd64 extends PlatformContextLlvm
 	}
 
 	@Override
-	public int alignof(BuiltinType builtin)
+	public BigInteger alignof(BuiltinType builtin)
 	{
 		return sizeof(builtin);
 	}
 
 	@Override
-	public int sizeof(Data data)
+	public BigInteger sizeof(Data data)
 	{
-		return -1;
+		return BigInteger.valueOf(-1);
 	}
 
 	@Override
-	public int alignof(Data data)
+	public BigInteger alignof(Data data)
 	{
 		List<Data.Field> fields = data.fieldsByIndex();
 
 		if(fields.isEmpty())
-			return 1;
+			return BigInteger.ONE;
 
-		int max = fields.get(0).type.alignof(this);
+		BigInteger max = fields.get(0).type.alignof(this);
 
 		for(int i = 1; i != fields.size(); ++i)
 		{
-			int align = fields.get(i).type.alignof(this);
+			BigInteger align = fields.get(i).type.alignof(this);
 
-			if(align > max)
+			if(align.compareTo(max) == 1)
 				max = align;
 		}
 

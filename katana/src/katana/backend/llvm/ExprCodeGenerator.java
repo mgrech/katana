@@ -25,6 +25,7 @@ import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -106,7 +107,7 @@ public class ExprCodeGenerator implements IVisitor
 		String arraySSA = generate(arrayAccess.expr, builder, context, fcontext).unwrap();
 		Type arrayType = arrayAccess.expr.type().unwrap();
 		String arrayTypeString = TypeCodeGenerator.generate(arrayType, context);
-		int arrayAlignment = arrayType.alignof(context);
+		BigInteger arrayAlignment = arrayType.alignof(context);
 
 		String tmpSSA = fcontext.allocateSSA();
 		builder.append(String.format("\t%s = alloca %s, align %s\n", tmpSSA, arrayTypeString, arrayAlignment));

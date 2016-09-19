@@ -17,6 +17,7 @@ package katana.sema.type;
 import katana.backend.PlatformContext;
 import katana.utils.Maybe;
 
+import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.List;
 
@@ -29,13 +30,13 @@ public class Function extends Type
 	}
 
 	@Override
-	public int sizeof(PlatformContext context)
+	public BigInteger sizeof(PlatformContext context)
 	{
 		throw new UnsupportedOperationException("sizeof");
 	}
 
 	@Override
-	public int alignof(PlatformContext context)
+	public BigInteger alignof(PlatformContext context)
 	{
 		throw new UnsupportedOperationException("alignof");
 	}

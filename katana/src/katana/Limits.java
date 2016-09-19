@@ -63,7 +63,7 @@ public class Limits
 
 		boolean isSigned = type.kind == BuiltinType.Kind.INT;
 
-		switch(context.sizeof(type))
+		switch(context.sizeof(type).intValue())
 		{
 		case 1: return isSigned ? BuiltinType.INT8  : BuiltinType.UINT8;
 		case 2: return isSigned ? BuiltinType.INT16 : BuiltinType.UINT16;

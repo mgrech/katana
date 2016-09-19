@@ -21,6 +21,7 @@ import katana.sema.stmt.Stmt;
 import katana.sema.type.Type;
 import katana.visitor.IVisitor;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
@@ -101,7 +102,7 @@ public class DeclCodeGenerator implements IVisitor
 		for(Function.Param param : function.params)
 		{
 			String typeString = TypeCodeGenerator.generate(param.type, context);
-			int alignment = param.type.alignof(context);
+			BigInteger alignment = param.type.alignof(context);
 			builder.append(String.format("\t%%%s = alloca %s, align %s\n", param.name, typeString, alignment));
 			builder.append(String.format("\tstore %s %%p$%s, %s* %%%s\n", typeString, param.name, typeString, param.name));
 		}
@@ -115,7 +116,7 @@ public class DeclCodeGenerator implements IVisitor
 		{
 			Type type = entry.getValue().type;
 			String llvmType = TypeCodeGenerator.generate(type, context);
-			int align = type.alignof(context);
+			BigInteger align = type.alignof(context);
 			builder.append(String.format("\t%%%s = alloca %s, align %s\n", entry.getKey(), llvmType, align));
 		}
 

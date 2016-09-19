@@ -19,13 +19,15 @@ import katana.sema.BuiltinFunc;
 import katana.sema.decl.Data;
 import katana.utils.Maybe;
 
+import java.math.BigInteger;
+
 public interface PlatformContext
 {
 	Maybe<BuiltinFunc> findBuiltin(String name);
 
-	int sizeof(BuiltinType builtin);
-	int sizeof(Data data);
+	BigInteger sizeof(BuiltinType builtin);
+	BigInteger sizeof(Data data);
 
-	int alignof(BuiltinType builtin);
-	int alignof(Data data);
+	BigInteger alignof(BuiltinType builtin);
+	BigInteger alignof(Data data);
 }

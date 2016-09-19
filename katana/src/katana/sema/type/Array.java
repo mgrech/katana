@@ -16,22 +16,24 @@ package katana.sema.type;
 
 import katana.backend.PlatformContext;
 
+import java.math.BigInteger;
+
 public class Array extends Type
 {
-	public Array(int length, Type type)
+	public Array(BigInteger length, Type type)
 	{
 		this.length = length;
 		this.type = type;
 	}
 
 	@Override
-	public int sizeof(PlatformContext context)
+	public BigInteger sizeof(PlatformContext context)
 	{
-		return length * type.sizeof(context);
+		return length.multiply(type.sizeof(context));
 	}
 
 	@Override
-	public int alignof(PlatformContext context)
+	public BigInteger alignof(PlatformContext context)
 	{
 		return type.alignof(context);
 	}
@@ -40,7 +42,7 @@ public class Array extends Type
 	protected boolean same(Type other)
 	{
 		Array o = (Array)other;
-		return length == o.length && Type.same(type, o.type);
+		return length.equals(o.length) && Type.same(type, o.type);
 	}
 
 	@Override
@@ -49,6 +51,6 @@ public class Array extends Type
 		return String.format("[%s]%s", length, type);
 	}
 
-	public int length;
+	public BigInteger length;
 	public Type type;
 }

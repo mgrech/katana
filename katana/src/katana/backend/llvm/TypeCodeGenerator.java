@@ -18,6 +18,8 @@ import katana.backend.PlatformContext;
 import katana.sema.type.*;
 import katana.visitor.IVisitor;
 
+import java.math.BigInteger;
+
 @SuppressWarnings("unused")
 public class TypeCodeGenerator implements IVisitor
 {
@@ -50,7 +52,7 @@ public class TypeCodeGenerator implements IVisitor
 		case UINT:
 		case PINT:
 		case UPINT:
-			return "i" + 8 * type.sizeof(context);
+			return "i" + type.sizeof(context).multiply(BigInteger.valueOf(8));
 
 		case BOOL:    return "i1";
 		case FLOAT32: return "float";

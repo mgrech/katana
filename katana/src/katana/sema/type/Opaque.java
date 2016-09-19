@@ -16,22 +16,24 @@ package katana.sema.type;
 
 import katana.backend.PlatformContext;
 
+import java.math.BigInteger;
+
 public class Opaque extends Type
 {
-	public Opaque(int size, int alignment)
+	public Opaque(BigInteger size, BigInteger alignment)
 	{
 		this.size = size;
 		this.alignment = alignment;
 	}
 
 	@Override
-	public int sizeof(PlatformContext context)
+	public BigInteger sizeof(PlatformContext context)
 	{
 		return size;
 	}
 
 	@Override
-	public int alignof(PlatformContext context)
+	public BigInteger alignof(PlatformContext context)
 	{
 		return alignment;
 	}
@@ -40,7 +42,7 @@ public class Opaque extends Type
 	protected boolean same(Type other)
 	{
 		Opaque o = (Opaque)other;
-		return size == o.size && alignment == o.alignment;
+		return size.equals(o.size) && alignment.equals(o.alignment);
 	}
 
 	@Override
@@ -49,6 +51,6 @@ public class Opaque extends Type
 		return String.format("opaque(%s, %s)", size, alignment);
 	}
 
-	public int size;
-	public int alignment;
+	public BigInteger size;
+	public BigInteger alignment;
 }

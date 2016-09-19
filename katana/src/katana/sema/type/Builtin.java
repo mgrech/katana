@@ -17,6 +17,8 @@ package katana.sema.type;
 import katana.BuiltinType;
 import katana.backend.PlatformContext;
 
+import java.math.BigInteger;
+
 public class Builtin extends Type
 {
 	public static final Builtin BOOL    = new Builtin(BuiltinType.BOOL);
@@ -42,13 +44,13 @@ public class Builtin extends Type
 	}
 
 	@Override
-	public int sizeof(PlatformContext context)
+	public BigInteger sizeof(PlatformContext context)
 	{
 		return context.sizeof(which);
 	}
 
 	@Override
-	public int alignof(PlatformContext context)
+	public BigInteger alignof(PlatformContext context)
 	{
 		return context.alignof(which);
 	}

@@ -19,6 +19,7 @@ import katana.sema.type.Builtin;
 import katana.sema.type.Type;
 import katana.utils.Maybe;
 
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 
 public class LitString extends SimpleLValueExpr
@@ -31,7 +32,8 @@ public class LitString extends SimpleLValueExpr
 	@Override
 	public Maybe<Type> type()
 	{
-		return Maybe.some(new Array(value.getBytes(StandardCharsets.UTF_8).length, Builtin.UINT8));
+		BigInteger length = BigInteger.valueOf(value.getBytes(StandardCharsets.UTF_8).length);
+		return Maybe.some(new Array(length, Builtin.UINT8));
 	}
 
 	public String value;

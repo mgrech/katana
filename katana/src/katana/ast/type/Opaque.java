@@ -14,16 +14,18 @@
 
 package katana.ast.type;
 
+import java.math.BigInteger;
+
 public class Opaque extends Type
 {
-	public Opaque(int size, int alignment)
+	public Opaque(BigInteger size, BigInteger alignment)
 	{
 		this.size = size;
 		this.alignment = alignment;
 	}
 
-	public int size;
-	public int alignment;
+	public BigInteger size;
+	public BigInteger alignment;
 
 	@Override
 	public String toString()

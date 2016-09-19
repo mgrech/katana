@@ -17,6 +17,8 @@ package katana.sema.type;
 import katana.backend.PlatformContext;
 import katana.sema.decl.Data;
 
+import java.math.BigInteger;
+
 public class UserDefined extends Type
 {
 	public UserDefined(Data data)
@@ -25,13 +27,13 @@ public class UserDefined extends Type
 	}
 
 	@Override
-	public int sizeof(PlatformContext context)
+	public BigInteger sizeof(PlatformContext context)
 	{
 		return context.sizeof(data);
 	}
 
 	@Override
-	public int alignof(PlatformContext context)
+	public BigInteger alignof(PlatformContext context)
 	{
 		return context.alignof(data);
 	}

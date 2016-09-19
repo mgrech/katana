@@ -19,6 +19,7 @@ import katana.scanner.Scanner;
 import katana.scanner.Token;
 import katana.utils.Maybe;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 
 public class TypeParser
@@ -83,17 +84,19 @@ public class TypeParser
 	{
 		String size = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT_DEDUCE).value;
 		ParseTools.expect(scanner, Token.Type.PUNCT_RBRACKET, true);
-		return new Array(Integer.parseInt(size), TypeParser.parse(scanner));
+		return new Array(BigInteger.valueOf(Integer.parseInt(size)), TypeParser.parse(scanner));
 	}
 
 	private static Opaque parseOpaque(Scanner scanner)
 	{
 		return ParseTools.parenthesized(scanner, () ->
 		{
-			String size = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT_DEDUCE).value;
+			String sizeString = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT_DEDUCE).value;
 			ParseTools.expect(scanner, Token.Type.PUNCT_COMMA, true);
-			String alignment = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT_DEDUCE).value;
-			return new Opaque(Integer.parseInt(size), Integer.parseInt(alignment));
+			String alignmentString = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT_DEDUCE).value;
+			BigInteger size = BigInteger.valueOf(Integer.parseInt(sizeString));
+			BigInteger alignment = BigInteger.valueOf(Integer.parseInt(alignmentString));
+			return new Opaque(size, alignment);
 		});
 	}
 

@@ -14,20 +14,22 @@
 
 package katana.ast.type;
 
+import java.math.BigInteger;
+
 public class Array extends Type
 {
-	public Array(int size, Type type)
+	public Array(BigInteger length, Type type)
 	{
-		this.size = size;
+		this.length = length;
 		this.type = type;
 	}
 
-	public int size;
+	public BigInteger length;
 	public Type type;
 
 	@Override
 	public String toString()
 	{
-		return String.format("[%s]%s", size, type);
+		return String.format("[%s]%s", length, type);
 	}
 }
