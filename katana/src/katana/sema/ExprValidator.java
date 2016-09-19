@@ -269,6 +269,12 @@ public class ExprValidator implements IVisitor
 			values.add(semaExpr);
 		}
 
+		if(BigInteger.valueOf(values.size()).compareTo(length.unwrap()) != 0)
+		{
+			String fmt = "invalid number of elements in array litera: got %s, expected %s";
+			throw new RuntimeException(String.format(fmt, values.size(), length.unwrap()));
+		}
+
 		return new LitArray(length.unwrap(), type.unwrap(), values);
 	}
 
