@@ -271,7 +271,7 @@ public class ExprValidator implements IVisitor
 
 		if(BigInteger.valueOf(values.size()).compareTo(length.unwrap()) != 0)
 		{
-			String fmt = "invalid number of elements in array litera: got %s, expected %s";
+			String fmt = "invalid number of elements in array literal: got %s, expected %s";
 			throw new RuntimeException(String.format(fmt, values.size(), length.unwrap()));
 		}
 
