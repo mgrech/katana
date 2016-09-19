@@ -16,12 +16,14 @@ package katana.ast.expr;
 
 public class MemberAccess extends Expr
 {
-	public MemberAccess(Expr expr, String name)
+	public MemberAccess(Expr expr, String name, boolean global)
 	{
 		this.expr = expr;
 		this.name = name;
+		this.global = global;
 	}
 
 	public Expr expr;
 	public String name;
+	public boolean global;
 }

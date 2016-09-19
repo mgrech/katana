@@ -16,6 +16,7 @@ package katana.sema;
 
 import katana.ast.Path;
 import katana.ast.decl.Import;
+import katana.ast.decl.RenamedImport;
 import katana.backend.PlatformContext;
 import katana.sema.decl.*;
 import katana.utils.Maybe;
@@ -37,6 +38,7 @@ public class FileValidator implements IVisitor
 	private Module currentModule = null;
 	private boolean declsSeen = false;
 	private Map<Path, Import> imports = new HashMap<>();
+	private Map<String, RenamedImport> renamedImports = new HashMap<>();
 	private FileScope scope = new FileScope();
 
 	public FileValidator(PlatformContext context, Program program, Consumer<Decl> validateDecl)
@@ -51,21 +53,36 @@ public class FileValidator implements IVisitor
 		return (Maybe<Decl>)decl.accept(this);
 	}
 
+	private Module checkModuleImport(Path path)
+	{
+		Maybe<Module> module = program.findModule(path);
+
+		if(module.isNone())
+			throw new RuntimeException(String.format("import of unknown module '%s'", path));
+
+		return module.unwrap();
+	}
+
 	public void validateImports()
 	{
 		for(Import import_ : imports.values())
 		{
-			Maybe<Module> module = program.findModule(import_.path);
+			Module module = checkModuleImport(import_.path);
 
-			if(module.isNone())
-				throw new RuntimeException(String.format("import of unknown module '%s'", import_.path));
+			for(Decl decl : module.decls().values())
+				if(decl.exported)
+					scope.defineSymbol(decl);
+		}
 
-			if(import_.rename.isNone())
-			{
-				for(Decl decl : module.unwrap().decls().values())
-					if(decl.exported)
-						scope.defineSymbol(decl);
-			}
+		for(RenamedImport import_ : renamedImports.values())
+		{
+			Module module = checkModuleImport(import_.path);
+			katana.sema.decl.RenamedImport semaImport = new katana.sema.decl.RenamedImport(module, import_.rename);
+
+			for(Decl decl : module.decls().values())
+				semaImport.decls.put(decl.name(), decl);
+
+			scope.defineSymbol(semaImport);
 		}
 	}
 
@@ -135,9 +152,22 @@ public class FileValidator implements IVisitor
 			throw new RuntimeException("imports must go before other decls");
 
 		if(imports.containsKey(import_.path))
-			throw new RuntimeException("duplicate import '" + import_.path + "'");
+			throw new RuntimeException(String.format("duplicate import '%s'", import_.path));
 
 		imports.put(import_.path, import_);
+
+		return Maybe.none();
+	}
+
+	private Maybe<Decl> visit(katana.ast.decl.RenamedImport import_)
+	{
+		if(declsSeen)
+			throw new RuntimeException("imports must go before other decls");
+
+		if(renamedImports.containsKey(import_.rename))
+			throw new RuntimeException(String.format("duplicate renamed import '%s'", import_.rename));
+
+		renamedImports.put(import_.rename, import_);
 
 		return Maybe.none();
 	}

@@ -27,10 +27,4 @@ public class Global extends Decl
 
 	public Type type;
 	public String name;
-
-	@Override
-	public String toString()
-	{
-		return String.format("%s\ttype: %s\n\tname: %s\n", super.toString(), type, name);
-	}
 }

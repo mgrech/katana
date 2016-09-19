@@ -53,8 +53,9 @@ public class ExprParser
 
 			case PUNCT_DOT:
 				scanner.advance();
+				boolean global = ParseTools.option(scanner, Token.Type.DECL_GLOBAL, true);
 				String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
-				expr = new MemberAccess(expr, name);
+				expr = new MemberAccess(expr, name, global);
 				break;
 
 			case PUNCT_ASSIGN:
@@ -79,7 +80,7 @@ public class ExprParser
 		if(ParseTools.option(scanner, Token.Type.IDENT, false))
 		{
 			String name = ParseTools.consume(scanner).value;
-			return new NamedValue(name);
+			return new NamedSymbol(name);
 		}
 
 		if(ParseTools.option(scanner, Token.Category.LIT, false))
@@ -123,7 +124,7 @@ public class ExprParser
 				() -> ParseTools.consumeExpected(scanner, Token.Type.LIT_BOOL).value);
 			String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
 			ParseTools.expect(scanner, Token.Type.PUNCT_LPAREN, true);
-			Expr call = parseFunctionCall(scanner, new NamedValue(name), Maybe.some(inline.equals("true")));
+			Expr call = parseFunctionCall(scanner, new NamedSymbol(name), Maybe.some(inline.equals("true")));
 			ParseTools.expect(scanner, Token.Type.PUNCT_RPAREN, true);
 			return call;
 

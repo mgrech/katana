@@ -25,10 +25,4 @@ public class Module extends Decl
 	}
 
 	public Path path;
-
-	@Override
-	public String toString()
-	{
-		return String.format("%s\tname: %s\n", super.toString(), path);
-	}
 }

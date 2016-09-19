@@ -166,22 +166,21 @@ public class DeclParser
 		return new Global(exported, opaque, type, name);
 	}
 
-	private static Import parseImport(Scanner scanner)
+	private static Decl parseImport(Scanner scanner)
 	{
 		scanner.advance();
 
 		Path path = ParseTools.path(scanner);
-		Maybe<String> rename = Maybe.none();
 
 		if(ParseTools.option(scanner, Token.Type.IDENT, false))
 		{
-			String name = ParseTools.consume(scanner).value;
-			rename = Maybe.some(name);
+			String rename = ParseTools.consume(scanner).value;
+			ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
+			return new RenamedImport(path, rename);
 		}
 
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-
-		return new Import(path, rename);
+		return new Import(path);
 	}
 
 	private static Module parseModule(Scanner scanner)

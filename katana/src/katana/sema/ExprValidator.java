@@ -16,9 +16,24 @@ package katana.sema;
 
 import katana.BuiltinType;
 import katana.Limits;
+import katana.ast.expr.*;
 import katana.backend.PlatformContext;
 import katana.sema.decl.*;
 import katana.sema.expr.*;
+import katana.sema.expr.Addressof;
+import katana.sema.expr.Alignof;
+import katana.sema.expr.Assign;
+import katana.sema.expr.BuiltinCall;
+import katana.sema.expr.Deref;
+import katana.sema.expr.Expr;
+import katana.sema.expr.LitBool;
+import katana.sema.expr.LitFloat;
+import katana.sema.expr.LitInt;
+import katana.sema.expr.LitNull;
+import katana.sema.expr.LitString;
+import katana.sema.expr.NamedGlobal;
+import katana.sema.expr.Offsetof;
+import katana.sema.expr.Sizeof;
 import katana.sema.type.Array;
 import katana.sema.type.Builtin;
 import katana.sema.type.Type;
@@ -277,9 +292,44 @@ public class ExprValidator implements IVisitor
 		return new LitString(lit.value);
 	}
 
+	private Expr namedDeclExpr(Decl decl, boolean globalAccess)
+	{
+		validateDecl.accept(decl);
+
+		if(decl instanceof Global)
+		{
+			if(!globalAccess)
+				throw new RuntimeException("reference to global requires 'global' keyword");
+
+			return new NamedGlobal((Global)decl);
+		}
+
+		if(globalAccess)
+			throw new RuntimeException("'global' keyword used on reference to symbol that isn't a global");
+
+		if(decl instanceof ExternFunction)
+			return new NamedExternFunc((ExternFunction)decl);
+
+		if(decl instanceof Function)
+			return new NamedFunc((Function)decl);
+
+		throw new AssertionError("unreachable");
+	}
+
 	private Expr visit(katana.ast.expr.MemberAccess memberAccess, Maybe<Type> deduce)
 	{
 		Expr expr = validate(memberAccess.expr, scope, context, validateDecl, Maybe.none());
+
+		if(expr instanceof NamedRenamedImport)
+		{
+			RenamedImport import_ = ((NamedRenamedImport)expr).import_;
+			Decl decl = import_.decls.get(memberAccess.name);
+
+			if(decl == null)
+				throw new RuntimeException(String.format("reference to unknown symbol '%s.%s'", import_.module.path(), memberAccess.name));
+
+			return namedDeclExpr(decl, memberAccess.global);
+		}
 
 		if(expr.type().isNone())
 			throw new RuntimeException("expression does not result in a value");
@@ -309,7 +359,7 @@ public class ExprValidator implements IVisitor
 		List<Symbol> candidates = scope.find(namedGlobal.name);
 
 		if(candidates.isEmpty())
-			throw new RuntimeException(String.format("use of unknown symbol '%s'", namedGlobal.name));
+			throw new RuntimeException(String.format("reference to unknown symbol '%s'", namedGlobal.name));
 
 		if(candidates.size() > 1)
 			throw new RuntimeException(String.format("ambiguos reference to symbol '%s'", namedGlobal.name));
@@ -319,23 +369,26 @@ public class ExprValidator implements IVisitor
 		if(!(symbol instanceof Global))
 			throw new RuntimeException(String.format("symbol '%s' does not refer to a global", namedGlobal.name));
 
-		return new NamedGlobal((Global)symbol);
+		return namedDeclExpr((Decl)symbol, true);
 	}
 
-	private Expr visit(katana.ast.expr.NamedValue namedValue, Maybe<Type> deduce)
+	private Expr visit(NamedSymbol namedSymbol, Maybe<Type> deduce)
 	{
-		List<Symbol> candidates = scope.find(namedValue.name);
+		List<Symbol> candidates = scope.find(namedSymbol.name);
 
 		if(candidates.isEmpty())
-			throw new RuntimeException(String.format("use of unknown symbol '%s'", namedValue.name));
+			throw new RuntimeException(String.format("reference to unknown symbol '%s'", namedSymbol.name));
 
 		if(candidates.size() > 1)
-			throw new RuntimeException(String.format("ambiguous reference to symbol '%s'", namedValue.name));
+			throw new RuntimeException(String.format("ambiguous reference to symbol '%s'", namedSymbol.name));
 
 		Symbol symbol = candidates.get(0);
 
+		if(symbol instanceof RenamedImport)
+			return new NamedRenamedImport((RenamedImport)symbol);
+
 		if(symbol instanceof Decl)
-			validateDecl.accept((Decl)symbol);
+			return namedDeclExpr((Decl)symbol, false);
 
 		if(symbol instanceof Function.Local)
 			return new NamedLocal((Function.Local)symbol);
@@ -343,16 +396,7 @@ public class ExprValidator implements IVisitor
 		if(symbol instanceof Function.Param)
 			return new NamedParam((Function.Param)symbol);
 
-		if(symbol instanceof ExternFunction)
-			return new NamedExternFunc((ExternFunction)symbol);
-
-		if(symbol instanceof Function)
-			return new NamedFunc((Function)symbol);
-
-		if(symbol instanceof Global)
-			throw new RuntimeException("referencing global requires 'global' keyword");
-
-		throw new RuntimeException(String.format("symbol '%s' does not refer to a value", namedValue.name));
+		throw new RuntimeException(String.format("symbol '%s' does not refer to a value", namedSymbol.name));
 	}
 
 	private Expr visit(katana.ast.expr.Offsetof offsetof, Maybe<Type> deduce)

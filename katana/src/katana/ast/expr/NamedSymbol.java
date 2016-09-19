@@ -12,17 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.ast.decl;
+package katana.ast.expr;
 
-import katana.ast.Path;
-
-public class Import extends Decl
+public class NamedSymbol extends Expr
 {
-	public Import(Path path)
+	public NamedSymbol(String name)
 	{
-		super(false, false);
-		this.path = path;
+		this.name = name;
 	}
 
-	public Path path;
+	public String name;
 }

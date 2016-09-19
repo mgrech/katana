@@ -12,14 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.ast.expr;
+package katana.ast.decl;
 
-public class NamedValue extends Expr
+import katana.ast.Path;
+
+public class RenamedImport extends Decl
 {
-	public NamedValue(String name)
+	public RenamedImport(Path path, String rename)
 	{
-		this.name = name;
+		super(false, false);
+		this.path = path;
+		this.rename = rename;
 	}
 
-	public String name;
+	public Path path;
+	public String rename;
 }

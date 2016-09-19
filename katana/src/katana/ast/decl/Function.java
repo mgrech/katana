@@ -59,32 +59,4 @@ public class Function extends Decl
 	public ArrayList<Param> params;
 	public Maybe<Type> ret;
 	public ArrayList<Stmt> body;
-
-	@Override
-	public String toString()
-	{
-		StringBuilder params = new StringBuilder();
-
-		for(Param param : this.params)
-		{
-			params.append("\t\t");
-			params.append(param.name);
-			params.append(" (");
-			params.append(param.type);
-			params.append(")\n");
-		}
-
-		String ret = this.ret.isSome() ? "\tret: " + this.ret.unwrap() + '\n' : "";
-
-		StringBuilder body = new StringBuilder();
-
-		for(Stmt stmt : this.body)
-		{
-			body.append("\t\t");
-			body.append(stmt);
-			body.append('\n');
-		}
-
-		return String.format("%sname: %s\n\tparams:\n%s%s\tbody:\n%s", super.toString(), name, params, ret, body);
-	}
 }
