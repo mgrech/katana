@@ -16,10 +16,25 @@ package katana.sema;
 
 import katana.BuiltinType;
 import katana.Limits;
-import katana.ast.expr.NamedSymbol;
+import katana.ast.expr.*;
 import katana.backend.PlatformContext;
 import katana.sema.decl.*;
 import katana.sema.expr.*;
+import katana.sema.expr.Addressof;
+import katana.sema.expr.Alignof;
+import katana.sema.expr.Assign;
+import katana.sema.expr.BuiltinCall;
+import katana.sema.expr.Deref;
+import katana.sema.expr.Expr;
+import katana.sema.expr.LitArray;
+import katana.sema.expr.LitBool;
+import katana.sema.expr.LitFloat;
+import katana.sema.expr.LitInt;
+import katana.sema.expr.LitNull;
+import katana.sema.expr.LitString;
+import katana.sema.expr.NamedGlobal;
+import katana.sema.expr.Offsetof;
+import katana.sema.expr.Sizeof;
 import katana.sema.type.Array;
 import katana.sema.type.Builtin;
 import katana.sema.type.Type;
@@ -27,6 +42,7 @@ import katana.sema.type.UserDefined;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -212,6 +228,48 @@ public class ExprValidator implements IVisitor
 			return new DirectFunctionCall(((NamedFunc)expr).func, args, call.inline);
 
 		return new IndirectFunctionCall(expr, args);
+	}
+
+	private Expr visit(katana.ast.expr.LitArray lit, Maybe<Type> deduce)
+	{
+		Maybe<BigInteger> length = lit.length;
+		Maybe<Type> type = lit.type.map((t) -> TypeValidator.validate(t, scope, context, validateDecl));
+
+		if(deduce.isSome() && deduce.unwrap() instanceof Array)
+		{
+			Array array = (Array)deduce.unwrap();
+
+			if(length.isNone())
+				length = Maybe.some(array.length);
+
+			if(type.isNone())
+				type = Maybe.some(array.type);
+		}
+
+		if(length.isNone())
+			length = Maybe.some(BigInteger.valueOf(lit.values.size()));
+
+		if(type.isNone())
+			throw new RuntimeException("element type of array literal could not be deduced");
+
+		List<Expr> values = new ArrayList<>();
+
+		for(int i = 0; i != lit.values.size(); ++i)
+		{
+			Expr semaExpr = validate(lit.values.get(i), scope, context, validateDecl, type);
+
+			if(semaExpr.type().isNone() || !Type.same(semaExpr.type().unwrap(), type.unwrap()))
+			{
+				String gotten = semaExpr.type().map(Type::toString).or("void");
+				Type expected = type.unwrap();
+				String fmt = "element in array literal at index %s has type '%s', expected '%s'";
+				throw new RuntimeException(String.format(fmt, i, gotten, expected));
+			}
+
+			values.add(semaExpr);
+		}
+
+		return new LitArray(length.unwrap(), type.unwrap(), values);
 	}
 
 	private Expr visit(katana.ast.expr.LitBool lit, Maybe<Type> deduce)

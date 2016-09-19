@@ -235,9 +235,34 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some(fieldSSA);
 	}
 
-	private Maybe<String> visit(LitBool litBool)
+	private Maybe<String> visit(LitArray lit)
 	{
-		return Maybe.some("" + litBool.value);
+		StringBuilder builder = new StringBuilder();
+		builder.append('[');
+
+		if(!lit.values.isEmpty())
+		{
+			builder.append(TypeCodeGenerator.generate(lit.values.get(0).type().unwrap(), context));
+			builder.append(' ');
+			builder.append(generate(lit.values.get(0), builder, context, fcontext).unwrap());
+
+			for(int i = 1; i != lit.values.size(); ++i)
+			{
+				Expr expr = lit.values.get(i);
+				builder.append(", ");
+				builder.append(TypeCodeGenerator.generate(expr.type().unwrap(), context));
+				builder.append(' ');
+				builder.append(generate(expr, builder, context, fcontext).unwrap());
+			}
+		}
+
+		builder.append(']');
+		return Maybe.some(builder.toString());
+	}
+
+	private Maybe<String> visit(LitBool lit)
+	{
+		return Maybe.some("" + lit.value);
 	}
 
 	private String toFloatHexString(BigDecimal bd)
@@ -254,21 +279,21 @@ public class ExprCodeGenerator implements IVisitor
 		return String.format("0x%x", l);
 	}
 
-	private Maybe<String> visit(LitFloat litFloat)
+	private Maybe<String> visit(LitFloat lit)
 	{
-		String s = litFloat.type == BuiltinType.FLOAT32
-			? toFloatHexString(litFloat.value)
-			: toDoubleHexString(litFloat.value);
+		String s = lit.type == BuiltinType.FLOAT32
+			? toFloatHexString(lit.value)
+			: toDoubleHexString(lit.value);
 
 		return Maybe.some(s);
 	}
 
-	private Maybe<String> visit(LitInt litInt)
+	private Maybe<String> visit(LitInt lit)
 	{
-		return Maybe.some(litInt.value.toString());
+		return Maybe.some(lit.value.toString());
 	}
 
-	private Maybe<String> visit(LitNull litNull)
+	private Maybe<String> visit(LitNull lit)
 	{
 		return Maybe.some("null");
 	}
@@ -303,9 +328,9 @@ public class ExprCodeGenerator implements IVisitor
 		return result.toString();
 	}
 
-	private Maybe<String> visit(LitString litString)
+	private Maybe<String> visit(LitString lit)
 	{
-		return Maybe.some("c\"" + escape(litString.value) + '"');
+		return Maybe.some("c\"" + escape(lit.value) + '"');
 	}
 
 	private Maybe<String> visit(NamedFunc namedFunc)

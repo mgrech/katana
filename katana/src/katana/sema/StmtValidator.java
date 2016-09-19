@@ -185,6 +185,8 @@ public class StmtValidator implements IVisitor
 			throw new RuntimeException(String.format("redefinition of variable '%s'", name));
 
 		Function.Local local = function.localsByName.get(name);
-		return new ExprStmt(new Assign(new NamedLocal(local), init));
+		NamedLocal localref = new NamedLocal(local);
+		localref.useAsLValue(true);
+		return new ExprStmt(new Assign(localref, init));
 	}
 }

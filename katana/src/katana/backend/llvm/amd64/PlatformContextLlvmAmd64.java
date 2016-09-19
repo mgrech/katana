@@ -70,7 +70,7 @@ public class PlatformContextLlvmAmd64 extends PlatformContextLlvm
 	@Override
 	public BigInteger sizeof(Data data)
 	{
-		return BigInteger.valueOf(-1);
+		throw new RuntimeException("nyi");
 	}
 
 	@Override

@@ -25,6 +25,7 @@ import katana.utils.Maybe;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ExprParser
 {
@@ -89,8 +90,87 @@ public class ExprParser
 		if(ParseTools.option(scanner, Token.Category.MISC, false))
 			return parseMisc(scanner);
 
+		if(ParseTools.option(scanner, Token.Type.PUNCT_LBRACKET, true))
+			return parseArrayLiteral(scanner);
+
 		ParseTools.unexpectedToken(scanner);
 		throw new AssertionError("unreachable");
+	}
+
+	private static boolean isLiteral(Expr expr)
+	{
+		if(expr instanceof LitArray)
+			return true;
+
+		if(expr instanceof LitBool)
+			return true;
+
+		if(expr instanceof LitFloat)
+			return true;
+
+		if(expr instanceof LitInt)
+			return true;
+
+		if(expr instanceof LitNull)
+			return true;
+
+		if(expr instanceof LitString)
+			return true;
+
+		return false;
+	}
+
+	private static Expr parseArrayLiteral(Scanner scanner)
+	{
+		Maybe<BigInteger> size = Maybe.none();
+
+		if(!ParseTools.option(scanner, Token.Type.PUNCT_COLON, true))
+		{
+			Expr sizeLit = parseLiteral(scanner);
+
+			if(!(sizeLit instanceof LitInt))
+				throw new RuntimeException("expected integer literal as length in array literal");
+
+			if(((LitInt)sizeLit).type.isSome())
+				throw new RuntimeException("length in array literal cannot have a type suffix");
+
+			size = Maybe.some(((LitInt)sizeLit).value);
+			ParseTools.expect(scanner, Token.Type.PUNCT_COLON, true);
+		}
+
+		Maybe<Type> type = Maybe.none();
+
+		if(!ParseTools.option(scanner, Token.Type.PUNCT_COLON, true))
+		{
+			type = Maybe.some(TypeParser.parse(scanner));
+			ParseTools.expect(scanner, Token.Type.PUNCT_COLON, true);
+		}
+
+		List<Expr> values = new ArrayList<>();
+
+		if(!ParseTools.option(scanner, Token.Type.PUNCT_RBRACKET, true))
+		{
+			Expr first = parse(scanner);
+
+			if(!isLiteral(first))
+				throw new RuntimeException("array literal values must be literals");
+
+			values.add(first);
+
+			while(ParseTools.option(scanner, Token.Type.PUNCT_COMMA, true))
+			{
+				Expr next = parse(scanner);
+
+				if(!isLiteral(next))
+					throw new RuntimeException("array literal values must be literals");
+
+				values.add(next);
+			}
+
+			ParseTools.expect(scanner, Token.Type.PUNCT_RBRACKET, true);
+		}
+
+		return new LitArray(size, type, values);
 	}
 
 	private static Expr parseMisc(Scanner scanner)
