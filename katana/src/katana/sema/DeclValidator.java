@@ -16,8 +16,8 @@ package katana.sema;
 
 import katana.backend.PlatformContext;
 import katana.sema.decl.*;
-import katana.sema.stmt.Stmt;
 import katana.sema.type.Type;
+import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
 import java.util.function.Consumer;
@@ -36,10 +36,15 @@ public class DeclValidator implements IVisitor
 		this.validateDecl = validateDecl;
 	}
 
-	public static void validate(Decl semaDecl, katana.ast.decl.Decl decl, FileScope scope, PlatformContext context, Consumer<Decl> validateDecl)
+	public static Maybe<StmtValidator> validate(Decl semaDecl, katana.ast.decl.Decl decl, FileScope scope, PlatformContext context, Consumer<Decl> validateDecl)
 	{
 		DeclValidator validator = new DeclValidator(scope, context, validateDecl);
-		semaDecl.accept(validator, decl);
+		Object result = semaDecl.accept(validator, decl);
+
+		if(semaDecl instanceof Function)
+			return Maybe.some((StmtValidator)result);
+
+		return Maybe.none();
 	}
 
 	private void visit(Data semaData, katana.ast.decl.Data data)
@@ -53,7 +58,7 @@ public class DeclValidator implements IVisitor
 		}
 	}
 
-	private void visit(Function semaFunction, katana.ast.decl.Function function)
+	private StmtValidator visit(Function semaFunction, katana.ast.decl.Function function)
 	{
 		for(katana.ast.decl.Function.Param param : function.params)
 		{
@@ -64,18 +69,8 @@ public class DeclValidator implements IVisitor
 		}
 
 		FunctionScope fscope = new FunctionScope(scope, semaFunction);
-
 		semaFunction.ret = function.ret.map((type) -> TypeValidator.validate(type, fscope, context, validateDecl));
-
-		StmtValidator validator = new StmtValidator(semaFunction, fscope, context, validateDecl);
-
-		for(katana.ast.stmt.Stmt stmt : function.body)
-		{
-			Stmt semaStmt = validator.validate(stmt);
-			semaFunction.add(semaStmt);
-		}
-
-		validator.finalizeValidation();
+		return new StmtValidator(semaFunction, fscope, context, validateDecl);
 	}
 
 	private void visit(ExternFunction semaFunction, katana.ast.decl.ExternFunction function)

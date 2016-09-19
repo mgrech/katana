@@ -19,6 +19,7 @@ import katana.ast.decl.Import;
 import katana.ast.decl.RenamedImport;
 import katana.backend.PlatformContext;
 import katana.sema.decl.*;
+import katana.sema.stmt.Stmt;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
@@ -35,6 +36,7 @@ public class FileValidator implements IVisitor
 	private Consumer<Decl> validateDecl;
 
 	private IdentityHashMap<Decl, katana.ast.decl.Decl> decls = new IdentityHashMap<>();
+	private IdentityHashMap<Function, StmtValidator> funcs = new IdentityHashMap<>();
 	private Module currentModule = null;
 	private boolean declsSeen = false;
 	private Map<Path, Import> imports = new HashMap<>();
@@ -48,7 +50,7 @@ public class FileValidator implements IVisitor
 		this.validateDecl = validateDecl;
 	}
 
-	public Maybe<Decl> beginValidation(katana.ast.decl.Decl decl)
+	public Maybe<Decl> register(katana.ast.decl.Decl decl)
 	{
 		return (Maybe<Decl>)decl.accept(this);
 	}
@@ -86,9 +88,30 @@ public class FileValidator implements IVisitor
 		}
 	}
 
-	public void finalizeValidation(Decl decl)
+	public void validate(Decl decl)
 	{
-		DeclValidator.validate(decl, decls.get(decl), scope, context, validateDecl);
+		Maybe<StmtValidator> validator = DeclValidator.validate(decl, decls.get(decl), scope, context, validateDecl);
+
+		if(decl instanceof Function)
+			funcs.put((Function)decl, validator.unwrap());
+	}
+
+	public void finish()
+	{
+		for(Map.Entry<Function, StmtValidator> entry : funcs.entrySet())
+		{
+			Function semaFunction = entry.getKey();
+			katana.ast.decl.Function function = (katana.ast.decl.Function)decls.get(semaFunction);
+			StmtValidator validator = entry.getValue();
+
+			for(katana.ast.stmt.Stmt stmt : function.body)
+			{
+				Stmt semaStmt = validator.validate(stmt);
+				semaFunction.add(semaStmt);
+			}
+
+			validator.finalizeValidation();
+		}
 	}
 
 	private void requireModule()

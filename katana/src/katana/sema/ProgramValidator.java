@@ -39,7 +39,7 @@ public class ProgramValidator
 		{
 			statesByDecl.put(decl, ValidationState.ONGOING);
 			FileValidator validator = validatorsByDecl.get(decl);
-			validator.finalizeValidation(decl);
+			validator.validate(decl);
 			statesByDecl.put(decl, ValidationState.FINISHED);
 		}
 
@@ -74,7 +74,7 @@ public class ProgramValidator
 
 			for(katana.ast.decl.Decl decl : file.decls)
 			{
-				Maybe<Decl> semaDecl = validator.beginValidation(decl);
+				Maybe<Decl> semaDecl = validator.register(decl);
 
 				if(semaDecl.isSome())
 					validatorsByDecl.put(semaDecl.unwrap(), validator);
@@ -86,6 +86,9 @@ public class ProgramValidator
 
 		for(Decl decl : validatorsByDecl.keySet())
 			doValidate(decl);
+
+		for(FileValidator validator : validators)
+			validator.finish();
 
 		return program;
 	}
