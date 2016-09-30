@@ -37,7 +37,7 @@ public class FileParser
 
 		ArrayList<Decl> decls = new ArrayList<>();
 
-		while(scanner.token().type != Token.Type.END)
+		while(scanner.state().token.type != Token.Type.END)
 			decls.add(DeclParser.parse(scanner));
 
 		return new File(path, decls);

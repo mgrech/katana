@@ -39,10 +39,10 @@ public class DeclParser
 		if(ParseTools.option(scanner, Token.Type.DECL_EXTERN, true))
 			extern = Maybe.some(ParseTools.consumeExpected(scanner, Token.Type.LIT_STRING).value);
 
-		if(extern.isSome() && scanner.token().type != Token.Type.DECL_FN)
+		if(extern.isSome() && scanner.state().token.type != Token.Type.DECL_FN)
 			throw new RuntimeException("extern can only be applied to functions");
 
-		switch(scanner.token().type)
+		switch(scanner.state().token.type)
 		{
 		case DECL_FN:     return parseFunction(scanner, exported, opaque, extern);
 		case DECL_DATA:   return parseData(scanner, exported, opaque);

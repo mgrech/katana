@@ -51,7 +51,7 @@ public class ParseTools
 
 	public static boolean option(Scanner scanner, Predicate<Token> predicate, boolean eat)
 	{
-		if(!predicate.test(scanner.token()))
+		if(!predicate.test(scanner.state().token))
 			return false;
 
 		if(eat)
@@ -84,7 +84,7 @@ public class ParseTools
 
 	public static Token consume(Scanner scanner)
 	{
-		Token token = scanner.token();
+		Token token = scanner.state().token;
 		scanner.advance();
 		return token;
 	}
@@ -104,12 +104,12 @@ public class ParseTools
 	public static <T> void unexpectedToken(Scanner scanner, T expected)
 	{
 		String fmt = "unexpected token %s, expected %s on line %s, column %s";
-		throw new RuntimeException(String.format(fmt, scanner.token(), expected, scanner.line(), scanner.column()));
+		throw new RuntimeException(String.format(fmt, scanner.state().token, expected, scanner.state().line, scanner.state().tokenColumn));
 	}
 
 	public static void unexpectedToken(Scanner scanner)
 	{
 		String fmt = "unexpected token %s on line %s, column %s";
-		throw new RuntimeException(String.format(fmt, scanner.token(), scanner.line(), scanner.column()));
+		throw new RuntimeException(String.format(fmt, scanner.state().token, scanner.state().line, scanner.state().tokenColumn));
 	}
 }

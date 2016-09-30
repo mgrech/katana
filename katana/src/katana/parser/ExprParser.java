@@ -35,7 +35,7 @@ public class ExprParser
 
 		for(;;)
 		{
-			Token token = scanner.token();
+			Token token = scanner.state().token;
 
 			switch(token.type)
 			{

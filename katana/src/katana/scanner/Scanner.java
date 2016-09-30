@@ -21,12 +21,17 @@ public class Scanner
 		this.source = source;
 	}
 
-	public int line() { return line; }
-	public int column() { return tokenColumn; }
-	public int offset() { return tokenOffset; }
+	public ScannerState state()
+	{
+		return state.clone();
+	}
 
-	public Token token() { return token; }
-	public void advance() { token = doAdvance(); }
+	public void backtrack(ScannerState state)
+	{
+		this.state = state;
+	}
+
+	public void advance() { state.token = doAdvance(); }
 
 	private Token doAdvance()
 	{
@@ -35,8 +40,8 @@ public class Scanner
 		if(atEnd())
 			return Token.END;
 
-		tokenOffset = currentOffset;
-		tokenColumn = currentColumn;
+		state.tokenOffset = state.currentOffset;
+		state.tokenColumn = state.currentColumn;
 
 		int cp = here();
 
@@ -79,7 +84,7 @@ public class Scanner
 		if(CharClassifier.isIdentifierStart(cp))
 			return identifierOrKeyword();
 
-		error("invalid character encountered: " + formatCodepoint(cp));
+		error(String.format("invalid character encountered: %s", formatCodepoint(cp)));
 		throw new AssertionError("unreachable");
 	}
 
@@ -106,15 +111,13 @@ public class Scanner
 
 	private Token stringLiteral()
 	{
-		int line = line();
-
 		StringBuilder builder = new StringBuilder();
 
 		while(!atEnd() && here() != '"')
 			builder.appendCodePoint(stringCodepoint());
 
 		if(atEnd())
-			throw new RuntimeException("unterminated string literal on line " + line);
+			error("unterminated string literal");
 
 		advanceColumn();
 
@@ -149,7 +152,7 @@ public class Scanner
 			case '"': return '"';
 			case '\\': return '\\';
 
-			default: error("invalid escape sequence \\" + formatCodepoint(here()));
+			default: error(String.format("invalid escape sequence \\%s", formatCodepoint(here())));
 			}
 		}
 
@@ -202,7 +205,7 @@ public class Scanner
 		if(cp >= 'A' && cp <= 'F')
 			return 10 + cp - 'A';
 
-		throw new RuntimeException("invalid argument");
+		throw new AssertionError("invalid argument");
 	}
 
 	private Token identifierOrKeyword()
@@ -277,6 +280,9 @@ public class Scanner
 
 	private boolean isDigit(int cp, int base)
 	{
+		if(base < 2 || base > 16)
+			throw new AssertionError("invalid argument");
+
 		int index = "0123456789abcdef".indexOf(Character.toLowerCase(cp));
 		return index != -1 && index < base;
 	}
@@ -308,7 +314,7 @@ public class Scanner
 				advanceColumn();
 
 				if(!isDigit(here(), base))
-					throw new RuntimeException("numeric literal with base prefix requires at least one digit");
+					error("numeric literal with base prefix requires at least one digit");
 			}
 
 			else if(here() == 'o')
@@ -317,7 +323,7 @@ public class Scanner
 				advanceColumn();
 
 				if(!isDigit(here(), base))
-					throw new RuntimeException("numeric literal with base prefix requires at least one digit");
+					error("numeric literal with base prefix requires at least one digit");
 			}
 
 			else if(here() == 'x')
@@ -326,11 +332,11 @@ public class Scanner
 				advanceColumn();
 
 				if(!isDigit(here(), base))
-					throw new RuntimeException("numeric literal with base prefix requires at least one digit");
+					error("numeric literal with base prefix requires at least one digit");
 			}
 
 			else if(CharClassifier.isDigit(here()))
-				throw new RuntimeException("numeric literals must start with digit 1-9 or base prefix");
+				error("numeric literals must start with digit 1-9 or base prefix");
 
 			else
 				literal.append('0');
@@ -348,7 +354,7 @@ public class Scanner
 		boolean isFloatingPointLiteral = !atEnd() && here() == '.';
 
 		if(isFloatingPointLiteral && base != 10)
-			throw new RuntimeException("base prefixes are not supported with floating point literals");
+			error("base prefixes are not supported with floating point literals");
 
 		if(isFloatingPointLiteral)
 		{
@@ -404,7 +410,7 @@ public class Scanner
 			isFloatingPointSuffix = isFloatingPointLiteral;
 			break;
 
-		default: error("unknown literal suffix '" + suffix + "'");
+		default: error(String.format("unknown literal suffix '%s'", suffix));
 		}
 
 		if(isFloatingPointLiteral && !isFloatingPointSuffix)
@@ -456,38 +462,32 @@ public class Scanner
 
 	private boolean atEnd()
 	{
-		return currentOffset == source.length;
+		return state.currentOffset == source.length;
 	}
 
 	private int here()
 	{
-		return source[currentOffset];
+		return source[state.currentOffset];
 	}
 
 	private void skipLineBreak()
 	{
-		++currentOffset;
-		++line;
-		currentColumn = 1;
+		++state.currentOffset;
+		++state.line;
+		state.currentColumn = 1;
 	}
 
 	private void advanceColumn()
 	{
-		++currentOffset;
-		++currentColumn;
+		++state.currentOffset;
+		++state.currentColumn;
 	}
 
 	private void error(String message)
 	{
-		throw new RuntimeException(message + " on line " + line());
+		throw new RuntimeException(String.format("%s on line %s", message, state.line));
 	}
 
 	private int[] source;
-	private int line = 1;
-	private int currentOffset = 0;
-	private int tokenOffset = 0;
-	private int currentColumn = 1;
-	private int tokenColumn = 1;
-
-	private Token token = Token.BEGIN;
+	private ScannerState state = new ScannerState();
 }
