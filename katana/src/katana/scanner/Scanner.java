@@ -23,6 +23,11 @@ public class Scanner
 
 	public ScannerState state()
 	{
+		return state;
+	}
+	
+	public ScannerState capture()
+	{
 		return state.clone();
 	}
 
