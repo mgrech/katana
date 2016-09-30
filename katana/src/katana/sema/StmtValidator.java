@@ -175,13 +175,16 @@ public class StmtValidator implements IVisitor
 	private Stmt visit(katana.ast.stmt.VarDef varDef)
 	{
 		String name = varDef.name;
-		Expr init = ExprValidator.validate(varDef.init, scope, context, validateDecl, Maybe.none());
-		Maybe<Type> maybeType = init.type();
 
-		if(maybeType.isNone())
+		Maybe<Type> maybeDeclaredType = varDef.type.map((t) -> TypeValidator.validate(t, scope, context, validateDecl));
+		Expr init = ExprValidator.validate(varDef.init, scope, context, validateDecl, maybeDeclaredType);
+
+		if(init.type().isNone())
 			throw new RuntimeException(String.format("initializer for var '%s' yields void", name));
 
-		if(!function.defineLocal(name, maybeType.unwrap()))
+		Type type = maybeDeclaredType.or(init.type().unwrap());
+
+		if(!function.defineLocal(name, type))
 			throw new RuntimeException(String.format("redefinition of variable '%s'", name));
 
 		Function.Local local = function.localsByName.get(name);

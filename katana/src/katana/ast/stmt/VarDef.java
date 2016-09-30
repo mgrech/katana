@@ -15,15 +15,19 @@
 package katana.ast.stmt;
 
 import katana.ast.expr.Expr;
+import katana.ast.type.Type;
+import katana.utils.Maybe;
 
 public class VarDef extends Stmt
 {
-	public VarDef(String name, Expr init)
+	public VarDef(Maybe<Type> type, String name, Expr init)
 	{
+		this.type = type;
 		this.name = name;
 		this.init = init;
 	}
 
+	public Maybe<Type> type;
 	public String name;
 	public Expr init;
 }

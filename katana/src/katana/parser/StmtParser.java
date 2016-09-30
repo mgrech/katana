@@ -16,7 +16,9 @@ package katana.parser;
 
 import katana.ast.expr.Expr;
 import katana.ast.stmt.*;
+import katana.ast.type.Type;
 import katana.scanner.Scanner;
+import katana.scanner.ScannerState;
 import katana.scanner.Token;
 import katana.utils.Maybe;
 
@@ -53,11 +55,28 @@ public class StmtParser
 
 	private static Stmt parseVar(Scanner scanner)
 	{
+		ScannerState state = scanner.capture();
+
+		if(ParseTools.option(scanner, Token.Type.IDENT, false))
+		{
+			String name = ParseTools.consume(scanner).value;
+
+			if(ParseTools.option(scanner, Token.Type.PUNCT_ASSIGN, true))
+			{
+				Expr init = ExprParser.parse(scanner);
+				ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
+				return new VarDef(Maybe.none(), name, init);
+			}
+		}
+
+		scanner.backtrack(state);
+
+		Type type = TypeParser.parse(scanner);
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
 		ParseTools.expect(scanner, Token.Type.PUNCT_ASSIGN, true);
 		Expr init = ExprParser.parse(scanner);
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-		return new VarDef(name, init);
+		return new VarDef(Maybe.some(type), name, init);
 	}
 
 	private static Stmt parseIf(Scanner scanner)

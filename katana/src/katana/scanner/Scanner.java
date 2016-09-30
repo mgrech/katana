@@ -25,7 +25,7 @@ public class Scanner
 	{
 		return state;
 	}
-	
+
 	public ScannerState capture()
 	{
 		return state.clone();
