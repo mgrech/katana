@@ -26,7 +26,7 @@ public class StmtParser
 {
 	public static Stmt parse(Scanner scanner)
 	{
-		if(ParseTools.option(scanner, Token.Type.STMT_VAR, true))
+		if(ParseTools.option(scanner, Token.Type.STMT_LOCAL, true))
 			return parseVar(scanner);
 
 		if(ParseTools.option(scanner, Token.Type.STMT_IF, true))
@@ -65,7 +65,7 @@ public class StmtParser
 			{
 				Expr init = ExprParser.parse(scanner);
 				ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-				return new VarDef(Maybe.none(), name, init);
+				return new Local(Maybe.none(), name, init);
 			}
 		}
 
@@ -76,7 +76,7 @@ public class StmtParser
 		ParseTools.expect(scanner, Token.Type.PUNCT_ASSIGN, true);
 		Expr init = ExprParser.parse(scanner);
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-		return new VarDef(Maybe.some(type), name, init);
+		return new Local(Maybe.some(type), name, init);
 	}
 
 	private static Stmt parseIf(Scanner scanner)

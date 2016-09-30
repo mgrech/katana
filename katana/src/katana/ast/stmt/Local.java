@@ -18,9 +18,9 @@ import katana.ast.expr.Expr;
 import katana.ast.type.Type;
 import katana.utils.Maybe;
 
-public class VarDef extends Stmt
+public class Local extends Stmt
 {
-	public VarDef(Maybe<Type> type, String name, Expr init)
+	public Local(Maybe<Type> type, String name, Expr init)
 	{
 		this.type = type;
 		this.name = name;

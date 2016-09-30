@@ -14,6 +14,7 @@
 
 package katana.sema;
 
+import katana.ast.stmt.Local;
 import katana.backend.PlatformContext;
 import katana.sema.decl.Decl;
 import katana.sema.decl.Function;
@@ -172,23 +173,21 @@ public class StmtValidator implements IVisitor
 		return new ExprStmt(expr);
 	}
 
-	private Stmt visit(katana.ast.stmt.VarDef varDef)
+	private Stmt visit(Local local)
 	{
-		String name = varDef.name;
-
-		Maybe<Type> maybeDeclaredType = varDef.type.map((t) -> TypeValidator.validate(t, scope, context, validateDecl));
-		Expr init = ExprValidator.validate(varDef.init, scope, context, validateDecl, maybeDeclaredType);
+		Maybe<Type> maybeDeclaredType = local.type.map((t) -> TypeValidator.validate(t, scope, context, validateDecl));
+		Expr init = ExprValidator.validate(local.init, scope, context, validateDecl, maybeDeclaredType);
 
 		if(init.type().isNone())
-			throw new RuntimeException(String.format("initializer for var '%s' yields void", name));
+			throw new RuntimeException(String.format("initializer for var '%s' yields void", local.name));
 
 		Type type = maybeDeclaredType.or(init.type().unwrap());
 
-		if(!function.defineLocal(name, type))
-			throw new RuntimeException(String.format("redefinition of variable '%s'", name));
+		if(!function.defineLocal(local.name, type))
+			throw new RuntimeException(String.format("redefinition of variable '%s'", local.name));
 
-		Function.Local local = function.localsByName.get(name);
-		NamedLocal localref = new NamedLocal(local);
+		Function.Local semaLocal = function.localsByName.get(local.name);
+		NamedLocal localref = new NamedLocal(semaLocal);
 		localref.useAsLValue(true);
 		return new ExprStmt(new Assign(localref, init));
 	}

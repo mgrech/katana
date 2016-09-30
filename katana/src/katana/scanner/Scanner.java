@@ -244,7 +244,7 @@ public class Scanner
 		case "data":   return Token.DECL_DATA;
 		case "type":   return Token.DECL_TYPE;
 
-		case "var":    return Token.STMT_VAR;
+		case "local":  return Token.STMT_LOCAL;
 		case "if":     return Token.STMT_IF;
 		case "else":   return Token.STMT_ELSE;
 		case "goto":   return Token.STMT_GOTO;

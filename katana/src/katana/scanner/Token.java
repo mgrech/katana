@@ -63,7 +63,7 @@ public class Token
 		DECL_DATA,
 		DECL_TYPE,
 
-		STMT_VAR,
+		STMT_LOCAL,
 		STMT_IF,
 		STMT_ELSE,
 		STMT_GOTO,
@@ -131,7 +131,7 @@ public class Token
 	public static final Token DECL_DATA   = new Token(Category.DECL, Type.DECL_DATA,   "data");
 	public static final Token DECL_TYPE   = new Token(Category.DECL, Type.DECL_TYPE,   "type");
 
-	public static final Token STMT_VAR    = new Token(Category.STMT, Type.STMT_VAR,    "var");
+	public static final Token STMT_LOCAL  = new Token(Category.STMT, Type.STMT_LOCAL,  "local");
 	public static final Token STMT_IF     = new Token(Category.STMT, Type.STMT_IF,     "if");
 	public static final Token STMT_ELSE   = new Token(Category.STMT, Type.STMT_ELSE,   "else");
 	public static final Token STMT_GOTO   = new Token(Category.STMT, Type.STMT_GOTO,   "goto");
