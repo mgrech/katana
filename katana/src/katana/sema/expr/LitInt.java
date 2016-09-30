@@ -21,7 +21,7 @@ import katana.utils.Maybe;
 
 import java.math.BigInteger;
 
-public class LitInt implements Literal
+public class LitInt extends Literal
 {
 	public LitInt(BigInteger value, BuiltinType type)
 	{

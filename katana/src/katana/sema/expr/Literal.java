@@ -14,6 +14,6 @@
 
 package katana.sema.expr;
 
-public interface Literal extends Expr
+public abstract class Literal extends Expr
 {
 }

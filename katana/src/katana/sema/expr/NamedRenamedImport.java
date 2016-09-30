@@ -4,7 +4,7 @@ import katana.sema.decl.RenamedImport;
 import katana.sema.type.Type;
 import katana.utils.Maybe;
 
-public class NamedRenamedImport implements Expr
+public class NamedRenamedImport extends Expr
 {
 	public NamedRenamedImport(RenamedImport import_)
 	{

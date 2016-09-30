@@ -20,7 +20,7 @@ import katana.utils.Maybe;
 
 import java.util.List;
 
-public class DirectFunctionCall implements Expr
+public class DirectFunctionCall extends Expr
 {
 	public DirectFunctionCall(Function function, List<Expr> args, Maybe<Boolean> inline)
 	{

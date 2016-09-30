@@ -18,7 +18,7 @@ import katana.sema.decl.Data;
 import katana.sema.type.Type;
 import katana.utils.Maybe;
 
-public class FieldAccessRValue implements Expr
+public class FieldAccessRValue extends Expr
 {
 	public FieldAccessRValue(Expr expr, Data.Field field)
 	{

@@ -21,7 +21,7 @@ import katana.utils.Maybe;
 import java.math.BigInteger;
 import java.util.List;
 
-public class LitArray implements Literal
+public class LitArray extends Literal
 {
 	public LitArray(BigInteger length, Type type, List<Expr> values)
 	{

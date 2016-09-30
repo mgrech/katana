@@ -19,7 +19,7 @@ import katana.sema.type.Builtin;
 import katana.sema.type.Type;
 import katana.utils.Maybe;
 
-public class Offsetof implements Expr
+public class Offsetof extends Expr
 {
 	public Offsetof(Data.Field field)
 	{

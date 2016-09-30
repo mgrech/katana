@@ -18,7 +18,7 @@ import katana.sema.type.Type;
 import katana.utils.Maybe;
 import katana.visitor.IVisitable;
 
-public interface Expr extends IVisitable
+public abstract class Expr implements IVisitable
 {
-	Maybe<Type> type();
+	public abstract Maybe<Type> type();
 }
