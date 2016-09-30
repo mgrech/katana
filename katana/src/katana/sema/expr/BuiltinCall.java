@@ -20,7 +20,7 @@ import katana.utils.Maybe;
 
 import java.util.List;
 
-public class BuiltinCall extends Expr
+public class BuiltinCall implements Expr
 {
 	public BuiltinCall(BuiltinFunc func, List<Expr> args, Maybe<Type> ret)
 	{

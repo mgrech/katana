@@ -18,7 +18,7 @@ import katana.sema.type.Builtin;
 import katana.sema.type.Type;
 import katana.utils.Maybe;
 
-public class Addressof extends Expr
+public class Addressof implements Expr
 {
 	public Addressof(LValueExpr expr)
 	{

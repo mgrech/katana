@@ -18,7 +18,7 @@ import katana.sema.expr.Expr;
 import katana.sema.type.Type;
 import katana.utils.Maybe;
 
-public class SSAExpr extends Expr
+public class SSAExpr implements Expr
 {
 	public SSAExpr(String name)
 	{

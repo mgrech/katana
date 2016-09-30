@@ -21,7 +21,7 @@ import katana.utils.Maybe;
 
 import java.math.BigDecimal;
 
-public class LitFloat extends Expr
+public class LitFloat implements Literal
 {
 	public LitFloat(BigDecimal value, BuiltinType type)
 	{

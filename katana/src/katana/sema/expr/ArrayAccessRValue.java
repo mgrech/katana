@@ -18,7 +18,7 @@ import katana.sema.type.Array;
 import katana.sema.type.Type;
 import katana.utils.Maybe;
 
-public class ArrayAccessRValue extends Expr
+public class ArrayAccessRValue implements Expr
 {
 	public ArrayAccessRValue(Expr expr, Expr index)
 	{

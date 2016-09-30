@@ -12,10 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema.expr;
+package katana.ast.expr;
 
-public abstract class LValueExpr implements Expr
+public abstract class Literal extends Expr
 {
-	public abstract boolean isUsedAsLValue();
-	public abstract void useAsLValue(boolean use);
 }

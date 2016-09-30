@@ -19,7 +19,7 @@ import katana.utils.Maybe;
 
 import java.math.BigInteger;
 
-public class LitInt extends Expr
+public class LitInt extends Literal
 {
 	public LitInt(BigInteger value, Maybe<BuiltinType> type)
 	{

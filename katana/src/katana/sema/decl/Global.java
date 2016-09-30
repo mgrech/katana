@@ -15,14 +15,16 @@
 package katana.sema.decl;
 
 import katana.sema.Module;
+import katana.sema.expr.Literal;
 import katana.sema.type.Type;
 
 public class Global extends Decl
 {
-	public Global(Module module, boolean exported, boolean opaque, String name)
+	public Global(Module module, boolean exported, boolean opaque, String name, Literal init)
 	{
 		super(module, exported, opaque);
 		this.name = name;
+		this.init = init;
 	}
 
 	@Override
@@ -33,4 +35,5 @@ public class Global extends Decl
 
 	public String name;
 	public Type type;
+	public Literal init;
 }

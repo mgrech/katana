@@ -14,7 +14,7 @@
 
 package katana.ast.expr;
 
-public class LitString extends Expr
+public class LitString extends Literal
 {
 	public LitString(String value)
 	{

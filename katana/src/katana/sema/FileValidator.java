@@ -19,7 +19,9 @@ import katana.ast.decl.Import;
 import katana.ast.decl.RenamedImport;
 import katana.backend.PlatformContext;
 import katana.sema.decl.*;
+import katana.sema.expr.Literal;
 import katana.sema.stmt.Stmt;
+import katana.sema.type.Type;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
@@ -159,7 +161,9 @@ public class FileValidator implements IVisitor
 
 	private Maybe<Decl> visit(katana.ast.decl.Global global)
 	{
-		Global semaGlobal = new Global(currentModule, global.exported, global.opaque, global.name);
+		Type type = TypeValidator.validate(global.type, scope, context, validateDecl);
+		Literal init = (Literal)ExprValidator.validate(global.init, scope, context, validateDecl, Maybe.some(type));
+		Global semaGlobal = new Global(currentModule, global.exported, global.opaque, global.name, init);
 		return handleModuleDecl(semaGlobal, global);
 	}
 

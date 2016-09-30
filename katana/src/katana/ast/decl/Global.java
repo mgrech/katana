@@ -14,17 +14,20 @@
 
 package katana.ast.decl;
 
+import katana.ast.expr.Literal;
 import katana.ast.type.Type;
 
 public class Global extends Decl
 {
-	public Global(boolean exported, boolean opaque, Type type, String name)
+	public Global(boolean exported, boolean opaque, Type type, String name, Literal init)
 	{
 		super(exported, opaque);
 		this.type = type;
 		this.name = name;
+		this.init = init;
 	}
 
 	public Type type;
 	public String name;
+	public Literal init;
 }

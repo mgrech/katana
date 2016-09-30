@@ -14,8 +14,6 @@
 
 package katana.sema.expr;
 
-public abstract class LValueExpr implements Expr
+public interface Literal extends Expr
 {
-	public abstract boolean isUsedAsLValue();
-	public abstract void useAsLValue(boolean use);
 }

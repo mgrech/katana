@@ -14,7 +14,7 @@
 
 package katana.ast.expr;
 
-public class LitBool extends Expr
+public class LitBool extends Literal
 {
 	public LitBool(boolean value)
 	{

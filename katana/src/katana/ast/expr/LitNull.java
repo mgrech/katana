@@ -14,6 +14,6 @@
 
 package katana.ast.expr;
 
-public class LitNull extends Expr
+public class LitNull extends Literal
 {
 }

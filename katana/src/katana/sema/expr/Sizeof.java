@@ -18,7 +18,7 @@ import katana.sema.type.Builtin;
 import katana.sema.type.Type;
 import katana.utils.Maybe;
 
-public class Sizeof extends Expr
+public class Sizeof implements Expr
 {
 	public Sizeof(Type type)
 	{

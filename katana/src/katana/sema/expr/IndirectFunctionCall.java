@@ -20,7 +20,7 @@ import katana.utils.Maybe;
 
 import java.util.List;
 
-public class IndirectFunctionCall extends Expr
+public class IndirectFunctionCall implements Expr
 {
 	public IndirectFunctionCall(Expr expr, List<Expr> args)
 	{

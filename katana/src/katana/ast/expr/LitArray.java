@@ -20,9 +20,9 @@ import katana.utils.Maybe;
 import java.math.BigInteger;
 import java.util.List;
 
-public class LitArray extends Expr
+public class LitArray extends Literal
 {
-	public LitArray(Maybe<BigInteger> length, Maybe<Type> type, List<Expr> values)
+	public LitArray(Maybe<BigInteger> length, Maybe<Type> type, List<Literal> values)
 	{
 		this.length = length;
 		this.type = type;
@@ -31,5 +31,5 @@ public class LitArray extends Expr
 
 	public Maybe<BigInteger> length;
 	public Maybe<Type> type;
-	public List<Expr> values;
+	public List<Literal> values;
 }

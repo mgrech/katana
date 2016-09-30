@@ -97,29 +97,6 @@ public class ExprParser
 		throw new AssertionError("unreachable");
 	}
 
-	private static boolean isLiteral(Expr expr)
-	{
-		if(expr instanceof LitArray)
-			return true;
-
-		if(expr instanceof LitBool)
-			return true;
-
-		if(expr instanceof LitFloat)
-			return true;
-
-		if(expr instanceof LitInt)
-			return true;
-
-		if(expr instanceof LitNull)
-			return true;
-
-		if(expr instanceof LitString)
-			return true;
-
-		return false;
-	}
-
 	private static Expr parseArrayLiteral(Scanner scanner)
 	{
 		Maybe<BigInteger> size = Maybe.none();
@@ -146,25 +123,25 @@ public class ExprParser
 			ParseTools.expect(scanner, Token.Type.PUNCT_COLON, true);
 		}
 
-		List<Expr> values = new ArrayList<>();
+		List<Literal> values = new ArrayList<>();
 
 		if(!ParseTools.option(scanner, Token.Type.PUNCT_RBRACKET, true))
 		{
 			Expr first = parse(scanner);
 
-			if(!isLiteral(first))
-				throw new RuntimeException("array literal values must be literals");
+			if(!(first instanceof Literal))
+				throw new RuntimeException("array literal values must be literals themselves");
 
-			values.add(first);
+			values.add((Literal)first);
 
 			while(ParseTools.option(scanner, Token.Type.PUNCT_COMMA, true))
 			{
 				Expr next = parse(scanner);
 
-				if(!isLiteral(next))
-					throw new RuntimeException("array literal values must be literals");
+				if(!(next instanceof Literal))
+					throw new RuntimeException("array literal values must be literals themselves");
 
-				values.add(next);
+				values.add((Literal)next);
 			}
 
 			ParseTools.expect(scanner, Token.Type.PUNCT_RBRACKET, true);

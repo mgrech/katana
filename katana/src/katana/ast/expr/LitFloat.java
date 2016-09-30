@@ -19,7 +19,7 @@ import katana.utils.Maybe;
 
 import java.math.BigDecimal;
 
-public class LitFloat extends Expr
+public class LitFloat extends Literal
 {
 	public LitFloat(BigDecimal value, Maybe<BuiltinType> type)
 	{

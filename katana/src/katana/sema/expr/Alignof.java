@@ -18,7 +18,7 @@ import katana.sema.type.Builtin;
 import katana.sema.type.Type;
 import katana.utils.Maybe;
 
-public class Alignof extends Expr
+public class Alignof implements Expr
 {
 	public Alignof(Type type)
 	{

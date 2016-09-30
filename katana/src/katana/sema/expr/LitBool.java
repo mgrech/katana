@@ -18,7 +18,7 @@ import katana.sema.type.Builtin;
 import katana.sema.type.Type;
 import katana.utils.Maybe;
 
-public class LitBool extends Expr
+public class LitBool implements Literal
 {
 	public LitBool(boolean value)
 	{

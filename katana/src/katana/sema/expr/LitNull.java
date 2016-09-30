@@ -18,7 +18,7 @@ import katana.sema.type.Builtin;
 import katana.sema.type.Type;
 import katana.utils.Maybe;
 
-public class LitNull extends Expr
+public class LitNull implements Literal
 {
 	@Override
 	public Maybe<Type> type()

@@ -22,7 +22,7 @@ import katana.utils.Maybe;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 
-public class LitString extends SimpleLValueExpr
+public class LitString implements Literal
 {
 	public LitString(String value)
 	{
