@@ -267,9 +267,11 @@ public class ExprCodeGenerator implements IVisitor
 
 	private String toFloatHexString(BigDecimal bd)
 	{
-		float f = bd.floatValue();
-		int i = Float.floatToRawIntBits(f);
-		return String.format("0x%x", i);
+		// llvm requires float literals to be as wide as double literals but representable in a float
+		// hence we take the float value and widen it to double
+		double d = (double)bd.floatValue();
+		long l = Double.doubleToLongBits(d);
+		return String.format("0x%x", l);
 	}
 
 	private String toDoubleHexString(BigDecimal bd)
