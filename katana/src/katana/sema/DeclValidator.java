@@ -16,6 +16,7 @@ package katana.sema;
 
 import katana.backend.PlatformContext;
 import katana.sema.decl.*;
+import katana.sema.expr.Literal;
 import katana.sema.type.Type;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
@@ -54,7 +55,7 @@ public class DeclValidator implements IVisitor
 			Type type = TypeValidator.validate(field.type, scope, context, validateDecl);
 
 			if(!semaData.defineField(field.name, type))
-				throw new RuntimeException("duplicate field '" + field.name + "' in data '" + semaData.name() + "'");
+				throw new RuntimeException(String.format("duplicate field '%s' in data '%s'", field.name, semaData.name()));
 		}
 	}
 
@@ -65,7 +66,7 @@ public class DeclValidator implements IVisitor
 			Type type = TypeValidator.validate(param.type, scope, context, validateDecl);
 
 			if(!semaFunction.defineParam(param.name, type))
-				throw new RuntimeException("duplicate parameter '" + param.name + "' in function '" + function.name + "'");
+				throw new RuntimeException(String.format("duplicate parameter name '%s' in function '%s'", param.name, function.name));
 		}
 
 		FunctionScope fscope = new FunctionScope(scope, semaFunction);
@@ -80,7 +81,7 @@ public class DeclValidator implements IVisitor
 			Type type = TypeValidator.validate(param.type, scope, context, validateDecl);
 
 			if(!semaFunction.defineParam(type, param.name))
-				throw new RuntimeException("duplicate parameter '" + param.name + "' in function '" + function.name + "'");
+				throw new RuntimeException(String.format("duplicate parameter name '%s' in function '%s'", param.name, function.name));
 		}
 
 		semaFunction.ret = function.ret.map((type) -> TypeValidator.validate(type, scope, context, validateDecl));
@@ -88,7 +89,13 @@ public class DeclValidator implements IVisitor
 
 	private void visit(Global semaGlobal, katana.ast.decl.Global global)
 	{
-		semaGlobal.type = TypeValidator.validate(global.type, scope, context, validateDecl);
+		Maybe<Type> maybeDeclaredType = global.type.map((t) -> TypeValidator.validate(t, scope, context, validateDecl));
+		semaGlobal.init = (Literal)ExprValidator.validate(global.init, scope, context, validateDecl, maybeDeclaredType);
+
+		if(semaGlobal.init.type().isNone())
+			throw new RuntimeException(String.format("initializer for global %s yields void", global.name));
+
+		semaGlobal.type = maybeDeclaredType.or(semaGlobal.init.type().unwrap());
 	}
 
 	private void visit(TypeAlias semaAlias, katana.ast.decl.TypeAlias alias)

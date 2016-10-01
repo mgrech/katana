@@ -16,10 +16,11 @@ package katana.ast.decl;
 
 import katana.ast.expr.Literal;
 import katana.ast.type.Type;
+import katana.utils.Maybe;
 
 public class Global extends Decl
 {
-	public Global(boolean exported, boolean opaque, Type type, String name, Literal init)
+	public Global(boolean exported, boolean opaque, Maybe<Type> type, String name, Literal init)
 	{
 		super(exported, opaque);
 		this.type = type;
@@ -27,7 +28,7 @@ public class Global extends Decl
 		this.init = init;
 	}
 
-	public Type type;
+	public Maybe<Type> type;
 	public String name;
 	public Literal init;
 }

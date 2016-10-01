@@ -20,11 +20,10 @@ import katana.sema.type.Type;
 
 public class Global extends Decl
 {
-	public Global(Module module, boolean exported, boolean opaque, String name, Literal init)
+	public Global(Module module, boolean exported, boolean opaque, String name)
 	{
 		super(module, exported, opaque);
 		this.name = name;
-		this.init = init;
 	}
 
 	@Override

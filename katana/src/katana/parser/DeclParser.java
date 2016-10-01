@@ -21,6 +21,7 @@ import katana.ast.expr.Literal;
 import katana.ast.stmt.Stmt;
 import katana.ast.type.Type;
 import katana.scanner.Scanner;
+import katana.scanner.ScannerState;
 import katana.scanner.Token;
 import katana.utils.Maybe;
 
@@ -162,6 +163,26 @@ public class DeclParser
 	{
 		scanner.advance();
 
+		ScannerState state = scanner.capture();
+
+		if(ParseTools.option(scanner, Token.Type.IDENT, false))
+		{
+			String name = ParseTools.consume(scanner).value;
+
+			if(ParseTools.option(scanner, Token.Type.PUNCT_ASSIGN, true))
+			{
+				Expr init = ExprParser.parse(scanner);
+
+				if(!(init instanceof Literal))
+					throw new RuntimeException("global initializer must be literal");
+
+				ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
+				return new Global(exported, opaque, Maybe.none(), name, (Literal)init);
+			}
+		}
+
+		scanner.backtrack(state);
+
 		Type type = TypeParser.parse(scanner);
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
 		ParseTools.expect(scanner, Token.Type.PUNCT_ASSIGN, true);
@@ -171,7 +192,7 @@ public class DeclParser
 			throw new RuntimeException("global initializer must be literal");
 
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-		return new Global(exported, opaque, type, name, (Literal)init);
+		return new Global(exported, opaque, Maybe.some(type), name, (Literal)init);
 	}
 
 	private static Decl parseImport(Scanner scanner)
