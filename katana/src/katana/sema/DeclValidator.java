@@ -95,7 +95,14 @@ public class DeclValidator implements IVisitor
 		if(semaGlobal.init.type().isNone())
 			throw new RuntimeException(String.format("initializer for global %s yields void", global.name));
 
-		semaGlobal.type = maybeDeclaredType.or(semaGlobal.init.type().unwrap());
+		Type initType = semaGlobal.init.type().unwrap();
+		semaGlobal.type = maybeDeclaredType.or(initType);
+
+		if(!Type.same(semaGlobal.type, initType))
+		{
+			String fmt = "initializer for global '%s' has wrong type: expected '%s', got '%s'";
+			throw new RuntimeException(String.format(fmt, semaGlobal.name(), semaGlobal.type, initType));
+		}
 	}
 
 	private void visit(TypeAlias semaAlias, katana.ast.decl.TypeAlias alias)

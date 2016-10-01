@@ -179,12 +179,19 @@ public class StmtValidator implements IVisitor
 		Expr init = ExprValidator.validate(local.init, scope, context, validateDecl, maybeDeclaredType);
 
 		if(init.type().isNone())
-			throw new RuntimeException(String.format("initializer for var '%s' yields void", local.name));
+			throw new RuntimeException(String.format("initializer for local '%s' yields void", local.name));
 
-		Type type = maybeDeclaredType.or(init.type().unwrap());
+		Type initType = init.type().unwrap();
+		Type type = maybeDeclaredType.or(initType);
+
+		if(!Type.same(type, initType))
+		{
+			String fmt = "initializer for local '%s' has wrong type: expected '%s', got '%s'";
+			throw new RuntimeException(String.format(fmt, local.name, type.toString(), initType.toString()));
+		}
 
 		if(!function.defineLocal(local.name, type))
-			throw new RuntimeException(String.format("redefinition of variable '%s'", local.name));
+			throw new RuntimeException(String.format("redefinition of local '%s'", local.name));
 
 		Function.Local semaLocal = function.localsByName.get(local.name);
 		NamedLocal localref = new NamedLocal(semaLocal);

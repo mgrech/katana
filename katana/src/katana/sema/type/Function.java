@@ -83,7 +83,7 @@ public class Function extends Type
 			}
 		}
 
-		String retString = ret.isNone() ? "" : "=> " + ret.unwrap();
+		String retString = ret.isNone() ? "" : " => " + ret.unwrap();
 
 		return String.format("fn(%s)%s", paramString, retString);
 	}
