@@ -68,16 +68,19 @@ public class ExprValidator implements IVisitor
 
 		while(it1.hasNext())
 		{
-			Type param = it1.next();
-			Maybe<Type> arg = it2.next().type();
+			Type paramType = it1.next();
+			Maybe<Type> maybeArgType = it2.next().type();
 
-			if(arg.isNone())
+			if(maybeArgType.isNone())
 				throw new RuntimeException("expression given in argument " + argCount + " results in no value");
 
-			if(!Type.same(param, arg.unwrap()))
+			Type paramTypeStripped = TypeHelper.removeConst(paramType);
+			Type argTypeStripped = TypeHelper.removeConst(maybeArgType.unwrap());
+
+			if(!Type.same(paramTypeStripped, argTypeStripped))
 			{
 				String fmt = "type mismatch in argument %s: expected '%s', got '%s'";
-				throw new RuntimeException(String.format(fmt, argCount, param, arg.unwrap()));
+				throw new RuntimeException(String.format(fmt, argCount, paramTypeStripped, argTypeStripped));
 			}
 
 			++argCount;
