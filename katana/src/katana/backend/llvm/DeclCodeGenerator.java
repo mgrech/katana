@@ -16,6 +16,7 @@ package katana.backend.llvm;
 
 import katana.ast.Path;
 import katana.backend.PlatformContext;
+import katana.sema.TypeHelper;
 import katana.sema.decl.*;
 import katana.sema.stmt.Stmt;
 import katana.sema.type.Type;
@@ -158,7 +159,8 @@ public class DeclCodeGenerator implements IVisitor
 		String qualifiedName = qualifiedName(global);
 		String typeString = TypeCodeGenerator.generate(global.type, context);
 		String initializerString = ExprCodeGenerator.generate(global.init, builder, context, null).unwrap();
-		builder.append(String.format("@%s = private global %s %s\n", qualifiedName, typeString, initializerString));
+		String kind = TypeHelper.isConst(global.type) ? "constant" : "global";
+		builder.append(String.format("@%s = private %s %s %s\n", qualifiedName, kind, typeString, initializerString));
 	}
 
 	private void visit(TypeAlias alias)
