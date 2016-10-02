@@ -156,11 +156,12 @@ public class StmtValidator implements IVisitor
 			}
 
 			Type type = maybeType.unwrap();
+			Type typeStripped = TypeHelper.removeConst(type);
 
-			if(!Type.same(function.ret.unwrap(), type))
+			if(!Type.same(function.ret.unwrap(), typeStripped))
 			{
 				String fmt = "function %s returns value of type %s, %s given";
-				throw new RuntimeException(String.format(fmt, function.qualifiedName(), function.ret.unwrap(), type));
+				throw new RuntimeException(String.format(fmt, function.qualifiedName(), function.ret.unwrap(), typeStripped));
 			}
 		}
 
@@ -176,21 +177,24 @@ public class StmtValidator implements IVisitor
 	private Stmt visit(Local local)
 	{
 		Maybe<Type> maybeDeclaredType = local.type.map((t) -> TypeValidator.validate(t, scope, context, validateDecl));
-		Expr init = ExprValidator.validate(local.init, scope, context, validateDecl, maybeDeclaredType);
+		Maybe<Type> maybeDeclaredTypeStripped = maybeDeclaredType.map(TypeHelper::removeConst);
+		Expr init = ExprValidator.validate(local.init, scope, context, validateDecl, maybeDeclaredTypeStripped);
 
 		if(init.type().isNone())
 			throw new RuntimeException(String.format("initializer for local '%s' yields void", local.name));
 
 		Type initType = init.type().unwrap();
-		Type type = maybeDeclaredType.or(initType);
+		Type initTypeStripped = TypeHelper.removeConst(initType);
+		Type localType = maybeDeclaredType.or(initTypeStripped);
+		Type localTypeStripped = TypeHelper.removeConst(localType);
 
-		if(!Type.same(type, initType))
+		if(!Type.same(localTypeStripped, initTypeStripped))
 		{
 			String fmt = "initializer for local '%s' has wrong type: expected '%s', got '%s'";
-			throw new RuntimeException(String.format(fmt, local.name, type.toString(), initType.toString()));
+			throw new RuntimeException(String.format(fmt, local.name, localType, initType));
 		}
 
-		if(!function.defineLocal(local.name, type))
+		if(!function.defineLocal(local.name, localType))
 			throw new RuntimeException(String.format("redefinition of local '%s'", local.name));
 
 		Function.Local semaLocal = function.localsByName.get(local.name);

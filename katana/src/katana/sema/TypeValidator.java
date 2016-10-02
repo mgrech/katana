@@ -14,12 +14,20 @@
 
 package katana.sema;
 
+import katana.ast.type.*;
 import katana.backend.PlatformContext;
 import katana.sema.decl.Data;
 import katana.sema.decl.Decl;
 import katana.sema.decl.TypeAlias;
 import katana.sema.expr.Expr;
 import katana.sema.type.*;
+import katana.sema.type.Array;
+import katana.sema.type.Builtin;
+import katana.sema.type.Const;
+import katana.sema.type.Function;
+import katana.sema.type.Opaque;
+import katana.sema.type.Type;
+import katana.sema.type.UserDefined;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
@@ -121,6 +129,22 @@ public class TypeValidator implements IVisitor
 			return new UserDefined((Data)symbol);
 
 		throw new RuntimeException(String.format("symbol '%s' does not refer to a type"));
+	}
+
+	private Type visit(katana.ast.type.Const const_)
+	{
+		Type type = validate(const_.type, scope, context, validateDecl);
+
+		if(type instanceof Const)
+			return type;
+
+		if(type instanceof Array)
+			throw new RuntimeException("forming const array type, did you mean array of const element type?");
+
+		if(type instanceof Function)
+			throw new RuntimeException("forming const function type");
+
+		return new Const(type);
 	}
 
 	private Type visit(katana.ast.type.Typeof typeof)

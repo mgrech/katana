@@ -31,7 +31,7 @@ public class ExprParser
 {
 	public static Expr parse(Scanner scanner)
 	{
-		Expr expr = parseInitialExpr(scanner);
+		Expr expr = parsePrimaryExpr(scanner);
 
 		for(;;)
 		{
@@ -70,7 +70,7 @@ public class ExprParser
 		}
 	}
 
-	private static Expr parseInitialExpr(Scanner scanner)
+	private static Expr parsePrimaryExpr(Scanner scanner)
 	{
 		if(ParseTools.option(scanner, Token.Type.DECL_GLOBAL, true))
 		{
@@ -93,8 +93,19 @@ public class ExprParser
 		if(ParseTools.option(scanner, Token.Type.PUNCT_LBRACKET, true))
 			return parseArrayLiteral(scanner);
 
+		if(ParseTools.option(scanner, Token.Type.TYPE_CONST, true))
+			return parseConst(scanner);
+
 		ParseTools.unexpectedToken(scanner);
 		throw new AssertionError("unreachable");
+	}
+
+	private static Expr parseConst(Scanner scanner)
+	{
+		ParseTools.expect(scanner, Token.Type.PUNCT_LPAREN, true);
+		Expr expr = parse(scanner);
+		ParseTools.expect(scanner, Token.Type.PUNCT_RPAREN, true);
+		return new Const(expr);
 	}
 
 	private static Expr parseArrayLiteral(Scanner scanner)
@@ -130,7 +141,7 @@ public class ExprParser
 			Expr first = parse(scanner);
 
 			if(!(first instanceof Literal))
-				throw new RuntimeException("array literal values must be literals themselves");
+				throw new RuntimeException("array literal elements must be literals themselves");
 
 			values.add((Literal)first);
 
@@ -139,7 +150,7 @@ public class ExprParser
 				Expr next = parse(scanner);
 
 				if(!(next instanceof Literal))
-					throw new RuntimeException("array literal values must be literals themselves");
+					throw new RuntimeException("array literal elements must be literals themselves");
 
 				values.add((Literal)next);
 			}

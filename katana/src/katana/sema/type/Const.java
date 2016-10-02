@@ -12,33 +12,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema.expr;
+package katana.sema.type;
 
-import katana.sema.TypeHelper;
-import katana.sema.type.Array;
-import katana.sema.type.Const;
-import katana.sema.type.Type;
-import katana.utils.Maybe;
+import katana.backend.PlatformContext;
 
 import java.math.BigInteger;
-import java.util.List;
 
-public class LitArray extends Literal
+public class Const extends Type
 {
-	public LitArray(BigInteger length, Type type, List<Expr> values)
+	public Const(Type type)
 	{
-		this.length = length;
 		this.type = type;
-		this.values = values;
 	}
 
 	@Override
-	public Maybe<Type> type()
+	public BigInteger sizeof(PlatformContext context)
 	{
-		return Maybe.some(new Array(length, TypeHelper.addConst(type)));
+		return type.sizeof(context);
 	}
 
-	public final BigInteger length;
-	public final Type type;
-	public final List<Expr> values;
+	@Override
+	public BigInteger alignof(PlatformContext context)
+	{
+		return type.alignof(context);
+	}
+
+	@Override
+	protected boolean same(Type other)
+	{
+		return Type.same(type, ((Const)other).type);
+	}
+
+	@Override
+	public String toString()
+	{
+		return String.format("const %s", type);
+	}
+
+	public Type type;
 }

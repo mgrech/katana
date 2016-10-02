@@ -14,33 +14,22 @@
 
 package katana.sema.expr;
 
-import katana.sema.type.Array;
-import katana.sema.type.Builtin;
-import katana.sema.type.Const;
+import katana.sema.TypeHelper;
 import katana.sema.type.Type;
 import katana.utils.Maybe;
 
-import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-
-public class LitString extends Literal
+public class ConstRValue extends Expr
 {
-	private static final Type ELEMENT_TYPE = new Const(Builtin.UINT8);
-
-	public LitString(String value)
+	public ConstRValue(Expr expr)
 	{
-		this.value = value;
-
-		BigInteger length = BigInteger.valueOf(value.getBytes(StandardCharsets.UTF_8).length);
-		cachedType = Maybe.some(new Array(length, ELEMENT_TYPE));
+		this.expr = expr;
 	}
 
 	@Override
 	public Maybe<Type> type()
 	{
-		return cachedType;
+		return Maybe.some(TypeHelper.addConst(expr.type().unwrap()));
 	}
 
-	public final String value;
-	private final transient Maybe<Type> cachedType;
+	public Expr expr;
 }

@@ -16,6 +16,7 @@ package katana.sema.expr;
 
 import katana.BuiltinType;
 import katana.sema.type.Builtin;
+import katana.sema.type.Const;
 import katana.sema.type.Type;
 import katana.utils.Maybe;
 
@@ -28,22 +29,26 @@ public class LitFloat extends Literal
 		this.value = value;
 		this.type = type;
 
+		Type semaType;
+
 		switch(type)
 		{
-		case FLOAT32: cachedType = Builtin.FLOAT32; break;
-		case FLOAT64: cachedType = Builtin.FLOAT64; break;
+		case FLOAT32: semaType = Builtin.FLOAT32; break;
+		case FLOAT64: semaType = Builtin.FLOAT64; break;
 
 		default: throw new AssertionError("unreachable");
 		}
+
+		cachedType = Maybe.some(new Const(semaType));
 	}
 
 	@Override
 	public Maybe<Type> type()
 	{
-		return Maybe.some(cachedType);
+		return cachedType;
 	}
 
-	public BigDecimal value;
-	public BuiltinType type;
-	private Type cachedType;
+	public final BigDecimal value;
+	public final BuiltinType type;
+	private final transient Maybe<Type> cachedType;
 }

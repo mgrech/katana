@@ -19,11 +19,9 @@ import katana.Limits;
 import katana.ast.expr.NamedSymbol;
 import katana.backend.PlatformContext;
 import katana.sema.decl.*;
+import katana.sema.decl.Function;
 import katana.sema.expr.*;
-import katana.sema.type.Array;
-import katana.sema.type.Builtin;
-import katana.sema.type.Type;
-import katana.sema.type.UserDefined;
+import katana.sema.type.*;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
@@ -126,24 +124,28 @@ public class ExprValidator implements IVisitor
 		Expr left = validate(assign.left, scope, context, validateDecl, Maybe.none());
 
 		if(left.type().isNone())
-			throw new RuntimeException("value expected on left side of assignment");
+			throw new RuntimeException("value expected on left side of assignment, got expression yielding void");
 
 		Type leftType = left.type().unwrap();
-		Expr right = validate(assign.right, scope, context, validateDecl, Maybe.some(leftType));
+		Type leftTypeStripped = TypeHelper.removeConst(leftType);
+
+		Expr right = validate(assign.right, scope, context, validateDecl, Maybe.some(leftTypeStripped));
 
 		if(right.type().isNone())
-			throw new RuntimeException("value expected on right side of assignment");
+			throw new RuntimeException("value expected on right side of assignment, got expression yielding void");
 
 		Type rightType = right.type().unwrap();
 
-		if(!(left instanceof LValueExpr))
-			throw new RuntimeException("assignment requires lvalue operand on left side");
-
-		if(!Type.same(leftType, rightType))
-			throw new RuntimeException("same types expected in assignment");
+		if(TypeHelper.isConst(leftType) || !(left instanceof LValueExpr))
+			throw new RuntimeException("non-const lvalue required on left side of assignment");
 
 		if(leftType instanceof katana.sema.type.Function)
-			throw new RuntimeException("cannot assign to function");
+			throw new RuntimeException("cannot assign to value of function type");
+
+		Type rightTypeStripped = TypeHelper.removeConst(rightType);
+
+		if(!Type.same(leftTypeStripped, rightTypeStripped))
+			throw new RuntimeException("same types expected in assignment");
 
 		LValueExpr leftAsLvalue = (LValueExpr)left;
 		leftAsLvalue.useAsLValue(true);
@@ -178,6 +180,24 @@ public class ExprValidator implements IVisitor
 		BuiltinFunc func = maybeFunc.unwrap();
 		Maybe<Type> ret = func.validateCall(types);
 		return new BuiltinCall(func, args, ret);
+	}
+
+	private Expr visit(katana.ast.expr.Const const_, Maybe<Type> deduce)
+	{
+		Expr expr = validate(const_.expr, scope, context, validateDecl, deduce);
+
+		if(expr.type().isNone())
+			throw new RuntimeException("expression passed to const operator yields void");
+
+		Type type = expr.type().unwrap();
+
+		if(type instanceof katana.sema.type.Function)
+			throw new RuntimeException("const operator applied to value of function type");
+
+		if(expr instanceof LValueExpr)
+			return new ConstLValue((LValueExpr)expr);
+
+		return new ConstRValue(expr);
 	}
 
 	private Expr visit(katana.ast.expr.Deref deref, Maybe<Type> deduce)
@@ -218,7 +238,7 @@ public class ExprValidator implements IVisitor
 	private Expr visit(katana.ast.expr.LitArray lit, Maybe<Type> deduce)
 	{
 		Maybe<BigInteger> length = lit.length;
-		Maybe<Type> type = lit.type.map((t) -> TypeValidator.validate(t, scope, context, validateDecl));
+		Maybe<Type> maybeType = lit.type.map((t) -> TypeValidator.validate(t, scope, context, validateDecl));
 
 		if(deduce.isSome() && deduce.unwrap() instanceof Array)
 		{
@@ -227,28 +247,31 @@ public class ExprValidator implements IVisitor
 			if(length.isNone())
 				length = Maybe.some(array.length);
 
-			if(type.isNone())
-				type = Maybe.some(array.type);
+			if(maybeType.isNone())
+				maybeType = Maybe.some(array.type);
 		}
 
 		if(length.isNone())
 			length = Maybe.some(BigInteger.valueOf(lit.values.size()));
 
-		if(type.isNone())
+		if(maybeType.isNone())
 			throw new RuntimeException("element type of array literal could not be deduced");
+
+		Type type = maybeType.unwrap();
+		Type typeStripped = TypeHelper.removeConst(type);
 
 		List<Expr> values = new ArrayList<>();
 
 		for(int i = 0; i != lit.values.size(); ++i)
 		{
-			Expr semaExpr = validate(lit.values.get(i), scope, context, validateDecl, type);
+			Expr semaExpr = validate(lit.values.get(i), scope, context, validateDecl, maybeType);
+			Maybe<Type> elemType = semaExpr.type().map(TypeHelper::removeConst);
 
-			if(semaExpr.type().isNone() || !Type.same(semaExpr.type().unwrap(), type.unwrap()))
+			if(elemType.isNone() || !Type.same(elemType.unwrap(), typeStripped))
 			{
-				String gotten = semaExpr.type().map(Type::toString).or("void");
-				Type expected = type.unwrap();
+				String gotten = elemType.map(Type::toString).or("void");
 				String fmt = "element in array literal at index %s has type '%s', expected '%s'";
-				throw new RuntimeException(String.format(fmt, i, gotten, expected));
+				throw new RuntimeException(String.format(fmt, i, gotten, typeStripped));
 			}
 
 			values.add(semaExpr);
@@ -260,7 +283,7 @@ public class ExprValidator implements IVisitor
 			throw new RuntimeException(String.format(fmt, values.size(), length.unwrap()));
 		}
 
-		return new LitArray(length.unwrap(), type.unwrap(), values);
+		return new LitArray(length.unwrap(), maybeType.unwrap(), values);
 	}
 
 	private Expr visit(katana.ast.expr.LitBool lit, Maybe<Type> deduce)
@@ -273,12 +296,20 @@ public class ExprValidator implements IVisitor
 		throw new RuntimeException("type of literal could not be deduced");
 	}
 
-	BuiltinType deduceLiteralType(Maybe<Type> type, boolean floatingPoint)
+	BuiltinType deduceLiteralType(Maybe<Type> maybeType, boolean floatingPoint)
 	{
-		if(type.isNone() || !(type.unwrap() instanceof Builtin))
+		if(maybeType.isNone())
 			errorLiteralTypeDeduction();
 
-		Builtin builtin = (Builtin)type.unwrap();
+		Type type = maybeType.unwrap();
+
+		if(type instanceof Const)
+			type = ((Const)type).type;
+
+		if(!(type instanceof Builtin))
+			errorLiteralTypeDeduction();
+
+		Builtin builtin = (Builtin)type;
 
 		if(floatingPoint)
 		{

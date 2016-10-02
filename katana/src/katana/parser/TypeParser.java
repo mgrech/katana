@@ -26,14 +26,37 @@ public class TypeParser
 {
 	public static Type parse(Scanner scanner)
 	{
+		return doParse(scanner, false);
+	}
+
+	private static Type doParse(Scanner scanner, boolean const_)
+	{
 		if(ParseTools.option(scanner, Token.Type.DECL_FN, true))
+		{
+			if(const_)
+				throw new RuntimeException("forming type 'const function'");
+
 			return parseFunction(scanner);
+		}
 
 		if(ParseTools.option(scanner, Token.Type.PUNCT_LBRACKET, true))
+		{
+			if(const_)
+				throw new RuntimeException("forming type 'const array'");
+
 			return parseArray(scanner);
+		}
 
 		if(ParseTools.option(scanner, Token.Type.TYPE_OPAQUE, true))
 			return parseOpaque(scanner);
+
+		if(ParseTools.option(scanner, Token.Type.TYPE_CONST, true))
+		{
+			if(const_)
+				throw new RuntimeException("duplicate const");
+
+			return new Const(doParse(scanner, true));
+		}
 
 		if(ParseTools.option(scanner, Token.Type.TYPE_TYPEOF, true))
 			return parseTypeof(scanner);

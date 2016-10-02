@@ -27,7 +27,7 @@ public class StmtParser
 	public static Stmt parse(Scanner scanner)
 	{
 		if(ParseTools.option(scanner, Token.Type.STMT_LOCAL, true))
-			return parseVar(scanner);
+			return parseLocal(scanner);
 
 		if(ParseTools.option(scanner, Token.Type.STMT_IF, true))
 			return parseIf(scanner);
@@ -53,7 +53,7 @@ public class StmtParser
 		return parseExprStmt(scanner);
 	}
 
-	private static Stmt parseVar(Scanner scanner)
+	private static Stmt parseLocal(Scanner scanner)
 	{
 		ScannerState state = scanner.capture();
 

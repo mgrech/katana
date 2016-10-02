@@ -12,27 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema.expr;
+package katana.ast.expr;
 
-import katana.sema.type.Builtin;
-import katana.sema.type.Const;
-import katana.sema.type.Type;
-import katana.utils.Maybe;
-
-public class LitBool extends Literal
+public class Const extends Expr
 {
-	private static final Maybe<Type> TYPE = Maybe.some(new Const(Builtin.BOOL));
-
-	public LitBool(boolean value)
+	public Const(Expr expr)
 	{
-		this.value = value;
+		this.expr = expr;
 	}
 
-	@Override
-	public Maybe<Type> type()
-	{
-		return TYPE;
-	}
-
-	public boolean value;
+	public Expr expr;
 }

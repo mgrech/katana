@@ -99,4 +99,9 @@ public class TypeCodeGenerator implements IVisitor
 	{
 		return String.format("[%s x %s]", type.length, TypeCodeGenerator.generate(type.type, context));
 	}
+
+	private String visit(Const type)
+	{
+		return generate(type.type, context);
+	}
 }

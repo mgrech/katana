@@ -90,19 +90,25 @@ public class DeclValidator implements IVisitor
 	private void visit(Global semaGlobal, katana.ast.decl.Global global)
 	{
 		Maybe<Type> maybeDeclaredType = global.type.map((t) -> TypeValidator.validate(t, scope, context, validateDecl));
-		semaGlobal.init = (Literal)ExprValidator.validate(global.init, scope, context, validateDecl, maybeDeclaredType);
+		Maybe<Type> maybeDeclaredTypeStripped = maybeDeclaredType.map(TypeHelper::removeConst);
+		Literal init = (Literal)ExprValidator.validate(global.init, scope, context, validateDecl, maybeDeclaredTypeStripped);
 
-		if(semaGlobal.init.type().isNone())
+		if(init.type().isNone())
 			throw new RuntimeException(String.format("initializer for global %s yields void", global.name));
 
-		Type initType = semaGlobal.init.type().unwrap();
-		semaGlobal.type = maybeDeclaredType.or(initType);
+		Type initType = init.type().unwrap();
+		Type initTypeStripped = TypeHelper.removeConst(initType);
+		Type globalType = maybeDeclaredType.or(initTypeStripped);
+		Type globalTypeStripped = TypeHelper.removeConst(globalType);
 
-		if(!Type.same(semaGlobal.type, initType))
+		if(!Type.same(globalTypeStripped, initTypeStripped))
 		{
 			String fmt = "initializer for global '%s' has wrong type: expected '%s', got '%s'";
-			throw new RuntimeException(String.format(fmt, semaGlobal.name(), semaGlobal.type, initType));
+			throw new RuntimeException(String.format(fmt, semaGlobal.name(), globalTypeStripped, initTypeStripped));
 		}
+
+		semaGlobal.init = init;
+		semaGlobal.type = globalType;
 	}
 
 	private void visit(TypeAlias semaAlias, katana.ast.decl.TypeAlias alias)

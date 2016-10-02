@@ -15,14 +15,17 @@
 package katana.sema.expr;
 
 import katana.sema.type.Builtin;
+import katana.sema.type.Const;
 import katana.sema.type.Type;
 import katana.utils.Maybe;
 
 public class LitNull extends Literal
 {
+	private static final Maybe<Type> TYPE = Maybe.some(new Const(Builtin.PTR));
+
 	@Override
 	public Maybe<Type> type()
 	{
-		return Maybe.some(Builtin.PTR);
+		return TYPE;
 	}
 }

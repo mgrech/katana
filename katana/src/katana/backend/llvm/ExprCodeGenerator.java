@@ -133,6 +133,16 @@ public class ExprCodeGenerator implements IVisitor
 		return builtinCall.func.generateCall(builtinCall, builder, context, fcontext);
 	}
 
+	private Maybe<String> visit(ConstLValue const_)
+	{
+		return generate(const_.expr, builder, context, fcontext);
+	}
+
+	private Maybe<String> visit(ConstRValue const_)
+	{
+		return generate(const_.expr, builder, context, fcontext);
+	}
+
 	private Maybe<String> visit(Deref deref)
 	{
 		String ptrSSA = generate(deref.expr, builder, context, fcontext).unwrap();

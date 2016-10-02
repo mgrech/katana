@@ -104,6 +104,7 @@ public class Token
 		TYPE_FLOAT64,
 		TYPE_PTR,
 		TYPE_OPAQUE,
+		TYPE_CONST,
 		TYPE_TYPEOF,
 
 		MISC_SIZEOF,
@@ -171,6 +172,7 @@ public class Token
 	public static final Token TYPE_FLOAT64 = new Token(Category.TYPE, Type.TYPE_FLOAT64, "float64");
 	public static final Token TYPE_PTR     = new Token(Category.TYPE, Type.TYPE_PTR,     "ptr");
 	public static final Token TYPE_OPAQUE  = new Token(Category.TYPE, Type.TYPE_OPAQUE,  "opaque");
+	public static final Token TYPE_CONST   = new Token(Category.TYPE, Type.TYPE_CONST,   "const");
 	public static final Token TYPE_TYPEOF  = new Token(Category.TYPE, Type.TYPE_TYPEOF,  "typeof");
 
 	public static final Token MISC_SIZEOF    = new Token(Category.MISC, Type.MISC_SIZEOF,    "sizeof");

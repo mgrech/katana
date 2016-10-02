@@ -16,6 +16,7 @@ package katana.sema.expr;
 
 import katana.BuiltinType;
 import katana.sema.type.Builtin;
+import katana.sema.type.Const;
 import katana.sema.type.Type;
 import katana.utils.Maybe;
 
@@ -28,33 +29,37 @@ public class LitInt extends Literal
 		this.value = value;
 		this.type = type;
 
+		Type semaType;
+
 		switch(type)
 		{
-		case INT:   cachedType = Builtin.INT;   break;
-		case PINT:  cachedType = Builtin.PINT;  break;
-		case INT8:  cachedType = Builtin.INT8;  break;
-		case INT16: cachedType = Builtin.INT16; break;
-		case INT32: cachedType = Builtin.INT32; break;
-		case INT64: cachedType = Builtin.INT64; break;
+		case INT:   semaType = Builtin.INT;   break;
+		case PINT:  semaType = Builtin.PINT;  break;
+		case INT8:  semaType = Builtin.INT8;  break;
+		case INT16: semaType = Builtin.INT16; break;
+		case INT32: semaType = Builtin.INT32; break;
+		case INT64: semaType = Builtin.INT64; break;
 
-		case UINT:   cachedType = Builtin.UINT;   break;
-		case UPINT:  cachedType = Builtin.UPINT;  break;
-		case UINT8:  cachedType = Builtin.UINT8;  break;
-		case UINT16: cachedType = Builtin.UINT16; break;
-		case UINT32: cachedType = Builtin.UINT32; break;
-		case UINT64: cachedType = Builtin.UINT64; break;
+		case UINT:   semaType = Builtin.UINT;   break;
+		case UPINT:  semaType = Builtin.UPINT;  break;
+		case UINT8:  semaType = Builtin.UINT8;  break;
+		case UINT16: semaType = Builtin.UINT16; break;
+		case UINT32: semaType = Builtin.UINT32; break;
+		case UINT64: semaType = Builtin.UINT64; break;
 
 		default: throw new AssertionError("unreachable");
 		}
+
+		cachedType = Maybe.some(new Const(semaType));
 	}
 
 	@Override
 	public Maybe<Type> type()
 	{
-		return Maybe.some(cachedType);
+		return cachedType;
 	}
 
-	public BigInteger value;
-	public BuiltinType type;
-	private Type cachedType;
+	public final BigInteger value;
+	public final BuiltinType type;
+	private final transient Maybe<Type> cachedType;
 }

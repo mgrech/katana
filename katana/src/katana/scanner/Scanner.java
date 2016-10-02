@@ -269,6 +269,7 @@ public class Scanner
 		case "float64": return Token.TYPE_FLOAT64;
 		case "ptr":     return Token.TYPE_PTR;
 		case "opaque":  return Token.TYPE_OPAQUE;
+		case "const":   return Token.TYPE_CONST;
 		case "typeof":  return Token.TYPE_TYPEOF;
 
 		case "sizeof":    return Token.MISC_SIZEOF;
