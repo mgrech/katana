@@ -64,9 +64,8 @@ public class ExprValidator implements IVisitor
 
 		Iterator<Type> it1 = params.iterator();
 		Iterator<Expr> it2 = args.iterator();
-		int argCount = 1;
 
-		while(it1.hasNext())
+		for(int argCount = 1; it1.hasNext(); ++argCount)
 		{
 			Type paramType = it1.next();
 			Maybe<Type> maybeArgType = it2.next().type();
@@ -82,8 +81,6 @@ public class ExprValidator implements IVisitor
 				String fmt = "type mismatch in argument %s: expected '%s', got '%s'";
 				throw new RuntimeException(String.format(fmt, argCount, paramTypeStripped, argTypeStripped));
 			}
-
-			++argCount;
 		}
 	}
 
