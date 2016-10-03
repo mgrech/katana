@@ -23,7 +23,6 @@ import katana.sema.Module;
 import katana.sema.Program;
 import katana.sema.ProgramValidator;
 import katana.sema.decl.Decl;
-import katana.sema.decl.ExternFunction;
 import katana.sema.decl.Function;
 import katana.utils.Maybe;
 
@@ -82,7 +81,7 @@ public class Build
 
 		Decl decl = main.unwrap();
 
-		if(!(decl instanceof Function) && !(decl instanceof ExternFunction))
+		if(!(decl instanceof Function))
 			throw new RuntimeException("specified symbol is not a function");
 
 		return decl;

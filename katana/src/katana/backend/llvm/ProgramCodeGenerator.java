@@ -19,7 +19,6 @@ import katana.backend.PlatformContext;
 import katana.sema.Module;
 import katana.sema.Program;
 import katana.sema.decl.Decl;
-import katana.sema.decl.ExternFunction;
 import katana.sema.decl.Function;
 import katana.sema.type.Builtin;
 import katana.sema.type.Type;
@@ -38,7 +37,7 @@ public class ProgramCodeGenerator
 
 	private static void generateMainWrapper(StringBuilder builder, Decl func)
 	{
-		Maybe<Type> ret = func instanceof Function ? ((Function)func).ret : ((ExternFunction)func).ret;
+		Maybe<Type> ret = ((Function)func).ret;
 
 		if(ret.isSome() && (!(ret.unwrap() instanceof Builtin) || ((Builtin)ret.unwrap()).which != BuiltinType.INT32))
 			throw new RuntimeException("main function must return int32 or nothing");

@@ -14,20 +14,12 @@
 
 package katana.sema;
 
-import katana.ast.type.*;
 import katana.backend.PlatformContext;
 import katana.sema.decl.Data;
 import katana.sema.decl.Decl;
 import katana.sema.decl.TypeAlias;
 import katana.sema.expr.Expr;
 import katana.sema.type.*;
-import katana.sema.type.Array;
-import katana.sema.type.Builtin;
-import katana.sema.type.Const;
-import katana.sema.type.Function;
-import katana.sema.type.Opaque;
-import katana.sema.type.Type;
-import katana.sema.type.UserDefined;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 

@@ -16,22 +16,23 @@ package katana.sema.decl;
 
 import katana.sema.Module;
 import katana.sema.Symbol;
+import katana.sema.stmt.Label;
+import katana.sema.stmt.Stmt;
 import katana.sema.type.Type;
-import katana.utils.Maybe;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public abstract class Function extends Decl
+public class DefinedFunction extends Function
 {
-	public class Param implements Symbol
+	public class Local implements Symbol
 	{
-		public Param(Type type, String name, int index)
+		public Local(String name, Type type, int index)
 		{
-			this.type = type;
 			this.name = name;
+			this.type = type;
 			this.index = index;
 		}
 
@@ -41,36 +42,43 @@ public abstract class Function extends Decl
 			return name;
 		}
 
-		public Type type;
 		public String name;
+		public Type type;
 		public int index;
 	}
 
-	protected Function(Module module, boolean exported, boolean opaque, String name)
+	public DefinedFunction(Module module, boolean exported, boolean opaque, String name)
 	{
-		super(module, exported, opaque);
-		this.name = name;
+		super(module, exported, opaque, name);
 	}
 
-	@Override
-	public String name()
+	public boolean defineLocal(String name, Type type)
 	{
-		return name;
-	}
-
-	public boolean defineParam(String name, Type type)
-	{
-		if(paramsByName.containsKey(name))
+		if(localsByName.containsKey(name))
 			return false;
 
-		Param param = new Param(type, name, params.size());
-		params.add(param);
-		paramsByName.put(name, param);
+		Local local = new Local(name, type, locals.size());
+		locals.add(local);
+		localsByName.put(name, local);
 		return true;
 	}
 
-	private String name;
-	public List<Param> params = new ArrayList<>();
-	public Map<String, Param> paramsByName = new TreeMap<>();
-	public Maybe<Type> ret;
+	public boolean defineLabel(Label label)
+	{
+		if(labels.containsKey(label.name))
+			return false;
+
+		labels.put(label.name, label);
+		return true;
+	}
+
+	public void add(Stmt stmt)
+	{
+		body.add(stmt);
+	}
+
+	public List<Local> locals = new ArrayList<>();
+	public Map<String, Local> localsByName = new TreeMap<>();
+	public List<Stmt> body = new ArrayList<>();
+	public Map<String, Label> labels = new TreeMap<>();
 }

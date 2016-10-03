@@ -373,9 +373,6 @@ public class ExprValidator implements IVisitor
 		if(globalAccess)
 			throw new RuntimeException("'global' keyword used on reference to symbol that isn't a global");
 
-		if(decl instanceof ExternFunction)
-			return new NamedExternFunc((ExternFunction)decl);
-
 		if(decl instanceof Function)
 			return new NamedFunc((Function)decl);
 
@@ -456,8 +453,8 @@ public class ExprValidator implements IVisitor
 		if(symbol instanceof Decl)
 			return namedDeclExpr((Decl)symbol, false);
 
-		if(symbol instanceof Function.Local)
-			return new NamedLocal((Function.Local)symbol);
+		if(symbol instanceof DefinedFunction.Local)
+			return new NamedLocal((DefinedFunction.Local)symbol);
 
 		if(symbol instanceof Function.Param)
 			return new NamedParam((Function.Param)symbol);

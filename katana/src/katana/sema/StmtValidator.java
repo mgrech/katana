@@ -17,7 +17,7 @@ package katana.sema;
 import katana.ast.stmt.Local;
 import katana.backend.PlatformContext;
 import katana.sema.decl.Decl;
-import katana.sema.decl.Function;
+import katana.sema.decl.DefinedFunction;
 import katana.sema.expr.Assign;
 import katana.sema.expr.Expr;
 import katana.sema.expr.NamedLocal;
@@ -35,12 +35,12 @@ import java.util.function.Consumer;
 public class StmtValidator implements IVisitor
 {
 	private IdentityHashMap<Goto, String> gotos = new IdentityHashMap<>();
-	private Function function;
+	private DefinedFunction function;
 	private FunctionScope scope;
 	private PlatformContext context;
 	private Consumer<Decl> validateDecl;
 
-	public StmtValidator(Function function, FunctionScope scope, PlatformContext context, Consumer<Decl> validateDecl)
+	public StmtValidator(DefinedFunction function, FunctionScope scope, PlatformContext context, Consumer<Decl> validateDecl)
 	{
 		this.function = function;
 		this.scope = scope;
@@ -197,7 +197,7 @@ public class StmtValidator implements IVisitor
 		if(!function.defineLocal(local.name, localType))
 			throw new RuntimeException(String.format("redefinition of local '%s'", local.name));
 
-		Function.Local semaLocal = function.localsByName.get(local.name);
+		DefinedFunction.Local semaLocal = function.localsByName.get(local.name);
 		NamedLocal localref = new NamedLocal(semaLocal);
 		localref.useAsLValue(true);
 		return new ExprStmt(new Assign(localref, init));

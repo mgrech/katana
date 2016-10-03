@@ -15,57 +15,14 @@
 package katana.sema.decl;
 
 import katana.sema.Module;
-import katana.sema.type.Type;
-import katana.utils.Maybe;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-public class ExternFunction extends Decl
+public class ExternFunction extends Function
 {
-	public class Param
-	{
-		public Param(Type type, String name, int index)
-		{
-			this.type = type;
-			this.name = name;
-			this.index = index;
-		}
-
-		public Type type;
-		public String name;
-		public int index;
-	}
-
 	public ExternFunction(Module module, boolean exported, boolean opaque, String externName, String name)
 	{
-		super(module, exported, opaque);
+		super(module, exported, opaque, name);
 		this.externName = externName;
-		this.name = name;
-	}
-
-	public boolean defineParam(Type type, String name)
-	{
-		if(paramsByName.containsKey(name))
-			return false;
-
-		Param param = new Param(type, name, params.size());
-		params.add(param);
-		paramsByName.put(name, param);
-		return true;
-	}
-
-	@Override
-	public String name()
-	{
-		return name;
 	}
 
 	public String externName;
-	private String name;
-	public List<Param> params = new ArrayList<>();
-	public Map<String, Param> paramsByName = new HashMap<>();
-	public Maybe<Type> ret;
 }

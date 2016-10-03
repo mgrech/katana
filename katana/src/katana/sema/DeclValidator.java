@@ -42,7 +42,7 @@ public class DeclValidator implements IVisitor
 		DeclValidator validator = new DeclValidator(scope, context, validateDecl);
 		Object result = semaDecl.accept(validator, decl);
 
-		if(semaDecl instanceof Function)
+		if(semaDecl instanceof DefinedFunction)
 			return Maybe.some((StmtValidator)result);
 
 		return Maybe.none();
@@ -59,7 +59,7 @@ public class DeclValidator implements IVisitor
 		}
 	}
 
-	private StmtValidator visit(Function semaFunction, katana.ast.decl.Function function)
+	private StmtValidator visit(DefinedFunction semaFunction, katana.ast.decl.Function function)
 	{
 		for(katana.ast.decl.Function.Param param : function.params)
 		{
@@ -80,7 +80,7 @@ public class DeclValidator implements IVisitor
 		{
 			Type type = TypeValidator.validate(param.type, scope, context, validateDecl);
 
-			if(!semaFunction.defineParam(type, param.name))
+			if(!semaFunction.defineParam(param.name, type))
 				throw new RuntimeException(String.format("duplicate parameter name '%s' in function '%s'", param.name, function.name));
 		}
 

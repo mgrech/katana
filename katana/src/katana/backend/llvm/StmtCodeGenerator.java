@@ -15,7 +15,7 @@
 package katana.backend.llvm;
 
 import katana.backend.PlatformContext;
-import katana.sema.decl.Function;
+import katana.sema.decl.DefinedFunction;
 import katana.sema.stmt.*;
 import katana.sema.type.Type;
 import katana.visitor.IVisitor;
@@ -44,7 +44,7 @@ public class StmtCodeGenerator implements IVisitor
 		stmt.accept(this);
 	}
 
-	public void finish(Function func)
+	public void finish(DefinedFunction func)
 	{
 		if(!preceededByTerminator)
 			if(func.ret.isNone())

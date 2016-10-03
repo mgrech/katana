@@ -36,7 +36,7 @@ public class FileValidator implements IVisitor
 	private Consumer<Decl> validateDecl;
 
 	private IdentityHashMap<Decl, katana.ast.decl.Decl> decls = new IdentityHashMap<>();
-	private IdentityHashMap<Function, StmtValidator> funcs = new IdentityHashMap<>();
+	private IdentityHashMap<DefinedFunction, StmtValidator> funcs = new IdentityHashMap<>();
 	private Module currentModule = null;
 	private boolean declsSeen = false;
 	private Map<Path, Import> imports = new HashMap<>();
@@ -92,15 +92,15 @@ public class FileValidator implements IVisitor
 	{
 		Maybe<StmtValidator> validator = DeclValidator.validate(decl, decls.get(decl), scope, context, validateDecl);
 
-		if(decl instanceof Function)
-			funcs.put((Function)decl, validator.unwrap());
+		if(decl instanceof DefinedFunction)
+			funcs.put((DefinedFunction)decl, validator.unwrap());
 	}
 
 	public void finish()
 	{
-		for(Map.Entry<Function, StmtValidator> entry : funcs.entrySet())
+		for(Map.Entry<DefinedFunction, StmtValidator> entry : funcs.entrySet())
 		{
-			Function semaFunction = entry.getKey();
+			DefinedFunction semaFunction = entry.getKey();
 			katana.ast.decl.Function function = (katana.ast.decl.Function)decls.get(semaFunction);
 			StmtValidator validator = entry.getValue();
 
@@ -153,7 +153,7 @@ public class FileValidator implements IVisitor
 
 	private Maybe<Decl> visit(katana.ast.decl.Function function)
 	{
-		Function semaFunction = new Function(currentModule, function.exported, function.opaque, function.name);
+		DefinedFunction semaFunction = new DefinedFunction(currentModule, function.exported, function.opaque, function.name);
 		return handleModuleDecl(semaFunction, function);
 	}
 

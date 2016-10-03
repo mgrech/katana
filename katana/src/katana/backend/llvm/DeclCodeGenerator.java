@@ -71,7 +71,7 @@ public class DeclCodeGenerator implements IVisitor
 		builder.append(" }\n");
 	}
 
-	private void visit(Function function)
+	private void visit(DefinedFunction function)
 	{
 		builder.append("define private ");
 		builder.append(function.ret.map((type) -> TypeCodeGenerator.generate(type, context)).or("void"));
@@ -113,7 +113,7 @@ public class DeclCodeGenerator implements IVisitor
 
 		FunctionContext fcontext = new FunctionContext();
 
-		for(Map.Entry<String, Function.Local> entry : function.localsByName.entrySet())
+		for(Map.Entry<String, DefinedFunction.Local> entry : function.localsByName.entrySet())
 		{
 			Type type = entry.getValue().type;
 			String llvmType = TypeCodeGenerator.generate(type, context);

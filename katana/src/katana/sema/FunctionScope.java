@@ -14,6 +14,7 @@
 
 package katana.sema;
 
+import katana.sema.decl.DefinedFunction;
 import katana.sema.decl.Function;
 
 import java.util.Collections;
@@ -21,7 +22,7 @@ import java.util.List;
 
 public class FunctionScope implements Scope
 {
-	public FunctionScope(FileScope parent, Function function)
+	public FunctionScope(FileScope parent, DefinedFunction function)
 	{
 		this.parent = parent;
 		this.function = function;
@@ -30,7 +31,7 @@ public class FunctionScope implements Scope
 	@Override
 	public List<Symbol> find(String name)
 	{
-		Function.Local local = function.localsByName.get(name);
+		DefinedFunction.Local local = function.localsByName.get(name);
 
 		if(local != null)
 			return Collections.singletonList(local);
@@ -44,5 +45,5 @@ public class FunctionScope implements Scope
 	}
 
 	private FileScope parent;
-	private Function function;
+	private DefinedFunction function;
 }

@@ -14,13 +14,13 @@
 
 package katana.sema.expr;
 
-import katana.sema.decl.Function;
+import katana.sema.decl.DefinedFunction;
 import katana.sema.type.Type;
 import katana.utils.Maybe;
 
 public class NamedLocal extends SimpleLValueExpr
 {
-	public NamedLocal(Function.Local local)
+	public NamedLocal(DefinedFunction.Local local)
 	{
 		this.local = local;
 	}
@@ -31,5 +31,5 @@ public class NamedLocal extends SimpleLValueExpr
 		return Maybe.some(local.type);
 	}
 
-	public Function.Local local;
+	public DefinedFunction.Local local;
 }

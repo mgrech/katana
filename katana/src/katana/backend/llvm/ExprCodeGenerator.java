@@ -17,6 +17,7 @@ package katana.backend.llvm;
 import katana.BuiltinType;
 import katana.backend.PlatformContext;
 import katana.sema.decl.Data;
+import katana.sema.decl.ExternFunction;
 import katana.sema.expr.*;
 import katana.sema.type.Function;
 import katana.sema.type.Type;
@@ -347,12 +348,10 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(NamedFunc namedFunc)
 	{
-		return Maybe.some("@" + namedFunc.func.qualifiedName());
-	}
+		if(namedFunc.func instanceof ExternFunction)
+			return Maybe.some("@" + ((ExternFunction)namedFunc.func).externName);
 
-	private Maybe<String> visit(NamedExternFunc namedFunc)
-	{
-		return Maybe.some("@" + namedFunc.func.externName);
+		return Maybe.some("@" + namedFunc.func.qualifiedName());
 	}
 
 	private String visitNamedValue(char prefix, boolean usedAsLValue, Type type, String name)
