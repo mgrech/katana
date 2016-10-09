@@ -113,7 +113,7 @@ public class DeclValidator implements IVisitor
 				SemaDeclFunction b = set.overloads.get(j);
 
 				if(sameSignatures(a, b))
-					throw new RuntimeException(String.format("duplicate overloads in overload set '%s'", set.name()));
+					throw new RuntimeException(String.format("duplicate overloads in overload set '%s'", set.qualifiedName()));
 			}
 
 	}
