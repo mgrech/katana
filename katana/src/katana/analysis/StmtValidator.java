@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema;
+package katana.analysis;
 
 import katana.ast.stmt.Local;
 import katana.backend.PlatformContext;
+import katana.sema.FunctionScope;
 import katana.sema.decl.Decl;
 import katana.sema.decl.DefinedFunction;
 import katana.sema.expr.Assign;
@@ -131,7 +132,7 @@ public class StmtValidator implements IVisitor
 
 	private Stmt visit(katana.ast.stmt.Return return_)
 	{
-		Maybe<Expr> value = return_.value.map((v) -> ExprValidator.validate(v, scope, context, validateDecl, function.ret));
+		Maybe<Expr> value = return_.value.map(retval -> ExprValidator.validate(retval, scope, context, validateDecl, function.ret));
 
 		if(function.ret.isNone() && value.isSome())
 		{
@@ -156,12 +157,12 @@ public class StmtValidator implements IVisitor
 			}
 
 			Type type = maybeType.unwrap();
-			Type typeStripped = TypeHelper.removeConst(type);
+			Type typeDecayed = TypeHelper.decay(type);
 
-			if(!Type.same(function.ret.unwrap(), typeStripped))
+			if(!Type.same(function.ret.unwrap(), typeDecayed))
 			{
 				String fmt = "function %s returns value of type %s, %s given";
-				throw new RuntimeException(String.format(fmt, function.qualifiedName(), function.ret.unwrap(), typeStripped));
+				throw new RuntimeException(String.format(fmt, function.qualifiedName(), function.ret.unwrap(), typeDecayed));
 			}
 		}
 
@@ -176,22 +177,22 @@ public class StmtValidator implements IVisitor
 
 	private Stmt visit(Local local)
 	{
-		Maybe<Type> maybeDeclaredType = local.type.map((t) -> TypeValidator.validate(t, scope, context, validateDecl));
-		Maybe<Type> maybeDeclaredTypeStripped = maybeDeclaredType.map(TypeHelper::removeConst);
-		Expr init = ExprValidator.validate(local.init, scope, context, validateDecl, maybeDeclaredTypeStripped);
+		Maybe<Type> maybeDeclaredType = local.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
+		Maybe<Type> maybeDeclaredTypeDecayed = maybeDeclaredType.map(TypeHelper::decay);
+		Expr init = ExprValidator.validate(local.init, scope, context, validateDecl, maybeDeclaredTypeDecayed);
 
 		if(init.type().isNone())
 			throw new RuntimeException(String.format("initializer for local '%s' yields void", local.name));
 
 		Type initType = init.type().unwrap();
-		Type initTypeStripped = TypeHelper.removeConst(initType);
-		Type localType = maybeDeclaredType.or(initTypeStripped);
-		Type localTypeStripped = TypeHelper.removeConst(localType);
+		Type initTypeDecayed = TypeHelper.decay(initType);
+		Type localType = maybeDeclaredType.or(initTypeDecayed);
+		Type localTypeDecayed = TypeHelper.decay(localType);
 
-		if(!Type.same(localTypeStripped, initTypeStripped))
+		if(!Type.same(localTypeDecayed, initTypeDecayed))
 		{
 			String fmt = "initializer for local '%s' has wrong type: expected '%s', got '%s'";
-			throw new RuntimeException(String.format(fmt, local.name, localType, initType));
+			throw new RuntimeException(String.format(fmt, local.name, localTypeDecayed, initTypeDecayed));
 		}
 
 		if(!function.defineLocal(local.name, localType))

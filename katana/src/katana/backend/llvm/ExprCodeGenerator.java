@@ -174,7 +174,7 @@ public class ExprCodeGenerator implements IVisitor
 			builder.append(String.format("%s = ", retSSA.unwrap()));
 		}
 
-		String retTypeString = ret.map((r) -> TypeCodeGenerator.generate(r, context)).or("void");
+		String retTypeString = ret.map(type -> TypeCodeGenerator.generate(type, context)).or("void");
 
 		builder.append(String.format("call %s %s(", retTypeString, functionSSA));
 

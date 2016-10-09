@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema;
+package katana.analysis;
 
 import katana.backend.PlatformContext;
+import katana.sema.Scope;
+import katana.sema.Symbol;
 import katana.sema.decl.Data;
 import katana.sema.decl.Decl;
 import katana.sema.decl.TypeAlias;
@@ -95,7 +97,7 @@ public class TypeValidator implements IVisitor
 		for(katana.ast.type.Type param : functionType.params)
 			params.add(validate(param, scope, context, validateDecl));
 
-		Maybe<Type> ret = functionType.ret.map((type) -> validate(type, scope, context, validateDecl));
+		Maybe<Type> ret = functionType.ret.map(type -> validate(type, scope, context, validateDecl));
 		return new Function(ret, params);
 	}
 

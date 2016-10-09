@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema;
+package katana.analysis;
 
 import katana.BuiltinType;
 import katana.Limits;
 import katana.ast.expr.NamedSymbol;
 import katana.backend.PlatformContext;
+import katana.sema.BuiltinFunc;
+import katana.sema.Scope;
+import katana.sema.Symbol;
 import katana.sema.decl.*;
 import katana.sema.decl.Function;
 import katana.sema.expr.*;
@@ -71,13 +74,13 @@ public class ExprValidator implements IVisitor
 			if(maybeArgType.isNone())
 				throw new RuntimeException("expression given in argument " + argCount + " results in no value");
 
-			Type paramTypeStripped = TypeHelper.removeConst(paramType);
-			Type argTypeStripped = TypeHelper.removeConst(maybeArgType.unwrap());
+			Type paramTypeDecayed = TypeHelper.decay(paramType);
+			Type argTypeDecayed = TypeHelper.decay(maybeArgType.unwrap());
 
-			if(!Type.same(paramTypeStripped, argTypeStripped))
+			if(!Type.same(paramTypeDecayed, argTypeDecayed))
 			{
 				String fmt = "type mismatch in argument %s: expected '%s', got '%s'";
-				throw new RuntimeException(String.format(fmt, argCount, paramTypeStripped, argTypeStripped));
+				throw new RuntimeException(String.format(fmt, argCount, paramTypeDecayed, argTypeDecayed));
 			}
 		}
 	}
@@ -125,9 +128,9 @@ public class ExprValidator implements IVisitor
 			throw new RuntimeException("value expected on left side of assignment, got expression yielding void");
 
 		Type leftType = left.type().unwrap();
-		Type leftTypeStripped = TypeHelper.removeConst(leftType);
+		Type leftTypeDecayed = TypeHelper.decay(leftType);
 
-		Expr right = validate(assign.right, scope, context, validateDecl, Maybe.some(leftTypeStripped));
+		Expr right = validate(assign.right, scope, context, validateDecl, Maybe.some(leftTypeDecayed));
 
 		if(right.type().isNone())
 			throw new RuntimeException("value expected on right side of assignment, got expression yielding void");
@@ -140,9 +143,9 @@ public class ExprValidator implements IVisitor
 		if(leftType instanceof katana.sema.type.Function)
 			throw new RuntimeException("cannot assign to value of function type");
 
-		Type rightTypeStripped = TypeHelper.removeConst(rightType);
+		Type rightTypeDecayed = TypeHelper.decay(rightType);
 
-		if(!Type.same(leftTypeStripped, rightTypeStripped))
+		if(!Type.same(leftTypeDecayed, rightTypeDecayed))
 			throw new RuntimeException("same types expected in assignment");
 
 		LValueExpr leftAsLvalue = (LValueExpr)left;
@@ -215,13 +218,13 @@ public class ExprValidator implements IVisitor
 		for(int i = 0; i != function.params.size(); ++i)
 		{
 			Type paramType = function.params.get(i).type;
-			Type paramTypeStripped = TypeHelper.removeConst(paramType);
+			Type paramTypeDecayed = TypeHelper.decay(paramType);
 
 			Expr arg;
 
 			try
 			{
-				arg = ExprValidator.validate(args.get(i), scope, context, validateDecl, Maybe.some(paramTypeStripped));
+				arg = ExprValidator.validate(args.get(i), scope, context, validateDecl, Maybe.some(paramTypeDecayed));
 			}
 
 			catch(RuntimeException e)
@@ -236,9 +239,9 @@ public class ExprValidator implements IVisitor
 			}
 
 			Type argType = arg.type().unwrap();
-			Type argTypeStripped = TypeHelper.removeConst(argType);
+			Type argTypeDecayed = TypeHelper.decay(argType);
 
-			if(!Type.same(paramTypeStripped, argTypeStripped))
+			if(!Type.same(paramTypeDecayed, argTypeDecayed))
 				return Maybe.none();
 
 			result.add(arg);
@@ -303,7 +306,7 @@ public class ExprValidator implements IVisitor
 	private Expr visit(katana.ast.expr.LitArray lit, Maybe<Type> deduce)
 	{
 		Maybe<BigInteger> length = lit.length;
-		Maybe<Type> maybeType = lit.type.map((t) -> TypeValidator.validate(t, scope, context, validateDecl));
+		Maybe<Type> maybeType = lit.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
 
 		if(deduce.isSome() && deduce.unwrap() instanceof Array)
 		{
@@ -323,20 +326,20 @@ public class ExprValidator implements IVisitor
 			throw new RuntimeException("element type of array literal could not be deduced");
 
 		Type type = maybeType.unwrap();
-		Type typeStripped = TypeHelper.removeConst(type);
+		Type typeDecayed = TypeHelper.decay(type);
 
 		List<Expr> values = new ArrayList<>();
 
 		for(int i = 0; i != lit.values.size(); ++i)
 		{
 			Expr semaExpr = validate(lit.values.get(i), scope, context, validateDecl, maybeType);
-			Maybe<Type> elemType = semaExpr.type().map(TypeHelper::removeConst);
+			Maybe<Type> elemTypeDecayed = semaExpr.type().map(TypeHelper::decay);
 
-			if(elemType.isNone() || !Type.same(elemType.unwrap(), typeStripped))
+			if(elemTypeDecayed.isNone() || !Type.same(elemTypeDecayed.unwrap(), typeDecayed))
 			{
-				String gotten = elemType.map(Type::toString).or("void");
+				String gotten = elemTypeDecayed.map(Type::toString).or("void");
 				String fmt = "element in array literal at index %s has type '%s', expected '%s'";
-				throw new RuntimeException(String.format(fmt, i, gotten, typeStripped));
+				throw new RuntimeException(String.format(fmt, i, gotten, typeDecayed));
 			}
 
 			values.add(semaExpr);

@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema;
+package katana.analysis;
 
 import katana.ast.File;
 import katana.backend.PlatformContext;
 import katana.parser.FileParser;
+import katana.sema.Program;
 import katana.sema.decl.Decl;
 import katana.utils.Maybe;
 

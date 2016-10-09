@@ -14,6 +14,7 @@
 
 package katana.compiler.commands;
 
+import katana.analysis.ProgramValidator;
 import katana.backend.PlatformContext;
 import katana.backend.llvm.ProgramCodeGenerator;
 import katana.backend.llvm.amd64.PlatformContextLlvmAmd64;
@@ -21,7 +22,6 @@ import katana.compiler.Command;
 import katana.compiler.CommandException;
 import katana.sema.Module;
 import katana.sema.Program;
-import katana.sema.ProgramValidator;
 import katana.sema.decl.Decl;
 import katana.sema.decl.Function;
 import katana.utils.Maybe;

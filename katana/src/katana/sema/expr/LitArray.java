@@ -14,7 +14,7 @@
 
 package katana.sema.expr;
 
-import katana.sema.TypeHelper;
+import katana.analysis.TypeHelper;
 import katana.sema.type.Array;
 import katana.sema.type.Type;
 import katana.utils.Maybe;

@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema;
+package katana.analysis;
 
 import katana.backend.PlatformContext;
+import katana.sema.FileScope;
+import katana.sema.FunctionScope;
+import katana.sema.OverloadDeclList;
 import katana.sema.decl.*;
 import katana.sema.expr.Literal;
 import katana.sema.type.Type;
@@ -72,7 +75,7 @@ public class DeclValidator implements IVisitor
 				throw new RuntimeException(String.format("duplicate parameter name '%s' in function '%s'", param.name, function.name));
 		}
 
-		semaFunction.ret = function.ret.map((type) -> TypeValidator.validate(type, scope, context, validateDecl));
+		semaFunction.ret = function.ret.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
 
 		if(semaFunction instanceof DefinedFunction)
 		{
@@ -136,22 +139,22 @@ public class DeclValidator implements IVisitor
 
 	private void visit(Global semaGlobal, katana.ast.decl.Global global)
 	{
-		Maybe<Type> maybeDeclaredType = global.type.map((t) -> TypeValidator.validate(t, scope, context, validateDecl));
-		Maybe<Type> maybeDeclaredTypeStripped = maybeDeclaredType.map(TypeHelper::removeConst);
-		Literal init = (Literal)ExprValidator.validate(global.init, scope, context, validateDecl, maybeDeclaredTypeStripped);
+		Maybe<Type> maybeDeclaredType = global.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
+		Maybe<Type> maybeDeclaredTypeDecayed = maybeDeclaredType.map(TypeHelper::decay);
+		Literal init = (Literal)ExprValidator.validate(global.init, scope, context, validateDecl, maybeDeclaredTypeDecayed);
 
 		if(init.type().isNone())
 			throw new RuntimeException(String.format("initializer for global %s yields void", global.name));
 
 		Type initType = init.type().unwrap();
-		Type initTypeStripped = TypeHelper.removeConst(initType);
-		Type globalType = maybeDeclaredType.or(initTypeStripped);
-		Type globalTypeStripped = TypeHelper.removeConst(globalType);
+		Type initTypeDecayed = TypeHelper.decay(initType);
+		Type globalType = maybeDeclaredType.or(initTypeDecayed);
+		Type globalTypeDecayed = TypeHelper.decay(globalType);
 
-		if(!Type.same(globalTypeStripped, initTypeStripped))
+		if(!Type.same(globalTypeDecayed, initTypeDecayed))
 		{
 			String fmt = "initializer for global '%s' has wrong type: expected '%s', got '%s'";
-			throw new RuntimeException(String.format(fmt, semaGlobal.name(), globalTypeStripped, initTypeStripped));
+			throw new RuntimeException(String.format(fmt, semaGlobal.name(), globalTypeDecayed, initTypeDecayed));
 		}
 
 		semaGlobal.init = init;

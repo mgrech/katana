@@ -14,9 +14,9 @@
 
 package katana.backend.llvm;
 
+import katana.analysis.TypeHelper;
 import katana.ast.Path;
 import katana.backend.PlatformContext;
-import katana.sema.TypeHelper;
 import katana.sema.decl.*;
 import katana.sema.stmt.Stmt;
 import katana.sema.type.Type;
@@ -74,7 +74,7 @@ public class DeclCodeGenerator implements IVisitor
 	private void generateDefinedFunction(DefinedFunction function)
 	{
 		builder.append("define private ");
-		builder.append(function.ret.map((type) -> TypeCodeGenerator.generate(type, context)).or("void"));
+		builder.append(function.ret.map(type -> TypeCodeGenerator.generate(type, context)).or("void"));
 		builder.append(" @");
 		builder.append(FunctionNameMangler.mangle(function));
 		builder.append('(');
@@ -136,7 +136,7 @@ public class DeclCodeGenerator implements IVisitor
 
 	private void generateExternFunction(ExternFunction externFunction)
 	{
-		String retTypeString = externFunction.ret.map((t) -> TypeCodeGenerator.generate(t, context)).or("void");
+		String retTypeString = externFunction.ret.map(type -> TypeCodeGenerator.generate(type, context)).or("void");
 		builder.append(String.format("declare %s @%s(", retTypeString, externFunction.externName));
 
 		if(!externFunction.params.isEmpty())

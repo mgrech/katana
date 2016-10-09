@@ -62,12 +62,12 @@ public class ParseTools
 
 	public static boolean option(Scanner scanner, Token.Category category, boolean eat)
 	{
-		return option(scanner, (t) -> t.category == category, eat);
+		return option(scanner, t -> t.category == category, eat);
 	}
 
 	public static boolean option(Scanner scanner, Token.Type type, boolean eat)
 	{
-		return option(scanner, (t) -> t.type == type, eat);
+		return option(scanner, t -> t.type == type, eat);
 	}
 
 	public static void expect(Scanner scanner, Token.Category category, boolean eat)

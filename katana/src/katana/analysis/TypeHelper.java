@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema;
+package katana.analysis;
 
 import katana.sema.type.Array;
 import katana.sema.type.Const;
@@ -48,9 +48,6 @@ public class TypeHelper
 
 	public static Type removeConst(Type type)
 	{
-		if(type instanceof Function)
-			throw new AssertionError("const removed from function type");
-
 		if(type instanceof Const)
 			return ((Const)type).type;
 
@@ -63,8 +60,13 @@ public class TypeHelper
 		return type;
 	}
 
+	public static Type decay(Type type)
+	{
+		return removeConst(type);
+	}
+
 	public static boolean decayedEqual(Type a, Type b)
 	{
-		return Type.same(removeConst(a), removeConst(b));
+		return Type.same(decay(a), decay(b));
 	}
 }
