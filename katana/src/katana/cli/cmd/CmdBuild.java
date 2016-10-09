@@ -39,9 +39,9 @@ import java.util.List;
 @Command(name = "build", desc = "builds project in working directory")
 public class CmdBuild
 {
-	private static ArrayList<Path> discoverSourceFiles(Path root) throws IOException
+	private static List<Path> discoverSourceFiles(Path root) throws IOException
 	{
-		ArrayList<Path> paths = new ArrayList<>();
+		List<Path> paths = new ArrayList<>();
 
 		Files.walkFileTree(root, new SimpleFileVisitor<Path>()
 		{

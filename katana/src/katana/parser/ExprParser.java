@@ -251,17 +251,17 @@ public class ExprParser
 	private static AstExprBuiltinCall parseBuiltinCall(Scanner scanner)
 	{
 		AstPath path = ParseTools.path(scanner);
-		ArrayList<AstExpr> args = ParseTools.parenthesized(scanner, () -> parseArguments(scanner));
+		List<AstExpr> args = ParseTools.parenthesized(scanner, () -> parseArguments(scanner));
 		return new AstExprBuiltinCall(path.toString(), args);
 	}
 
 	private static AstExprFunctionCall parseFunctionCall(Scanner scanner, AstExpr expr, Maybe<Boolean> inline)
 	{
-		ArrayList<AstExpr> args = parseArguments(scanner);
+		List<AstExpr> args = parseArguments(scanner);
 		return new AstExprFunctionCall(expr, args, inline);
 	}
 
-	private static ArrayList<AstExpr> parseArguments(Scanner scanner)
+	private static List<AstExpr> parseArguments(Scanner scanner)
 	{
 		if(ParseTools.option(scanner, Token.Type.PUNCT_RPAREN, false))
 			return new ArrayList<>();

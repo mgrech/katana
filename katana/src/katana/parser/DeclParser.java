@@ -26,6 +26,7 @@ import katana.scanner.Token;
 import katana.utils.Maybe;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class DeclParser
 {
@@ -81,7 +82,7 @@ public class DeclParser
 		scanner.advance();
 
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
-		ArrayList<AstDeclFunction.Param> params = parseParameterList(scanner);
+		List<AstDeclFunction.Param> params = parseParameterList(scanner);
 
 		Maybe<AstType> ret = Maybe.none();
 
@@ -94,15 +95,15 @@ public class DeclParser
 			return new AstDeclExternFunction(exported, opaque, extern.unwrap(), name, params, ret);
 		}
 
-		ArrayList<AstStmt> body = parseBody(scanner);
+		List<AstStmt> body = parseBody(scanner);
 		return new AstDeclDefinedFunction(exported, opaque, name, params, ret, body);
 	}
 
-	private static ArrayList<AstDeclFunction.Param> parseParameterList(Scanner scanner)
+	private static List<AstDeclFunction.Param> parseParameterList(Scanner scanner)
 	{
 		ParseTools.expect(scanner, Token.Type.PUNCT_LPAREN, true);
 
-		ArrayList<AstDeclFunction.Param> params = new ArrayList<>();
+		List<AstDeclFunction.Param> params = new ArrayList<>();
 
 		if(!ParseTools.option(scanner, Token.Type.PUNCT_RPAREN, true))
 		{
@@ -120,11 +121,11 @@ public class DeclParser
 		return new AstDeclFunction.Param(type, name);
 	}
 
-	private static ArrayList<AstStmt> parseBody(Scanner scanner)
+	private static List<AstStmt> parseBody(Scanner scanner)
 	{
 		ParseTools.expect(scanner, Token.Type.PUNCT_LBRACE, true);
 
-		ArrayList<AstStmt> body = new ArrayList<>();
+		List<AstStmt> body = new ArrayList<>();
 
 		while(!ParseTools.option(scanner, Token.Type.PUNCT_RBRACE, false))
 			body.add(StmtParser.parse(scanner));
@@ -141,7 +142,7 @@ public class DeclParser
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
 		ParseTools.expect(scanner, Token.Type.PUNCT_LBRACE, true);
 
-		ArrayList<AstDeclData.Field> fields = new ArrayList<>();
+		List<AstDeclData.Field> fields = new ArrayList<>();
 
 		while(!ParseTools.option(scanner, Token.Type.PUNCT_RBRACE, false))
 			fields.add(parseField(scanner));

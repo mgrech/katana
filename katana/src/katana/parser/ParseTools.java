@@ -19,6 +19,7 @@ import katana.scanner.Scanner;
 import katana.scanner.Token;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -27,13 +28,13 @@ public class ParseTools
 	public static AstPath path(Scanner scanner)
 	{
 		Supplier<String> parseComponent = () -> consumeExpected(scanner, Token.Type.IDENT).value;
-		ArrayList<String> components = separated(scanner, Token.Type.PUNCT_DOT, parseComponent);
+		List<String> components = separated(scanner, Token.Type.PUNCT_DOT, parseComponent);
 		return new AstPath(components);
 	}
 
-	public static <T> ArrayList<T> separated(Scanner scanner, Token.Type separator, Supplier<T> parser)
+	public static <T> List<T> separated(Scanner scanner, Token.Type separator, Supplier<T> parser)
 	{
-		ArrayList<T> result = new ArrayList<>();
+		List<T> result = new ArrayList<>();
 
 		do result.add(parser.get());
 		while(option(scanner, separator, true));

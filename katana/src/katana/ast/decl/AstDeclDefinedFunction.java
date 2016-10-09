@@ -18,16 +18,15 @@ import katana.ast.stmt.AstStmt;
 import katana.ast.type.AstType;
 import katana.utils.Maybe;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class AstDeclDefinedFunction extends AstDeclFunction
 {
-	public AstDeclDefinedFunction(boolean exported, boolean opaque, String name, List<Param> params, Maybe<AstType> ret, ArrayList<AstStmt> body)
+	public AstDeclDefinedFunction(boolean exported, boolean opaque, String name, List<Param> params, Maybe<AstType> ret, List<AstStmt> body)
 	{
 		super(exported, opaque, name, params, ret);
 		this.body = body;
 	}
 
-	public ArrayList<AstStmt> body;
+	public List<AstStmt> body;
 }

@@ -21,6 +21,7 @@ import katana.utils.Maybe;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.List;
 
 public class TypeParser
 {
@@ -76,7 +77,7 @@ public class TypeParser
 
 	private static AstTypeFunction parseFunction(Scanner scanner)
 	{
-		ArrayList<AstType> params = parseParameters(scanner);
+		List<AstType> params = parseParameters(scanner);
 		Maybe<AstType> ret = Maybe.none();
 
 		if(ParseTools.option(scanner, Token.Type.PUNCT_RET, true))
@@ -85,11 +86,11 @@ public class TypeParser
 		return new AstTypeFunction(ret, params);
 	}
 
-	private static ArrayList<AstType> parseParameters(Scanner scanner)
+	private static List<AstType> parseParameters(Scanner scanner)
 	{
 		return ParseTools.parenthesized(scanner, () ->
 		{
-			ArrayList<AstType> params = new ArrayList<>();
+			List<AstType> params = new ArrayList<>();
 
 			if(!ParseTools.option(scanner, Token.Type.PUNCT_RPAREN, false))
 			{

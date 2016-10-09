@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 
 public class FileParser
 {
@@ -35,7 +36,7 @@ public class FileParser
 		Scanner scanner = new Scanner(codepoints);
 		scanner.advance();
 
-		ArrayList<AstDecl> decls = new ArrayList<>();
+		List<AstDecl> decls = new ArrayList<>();
 
 		while(scanner.state().token.type != Token.Type.END)
 			decls.add(DeclParser.parse(scanner));

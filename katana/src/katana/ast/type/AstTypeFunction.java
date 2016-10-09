@@ -16,16 +16,16 @@ package katana.ast.type;
 
 import katana.utils.Maybe;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class AstTypeFunction extends AstType
 {
-	public AstTypeFunction(Maybe<AstType> ret, ArrayList<AstType> params)
+	public AstTypeFunction(Maybe<AstType> ret, List<AstType> params)
 	{
 		this.ret = ret;
 		this.params = params;
 	}
 
 	public Maybe<AstType> ret;
-	public ArrayList<AstType> params;
+	public List<AstType> params;
 }

@@ -14,16 +14,16 @@
 
 package katana.ast.expr;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class AstExprBuiltinCall extends AstExpr
 {
-	public AstExprBuiltinCall(String name, ArrayList<AstExpr> args)
+	public AstExprBuiltinCall(String name, List<AstExpr> args)
 	{
 		this.name = name;
 		this.args = args;
 	}
 
 	public String name;
-	public ArrayList<AstExpr> args;
+	public List<AstExpr> args;
 }

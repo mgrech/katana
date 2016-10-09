@@ -17,16 +17,16 @@ package katana.ast;
 import katana.ast.decl.AstDecl;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.List;
 
 public class AstFile
 {
-	public AstFile(Path path, ArrayList<AstDecl> decls)
+	public AstFile(Path path, List<AstDecl> decls)
 	{
 		this.path = path;
 		this.decls = decls;
 	}
 
 	public Path path;
-	public ArrayList<AstDecl> decls;
+	public List<AstDecl> decls;
 }

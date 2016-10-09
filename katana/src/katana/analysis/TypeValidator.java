@@ -93,7 +93,7 @@ public class TypeValidator implements IVisitor
 
 	private SemaType visit(AstTypeFunction functionType)
 	{
-		ArrayList<SemaType> params = new ArrayList<>();
+		List<SemaType> params = new ArrayList<>();
 
 		for(AstType param : functionType.params)
 			params.add(validate(param, scope, context, validateDecl));

@@ -16,7 +16,7 @@ package katana.ast.decl;
 
 import katana.ast.type.AstType;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class AstDeclData extends AstDecl
 {
@@ -38,7 +38,7 @@ public class AstDeclData extends AstDecl
 		}
 	}
 
-	public AstDeclData(boolean exported, boolean opaque, String name, ArrayList<Field> fields)
+	public AstDeclData(boolean exported, boolean opaque, String name, List<Field> fields)
 	{
 		super(exported, opaque);
 		this.name = name;
@@ -46,7 +46,7 @@ public class AstDeclData extends AstDecl
 	}
 
 	public String name;
-	public ArrayList<Field> fields;
+	public List<Field> fields;
 
 	@Override
 	public String toString()

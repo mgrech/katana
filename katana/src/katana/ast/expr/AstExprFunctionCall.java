@@ -16,11 +16,11 @@ package katana.ast.expr;
 
 import katana.utils.Maybe;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class AstExprFunctionCall extends AstExpr
 {
-	public AstExprFunctionCall(AstExpr expr, ArrayList<AstExpr> args, Maybe<Boolean> inline)
+	public AstExprFunctionCall(AstExpr expr, List<AstExpr> args, Maybe<Boolean> inline)
 	{
 		this.expr = expr;
 		this.args = args;
@@ -28,6 +28,6 @@ public class AstExprFunctionCall extends AstExpr
 	}
 
 	public AstExpr expr;
-	public ArrayList<AstExpr> args;
+	public List<AstExpr> args;
 	public Maybe<Boolean> inline;
 }
