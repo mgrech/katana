@@ -14,9 +14,9 @@
 
 package katana.backend.llvm;
 
+import katana.BuiltinFunc;
 import katana.backend.PlatformContext;
-import katana.sema.BuiltinFunc;
-import katana.sema.type.Builtin;
+import katana.sema.type.SemaTypeBuiltin;
 import katana.utils.Maybe;
 
 import java.util.HashMap;
@@ -26,7 +26,7 @@ public abstract class PlatformContextLlvm implements PlatformContext
 {
 	private static final Map<String, BuiltinFunc> BUILTINS = new HashMap<>();
 
-	private static void registerBinaryOp(String name, String boolInstr, String sintInstr, String uintInstr, String floatInstr, String ptrInstr, Builtin ret)
+	private static void registerBinaryOp(String name, String boolInstr, String sintInstr, String uintInstr, String floatInstr, String ptrInstr, SemaTypeBuiltin ret)
 	{
 		BUILTINS.put(name, new BinaryOp(name, Maybe.wrap(boolInstr), Maybe.wrap(sintInstr), Maybe.wrap(uintInstr), Maybe.wrap(floatInstr), Maybe.wrap(ptrInstr), Maybe.wrap(ret)));
 	}
@@ -38,12 +38,12 @@ public abstract class PlatformContextLlvm implements PlatformContext
 
 	static
 	{
-		registerBinaryOp("katana.eq",   "icmp eq", "icmp eq",  "icmp eq",  "fcmp oeq", "icmp eq", Builtin.BOOL);
-		registerBinaryOp("katana.neq",  "icmp ne", "icmp ne",  "icmp ne",  "fcmp one", "icmp ne", Builtin.BOOL);
-		registerBinaryOp("katana.lt",   null,      "icmp slt", "icmp ult", "fcmp olt", null,      Builtin.BOOL);
-		registerBinaryOp("katana.lteq", null,      "icmp sle", "icmp ule", "fcmp ole", null,      Builtin.BOOL);
-		registerBinaryOp("katana.gt",   null,      "icmp sgt", "icmp ugt", "fcmp ogt", null,      Builtin.BOOL);
-		registerBinaryOp("katana.gteq", null,      "icmp sge", "icmp uge", "fcmp oge", null,      Builtin.BOOL);
+		registerBinaryOp("katana.eq",   "icmp eq", "icmp eq",  "icmp eq",  "fcmp oeq", "icmp eq", SemaTypeBuiltin.BOOL);
+		registerBinaryOp("katana.neq",  "icmp ne", "icmp ne",  "icmp ne",  "fcmp one", "icmp ne", SemaTypeBuiltin.BOOL);
+		registerBinaryOp("katana.lt",   null,      "icmp slt", "icmp ult", "fcmp olt", null,      SemaTypeBuiltin.BOOL);
+		registerBinaryOp("katana.lteq", null,      "icmp sle", "icmp ule", "fcmp ole", null,      SemaTypeBuiltin.BOOL);
+		registerBinaryOp("katana.gt",   null,      "icmp sgt", "icmp ugt", "fcmp ogt", null,      SemaTypeBuiltin.BOOL);
+		registerBinaryOp("katana.gteq", null,      "icmp sge", "icmp uge", "fcmp oge", null,      SemaTypeBuiltin.BOOL);
 
 		registerBinaryOp("katana.add", null, "add",  "add",  "fadd", null, null);
 		registerBinaryOp("katana.sub", null, "sub",  "sub",  "fsub", null, null);

@@ -14,13 +14,16 @@
 
 package katana.analysis;
 
-import katana.ast.Path;
-import katana.ast.decl.Import;
-import katana.ast.decl.RenamedImport;
+import katana.ast.AstPath;
+import katana.ast.decl.*;
+import katana.ast.stmt.AstStmt;
 import katana.backend.PlatformContext;
-import katana.sema.*;
+import katana.sema.SemaModule;
+import katana.sema.SemaProgram;
+import katana.sema.SemaSymbol;
 import katana.sema.decl.*;
-import katana.sema.stmt.Stmt;
+import katana.sema.scope.SemaScopeFile;
+import katana.sema.stmt.SemaStmt;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
@@ -33,33 +36,33 @@ import java.util.function.Consumer;
 public class FileValidator implements IVisitor
 {
 	private PlatformContext context;
-	private Program program;
-	private Consumer<Decl> validateDecl;
+	private SemaProgram program;
+	private Consumer<SemaDecl> validateDecl;
 
-	private IdentityHashMap<Decl, katana.ast.decl.Decl> decls = new IdentityHashMap<>();
-	private IdentityHashMap<DefinedFunction, StmtValidator> validators = new IdentityHashMap<>();
-	private Map<String, OverloadSet> overloadSets = new HashMap<>();
-	private Module currentModule = null;
+	private IdentityHashMap<SemaDecl, AstDecl> decls = new IdentityHashMap<>();
+	private IdentityHashMap<SemaDeclDefinedFunction, StmtValidator> validators = new IdentityHashMap<>();
+	private Map<String, SemaDeclOverloadSet> overloadSets = new HashMap<>();
+	private SemaModule currentModule = null;
 	private boolean declsSeen = false;
-	private Map<Path, Import> imports = new HashMap<>();
-	private Map<String, RenamedImport> renamedImports = new HashMap<>();
-	private FileScope scope = new FileScope();
+	private Map<AstPath, AstDeclImport> imports = new HashMap<>();
+	private Map<String, AstDeclRenamedImport> renamedImports = new HashMap<>();
+	private SemaScopeFile scope = new SemaScopeFile();
 
-	public FileValidator(PlatformContext context, Program program, Consumer<Decl> validateDecl)
+	public FileValidator(PlatformContext context, SemaProgram program, Consumer<SemaDecl> validateDecl)
 	{
 		this.context = context;
 		this.program = program;
 		this.validateDecl = validateDecl;
 	}
 
-	public Maybe<Decl> register(katana.ast.decl.Decl decl)
+	public Maybe<SemaDecl> register(AstDecl decl)
 	{
-		return (Maybe<Decl>)decl.accept(this);
+		return (Maybe<SemaDecl>)decl.accept(this);
 	}
 
-	private Module checkModuleImport(Path path)
+	private SemaModule checkModuleImport(AstPath path)
 	{
-		Maybe<Module> module = program.findModule(path);
+		Maybe<SemaModule> module = program.findModule(path);
 
 		if(module.isNone())
 			throw new RuntimeException(String.format("import of unknown module '%s'", path));
@@ -69,40 +72,40 @@ public class FileValidator implements IVisitor
 
 	public void validateImports()
 	{
-		for(Import import_ : imports.values())
+		for(AstDeclImport import_ : imports.values())
 		{
-			Module module = checkModuleImport(import_.path);
+			SemaModule module = checkModuleImport(import_.path);
 
-			for(Decl decl : module.decls().values())
+			for(SemaDecl decl : module.decls().values())
 				if(decl.exported)
 					scope.defineSymbol(decl);
 		}
 
-		for(RenamedImport import_ : renamedImports.values())
+		for(AstDeclRenamedImport import_ : renamedImports.values())
 		{
-			Module module = checkModuleImport(import_.path);
-			katana.sema.decl.RenamedImport semaImport = new katana.sema.decl.RenamedImport(module, import_.rename);
+			SemaModule module = checkModuleImport(import_.path);
+			SemaDeclRenamedImport semaImport = new SemaDeclRenamedImport(module, import_.rename);
 
-			for(Decl decl : module.decls().values())
+			for(SemaDecl decl : module.decls().values())
 				semaImport.decls.put(decl.name(), decl);
 
 			scope.defineSymbol(semaImport);
 		}
 	}
 
-	public void validate(Decl decl)
+	public void validate(SemaDecl decl)
 	{
-		Map<DefinedFunction, StmtValidator> validators = DeclValidator.validate(decl, decls.get(decl), scope, context, validateDecl);
+		Map<SemaDeclDefinedFunction, StmtValidator> validators = DeclValidator.validate(decl, decls.get(decl), scope, context, validateDecl);
 
 		if(!validators.isEmpty())
 			this.validators.putAll(validators);
 	}
 
-	private void validate(DefinedFunction semaFunction, katana.ast.decl.DefinedFunction function, StmtValidator validator)
+	private void validate(SemaDeclDefinedFunction semaFunction, AstDeclDefinedFunction function, StmtValidator validator)
 	{
-		for(katana.ast.stmt.Stmt stmt : function.body)
+		for(AstStmt stmt : function.body)
 		{
-			Stmt semaStmt = validator.validate(stmt);
+			SemaStmt semaStmt = validator.validate(stmt);
 			semaFunction.add(semaStmt);
 		}
 
@@ -111,19 +114,19 @@ public class FileValidator implements IVisitor
 
 	public void finish()
 	{
-		for(OverloadSet set : overloadSets.values())
+		for(SemaDeclOverloadSet set : overloadSets.values())
 		{
 			OverloadDeclList overloadDecls = (OverloadDeclList)decls.get(set);
 
 			for(int i = 0; i != set.overloads.size(); ++i)
 			{
-				Function overload = set.overloads.get(i);
+				SemaDeclFunction overload = set.overloads.get(i);
 
-				if(!(overload instanceof DefinedFunction))
+				if(!(overload instanceof SemaDeclDefinedFunction))
 					continue;
 
-				DefinedFunction semaFunction = (DefinedFunction)overload;
-				katana.ast.decl.DefinedFunction function = (katana.ast.decl.DefinedFunction)overloadDecls.decls.get(i);
+				SemaDeclDefinedFunction semaFunction = (SemaDeclDefinedFunction)overload;
+				AstDeclDefinedFunction function = (AstDeclDefinedFunction)overloadDecls.decls.get(i);
 				StmtValidator validator = validators.get(semaFunction);
 				validate(semaFunction, function, validator);
 			}
@@ -136,12 +139,12 @@ public class FileValidator implements IVisitor
 			throw new RuntimeException("no module defined");
 	}
 
-	private void redefinitionError(Symbol symbol)
+	private void redefinitionError(SemaSymbol symbol)
 	{
 		throw new RuntimeException(String.format("redefinition of symbol '%s'", symbol.name()));
 	}
 
-	private Maybe<Decl> handleModuleDecl(Decl semaDecl, katana.ast.decl.Decl decl)
+	private Maybe<SemaDecl> handleModuleDecl(SemaDecl semaDecl, AstDecl decl)
 	{
 		declsSeen = true;
 		requireModule();
@@ -155,20 +158,20 @@ public class FileValidator implements IVisitor
 		return Maybe.some(semaDecl);
 	}
 
-	private Maybe<Decl> visit(katana.ast.decl.Data data)
+	private Maybe<SemaDecl> visit(AstDeclData data)
 	{
-		Data semaData = new Data(currentModule, data.exported, data.opaque, data.name);
+		SemaDeclData semaData = new SemaDeclData(currentModule, data.exported, data.opaque, data.name);
 		return handleModuleDecl(semaData, data);
 	}
 
-	private Maybe<Decl> handleFunction(Function semaFunction, katana.ast.decl.Function function)
+	private Maybe<SemaDecl> handleFunction(SemaDeclFunction semaFunction, AstDeclFunction function)
 	{
 		String name = semaFunction.name();
-		OverloadSet set = overloadSets.get(name);
+		SemaDeclOverloadSet set = overloadSets.get(name);
 
 		if(set == null)
 		{
-			set = new OverloadSet(semaFunction.module(), name);
+			set = new SemaDeclOverloadSet(semaFunction.module(), name);
 			set.overloads.add(semaFunction);
 			overloadSets.put(name, set);
 			OverloadDeclList list = new OverloadDeclList();
@@ -181,31 +184,31 @@ public class FileValidator implements IVisitor
 		return Maybe.none();
 	}
 
-	private Maybe<Decl> visit(katana.ast.decl.ExternFunction function)
+	private Maybe<SemaDecl> visit(AstDeclExternFunction function)
 	{
-		ExternFunction semaFunction = new ExternFunction(currentModule, function.exported, function.opaque, function.externName, function.name);
+		SemaDeclExternFunction semaFunction = new SemaDeclExternFunction(currentModule, function.exported, function.opaque, function.externName, function.name);
 		return handleFunction(semaFunction, function);
 	}
 
-	private Maybe<Decl> visit(katana.ast.decl.DefinedFunction function)
+	private Maybe<SemaDecl> visit(AstDeclDefinedFunction function)
 	{
-		DefinedFunction semaFunction = new DefinedFunction(currentModule, function.exported, function.opaque, function.name);
+		SemaDeclDefinedFunction semaFunction = new SemaDeclDefinedFunction(currentModule, function.exported, function.opaque, function.name);
 		return handleFunction(semaFunction, function);
 	}
 
-	private Maybe<Decl> visit(katana.ast.decl.Global global)
+	private Maybe<SemaDecl> visit(AstDeclGlobal global)
 	{
-		Global semaGlobal = new Global(currentModule, global.exported, global.opaque, global.name);
+		SemaDeclGlobal semaGlobal = new SemaDeclGlobal(currentModule, global.exported, global.opaque, global.name);
 		return handleModuleDecl(semaGlobal, global);
 	}
 
-	private Maybe<Decl> visit(katana.ast.decl.TypeAlias alias)
+	private Maybe<SemaDecl> visit(AstDeclTypeAlias alias)
 	{
-		TypeAlias semaAlias = new TypeAlias(currentModule, alias.exported, alias.name);
+		SemaDeclTypeAlias semaAlias = new SemaDeclTypeAlias(currentModule, alias.exported, alias.name);
 		return handleModuleDecl(semaAlias, alias);
 	}
 
-	private Maybe<Decl> visit(katana.ast.decl.Import import_)
+	private Maybe<SemaDecl> visit(AstDeclImport import_)
 	{
 		if(declsSeen)
 			throw new RuntimeException("imports must go before other decls");
@@ -218,7 +221,7 @@ public class FileValidator implements IVisitor
 		return Maybe.none();
 	}
 
-	private Maybe<Decl> visit(katana.ast.decl.RenamedImport import_)
+	private Maybe<SemaDecl> visit(AstDeclRenamedImport import_)
 	{
 		if(declsSeen)
 			throw new RuntimeException("imports must go before other decls");
@@ -231,7 +234,7 @@ public class FileValidator implements IVisitor
 		return Maybe.none();
 	}
 
-	private Maybe<Decl> visit(katana.ast.decl.Module module_)
+	private Maybe<SemaDecl> visit(AstDeclModule module_)
 	{
 		declsSeen = true;
 		currentModule = program.findOrCreateModule(module_.path);

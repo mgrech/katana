@@ -14,9 +14,9 @@
 
 package katana.backend;
 
+import katana.BuiltinFunc;
 import katana.BuiltinType;
-import katana.sema.BuiltinFunc;
-import katana.sema.decl.Data;
+import katana.sema.decl.SemaDeclData;
 import katana.utils.Maybe;
 
 import java.math.BigInteger;
@@ -26,8 +26,8 @@ public interface PlatformContext
 	Maybe<BuiltinFunc> findBuiltin(String name);
 
 	BigInteger sizeof(BuiltinType builtin);
-	BigInteger sizeof(Data data);
+	BigInteger sizeof(SemaDeclData data);
 
 	BigInteger alignof(BuiltinType builtin);
-	BigInteger alignof(Data data);
+	BigInteger alignof(SemaDeclData data);
 }

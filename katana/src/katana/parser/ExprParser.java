@@ -15,9 +15,9 @@
 package katana.parser;
 
 import katana.BuiltinType;
-import katana.ast.Path;
+import katana.ast.AstPath;
 import katana.ast.expr.*;
-import katana.ast.type.Type;
+import katana.ast.type.AstType;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
 import katana.utils.Maybe;
@@ -29,9 +29,9 @@ import java.util.List;
 
 public class ExprParser
 {
-	public static Expr parse(Scanner scanner)
+	public static AstExpr parse(Scanner scanner)
 	{
-		Expr expr = parsePrimaryExpr(scanner);
+		AstExpr expr = parsePrimaryExpr(scanner);
 
 		for(;;)
 		{
@@ -47,8 +47,8 @@ public class ExprParser
 
 			case PUNCT_LBRACKET:
 				scanner.advance();
-				Expr index = ExprParser.parse(scanner);
-				expr = new ArrayAccess(expr, index);
+				AstExpr index = ExprParser.parse(scanner);
+				expr = new AstExprArrayAccess(expr, index);
 				ParseTools.expect(scanner, Token.Type.PUNCT_RBRACKET, true);
 				break;
 
@@ -56,13 +56,13 @@ public class ExprParser
 				scanner.advance();
 				boolean global = ParseTools.option(scanner, Token.Type.DECL_GLOBAL, true);
 				String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
-				expr = new MemberAccess(expr, name, global);
+				expr = new AstExprMemberAccess(expr, name, global);
 				break;
 
 			case PUNCT_ASSIGN:
 				scanner.advance();
-				Expr value = parse(scanner);
-				expr = new Assign(expr, value);
+				AstExpr value = parse(scanner);
+				expr = new AstExprAssign(expr, value);
 				break;
 
 			default: return expr;
@@ -70,18 +70,18 @@ public class ExprParser
 		}
 	}
 
-	private static Expr parsePrimaryExpr(Scanner scanner)
+	private static AstExpr parsePrimaryExpr(Scanner scanner)
 	{
 		if(ParseTools.option(scanner, Token.Type.DECL_GLOBAL, true))
 		{
 			String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
-			return new NamedGlobal(name);
+			return new AstExprNamedGlobal(name);
 		}
 
 		if(ParseTools.option(scanner, Token.Type.IDENT, false))
 		{
 			String name = ParseTools.consume(scanner).value;
-			return new NamedSymbol(name);
+			return new AstExprNamedSymbol(name);
 		}
 
 		if(ParseTools.option(scanner, Token.Category.LIT, false))
@@ -100,33 +100,33 @@ public class ExprParser
 		throw new AssertionError("unreachable");
 	}
 
-	private static Expr parseConst(Scanner scanner)
+	private static AstExpr parseConst(Scanner scanner)
 	{
 		ParseTools.expect(scanner, Token.Type.PUNCT_LPAREN, true);
-		Expr expr = parse(scanner);
+		AstExpr expr = parse(scanner);
 		ParseTools.expect(scanner, Token.Type.PUNCT_RPAREN, true);
-		return new Const(expr);
+		return new AstExprConst(expr);
 	}
 
-	private static Expr parseArrayLiteral(Scanner scanner)
+	private static AstExpr parseArrayLiteral(Scanner scanner)
 	{
 		Maybe<BigInteger> size = Maybe.none();
 
 		if(!ParseTools.option(scanner, Token.Type.PUNCT_COLON, true))
 		{
-			Expr sizeLit = parseLiteral(scanner);
+			AstExpr sizeLit = parseLiteral(scanner);
 
-			if(!(sizeLit instanceof LitInt))
+			if(!(sizeLit instanceof AstExprLitInt))
 				throw new RuntimeException("expected integer literal as length in array literal");
 
-			if(((LitInt)sizeLit).type.isSome())
+			if(((AstExprLitInt)sizeLit).type.isSome())
 				throw new RuntimeException("length in array literal cannot have a type suffix");
 
-			size = Maybe.some(((LitInt)sizeLit).value);
+			size = Maybe.some(((AstExprLitInt)sizeLit).value);
 			ParseTools.expect(scanner, Token.Type.PUNCT_COLON, true);
 		}
 
-		Maybe<Type> type = Maybe.none();
+		Maybe<AstType> type = Maybe.none();
 
 		if(!ParseTools.option(scanner, Token.Type.PUNCT_COLON, true))
 		{
@@ -134,46 +134,46 @@ public class ExprParser
 			ParseTools.expect(scanner, Token.Type.PUNCT_COLON, true);
 		}
 
-		List<Literal> values = new ArrayList<>();
+		List<AstExprLiteral> values = new ArrayList<>();
 
 		if(!ParseTools.option(scanner, Token.Type.PUNCT_RBRACKET, true))
 		{
-			Expr first = parse(scanner);
+			AstExpr first = parse(scanner);
 
-			if(!(first instanceof Literal))
+			if(!(first instanceof AstExprLiteral))
 				throw new RuntimeException("array literal elements must be literals themselves");
 
-			values.add((Literal)first);
+			values.add((AstExprLiteral)first);
 
 			while(ParseTools.option(scanner, Token.Type.PUNCT_COMMA, true))
 			{
-				Expr next = parse(scanner);
+				AstExpr next = parse(scanner);
 
-				if(!(next instanceof Literal))
+				if(!(next instanceof AstExprLiteral))
 					throw new RuntimeException("array literal elements must be literals themselves");
 
-				values.add((Literal)next);
+				values.add((AstExprLiteral)next);
 			}
 
 			ParseTools.expect(scanner, Token.Type.PUNCT_RBRACKET, true);
 		}
 
-		return new LitArray(size, type, values);
+		return new AstExprLitArray(size, type, values);
 	}
 
-	private static Expr parseMisc(Scanner scanner)
+	private static AstExpr parseMisc(Scanner scanner)
 	{
 		Token token = ParseTools.consume(scanner);
 
 		switch(token.type)
 		{
 		case MISC_SIZEOF:
-			Type stype = ParseTools.parenthesized(scanner, () -> TypeParser.parse(scanner));
-			return new Sizeof(stype);
+			AstType stype = ParseTools.parenthesized(scanner, () -> TypeParser.parse(scanner));
+			return new AstExprSizeof(stype);
 
 		case MISC_ALIGNOF:
-			Type atype = ParseTools.parenthesized(scanner, () -> TypeParser.parse(scanner));
-			return new Alignof(atype);
+			AstType atype = ParseTools.parenthesized(scanner, () -> TypeParser.parse(scanner));
+			return new AstExprAlignof(atype);
 
 		case MISC_OFFSETOF:
 			return ParseTools.parenthesized(scanner, () ->
@@ -181,7 +181,7 @@ public class ExprParser
 				String type = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
 				ParseTools.expect(scanner, Token.Type.PUNCT_COMMA, true);
 				String field = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
-				return new Offsetof(type, field);
+				return new AstExprOffsetof(type, field);
 			});
 
 		case MISC_BUILTIN:
@@ -192,76 +192,76 @@ public class ExprParser
 				() -> ParseTools.consumeExpected(scanner, Token.Type.LIT_BOOL).value);
 			String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
 			ParseTools.expect(scanner, Token.Type.PUNCT_LPAREN, true);
-			Expr call = parseFunctionCall(scanner, new NamedSymbol(name), Maybe.some(inline.equals("true")));
+			AstExpr call = parseFunctionCall(scanner, new AstExprNamedSymbol(name), Maybe.some(inline.equals("true")));
 			ParseTools.expect(scanner, Token.Type.PUNCT_RPAREN, true);
 			return call;
 
 		case MISC_ADDRESSOF:
-			Expr aexpr = ParseTools.parenthesized(scanner, () -> ExprParser.parse(scanner));
-			return new Addressof(aexpr);
+			AstExpr aexpr = ParseTools.parenthesized(scanner, () -> ExprParser.parse(scanner));
+			return new AstExprAddressof(aexpr);
 
 		case MISC_DEREF:
 			return ParseTools.parenthesized(scanner, () ->
 			{
-				Type dtype = TypeParser.parse(scanner);
+				AstType dtype = TypeParser.parse(scanner);
 				ParseTools.expect(scanner, Token.Type.PUNCT_COMMA, true);
-				Expr dexpr = ExprParser.parse(scanner);
-				return new Deref(dtype, dexpr);
+				AstExpr dexpr = ExprParser.parse(scanner);
+				return new AstExprDeref(dtype, dexpr);
 			});
 
 		default: throw new AssertionError("unreachable");
 		}
 	}
 
-	private static Expr parseLiteral(Scanner scanner)
+	private static AstExpr parseLiteral(Scanner scanner)
 	{
 		Token token = ParseTools.consume(scanner);
 
 		switch(token.type)
 		{
-		case LIT_NULL: return new LitNull();
-		case LIT_BOOL: return new LitBool((boolean)token.data);
+		case LIT_NULL: return new AstExprLitNull();
+		case LIT_BOOL: return new AstExprLitBool((boolean)token.data);
 
-		case LIT_INT:   return new LitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT));
-		case LIT_PINT:  return new LitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.PINT));
-		case LIT_INT8:  return new LitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT8));
-		case LIT_INT16: return new LitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT16));
-		case LIT_INT32: return new LitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT32));
-		case LIT_INT64: return new LitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT64));
+		case LIT_INT:   return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT));
+		case LIT_PINT:  return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.PINT));
+		case LIT_INT8:  return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT8));
+		case LIT_INT16: return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT16));
+		case LIT_INT32: return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT32));
+		case LIT_INT64: return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT64));
 
-		case LIT_UINT:   return new LitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT));
-		case LIT_UPINT:  return new LitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UPINT));
-		case LIT_UINT8:  return new LitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT8));
-		case LIT_UINT16: return new LitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT16));
-		case LIT_UINT32: return new LitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT32));
-		case LIT_UINT64: return new LitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT64));
+		case LIT_UINT:   return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT));
+		case LIT_UPINT:  return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UPINT));
+		case LIT_UINT8:  return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT8));
+		case LIT_UINT16: return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT16));
+		case LIT_UINT32: return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT32));
+		case LIT_UINT64: return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT64));
 
-		case LIT_FLOAT32: return new LitFloat(new BigDecimal(token.value), Maybe.some(BuiltinType.FLOAT32));
-		case LIT_FLOAT64: return new LitFloat(new BigDecimal(token.value), Maybe.some(BuiltinType.FLOAT64));
+		case LIT_FLOAT32: return new AstExprLitFloat(new BigDecimal(token.value), Maybe.some(BuiltinType.FLOAT32));
+		case LIT_FLOAT64: return new AstExprLitFloat(new BigDecimal(token.value), Maybe.some(BuiltinType.FLOAT64));
 
-		case LIT_STRING: return new LitString(token.value);
+		case LIT_STRING: return new AstExprLitString(token.value);
 
-		case LIT_INT_DEDUCE:   return new LitInt(new BigInteger(token.value, (int)token.data), Maybe.none());
-		case LIT_FLOAT_DEDUCE: return new LitFloat(new BigDecimal(token.value), Maybe.none());
+		case LIT_INT_DEDUCE:   return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.none());
+		case LIT_FLOAT_DEDUCE: return new AstExprLitFloat(new BigDecimal(token.value), Maybe.none());
 
 		default: throw new AssertionError("unreachable");
 		}
 	}
 
-	private static BuiltinCall parseBuiltinCall(Scanner scanner)
+	private static AstExprBuiltinCall parseBuiltinCall(Scanner scanner)
 	{
-		Path path = ParseTools.path(scanner);
-		ArrayList<Expr> args = ParseTools.parenthesized(scanner, () -> parseArguments(scanner));
-		return new BuiltinCall(path.toString(), args);
+		AstPath path = ParseTools.path(scanner);
+		ArrayList<AstExpr> args = ParseTools.parenthesized(scanner, () -> parseArguments(scanner));
+		return new AstExprBuiltinCall(path.toString(), args);
 	}
 
-	private static FunctionCall parseFunctionCall(Scanner scanner, Expr expr, Maybe<Boolean> inline)
+	private static AstExprFunctionCall parseFunctionCall(Scanner scanner, AstExpr expr, Maybe<Boolean> inline)
 	{
-		ArrayList<Expr> args = parseArguments(scanner);
-		return new FunctionCall(expr, args, inline);
+		ArrayList<AstExpr> args = parseArguments(scanner);
+		return new AstExprFunctionCall(expr, args, inline);
 	}
 
-	private static ArrayList<Expr> parseArguments(Scanner scanner)
+	private static ArrayList<AstExpr> parseArguments(Scanner scanner)
 	{
 		if(ParseTools.option(scanner, Token.Type.PUNCT_RPAREN, false))
 			return new ArrayList<>();

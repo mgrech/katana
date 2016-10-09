@@ -1,2 +1,2 @@
 Manifest-Version: 1.0
-Main-Class: katana.compiler.Main
+Main-Class: katana.cli.Main

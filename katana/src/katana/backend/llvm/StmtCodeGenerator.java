@@ -15,9 +15,9 @@
 package katana.backend.llvm;
 
 import katana.backend.PlatformContext;
-import katana.sema.decl.DefinedFunction;
+import katana.sema.decl.SemaDeclDefinedFunction;
 import katana.sema.stmt.*;
-import katana.sema.type.Type;
+import katana.sema.type.SemaType;
 import katana.visitor.IVisitor;
 
 import java.util.ArrayList;
@@ -39,12 +39,12 @@ public class StmtCodeGenerator implements IVisitor
 		this.fcontext = fcontext;
 	}
 
-	public void generate(Stmt stmt)
+	public void generate(SemaStmt stmt)
 	{
 		stmt.accept(this);
 	}
 
-	public void finish(DefinedFunction func)
+	public void finish(SemaDeclDefinedFunction func)
 	{
 		if(!preceededByTerminator)
 			if(func.ret.isNone())
@@ -53,15 +53,15 @@ public class StmtCodeGenerator implements IVisitor
 				throw new RuntimeException(String.format("at least one path in '%s' returns no value", func.qualifiedName()));
 	}
 
-	private void visit(Compound compound)
+	private void visit(SemaStmtCompound compound)
 	{
 		preceededByTerminator = false;
 
-		for(Stmt stmt : compound.body)
+		for(SemaStmt stmt : compound.body)
 			generate(stmt);
 	}
 
-	private void visit(ExprStmt stmt)
+	private void visit(SemaStmtExprStmt stmt)
 	{
 		preceededByTerminator = false;
 		ExprCodeGenerator.generate(stmt.expr, builder, context, fcontext);
@@ -73,7 +73,7 @@ public class StmtCodeGenerator implements IVisitor
 		builder.append(String.format("\tbr label %%%s\n\n", label));
 	}
 
-	private void visit(Goto goto_)
+	private void visit(SemaStmtGoto goto_)
 	{
 		generateGoto("ul$" + goto_.target.name);
 	}
@@ -83,7 +83,7 @@ public class StmtCodeGenerator implements IVisitor
 		generateGoto(goto_.label.name);
 	}
 
-	private void visit(If if_)
+	private void visit(SemaStmtIf if_)
 	{
 		String condSSA = ExprCodeGenerator.generate(if_.condition, builder, context, fcontext).unwrap();
 
@@ -103,20 +103,20 @@ public class StmtCodeGenerator implements IVisitor
 		preceededByTerminator = false;
 	}
 
-	private void visit(IfElse ifelse)
+	private void visit(SemaStmtIfElse ifelse)
 	{
 		GeneratedLabel after = fcontext.allocateLabel("ifelse.after");
 
-		List<Stmt> then = new ArrayList<>();
+		List<SemaStmt> then = new ArrayList<>();
 		then.add(ifelse.then);
 		then.add(new GeneratedGoto(after));
 
-		visit(new If(ifelse.negated, ifelse.condition, new Compound(then)));
+		visit(new SemaStmtIf(ifelse.negated, ifelse.condition, new SemaStmtCompound(then)));
 		generate(ifelse.else_);
 		visit(after);
 	}
 
-	private void visit(Loop loop)
+	private void visit(SemaStmtLoop loop)
 	{
 		GeneratedLabel label = fcontext.allocateLabel("loop");
 
@@ -125,15 +125,15 @@ public class StmtCodeGenerator implements IVisitor
 		visit(new GeneratedGoto(label));
 	}
 
-	private void visit(While while_)
+	private void visit(SemaStmtWhile while_)
 	{
 		GeneratedLabel afterLabel = fcontext.allocateLabel("while.after");
 
-		List<Stmt> body = new ArrayList<>();
-		body.add(new If(!while_.negated, while_.condition, new GeneratedGoto(afterLabel)));
+		List<SemaStmt> body = new ArrayList<>();
+		body.add(new SemaStmtIf(!while_.negated, while_.condition, new GeneratedGoto(afterLabel)));
 		body.add(while_.body);
 
-		visit(new Loop(new Compound(body)));
+		visit(new SemaStmtLoop(new SemaStmtCompound(body)));
 		visit(afterLabel);
 	}
 
@@ -146,7 +146,7 @@ public class StmtCodeGenerator implements IVisitor
 		preceededByTerminator = false;
 	}
 
-	private void visit(Label label)
+	private void visit(SemaStmtLabel label)
 	{
 		generateLabel("ul$" + label.name);
 	}
@@ -156,7 +156,7 @@ public class StmtCodeGenerator implements IVisitor
 		generateLabel(label.name);
 	}
 
-	private void visit(Return ret)
+	private void visit(SemaStmtReturn ret)
 	{
 		preceededByTerminator = true;
 
@@ -167,7 +167,7 @@ public class StmtCodeGenerator implements IVisitor
 		}
 
 		String expr = ExprCodeGenerator.generate(ret.ret.unwrap(), builder, context, fcontext).unwrap();
-		Type type = ret.ret.unwrap().type().unwrap();
+		SemaType type = ret.ret.unwrap().type().unwrap();
 		String llvmType = TypeCodeGenerator.generate(type, context);
 		builder.append(String.format("\tret %s %s\n\n", llvmType, expr));
 	}

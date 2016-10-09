@@ -14,17 +14,17 @@
 
 package katana.analysis;
 
-import katana.ast.stmt.Local;
+import katana.ast.stmt.*;
 import katana.backend.PlatformContext;
-import katana.sema.FunctionScope;
-import katana.sema.decl.Decl;
-import katana.sema.decl.DefinedFunction;
-import katana.sema.expr.Assign;
-import katana.sema.expr.Expr;
-import katana.sema.expr.NamedLocal;
+import katana.sema.decl.SemaDecl;
+import katana.sema.decl.SemaDeclDefinedFunction;
+import katana.sema.expr.SemaExpr;
+import katana.sema.expr.SemaExprAssign;
+import katana.sema.expr.SemaExprNamedLocal;
+import katana.sema.scope.SemaScopeFunction;
 import katana.sema.stmt.*;
-import katana.sema.type.Builtin;
-import katana.sema.type.Type;
+import katana.sema.type.SemaType;
+import katana.sema.type.SemaTypeBuiltin;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
@@ -35,13 +35,13 @@ import java.util.function.Consumer;
 @SuppressWarnings("unused")
 public class StmtValidator implements IVisitor
 {
-	private IdentityHashMap<Goto, String> gotos = new IdentityHashMap<>();
-	private DefinedFunction function;
-	private FunctionScope scope;
+	private IdentityHashMap<SemaStmtGoto, String> gotos = new IdentityHashMap<>();
+	private SemaDeclDefinedFunction function;
+	private SemaScopeFunction scope;
 	private PlatformContext context;
-	private Consumer<Decl> validateDecl;
+	private Consumer<SemaDecl> validateDecl;
 
-	public StmtValidator(DefinedFunction function, FunctionScope scope, PlatformContext context, Consumer<Decl> validateDecl)
+	public StmtValidator(SemaDeclDefinedFunction function, SemaScopeFunction scope, PlatformContext context, Consumer<SemaDecl> validateDecl)
 	{
 		this.function = function;
 		this.scope = scope;
@@ -49,17 +49,17 @@ public class StmtValidator implements IVisitor
 		this.validateDecl = validateDecl;
 	}
 
-	public Stmt validate(katana.ast.stmt.Stmt stmt)
+	public SemaStmt validate(AstStmt stmt)
 	{
-		return (Stmt)stmt.accept(this);
+		return (SemaStmt)stmt.accept(this);
 	}
 
 	public void finalizeValidation()
 	{
-		for(Map.Entry<Goto, String> entry : gotos.entrySet())
+		for(Map.Entry<SemaStmtGoto, String> entry : gotos.entrySet())
 		{
 			String labelName = entry.getValue();
-			Label label = function.labels.get(labelName);
+			SemaStmtLabel label = function.labels.get(labelName);
 
 			if(label == null)
 				throw new RuntimeException("unknown label '@" + labelName + "'");
@@ -68,19 +68,19 @@ public class StmtValidator implements IVisitor
 		}
 	}
 
-	private Stmt visit(katana.ast.stmt.Compound compound)
+	private SemaStmt visit(AstStmtCompound compound)
 	{
-		Compound semaCompound = new Compound();
+		SemaStmtCompound semaCompound = new SemaStmtCompound();
 
-		for(katana.ast.stmt.Stmt stmt : compound.body)
+		for(AstStmt stmt : compound.body)
 			semaCompound.body.add(validate(stmt));
 
 		return semaCompound;
 	}
 
-	private Stmt visit(katana.ast.stmt.Label label)
+	private SemaStmt visit(AstStmtLabel label)
 	{
-		Label semaLabel = new Label(label.name);
+		SemaStmtLabel semaLabel = new SemaStmtLabel(label.name);
 
 		if(!function.defineLabel(semaLabel))
 			throw new RuntimeException("duplicate label name '" + label.name + "'");
@@ -88,51 +88,51 @@ public class StmtValidator implements IVisitor
 		return semaLabel;
 	}
 
-	private Stmt visit(katana.ast.stmt.Goto goto_)
+	private SemaStmt visit(AstStmtGoto goto_)
 	{
-		Goto semaGoto = new Goto(null);
+		SemaStmtGoto semaGoto = new SemaStmtGoto(null);
 		gotos.put(semaGoto, goto_.label);
 		return semaGoto;
 	}
 
-	private Stmt visit(katana.ast.stmt.If if_)
+	private SemaStmt visit(AstStmtIf if_)
 	{
-		Expr condition = ExprValidator.validate(if_.condition, scope, context, validateDecl, Maybe.some(Builtin.BOOL));
+		SemaExpr condition = ExprValidator.validate(if_.condition, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.BOOL));
 
-		if(condition.type().isNone() || !Type.same(condition.type().unwrap(), Builtin.BOOL))
+		if(condition.type().isNone() || !SemaType.same(condition.type().unwrap(), SemaTypeBuiltin.BOOL))
 			throw new RuntimeException("if requires condition of type bool");
 
-		return new If(if_.negated, condition, validate(if_.then));
+		return new SemaStmtIf(if_.negated, condition, validate(if_.then));
 	}
 
-	private Stmt visit(katana.ast.stmt.IfElse ifelse)
+	private SemaStmt visit(AstStmtIfElse ifelse)
 	{
-		Expr condition = ExprValidator.validate(ifelse.condition, scope, context, validateDecl, Maybe.some(Builtin.BOOL));
+		SemaExpr condition = ExprValidator.validate(ifelse.condition, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.BOOL));
 
-		if(condition.type().isNone() || !Type.same(condition.type().unwrap(), Builtin.BOOL))
+		if(condition.type().isNone() || !SemaType.same(condition.type().unwrap(), SemaTypeBuiltin.BOOL))
 			throw new RuntimeException("if requires condition of type bool");
 
-		return new IfElse(ifelse.negated, condition, validate(ifelse.then), validate(ifelse.else_));
+		return new SemaStmtIfElse(ifelse.negated, condition, validate(ifelse.then), validate(ifelse.else_));
 	}
 
-	private Stmt visit(katana.ast.stmt.Loop loop)
+	private SemaStmt visit(AstStmtLoop loop)
 	{
-		return new Loop(validate(loop.body));
+		return new SemaStmtLoop(validate(loop.body));
 	}
 
-	private Stmt visit(katana.ast.stmt.While while_)
+	private SemaStmt visit(AstStmtWhile while_)
 	{
-		Expr condition = ExprValidator.validate(while_.condition, scope, context, validateDecl, Maybe.some(Builtin.BOOL));
+		SemaExpr condition = ExprValidator.validate(while_.condition, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.BOOL));
 
-		if(condition.type().isNone() || !Type.same(condition.type().unwrap(), Builtin.BOOL))
+		if(condition.type().isNone() || !SemaType.same(condition.type().unwrap(), SemaTypeBuiltin.BOOL))
 			throw new RuntimeException("while requires condition of type bool");
 
-		return new While(while_.negated, condition, validate(while_.body));
+		return new SemaStmtWhile(while_.negated, condition, validate(while_.body));
 	}
 
-	private Stmt visit(katana.ast.stmt.Return return_)
+	private SemaStmt visit(AstStmtReturn return_)
 	{
-		Maybe<Expr> value = return_.value.map(retval -> ExprValidator.validate(retval, scope, context, validateDecl, function.ret));
+		Maybe<SemaExpr> value = return_.value.map(retval -> ExprValidator.validate(retval, scope, context, validateDecl, function.ret));
 
 		if(function.ret.isNone() && value.isSome())
 		{
@@ -148,7 +148,7 @@ public class StmtValidator implements IVisitor
 
 		if(function.ret.isSome() && value.isSome())
 		{
-			Maybe<Type> maybeType = value.unwrap().type();
+			Maybe<SemaType> maybeType = value.unwrap().type();
 
 			if(maybeType.isNone())
 			{
@@ -156,40 +156,40 @@ public class StmtValidator implements IVisitor
 				throw new RuntimeException(String.format(fmt, function.qualifiedName(), function.ret.unwrap()));
 			}
 
-			Type type = maybeType.unwrap();
-			Type typeDecayed = TypeHelper.decay(type);
+			SemaType type = maybeType.unwrap();
+			SemaType typeDecayed = TypeHelper.decay(type);
 
-			if(!Type.same(function.ret.unwrap(), typeDecayed))
+			if(!SemaType.same(function.ret.unwrap(), typeDecayed))
 			{
 				String fmt = "function %s returns value of type %s, %s given";
 				throw new RuntimeException(String.format(fmt, function.qualifiedName(), function.ret.unwrap(), typeDecayed));
 			}
 		}
 
-		return new Return(value);
+		return new SemaStmtReturn(value);
 	}
 
-	private Stmt visit(katana.ast.stmt.ExprStmt exprStmt)
+	private SemaStmt visit(AstStmtExprStmt exprStmt)
 	{
-		Expr expr = ExprValidator.validate(exprStmt.expr, scope, context, validateDecl, Maybe.none());
-		return new ExprStmt(expr);
+		SemaExpr expr = ExprValidator.validate(exprStmt.expr, scope, context, validateDecl, Maybe.none());
+		return new SemaStmtExprStmt(expr);
 	}
 
-	private Stmt visit(Local local)
+	private SemaStmt visit(AstStmtLocal local)
 	{
-		Maybe<Type> maybeDeclaredType = local.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
-		Maybe<Type> maybeDeclaredTypeDecayed = maybeDeclaredType.map(TypeHelper::decay);
-		Expr init = ExprValidator.validate(local.init, scope, context, validateDecl, maybeDeclaredTypeDecayed);
+		Maybe<SemaType> maybeDeclaredType = local.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
+		Maybe<SemaType> maybeDeclaredTypeDecayed = maybeDeclaredType.map(TypeHelper::decay);
+		SemaExpr init = ExprValidator.validate(local.init, scope, context, validateDecl, maybeDeclaredTypeDecayed);
 
 		if(init.type().isNone())
 			throw new RuntimeException(String.format("initializer for local '%s' yields void", local.name));
 
-		Type initType = init.type().unwrap();
-		Type initTypeDecayed = TypeHelper.decay(initType);
-		Type localType = maybeDeclaredType.or(initTypeDecayed);
-		Type localTypeDecayed = TypeHelper.decay(localType);
+		SemaType initType = init.type().unwrap();
+		SemaType initTypeDecayed = TypeHelper.decay(initType);
+		SemaType localType = maybeDeclaredType.or(initTypeDecayed);
+		SemaType localTypeDecayed = TypeHelper.decay(localType);
 
-		if(!Type.same(localTypeDecayed, initTypeDecayed))
+		if(!SemaType.same(localTypeDecayed, initTypeDecayed))
 		{
 			String fmt = "initializer for local '%s' has wrong type: expected '%s', got '%s'";
 			throw new RuntimeException(String.format(fmt, local.name, localTypeDecayed, initTypeDecayed));
@@ -198,9 +198,9 @@ public class StmtValidator implements IVisitor
 		if(!function.defineLocal(local.name, localType))
 			throw new RuntimeException(String.format("redefinition of local '%s'", local.name));
 
-		DefinedFunction.Local semaLocal = function.localsByName.get(local.name);
-		NamedLocal localref = new NamedLocal(semaLocal);
+		SemaDeclDefinedFunction.Local semaLocal = function.localsByName.get(local.name);
+		SemaExprNamedLocal localref = new SemaExprNamedLocal(semaLocal);
 		localref.useAsLValue(true);
-		return new ExprStmt(new Assign(localref, init));
+		return new SemaStmtExprStmt(new SemaExprAssign(localref, init));
 	}
 }

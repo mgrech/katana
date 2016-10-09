@@ -14,8 +14,8 @@
 
 package katana.parser;
 
-import katana.ast.File;
-import katana.ast.decl.Decl;
+import katana.ast.AstFile;
+import katana.ast.decl.AstDecl;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
 
@@ -27,7 +27,7 @@ import java.util.ArrayList;
 
 public class FileParser
 {
-	public static File parse(Path path) throws IOException
+	public static AstFile parse(Path path) throws IOException
 	{
 		byte[] data = Files.readAllBytes(path);
 		int[] codepoints = new String(data, StandardCharsets.UTF_8).codePoints().toArray();
@@ -35,11 +35,11 @@ public class FileParser
 		Scanner scanner = new Scanner(codepoints);
 		scanner.advance();
 
-		ArrayList<Decl> decls = new ArrayList<>();
+		ArrayList<AstDecl> decls = new ArrayList<>();
 
 		while(scanner.state().token.type != Token.Type.END)
 			decls.add(DeclParser.parse(scanner));
 
-		return new File(path, decls);
+		return new AstFile(path, decls);
 	}
 }

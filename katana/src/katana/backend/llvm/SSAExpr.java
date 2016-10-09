@@ -14,11 +14,11 @@
 
 package katana.backend.llvm;
 
-import katana.sema.expr.Expr;
-import katana.sema.type.Type;
+import katana.sema.expr.SemaExpr;
+import katana.sema.type.SemaType;
 import katana.utils.Maybe;
 
-public class SSAExpr extends Expr
+public class SSAExpr extends SemaExpr
 {
 	public SSAExpr(String name)
 	{
@@ -26,7 +26,7 @@ public class SSAExpr extends Expr
 	}
 
 	@Override
-	public Maybe<Type> type()
+	public Maybe<SemaType> type()
 	{
 		return null;
 	}

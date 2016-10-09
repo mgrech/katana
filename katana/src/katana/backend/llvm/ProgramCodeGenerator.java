@@ -16,30 +16,30 @@ package katana.backend.llvm;
 
 import katana.BuiltinType;
 import katana.backend.PlatformContext;
-import katana.sema.Module;
-import katana.sema.Program;
-import katana.sema.decl.Decl;
-import katana.sema.decl.Function;
-import katana.sema.type.Builtin;
-import katana.sema.type.Type;
+import katana.sema.SemaModule;
+import katana.sema.SemaProgram;
+import katana.sema.decl.SemaDecl;
+import katana.sema.decl.SemaDeclFunction;
+import katana.sema.type.SemaType;
+import katana.sema.type.SemaTypeBuiltin;
 import katana.utils.Maybe;
 
 public class ProgramCodeGenerator
 {
-	private static void generate(DeclCodeGenerator generator, Module module)
+	private static void generate(DeclCodeGenerator generator, SemaModule module)
 	{
-		for(Module child : module.children().values())
+		for(SemaModule child : module.children().values())
 			generate(generator, child);
 
-		for(Decl decl : module.decls().values())
+		for(SemaDecl decl : module.decls().values())
 			generator.generate(decl);
 	}
 
-	private static void generateMainWrapper(StringBuilder builder, Decl func)
+	private static void generateMainWrapper(StringBuilder builder, SemaDecl func)
 	{
-		Maybe<Type> ret = ((Function)func).ret;
+		Maybe<SemaType> ret = ((SemaDeclFunction)func).ret;
 
-		if(ret.isSome() && (!(ret.unwrap() instanceof Builtin) || ((Builtin)ret.unwrap()).which != BuiltinType.INT32))
+		if(ret.isSome() && (!(ret.unwrap() instanceof SemaTypeBuiltin) || ((SemaTypeBuiltin)ret.unwrap()).which != BuiltinType.INT32))
 			throw new RuntimeException("main function must return int32 or nothing");
 
 		builder.append("define i32 @main()\n{\n");
@@ -59,7 +59,7 @@ public class ProgramCodeGenerator
 		builder.append("}\n");
 	}
 
-	public static String generate(Program program, PlatformContext context, Maybe<Decl> main)
+	public static String generate(SemaProgram program, PlatformContext context, Maybe<SemaDecl> main)
 	{
 		StringBuilder builder = new StringBuilder();
 		generate(new DeclCodeGenerator(builder, context), program.root);

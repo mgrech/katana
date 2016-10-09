@@ -14,12 +14,12 @@
 
 package katana.parser;
 
-import katana.ast.Path;
+import katana.ast.AstPath;
 import katana.ast.decl.*;
-import katana.ast.expr.Expr;
-import katana.ast.expr.Literal;
-import katana.ast.stmt.Stmt;
-import katana.ast.type.Type;
+import katana.ast.expr.AstExpr;
+import katana.ast.expr.AstExprLiteral;
+import katana.ast.stmt.AstStmt;
+import katana.ast.type.AstType;
 import katana.scanner.Scanner;
 import katana.scanner.ScannerState;
 import katana.scanner.Token;
@@ -29,7 +29,7 @@ import java.util.ArrayList;
 
 public class DeclParser
 {
-	public static Decl parse(Scanner scanner)
+	public static AstDecl parse(Scanner scanner)
 	{
 		boolean exported = ParseTools.option(scanner, Token.Type.DECL_EXPORT, true);
 		boolean opaque = ParseTools.option(scanner, Token.Type.TYPE_OPAQUE, true);
@@ -76,14 +76,14 @@ public class DeclParser
 		throw new AssertionError("unreachable");
 	}
 
-	private static Decl parseFunction(Scanner scanner, boolean exported, boolean opaque, Maybe<String> extern)
+	private static AstDecl parseFunction(Scanner scanner, boolean exported, boolean opaque, Maybe<String> extern)
 	{
 		scanner.advance();
 
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
-		ArrayList<Function.Param> params = parseParameterList(scanner);
+		ArrayList<AstDeclFunction.Param> params = parseParameterList(scanner);
 
-		Maybe<Type> ret = Maybe.none();
+		Maybe<AstType> ret = Maybe.none();
 
 		if(ParseTools.option(scanner, Token.Type.PUNCT_RET, true))
 			ret = Maybe.some(TypeParser.parse(scanner));
@@ -91,18 +91,18 @@ public class DeclParser
 		if(extern.isSome())
 		{
 			ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-			return new ExternFunction(exported, opaque, extern.unwrap(), name, params, ret);
+			return new AstDeclExternFunction(exported, opaque, extern.unwrap(), name, params, ret);
 		}
 
-		ArrayList<Stmt> body = parseBody(scanner);
-		return new DefinedFunction(exported, opaque, name, params, ret, body);
+		ArrayList<AstStmt> body = parseBody(scanner);
+		return new AstDeclDefinedFunction(exported, opaque, name, params, ret, body);
 	}
 
-	private static ArrayList<Function.Param> parseParameterList(Scanner scanner)
+	private static ArrayList<AstDeclFunction.Param> parseParameterList(Scanner scanner)
 	{
 		ParseTools.expect(scanner, Token.Type.PUNCT_LPAREN, true);
 
-		ArrayList<Function.Param> params = new ArrayList<>();
+		ArrayList<AstDeclFunction.Param> params = new ArrayList<>();
 
 		if(!ParseTools.option(scanner, Token.Type.PUNCT_RPAREN, true))
 		{
@@ -113,18 +113,18 @@ public class DeclParser
 		return params;
 	}
 
-	private static Function.Param parseParameter(Scanner scanner)
+	private static AstDeclFunction.Param parseParameter(Scanner scanner)
 	{
-		Type type = TypeParser.parse(scanner);
+		AstType type = TypeParser.parse(scanner);
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
-		return new Function.Param(type, name);
+		return new AstDeclFunction.Param(type, name);
 	}
 
-	private static ArrayList<Stmt> parseBody(Scanner scanner)
+	private static ArrayList<AstStmt> parseBody(Scanner scanner)
 	{
 		ParseTools.expect(scanner, Token.Type.PUNCT_LBRACE, true);
 
-		ArrayList<Stmt> body = new ArrayList<>();
+		ArrayList<AstStmt> body = new ArrayList<>();
 
 		while(!ParseTools.option(scanner, Token.Type.PUNCT_RBRACE, false))
 			body.add(StmtParser.parse(scanner));
@@ -134,32 +134,32 @@ public class DeclParser
 		return body;
 	}
 
-	private static Data parseData(Scanner scanner, boolean exported, boolean opaque)
+	private static AstDeclData parseData(Scanner scanner, boolean exported, boolean opaque)
 	{
 		scanner.advance();
 
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
 		ParseTools.expect(scanner, Token.Type.PUNCT_LBRACE, true);
 
-		ArrayList<Data.Field> fields = new ArrayList<>();
+		ArrayList<AstDeclData.Field> fields = new ArrayList<>();
 
 		while(!ParseTools.option(scanner, Token.Type.PUNCT_RBRACE, false))
 			fields.add(parseField(scanner));
 
 		ParseTools.expect(scanner, Token.Type.PUNCT_RBRACE, true);
 
-		return new Data(exported, opaque, name, fields);
+		return new AstDeclData(exported, opaque, name, fields);
 	}
 
-	private static Data.Field parseField(Scanner scanner)
+	private static AstDeclData.Field parseField(Scanner scanner)
 	{
-		Type type = TypeParser.parse(scanner);
+		AstType type = TypeParser.parse(scanner);
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-		return new Data.Field(type, name);
+		return new AstDeclData.Field(type, name);
 	}
 
-	private static Global parseGlobal(Scanner scanner, boolean exported, boolean opaque)
+	private static AstDeclGlobal parseGlobal(Scanner scanner, boolean exported, boolean opaque)
 	{
 		scanner.advance();
 
@@ -171,63 +171,63 @@ public class DeclParser
 
 			if(ParseTools.option(scanner, Token.Type.PUNCT_ASSIGN, true))
 			{
-				Expr init = ExprParser.parse(scanner);
+				AstExpr init = ExprParser.parse(scanner);
 
-				if(!(init instanceof Literal))
+				if(!(init instanceof AstExprLiteral))
 					throw new RuntimeException("global initializer must be literal");
 
 				ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-				return new Global(exported, opaque, Maybe.none(), name, (Literal)init);
+				return new AstDeclGlobal(exported, opaque, Maybe.none(), name, (AstExprLiteral)init);
 			}
 		}
 
 		scanner.backtrack(state);
 
-		Type type = TypeParser.parse(scanner);
+		AstType type = TypeParser.parse(scanner);
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
 		ParseTools.expect(scanner, Token.Type.PUNCT_ASSIGN, true);
-		Expr init = ExprParser.parse(scanner);
+		AstExpr init = ExprParser.parse(scanner);
 
-		if(!(init instanceof Literal))
+		if(!(init instanceof AstExprLiteral))
 			throw new RuntimeException("global initializer must be literal");
 
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-		return new Global(exported, opaque, Maybe.some(type), name, (Literal)init);
+		return new AstDeclGlobal(exported, opaque, Maybe.some(type), name, (AstExprLiteral)init);
 	}
 
-	private static Decl parseImport(Scanner scanner)
+	private static AstDecl parseImport(Scanner scanner)
 	{
 		scanner.advance();
 
-		Path path = ParseTools.path(scanner);
+		AstPath path = ParseTools.path(scanner);
 
 		if(ParseTools.option(scanner, Token.Type.IDENT, false))
 		{
 			String rename = ParseTools.consume(scanner).value;
 			ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-			return new RenamedImport(path, rename);
+			return new AstDeclRenamedImport(path, rename);
 		}
 
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-		return new Import(path);
+		return new AstDeclImport(path);
 	}
 
-	private static Module parseModule(Scanner scanner)
+	private static AstDeclModule parseModule(Scanner scanner)
 	{
 		scanner.advance();
 
-		Path path = ParseTools.path(scanner);
+		AstPath path = ParseTools.path(scanner);
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-		return new Module(path);
+		return new AstDeclModule(path);
 	}
 
-	private static TypeAlias parseTypeAlias(Scanner scanner, boolean exported)
+	private static AstDeclTypeAlias parseTypeAlias(Scanner scanner, boolean exported)
 	{
 		scanner.advance();
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
 		ParseTools.expect(scanner, Token.Type.PUNCT_ASSIGN, true);
-		Type type = TypeParser.parse(scanner);
+		AstType type = TypeParser.parse(scanner);
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-		return new TypeAlias(exported, name, type);
+		return new AstDeclTypeAlias(exported, name, type);
 	}
 }

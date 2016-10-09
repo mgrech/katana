@@ -14,12 +14,12 @@
 
 package katana.backend.llvm;
 
+import katana.BuiltinFunc;
 import katana.backend.PlatformContext;
-import katana.sema.BuiltinFunc;
-import katana.sema.expr.BuiltinCall;
-import katana.sema.expr.Expr;
-import katana.sema.type.Builtin;
-import katana.sema.type.Type;
+import katana.sema.expr.SemaExpr;
+import katana.sema.expr.SemaExprBuiltinCall;
+import katana.sema.type.SemaType;
+import katana.sema.type.SemaTypeBuiltin;
 import katana.utils.Maybe;
 
 import java.util.List;
@@ -40,27 +40,27 @@ public class PointerIntegerConversion extends BuiltinFunc
 	}
 
 	@Override
-	public Maybe<Type> validateCall(List<Type> args)
+	public Maybe<SemaType> validateCall(List<SemaType> args)
 	{
 		if(args.size() != 1)
 			throw new RuntimeException(String.format("builtin %s expects exactly 1 argument", name));
 
-		Type arg = args.get(0);
+		SemaType arg = args.get(0);
 
 		switch(which)
 		{
 		case PTR2PINT:
 		case PTR2UPINT:
-			if(!Type.same(arg, Builtin.PTR))
+			if(!SemaType.same(arg, SemaTypeBuiltin.PTR))
 				throw new RuntimeException(String.format("builtin %s expects argument of type ptr", name));
 
-			return Maybe.some(which == Which.PTR2PINT ? Builtin.PINT : Builtin.UPINT);
+			return Maybe.some(which == Which.PTR2PINT ? SemaTypeBuiltin.PINT : SemaTypeBuiltin.UPINT);
 
 		case INT2PTR:
-			if(!Type.same(arg, Builtin.UPINT) && !Type.same(arg, Builtin.PINT))
+			if(!SemaType.same(arg, SemaTypeBuiltin.UPINT) && !SemaType.same(arg, SemaTypeBuiltin.PINT))
 				throw new RuntimeException(String.format("builtin %s expects argument of type pint or upint", name));
 
-			return Maybe.some(Builtin.PTR);
+			return Maybe.some(SemaTypeBuiltin.PTR);
 
 		default: break;
 		}
@@ -69,7 +69,7 @@ public class PointerIntegerConversion extends BuiltinFunc
 	}
 
 	@Override
-	public Maybe<String> generateCall(BuiltinCall call, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
+	public Maybe<String> generateCall(SemaExprBuiltinCall call, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
 	{
 		switch(which)
 		{
@@ -77,7 +77,7 @@ public class PointerIntegerConversion extends BuiltinFunc
 		case PTR2UPINT:
 			{
 				String argSSA = ExprCodeGenerator.generate(call.args.get(0), builder, context, fcontext).unwrap();
-				String resultTypeString = TypeCodeGenerator.generate(which == Which.PTR2PINT ? Builtin.PINT : Builtin.UPINT, context);
+				String resultTypeString = TypeCodeGenerator.generate(which == Which.PTR2PINT ? SemaTypeBuiltin.PINT : SemaTypeBuiltin.UPINT, context);
 				String resultSSA = fcontext.allocateSSA();
 				builder.append(String.format("\t%s = ptrtoint i8* %s to %s\n", resultSSA, argSSA, resultTypeString));
 				return Maybe.some(resultSSA);
@@ -85,7 +85,7 @@ public class PointerIntegerConversion extends BuiltinFunc
 
 		case INT2PTR:
 			{
-				Expr arg = call.args.get(0);
+				SemaExpr arg = call.args.get(0);
 				String argSSA = ExprCodeGenerator.generate(arg, builder, context, fcontext).unwrap();
 				String argTypeString = TypeCodeGenerator.generate(arg.type().unwrap(), context);
 				String resultSSA = fcontext.allocateSSA();

@@ -14,7 +14,7 @@
 
 package katana.utils;
 
-import katana.compiler.commands.CHeader;
+import katana.cli.cmd.CmdCheader;
 
 import java.io.InputStream;
 import java.util.Scanner;
@@ -23,7 +23,7 @@ public class ResourceLoader
 {
 	public static byte[] load(String location)
 	{
-		InputStream stream = CHeader.class.getClassLoader().getResourceAsStream(location);
+		InputStream stream = CmdCheader.class.getClassLoader().getResourceAsStream(location);
 		Scanner scanner = new Scanner(stream).useDelimiter("\\A");
 		return scanner.hasNext() ? scanner.next().getBytes() : new byte[0];
 	}

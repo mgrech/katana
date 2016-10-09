@@ -14,59 +14,59 @@
 
 package katana.analysis;
 
-import katana.sema.type.Array;
-import katana.sema.type.Const;
-import katana.sema.type.Function;
-import katana.sema.type.Type;
+import katana.sema.type.SemaType;
+import katana.sema.type.SemaTypeArray;
+import katana.sema.type.SemaTypeConst;
+import katana.sema.type.SemaTypeFunction;
 
 public class TypeHelper
 {
-	public static boolean isConst(Type type)
+	public static boolean isConst(SemaType type)
 	{
-		if(type instanceof Array)
-			return isConst(((Array)type).type);
+		if(type instanceof SemaTypeArray)
+			return isConst(((SemaTypeArray)type).type);
 
-		return type instanceof Const;
+		return type instanceof SemaTypeConst;
 	}
 
-	public static Type addConst(Type type)
+	public static SemaType addConst(SemaType type)
 	{
-		if(type instanceof Function)
+		if(type instanceof SemaTypeFunction)
 			throw new AssertionError("const added to function type");
 
 		if(isConst(type))
 			return type;
 
-		if(type instanceof Array)
+		if(type instanceof SemaTypeArray)
 		{
-			Array array = (Array)type;
-			return new Array(array.length, addConst(array.type));
+			SemaTypeArray array = (SemaTypeArray)type;
+			return new SemaTypeArray(array.length, addConst(array.type));
 		}
 
-		return new Const(type);
+		return new SemaTypeConst(type);
 	}
 
-	public static Type removeConst(Type type)
+	public static SemaType removeConst(SemaType type)
 	{
-		if(type instanceof Const)
-			return ((Const)type).type;
+		if(type instanceof SemaTypeConst)
+			return ((SemaTypeConst)type).type;
 
-		if(type instanceof Array)
+		if(type instanceof SemaTypeArray)
 		{
-			Array array = (Array)type;
-			return new Array(array.length, removeConst(array.type));
+			SemaTypeArray array = (SemaTypeArray)type;
+			return new SemaTypeArray(array.length, removeConst(array.type));
 		}
 
 		return type;
 	}
 
-	public static Type decay(Type type)
+	public static SemaType decay(SemaType type)
 	{
 		return removeConst(type);
 	}
 
-	public static boolean decayedEqual(Type a, Type b)
+	public static boolean decayedEqual(SemaType a, SemaType b)
 	{
-		return Type.same(decay(a), decay(b));
+		return SemaType.same(decay(a), decay(b));
 	}
 }

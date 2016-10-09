@@ -15,11 +15,11 @@
 package katana.backend.llvm;
 
 import katana.analysis.TypeHelper;
-import katana.ast.Path;
+import katana.ast.AstPath;
 import katana.backend.PlatformContext;
 import katana.sema.decl.*;
-import katana.sema.stmt.Stmt;
-import katana.sema.type.Type;
+import katana.sema.stmt.SemaStmt;
+import katana.sema.type.SemaType;
 import katana.visitor.IVisitor;
 
 import java.math.BigInteger;
@@ -38,24 +38,24 @@ public class DeclCodeGenerator implements IVisitor
 		this.context = context;
 	}
 
-	public void generate(Decl decl)
+	public void generate(SemaDecl decl)
 	{
 		decl.accept(this);
 	}
 
-	private static String qualifiedName(Decl decl)
+	private static String qualifiedName(SemaDecl decl)
 	{
-		Path modulePath = decl.module().path();
+		AstPath modulePath = decl.module().path();
 		return modulePath.toString() + "." + decl.name();
 	}
 
-	private void visit(Data data)
+	private void visit(SemaDeclData data)
 	{
 		builder.append('%');
 		builder.append(qualifiedName(data));
 		builder.append(" = type { ");
 
-		List<Data.Field> fields = data.fieldsByIndex();
+		List<SemaDeclData.Field> fields = data.fieldsByIndex();
 
 		if(!fields.isEmpty())
 		{
@@ -71,7 +71,7 @@ public class DeclCodeGenerator implements IVisitor
 		builder.append(" }\n");
 	}
 
-	private void generateDefinedFunction(DefinedFunction function)
+	private void generateDefinedFunction(SemaDeclDefinedFunction function)
 	{
 		builder.append("define private ");
 		builder.append(function.ret.map(type -> TypeCodeGenerator.generate(type, context)).or("void"));
@@ -81,7 +81,7 @@ public class DeclCodeGenerator implements IVisitor
 
 		if(!function.params.isEmpty())
 		{
-			Function.Param first = function.params.get(0);
+			SemaDeclFunction.Param first = function.params.get(0);
 
 			builder.append(TypeCodeGenerator.generate(first.type, context));
 			builder.append(" %p$");
@@ -91,7 +91,7 @@ public class DeclCodeGenerator implements IVisitor
 			{
 				builder.append(", ");
 
-				Function.Param param = function.params.get(i);
+				SemaDeclFunction.Param param = function.params.get(i);
 				builder.append(TypeCodeGenerator.generate(param.type, context));
 				builder.append(" %p$");
 				builder.append(param.name);
@@ -100,7 +100,7 @@ public class DeclCodeGenerator implements IVisitor
 
 		builder.append(")\n{\n");
 
-		for(Function.Param param : function.params)
+		for(SemaDeclFunction.Param param : function.params)
 		{
 			String typeString = TypeCodeGenerator.generate(param.type, context);
 			BigInteger alignment = param.type.alignof(context);
@@ -113,9 +113,9 @@ public class DeclCodeGenerator implements IVisitor
 
 		FunctionContext fcontext = new FunctionContext();
 
-		for(Map.Entry<String, DefinedFunction.Local> entry : function.localsByName.entrySet())
+		for(Map.Entry<String, SemaDeclDefinedFunction.Local> entry : function.localsByName.entrySet())
 		{
-			Type type = entry.getValue().type;
+			SemaType type = entry.getValue().type;
 			String llvmType = TypeCodeGenerator.generate(type, context);
 			BigInteger align = type.alignof(context);
 			builder.append(String.format("\t%%%s = alloca %s, align %s\n", entry.getKey(), llvmType, align));
@@ -126,7 +126,7 @@ public class DeclCodeGenerator implements IVisitor
 
 		StmtCodeGenerator stmtCodeGen = new StmtCodeGenerator(builder, context, fcontext);
 
-		for(Stmt stmt : function.body)
+		for(SemaStmt stmt : function.body)
 			stmtCodeGen.generate(stmt);
 
 		stmtCodeGen.finish(function);
@@ -134,7 +134,7 @@ public class DeclCodeGenerator implements IVisitor
 		builder.append("}\n");
 	}
 
-	private void generateExternFunction(ExternFunction externFunction)
+	private void generateExternFunction(SemaDeclExternFunction externFunction)
 	{
 		String retTypeString = externFunction.ret.map(type -> TypeCodeGenerator.generate(type, context)).or("void");
 		builder.append(String.format("declare %s @%s(", retTypeString, externFunction.externName));
@@ -154,22 +154,22 @@ public class DeclCodeGenerator implements IVisitor
 		builder.append(")\n");
 	}
 
-	private void visit(OverloadSet set)
+	private void visit(SemaDeclOverloadSet set)
 	{
-		for(Function overload : set.overloads)
+		for(SemaDeclFunction overload : set.overloads)
 		{
-			if(overload instanceof DefinedFunction)
-				generateDefinedFunction((DefinedFunction)overload);
+			if(overload instanceof SemaDeclDefinedFunction)
+				generateDefinedFunction((SemaDeclDefinedFunction)overload);
 
-			else if(overload instanceof ExternFunction)
-				generateExternFunction((ExternFunction)overload);
+			else if(overload instanceof SemaDeclExternFunction)
+				generateExternFunction((SemaDeclExternFunction)overload);
 
 			else
 				throw new AssertionError("unreachable");
 		}
 	}
 
-	private void visit(Global global)
+	private void visit(SemaDeclGlobal global)
 	{
 		String qualifiedName = qualifiedName(global);
 		String typeString = TypeCodeGenerator.generate(global.type, context);
@@ -178,6 +178,6 @@ public class DeclCodeGenerator implements IVisitor
 		builder.append(String.format("@%s = private %s %s %s\n", qualifiedName, kind, typeString, initializerString));
 	}
 
-	private void visit(TypeAlias alias)
+	private void visit(SemaDeclTypeAlias alias)
 	{}
 }

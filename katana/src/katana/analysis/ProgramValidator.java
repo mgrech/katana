@@ -14,11 +14,12 @@
 
 package katana.analysis;
 
-import katana.ast.File;
+import katana.ast.AstFile;
+import katana.ast.decl.AstDecl;
 import katana.backend.PlatformContext;
 import katana.parser.FileParser;
-import katana.sema.Program;
-import katana.sema.decl.Decl;
+import katana.sema.SemaProgram;
+import katana.sema.decl.SemaDecl;
 import katana.utils.Maybe;
 
 import java.io.IOException;
@@ -29,10 +30,10 @@ import java.util.List;
 
 public class ProgramValidator
 {
-	private IdentityHashMap<Decl, FileValidator> validatorsByDecl = new IdentityHashMap<>();
-	private IdentityHashMap<Decl, ValidationState> statesByDecl = new IdentityHashMap<>();
+	private IdentityHashMap<SemaDecl, FileValidator> validatorsByDecl = new IdentityHashMap<>();
+	private IdentityHashMap<SemaDecl, ValidationState> statesByDecl = new IdentityHashMap<>();
 
-	private void doValidate(Decl decl)
+	private void doValidate(SemaDecl decl)
 	{
 		ValidationState state = statesByDecl.get(decl);
 
@@ -61,21 +62,21 @@ public class ProgramValidator
 		}
 	}
 
-	private Program doValidate(List<Path> filePaths, PlatformContext context) throws IOException
+	private SemaProgram doValidate(List<Path> filePaths, PlatformContext context) throws IOException
 	{
-		Program program = new Program();
+		SemaProgram program = new SemaProgram();
 
 		List<FileValidator> validators = new ArrayList<>();
 
 		for(Path filePath : filePaths)
 		{
-			File file = FileParser.parse(filePath);
+			AstFile file = FileParser.parse(filePath);
 			FileValidator validator = new FileValidator(context, program, this::doValidate);
 			validators.add(validator);
 
-			for(katana.ast.decl.Decl decl : file.decls)
+			for(AstDecl decl : file.decls)
 			{
-				Maybe<Decl> semaDecl = validator.register(decl);
+				Maybe<SemaDecl> semaDecl = validator.register(decl);
 
 				if(semaDecl.isSome())
 					validatorsByDecl.put(semaDecl.unwrap(), validator);
@@ -85,7 +86,7 @@ public class ProgramValidator
 		for(FileValidator validator : validators)
 			validator.validateImports();
 
-		for(Decl decl : validatorsByDecl.keySet())
+		for(SemaDecl decl : validatorsByDecl.keySet())
 			doValidate(decl);
 
 		for(FileValidator validator : validators)
@@ -94,7 +95,7 @@ public class ProgramValidator
 		return program;
 	}
 
-	public static Program validate(List<Path> filePaths, PlatformContext context) throws IOException
+	public static SemaProgram validate(List<Path> filePaths, PlatformContext context) throws IOException
 	{
 		return new ProgramValidator().doValidate(filePaths, context);
 	}

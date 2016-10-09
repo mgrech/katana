@@ -24,37 +24,37 @@ public class TypeMangler implements IVisitor
 
 	private TypeMangler() {}
 
-	public static String mangle(Type type)
+	public static String mangle(SemaType type)
 	{
 		return (String)type.accept(MANGLER);
 	}
 
-	private String visit(Builtin builtin)
+	private String visit(SemaTypeBuiltin builtin)
 	{
 		return builtin.toString();
 	}
 
-	private String visit(Const const_)
+	private String visit(SemaTypeConst const_)
 	{
 		return String.format("const-%s", mangle(const_.type));
 	}
 
-	private String visit(Array array)
+	private String visit(SemaTypeArray array)
 	{
 		return String.format("array-%s-%s", array.length, mangle(array.type));
 	}
 
-	private String visit(Opaque opaque)
+	private String visit(SemaTypeOpaque opaque)
 	{
 		return String.format("opaque-%s-%s", opaque.size, opaque.alignment);
 	}
 
-	private String visit(UserDefined user)
+	private String visit(SemaTypeUserDefined user)
 	{
 		return user.data.qualifiedName().toString();
 	}
 
-	private String visit(Function function)
+	private String visit(SemaTypeFunction function)
 	{
 		throw new AssertionError("unreachable");
 	}

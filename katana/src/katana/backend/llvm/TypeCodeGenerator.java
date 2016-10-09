@@ -30,13 +30,13 @@ public class TypeCodeGenerator implements IVisitor
 		this.context = context;
 	}
 
-	public static String generate(Type type, PlatformContext context)
+	public static String generate(SemaType type, PlatformContext context)
 	{
 		TypeCodeGenerator visitor = new TypeCodeGenerator(context);
 		return (String)type.accept(visitor);
 	}
 
-	private String visit(Builtin type)
+	private String visit(SemaTypeBuiltin type)
 	{
 		switch(type.which)
 		{
@@ -65,12 +65,12 @@ public class TypeCodeGenerator implements IVisitor
 		throw new AssertionError("unreachable");
 	}
 
-	private String visit(Opaque type)
+	private String visit(SemaTypeOpaque type)
 	{
 		return String.format("[%s x i8]", type.sizeof(context));
 	}
 
-	private String visit(Function type)
+	private String visit(SemaTypeFunction type)
 	{
 		String ret = type.ret.isSome() ? TypeCodeGenerator.generate(type.ret.get(), context) : "void";
 
@@ -90,17 +90,17 @@ public class TypeCodeGenerator implements IVisitor
 		return String.format("%s(%s)", ret, params.toString());
 	}
 
-	private String visit(UserDefined type)
+	private String visit(SemaTypeUserDefined type)
 	{
 		return '%' + type.data.qualifiedName().toString();
 	}
 
-	private String visit(Array type)
+	private String visit(SemaTypeArray type)
 	{
 		return String.format("[%s x %s]", type.length, TypeCodeGenerator.generate(type.type, context));
 	}
 
-	private String visit(Const type)
+	private String visit(SemaTypeConst type)
 	{
 		return generate(type.type, context);
 	}

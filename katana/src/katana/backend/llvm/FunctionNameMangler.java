@@ -14,15 +14,15 @@
 
 package katana.backend.llvm;
 
-import katana.sema.decl.Function;
+import katana.sema.decl.SemaDeclFunction;
 
 public class FunctionNameMangler
 {
-	public static String mangle(Function function)
+	public static String mangle(SemaDeclFunction function)
 	{
 		StringBuilder builder = new StringBuilder();
 
-		for(Function.Param param : function.params)
+		for(SemaDeclFunction.Param param : function.params)
 		{
 			builder.append('$');
 			builder.append(TypeMangler.mangle(param.type));

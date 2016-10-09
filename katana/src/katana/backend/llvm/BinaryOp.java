@@ -14,19 +14,19 @@
 
 package katana.backend.llvm;
 
+import katana.BuiltinFunc;
 import katana.BuiltinType;
 import katana.backend.PlatformContext;
-import katana.sema.BuiltinFunc;
-import katana.sema.expr.BuiltinCall;
-import katana.sema.type.Builtin;
-import katana.sema.type.Type;
+import katana.sema.expr.SemaExprBuiltinCall;
+import katana.sema.type.SemaType;
+import katana.sema.type.SemaTypeBuiltin;
 import katana.utils.Maybe;
 
 import java.util.List;
 
 public class BinaryOp extends BuiltinFunc
 {
-	public BinaryOp(String name, Maybe<String> boolInstr, Maybe<String> sintInstr, Maybe<String> uintInstr, Maybe<String> floatInstr, Maybe<String> ptrInstr, Maybe<Type> ret)
+	public BinaryOp(String name, Maybe<String> boolInstr, Maybe<String> sintInstr, Maybe<String> uintInstr, Maybe<String> floatInstr, Maybe<String> ptrInstr, Maybe<SemaType> ret)
 	{
 		super(name);
 		this.boolInstr = boolInstr;
@@ -76,24 +76,24 @@ public class BinaryOp extends BuiltinFunc
 	}
 
 	@Override
-	public Maybe<Type> validateCall(List<Type> args)
+	public Maybe<SemaType> validateCall(List<SemaType> args)
 	{
 		if(args.size() != 2)
 			throw new RuntimeException(String.format("builtin %s expects 2 arguments", name));
 
-		Type argType = args.get(0);
+		SemaType argType = args.get(0);
 
-		if(!Type.same(argType, args.get(1)))
+		if(!SemaType.same(argType, args.get(1)))
 			throw new RuntimeException(String.format("arguments to builtin %s must be of same type", name));
 
-		if(!(argType instanceof Builtin))
+		if(!(argType instanceof SemaTypeBuiltin))
 			throw new RuntimeException(String.format("builtin %s requires arguments of builtin type", name));
 
-		checkTypeSupport(((Builtin)argType).which);
+		checkTypeSupport(((SemaTypeBuiltin)argType).which);
 		return Maybe.some(ret.or(argType));
 	}
 
-	private String instrForType(Builtin type)
+	private String instrForType(SemaTypeBuiltin type)
 	{
 		switch(type.which.kind)
 		{
@@ -109,9 +109,9 @@ public class BinaryOp extends BuiltinFunc
 	}
 
 	@Override
-	public Maybe<String> generateCall(BuiltinCall call, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
+	public Maybe<String> generateCall(SemaExprBuiltinCall call, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
 	{
-		Builtin type = (Builtin)call.args.get(0).type().unwrap();
+		SemaTypeBuiltin type = (SemaTypeBuiltin)call.args.get(0).type().unwrap();
 		String typeString = TypeCodeGenerator.generate(type, context);
 		String leftSSA = ExprCodeGenerator.generate(call.args.get(0), builder, context, fcontext).unwrap();
 		String rightSSA = ExprCodeGenerator.generate(call.args.get(1), builder, context, fcontext).unwrap();
@@ -126,5 +126,5 @@ public class BinaryOp extends BuiltinFunc
 	private Maybe<String> uintInstr;
 	private Maybe<String> floatInstr;
 	private Maybe<String> ptrInstr;
-	private Maybe<Type> ret;
+	private Maybe<SemaType> ret;
 }

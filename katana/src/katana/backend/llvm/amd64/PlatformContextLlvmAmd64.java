@@ -16,7 +16,7 @@ package katana.backend.llvm.amd64;
 
 import katana.BuiltinType;
 import katana.backend.llvm.PlatformContextLlvm;
-import katana.sema.decl.Data;
+import katana.sema.decl.SemaDeclData;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -68,15 +68,15 @@ public class PlatformContextLlvmAmd64 extends PlatformContextLlvm
 	}
 
 	@Override
-	public BigInteger sizeof(Data data)
+	public BigInteger sizeof(SemaDeclData data)
 	{
 		throw new RuntimeException("nyi");
 	}
 
 	@Override
-	public BigInteger alignof(Data data)
+	public BigInteger alignof(SemaDeclData data)
 	{
-		List<Data.Field> fields = data.fieldsByIndex();
+		List<SemaDeclData.Field> fields = data.fieldsByIndex();
 
 		if(fields.isEmpty())
 			return BigInteger.ONE;

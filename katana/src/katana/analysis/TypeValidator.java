@@ -14,13 +14,14 @@
 
 package katana.analysis;
 
+import katana.ast.type.*;
 import katana.backend.PlatformContext;
-import katana.sema.Scope;
-import katana.sema.Symbol;
-import katana.sema.decl.Data;
-import katana.sema.decl.Decl;
-import katana.sema.decl.TypeAlias;
-import katana.sema.expr.Expr;
+import katana.sema.SemaSymbol;
+import katana.sema.decl.SemaDecl;
+import katana.sema.decl.SemaDeclData;
+import katana.sema.decl.SemaDeclTypeAlias;
+import katana.sema.expr.SemaExpr;
+import katana.sema.scope.SemaScope;
 import katana.sema.type.*;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
@@ -33,43 +34,43 @@ import java.util.function.Consumer;
 @SuppressWarnings("unused")
 public class TypeValidator implements IVisitor
 {
-	private Scope scope;
+	private SemaScope scope;
 	private PlatformContext context;
-	private Consumer<Decl> validateDecl;
+	private Consumer<SemaDecl> validateDecl;
 
-	private TypeValidator(Scope scope, PlatformContext context, Consumer<Decl> validateDecl)
+	private TypeValidator(SemaScope scope, PlatformContext context, Consumer<SemaDecl> validateDecl)
 	{
 		this.scope = scope;
 		this.context = context;
 		this.validateDecl = validateDecl;
 	}
 
-	public static Type validate(katana.ast.type.Type type, Scope scope, PlatformContext context, Consumer<Decl> validateDecl)
+	public static SemaType validate(AstType type, SemaScope scope, PlatformContext context, Consumer<SemaDecl> validateDecl)
 	{
 		TypeValidator translator = new TypeValidator(scope, context, validateDecl);
-		return (Type)type.accept(translator);
+		return (SemaType)type.accept(translator);
 	}
 
-	private Type visit(katana.ast.type.Builtin builtin)
+	private SemaType visit(AstTypeBuiltin builtin)
 	{
 		switch(builtin.which)
 		{
-		case INT8:    return Builtin.INT8;
-		case UINT8:   return Builtin.UINT8;
-		case INT16:   return Builtin.INT16;
-		case UINT16:  return Builtin.UINT16;
-		case INT32:   return Builtin.INT32;
-		case UINT32:  return Builtin.UINT32;
-		case INT64:   return Builtin.INT64;
-		case UINT64:  return Builtin.UINT64;
-		case INT:     return Builtin.INT;
-		case UINT:    return Builtin.UINT;
-		case PINT:    return Builtin.PINT;
-		case UPINT:   return Builtin.UPINT;
-		case PTR:     return Builtin.PTR;
-		case BOOL:    return Builtin.BOOL;
-		case FLOAT32: return Builtin.FLOAT32;
-		case FLOAT64: return Builtin.FLOAT64;
+		case INT8:    return SemaTypeBuiltin.INT8;
+		case UINT8:   return SemaTypeBuiltin.UINT8;
+		case INT16:   return SemaTypeBuiltin.INT16;
+		case UINT16:  return SemaTypeBuiltin.UINT16;
+		case INT32:   return SemaTypeBuiltin.INT32;
+		case UINT32:  return SemaTypeBuiltin.UINT32;
+		case INT64:   return SemaTypeBuiltin.INT64;
+		case UINT64:  return SemaTypeBuiltin.UINT64;
+		case INT:     return SemaTypeBuiltin.INT;
+		case UINT:    return SemaTypeBuiltin.UINT;
+		case PINT:    return SemaTypeBuiltin.PINT;
+		case UPINT:   return SemaTypeBuiltin.UPINT;
+		case PTR:     return SemaTypeBuiltin.PTR;
+		case BOOL:    return SemaTypeBuiltin.BOOL;
+		case FLOAT32: return SemaTypeBuiltin.FLOAT32;
+		case FLOAT64: return SemaTypeBuiltin.FLOAT64;
 
 		default: break;
 		}
@@ -77,33 +78,33 @@ public class TypeValidator implements IVisitor
 		throw new AssertionError("unreachable");
 	}
 
-	private Type visit(katana.ast.type.Opaque opaque)
+	private SemaType visit(AstTypeOpaque opaque)
 	{
-		return new Opaque(opaque.size, opaque.alignment);
+		return new SemaTypeOpaque(opaque.size, opaque.alignment);
 	}
 
-	private Type visit(katana.ast.type.Array array)
+	private SemaType visit(AstTypeArray array)
 	{
 		if(array.length.compareTo(BigInteger.ZERO) == -1)
 			throw new RuntimeException(String.format("invalid array length %s", array.length));
 
-		return new Array(array.length, validate(array.type, scope, context, validateDecl));
+		return new SemaTypeArray(array.length, validate(array.type, scope, context, validateDecl));
 	}
 
-	private Type visit(katana.ast.type.Function functionType)
+	private SemaType visit(AstTypeFunction functionType)
 	{
-		ArrayList<Type> params = new ArrayList<>();
+		ArrayList<SemaType> params = new ArrayList<>();
 
-		for(katana.ast.type.Type param : functionType.params)
+		for(AstType param : functionType.params)
 			params.add(validate(param, scope, context, validateDecl));
 
-		Maybe<Type> ret = functionType.ret.map(type -> validate(type, scope, context, validateDecl));
-		return new Function(ret, params);
+		Maybe<SemaType> ret = functionType.ret.map(type -> validate(type, scope, context, validateDecl));
+		return new SemaTypeFunction(ret, params);
 	}
 
-	private Type visit(katana.ast.type.UserDefined user)
+	private SemaType visit(AstTypeUserDefined user)
 	{
-		List<Symbol> candidates = scope.find(user.name);
+		List<SemaSymbol> candidates = scope.find(user.name);
 
 		if(candidates.isEmpty())
 			throw new RuntimeException(String.format("use of unknown type '%s'", user.name));
@@ -111,43 +112,43 @@ public class TypeValidator implements IVisitor
 		if(candidates.size() > 1)
 			throw new RuntimeException(String.format("ambiguous reference to symbol '%s'", user.name));
 
-		Symbol symbol = candidates.get(0);
+		SemaSymbol symbol = candidates.get(0);
 
-		if(symbol instanceof Decl)
-			validateDecl.accept((Decl)symbol);
+		if(symbol instanceof SemaDecl)
+			validateDecl.accept((SemaDecl)symbol);
 
-		if(symbol instanceof TypeAlias)
-			return ((TypeAlias)symbol).type;
+		if(symbol instanceof SemaDeclTypeAlias)
+			return ((SemaDeclTypeAlias)symbol).type;
 
-		if(symbol instanceof Data)
-			return new UserDefined((Data)symbol);
+		if(symbol instanceof SemaDeclData)
+			return new SemaTypeUserDefined((SemaDeclData)symbol);
 
 		throw new RuntimeException(String.format("symbol '%s' does not refer to a type"));
 	}
 
-	private Type visit(katana.ast.type.Const const_)
+	private SemaType visit(AstTypeConst const_)
 	{
-		Type type = validate(const_.type, scope, context, validateDecl);
+		SemaType type = validate(const_.type, scope, context, validateDecl);
 
-		if(type instanceof Const)
+		if(type instanceof SemaTypeConst)
 			return type;
 
-		if(type instanceof Array)
+		if(type instanceof SemaTypeArray)
 			throw new RuntimeException("forming const array type, did you mean array of const element type?");
 
-		if(type instanceof Function)
+		if(type instanceof SemaTypeFunction)
 			throw new RuntimeException("forming const function type");
 
-		return new Const(type);
+		return new SemaTypeConst(type);
 	}
 
-	private Type visit(katana.ast.type.Typeof typeof)
+	private SemaType visit(AstTypeTypeof typeof)
 	{
 		if(scope == null)
 			throw new RuntimeException("typeof is not valid in this context");
 
-		Expr expr = ExprValidator.validate(typeof.expr, scope, context, validateDecl, Maybe.none());
-		Maybe<Type> type = expr.type();
+		SemaExpr expr = ExprValidator.validate(typeof.expr, scope, context, validateDecl, Maybe.none());
+		Maybe<SemaType> type = expr.type();
 
 		if(type.isNone())
 			throw new RuntimeException("expression passed to typeof yields no type");

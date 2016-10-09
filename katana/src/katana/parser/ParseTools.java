@@ -14,7 +14,7 @@
 
 package katana.parser;
 
-import katana.ast.Path;
+import katana.ast.AstPath;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
 
@@ -24,11 +24,11 @@ import java.util.function.Supplier;
 
 public class ParseTools
 {
-	public static Path path(Scanner scanner)
+	public static AstPath path(Scanner scanner)
 	{
 		Supplier<String> parseComponent = () -> consumeExpected(scanner, Token.Type.IDENT).value;
 		ArrayList<String> components = separated(scanner, Token.Type.PUNCT_DOT, parseComponent);
-		return new Path(components);
+		return new AstPath(components);
 	}
 
 	public static <T> ArrayList<T> separated(Scanner scanner, Token.Type separator, Supplier<T> parser)

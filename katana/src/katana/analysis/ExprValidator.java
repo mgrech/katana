@@ -14,16 +14,15 @@
 
 package katana.analysis;
 
+import katana.BuiltinFunc;
 import katana.BuiltinType;
 import katana.Limits;
-import katana.ast.expr.NamedSymbol;
+import katana.ast.expr.*;
 import katana.backend.PlatformContext;
-import katana.sema.BuiltinFunc;
-import katana.sema.Scope;
-import katana.sema.Symbol;
+import katana.sema.SemaSymbol;
 import katana.sema.decl.*;
-import katana.sema.decl.Function;
 import katana.sema.expr.*;
+import katana.sema.scope.SemaScope;
 import katana.sema.type.*;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
@@ -35,24 +34,24 @@ import java.util.function.Consumer;
 @SuppressWarnings("unused")
 public class ExprValidator implements IVisitor
 {
-	private Scope scope;
+	private SemaScope scope;
 	private PlatformContext context;
-	private Consumer<Decl> validateDecl;
+	private Consumer<SemaDecl> validateDecl;
 
-	private ExprValidator(Scope scope, PlatformContext context, Consumer<Decl> validateDecl)
+	private ExprValidator(SemaScope scope, PlatformContext context, Consumer<SemaDecl> validateDecl)
 	{
 		this.scope = scope;
 		this.context = context;
 		this.validateDecl = validateDecl;
 	}
 
-	public static Expr validate(katana.ast.expr.Expr expr, Scope scope, PlatformContext context, Consumer<Decl> validateDecl, Maybe<Type> deduce)
+	public static SemaExpr validate(AstExpr expr, SemaScope scope, PlatformContext context, Consumer<SemaDecl> validateDecl, Maybe<SemaType> deduce)
 	{
 		ExprValidator validator = new ExprValidator(scope, context, validateDecl);
-		return (Expr)expr.accept(validator, deduce);
+		return (SemaExpr)expr.accept(validator, deduce);
 	}
 
-	private void checkArguments(List<Type> params, List<Expr> args)
+	private void checkArguments(List<SemaType> params, List<SemaExpr> args)
 	{
 		int expected = params.size();
 		int actual = args.size();
@@ -63,21 +62,21 @@ public class ExprValidator implements IVisitor
 			throw new RuntimeException(String.format(fmt, expected, actual));
 		}
 
-		Iterator<Type> it1 = params.iterator();
-		Iterator<Expr> it2 = args.iterator();
+		Iterator<SemaType> it1 = params.iterator();
+		Iterator<SemaExpr> it2 = args.iterator();
 
 		for(int argCount = 1; it1.hasNext(); ++argCount)
 		{
-			Type paramType = it1.next();
-			Maybe<Type> maybeArgType = it2.next().type();
+			SemaType paramType = it1.next();
+			Maybe<SemaType> maybeArgType = it2.next().type();
 
 			if(maybeArgType.isNone())
 				throw new RuntimeException("expression given in argument " + argCount + " results in no value");
 
-			Type paramTypeDecayed = TypeHelper.decay(paramType);
-			Type argTypeDecayed = TypeHelper.decay(maybeArgType.unwrap());
+			SemaType paramTypeDecayed = TypeHelper.decay(paramType);
+			SemaType argTypeDecayed = TypeHelper.decay(maybeArgType.unwrap());
 
-			if(!Type.same(paramTypeDecayed, argTypeDecayed))
+			if(!SemaType.same(paramTypeDecayed, argTypeDecayed))
 			{
 				String fmt = "type mismatch in argument %s: expected '%s', got '%s'";
 				throw new RuntimeException(String.format(fmt, argCount, paramTypeDecayed, argTypeDecayed));
@@ -85,88 +84,88 @@ public class ExprValidator implements IVisitor
 		}
 	}
 
-	private Expr visit(katana.ast.expr.Addressof addressof, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprAddressof addressof, Maybe<SemaType> deduce)
 	{
-		Expr expr = validate(addressof.expr, scope, context, validateDecl, Maybe.none());
+		SemaExpr expr = validate(addressof.expr, scope, context, validateDecl, Maybe.none());
 
-		if(!(expr instanceof LValueExpr))
+		if(!(expr instanceof SemaExprLValueExpr))
 			throw new RuntimeException("addressof() requires lvalue operand");
 
-		LValueExpr lvalue = (LValueExpr)expr;
+		SemaExprLValueExpr lvalue = (SemaExprLValueExpr)expr;
 		lvalue.useAsLValue(true);
-		return new Addressof(lvalue);
+		return new SemaExprAddressof(lvalue);
 	}
 
-	private Expr visit(katana.ast.expr.Alignof alignof, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprAlignof alignof, Maybe<SemaType> deduce)
 	{
-		return new Alignof(TypeValidator.validate(alignof.type, scope, context, validateDecl));
+		return new SemaExprAlignof(TypeValidator.validate(alignof.type, scope, context, validateDecl));
 	}
 
-	private Expr visit(katana.ast.expr.ArrayAccess arrayAccess, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprArrayAccess arrayAccess, Maybe<SemaType> deduce)
 	{
-		Expr value = validate(arrayAccess.value, scope, context, validateDecl, Maybe.none());
-		Expr index = validate(arrayAccess.index, scope, context, validateDecl, Maybe.some(Builtin.INT));
-		Maybe<Type> indexType = index.type();
+		SemaExpr value = validate(arrayAccess.value, scope, context, validateDecl, Maybe.none());
+		SemaExpr index = validate(arrayAccess.index, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.INT));
+		Maybe<SemaType> indexType = index.type();
 
-		if(indexType.isNone() || indexType.unwrap() != Builtin.INT)
+		if(indexType.isNone() || indexType.unwrap() != SemaTypeBuiltin.INT)
 			throw new RuntimeException("array access requires index of type int");
 
-		if(value.type().isNone() || !(value.type().unwrap() instanceof Array))
+		if(value.type().isNone() || !(value.type().unwrap() instanceof SemaTypeArray))
 			throw new RuntimeException("array access requires expression yielding array type");
 
-		if(value instanceof LValueExpr)
-			return new ArrayAccessLValue((LValueExpr)value, index);
+		if(value instanceof SemaExprLValueExpr)
+			return new SemaExprArrayAccessLValue((SemaExprLValueExpr)value, index);
 
-		return new ArrayAccessRValue(value, index);
+		return new SemaExprArrayAccessRValue(value, index);
 	}
 
-	private Expr visit(katana.ast.expr.Assign assign, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprAssign assign, Maybe<SemaType> deduce)
 	{
-		Expr left = validate(assign.left, scope, context, validateDecl, Maybe.none());
+		SemaExpr left = validate(assign.left, scope, context, validateDecl, Maybe.none());
 
 		if(left.type().isNone())
 			throw new RuntimeException("value expected on left side of assignment, got expression yielding void");
 
-		Type leftType = left.type().unwrap();
-		Type leftTypeDecayed = TypeHelper.decay(leftType);
+		SemaType leftType = left.type().unwrap();
+		SemaType leftTypeDecayed = TypeHelper.decay(leftType);
 
-		Expr right = validate(assign.right, scope, context, validateDecl, Maybe.some(leftTypeDecayed));
+		SemaExpr right = validate(assign.right, scope, context, validateDecl, Maybe.some(leftTypeDecayed));
 
 		if(right.type().isNone())
 			throw new RuntimeException("value expected on right side of assignment, got expression yielding void");
 
-		Type rightType = right.type().unwrap();
+		SemaType rightType = right.type().unwrap();
 
-		if(TypeHelper.isConst(leftType) || !(left instanceof LValueExpr))
+		if(TypeHelper.isConst(leftType) || !(left instanceof SemaExprLValueExpr))
 			throw new RuntimeException("non-const lvalue required on left side of assignment");
 
-		if(leftType instanceof katana.sema.type.Function)
+		if(leftType instanceof SemaTypeFunction)
 			throw new RuntimeException("cannot assign to value of function type");
 
-		Type rightTypeDecayed = TypeHelper.decay(rightType);
+		SemaType rightTypeDecayed = TypeHelper.decay(rightType);
 
-		if(!Type.same(leftTypeDecayed, rightTypeDecayed))
+		if(!SemaType.same(leftTypeDecayed, rightTypeDecayed))
 			throw new RuntimeException("same types expected in assignment");
 
-		LValueExpr leftAsLvalue = (LValueExpr)left;
+		SemaExprLValueExpr leftAsLvalue = (SemaExprLValueExpr)left;
 		leftAsLvalue.useAsLValue(true);
-		return new Assign(leftAsLvalue, right);
+		return new SemaExprAssign(leftAsLvalue, right);
 	}
 
-	private Expr visit(katana.ast.expr.BuiltinCall builtinCall, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprBuiltinCall builtinCall, Maybe<SemaType> deduce)
 	{
 		Maybe<BuiltinFunc> maybeFunc = context.findBuiltin(builtinCall.name);
 
 		if(maybeFunc.isNone())
 			throw new RuntimeException(String.format("builtin %s not found", builtinCall.name));
 
-		List<Expr> args = new ArrayList<>();
-		List<Type> types = new ArrayList<>();
+		List<SemaExpr> args = new ArrayList<>();
+		List<SemaType> types = new ArrayList<>();
 
 		for(int i = 0; i != builtinCall.args.size(); ++i)
 		{
-			Expr semaExpr = validate(builtinCall.args.get(i), scope, context, validateDecl, Maybe.none());
-			Maybe<Type> type = semaExpr.type();
+			SemaExpr semaExpr = validate(builtinCall.args.get(i), scope, context, validateDecl, Maybe.none());
+			Maybe<SemaType> type = semaExpr.type();
 
 			if(type.isNone())
 			{
@@ -179,48 +178,48 @@ public class ExprValidator implements IVisitor
 		}
 
 		BuiltinFunc func = maybeFunc.unwrap();
-		Maybe<Type> ret = func.validateCall(types);
-		return new BuiltinCall(func, args, ret);
+		Maybe<SemaType> ret = func.validateCall(types);
+		return new SemaExprBuiltinCall(func, args, ret);
 	}
 
-	private Expr visit(katana.ast.expr.Const const_, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprConst const_, Maybe<SemaType> deduce)
 	{
-		Expr expr = validate(const_.expr, scope, context, validateDecl, deduce);
+		SemaExpr expr = validate(const_.expr, scope, context, validateDecl, deduce);
 
 		if(expr.type().isNone())
 			throw new RuntimeException("expression passed to const operator yields void");
 
-		Type type = expr.type().unwrap();
+		SemaType type = expr.type().unwrap();
 
-		if(type instanceof katana.sema.type.Function)
+		if(type instanceof SemaTypeFunction)
 			throw new RuntimeException("const operator applied to value of function type");
 
-		if(expr instanceof LValueExpr)
-			return new ConstLValue((LValueExpr)expr);
+		if(expr instanceof SemaExprLValueExpr)
+			return new SemaExprConstLValue((SemaExprLValueExpr)expr);
 
-		return new ConstRValue(expr);
+		return new SemaExprConstRValue(expr);
 	}
 
-	private Expr visit(katana.ast.expr.Deref deref, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprDeref deref, Maybe<SemaType> deduce)
 	{
-		Expr expr = validate(deref.expr, scope, context, validateDecl, Maybe.some(Builtin.PTR));
+		SemaExpr expr = validate(deref.expr, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.PTR));
 
-		if(expr.type().isNone() || expr.type().unwrap() != Builtin.PTR)
+		if(expr.type().isNone() || expr.type().unwrap() != SemaTypeBuiltin.PTR)
 			throw new RuntimeException("expression of type ptr expected in deref");
 
-		return new Deref(TypeValidator.validate(deref.type, scope, context, validateDecl), expr);
+		return new SemaExprDeref(TypeValidator.validate(deref.type, scope, context, validateDecl), expr);
 	}
 
-	private Maybe<List<Expr>> match(Function function, List<katana.ast.expr.Expr> args)
+	private Maybe<List<SemaExpr>> match(SemaDeclFunction function, List<AstExpr> args)
 	{
-		List<Expr> result = new ArrayList<>();
+		List<SemaExpr> result = new ArrayList<>();
 
 		for(int i = 0; i != function.params.size(); ++i)
 		{
-			Type paramType = function.params.get(i).type;
-			Type paramTypeDecayed = TypeHelper.decay(paramType);
+			SemaType paramType = function.params.get(i).type;
+			SemaType paramTypeDecayed = TypeHelper.decay(paramType);
 
-			Expr arg;
+			SemaExpr arg;
 
 			try
 			{
@@ -238,10 +237,10 @@ public class ExprValidator implements IVisitor
 				throw new RuntimeException(String.format(fmt, i + 1, function.name()));
 			}
 
-			Type argType = arg.type().unwrap();
-			Type argTypeDecayed = TypeHelper.decay(argType);
+			SemaType argType = arg.type().unwrap();
+			SemaType argTypeDecayed = TypeHelper.decay(argType);
 
-			if(!Type.same(paramTypeDecayed, argTypeDecayed))
+			if(!SemaType.same(paramTypeDecayed, argTypeDecayed))
 				return Maybe.none();
 
 			result.add(arg);
@@ -250,16 +249,16 @@ public class ExprValidator implements IVisitor
 		return Maybe.some(result);
 	}
 
-	private Expr resolveOverloadedCall(OverloadSet set, List<katana.ast.expr.Expr> args, Maybe<Boolean> inline)
+	private SemaExpr resolveOverloadedCall(SemaDeclOverloadSet set, List<AstExpr> args, Maybe<Boolean> inline)
 	{
-		IdentityHashMap<Function, List<Expr>> candidates = new IdentityHashMap<>();
+		IdentityHashMap<SemaDeclFunction, List<SemaExpr>> candidates = new IdentityHashMap<>();
 
-		for(Function overload : set.overloads)
+		for(SemaDeclFunction overload : set.overloads)
 		{
 			if(overload.params.size() != args.size())
 				continue;
 
-			Maybe<List<Expr>> semaArgs = match(overload, args);
+			Maybe<List<SemaExpr>> semaArgs = match(overload, args);
 
 			if(semaArgs.isSome())
 				candidates.put(overload, semaArgs.unwrap());
@@ -274,43 +273,43 @@ public class ExprValidator implements IVisitor
 		if(candidates.size() > 1)
 			throw new RuntimeException(String.format("ambiguous call to function %s", set.name()));
 
-		Map.Entry<Function, List<Expr>> first = candidates.entrySet().iterator().next();
-		return new DirectFunctionCall(first.getKey(), first.getValue(), inline);
+		Map.Entry<SemaDeclFunction, List<SemaExpr>> first = candidates.entrySet().iterator().next();
+		return new SemaExprDirectFunctionCall(first.getKey(), first.getValue(), inline);
 	}
 
-	private Expr visit(katana.ast.expr.FunctionCall call, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprFunctionCall call, Maybe<SemaType> deduce)
 	{
-		Expr expr = validate(call.expr, scope, context, validateDecl, Maybe.none());
+		SemaExpr expr = validate(call.expr, scope, context, validateDecl, Maybe.none());
 
-		if(expr instanceof NamedOverloadSet)
-			return resolveOverloadedCall(((NamedOverloadSet)expr).set, call.args, call.inline);
+		if(expr instanceof SemaExprNamedOverloadSet)
+			return resolveOverloadedCall(((SemaExprNamedOverloadSet)expr).set, call.args, call.inline);
 
-		if(expr.type().isNone() || !(expr.type().unwrap() instanceof katana.sema.type.Function))
+		if(expr.type().isNone() || !(expr.type().unwrap() instanceof SemaTypeFunction))
 			throw new RuntimeException("expression does not result in function type");
 
-		katana.sema.type.Function ftype = (katana.sema.type.Function)expr.type().unwrap();
-		List<Expr> args = new ArrayList<>();
+		SemaTypeFunction ftype = (SemaTypeFunction)expr.type().unwrap();
+		List<SemaExpr> args = new ArrayList<>();
 
 		for(int i = 0; i != call.args.size(); ++i)
 		{
-			katana.ast.expr.Expr arg = call.args.get(i);
-			Type type = ftype.params.get(i);
+			AstExpr arg = call.args.get(i);
+			SemaType type = ftype.params.get(i);
 			args.add(validate(call.args.get(i), scope, context, validateDecl, Maybe.some(type)));
 		}
 
 		checkArguments(ftype.params, args);
 
-		return new IndirectFunctionCall(expr, args);
+		return new SemaExprIndirectFunctionCall(expr, args);
 	}
 
-	private Expr visit(katana.ast.expr.LitArray lit, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprLitArray lit, Maybe<SemaType> deduce)
 	{
 		Maybe<BigInteger> length = lit.length;
-		Maybe<Type> maybeType = lit.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
+		Maybe<SemaType> maybeType = lit.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
 
-		if(deduce.isSome() && deduce.unwrap() instanceof Array)
+		if(deduce.isSome() && deduce.unwrap() instanceof SemaTypeArray)
 		{
-			Array array = (Array)deduce.unwrap();
+			SemaTypeArray array = (SemaTypeArray)deduce.unwrap();
 
 			if(length.isNone())
 				length = Maybe.some(array.length);
@@ -325,19 +324,19 @@ public class ExprValidator implements IVisitor
 		if(maybeType.isNone())
 			throw new RuntimeException("element type of array literal could not be deduced");
 
-		Type type = maybeType.unwrap();
-		Type typeDecayed = TypeHelper.decay(type);
+		SemaType type = maybeType.unwrap();
+		SemaType typeDecayed = TypeHelper.decay(type);
 
-		List<Expr> values = new ArrayList<>();
+		List<SemaExpr> values = new ArrayList<>();
 
 		for(int i = 0; i != lit.values.size(); ++i)
 		{
-			Expr semaExpr = validate(lit.values.get(i), scope, context, validateDecl, maybeType);
-			Maybe<Type> elemTypeDecayed = semaExpr.type().map(TypeHelper::decay);
+			SemaExpr semaExpr = validate(lit.values.get(i), scope, context, validateDecl, maybeType);
+			Maybe<SemaType> elemTypeDecayed = semaExpr.type().map(TypeHelper::decay);
 
-			if(elemTypeDecayed.isNone() || !Type.same(elemTypeDecayed.unwrap(), typeDecayed))
+			if(elemTypeDecayed.isNone() || !SemaType.same(elemTypeDecayed.unwrap(), typeDecayed))
 			{
-				String gotten = elemTypeDecayed.map(Type::toString).or("void");
+				String gotten = elemTypeDecayed.map(SemaType::toString).or("void");
 				String fmt = "element in array literal at index %s has type '%s', expected '%s'";
 				throw new RuntimeException(String.format(fmt, i, gotten, typeDecayed));
 			}
@@ -351,12 +350,12 @@ public class ExprValidator implements IVisitor
 			throw new RuntimeException(String.format(fmt, values.size(), length.unwrap()));
 		}
 
-		return new LitArray(length.unwrap(), maybeType.unwrap(), values);
+		return new SemaExprLitArray(length.unwrap(), maybeType.unwrap(), values);
 	}
 
-	private Expr visit(katana.ast.expr.LitBool lit, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprLitBool lit, Maybe<SemaType> deduce)
 	{
-		return new LitBool(lit.value);
+		return new SemaExprLitBool(lit.value);
 	}
 
 	private void errorLiteralTypeDeduction()
@@ -364,20 +363,20 @@ public class ExprValidator implements IVisitor
 		throw new RuntimeException("type of literal could not be deduced");
 	}
 
-	private BuiltinType deduceLiteralType(Maybe<Type> maybeType, boolean floatingPoint)
+	private BuiltinType deduceLiteralType(Maybe<SemaType> maybeType, boolean floatingPoint)
 	{
 		if(maybeType.isNone())
 			errorLiteralTypeDeduction();
 
-		Type type = maybeType.unwrap();
+		SemaType type = maybeType.unwrap();
 
-		if(type instanceof Const)
-			type = ((Const)type).type;
+		if(type instanceof SemaTypeConst)
+			type = ((SemaTypeConst)type).type;
 
-		if(!(type instanceof Builtin))
+		if(!(type instanceof SemaTypeBuiltin))
 			errorLiteralTypeDeduction();
 
-		Builtin builtin = (Builtin)type;
+		SemaTypeBuiltin builtin = (SemaTypeBuiltin)type;
 
 		if(floatingPoint)
 		{
@@ -394,7 +393,7 @@ public class ExprValidator implements IVisitor
 		return builtin.which;
 	}
 
-	private Expr visit(katana.ast.expr.LitFloat lit, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprLitFloat lit, Maybe<SemaType> deduce)
 	{
 		if(lit.type.isNone())
 			lit.type = Maybe.some(deduceLiteralType(deduce, true));
@@ -402,10 +401,10 @@ public class ExprValidator implements IVisitor
 		if(!Limits.inRange(lit.value, lit.type.unwrap()))
 			throw new RuntimeException("floating point literal value is out of range");
 
-		return new LitFloat(lit.value, lit.type.unwrap());
+		return new SemaExprLitFloat(lit.value, lit.type.unwrap());
 	}
 
-	private Expr visit(katana.ast.expr.LitInt lit, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprLitInt lit, Maybe<SemaType> deduce)
 	{
 		if(lit.type.isNone())
 			lit.type = Maybe.some(deduceLiteralType(deduce, false));
@@ -413,48 +412,48 @@ public class ExprValidator implements IVisitor
 		if(!Limits.inRange(lit.value, lit.type.unwrap(), context))
 			throw new RuntimeException("integer literal value is out of range");
 
-		return new LitInt(lit.value, lit.type.unwrap());
+		return new SemaExprLitInt(lit.value, lit.type.unwrap());
 	}
 
-	private Expr visit(katana.ast.expr.LitNull lit, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprLitNull lit, Maybe<SemaType> deduce)
 	{
-		return new LitNull();
+		return new SemaExprLitNull();
 	}
 
-	private Expr visit(katana.ast.expr.LitString lit, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprLitString lit, Maybe<SemaType> deduce)
 	{
-		return new LitString(lit.value);
+		return new SemaExprLitString(lit.value);
 	}
 
-	private Expr namedDeclExpr(Decl decl, boolean globalAccess)
+	private SemaExpr namedDeclExpr(SemaDecl decl, boolean globalAccess)
 	{
 		validateDecl.accept(decl);
 
-		if(decl instanceof Global)
+		if(decl instanceof SemaDeclGlobal)
 		{
 			if(!globalAccess)
 				throw new RuntimeException("reference to global requires 'global' keyword");
 
-			return new NamedGlobal((Global)decl);
+			return new SemaExprNamedGlobal((SemaDeclGlobal)decl);
 		}
 
 		if(globalAccess)
 			throw new RuntimeException("'global' keyword used on reference to symbol that isn't a global");
 
-		if(decl instanceof OverloadSet)
-			return new NamedOverloadSet((OverloadSet)decl);
+		if(decl instanceof SemaDeclOverloadSet)
+			return new SemaExprNamedOverloadSet((SemaDeclOverloadSet)decl);
 
 		throw new AssertionError("unreachable");
 	}
 
-	private Expr visit(katana.ast.expr.MemberAccess memberAccess, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprMemberAccess memberAccess, Maybe<SemaType> deduce)
 	{
-		Expr expr = validate(memberAccess.expr, scope, context, validateDecl, Maybe.none());
+		SemaExpr expr = validate(memberAccess.expr, scope, context, validateDecl, Maybe.none());
 
-		if(expr instanceof NamedRenamedImport)
+		if(expr instanceof SemaExprNamedRenamedImport)
 		{
-			RenamedImport import_ = ((NamedRenamedImport)expr).import_;
-			Decl decl = import_.decls.get(memberAccess.name);
+			SemaDeclRenamedImport import_ = ((SemaExprNamedRenamedImport)expr).import_;
+			SemaDecl decl = import_.decls.get(memberAccess.name);
 
 			if(decl == null)
 				throw new RuntimeException(String.format("reference to unknown symbol '%s.%s'", import_.module.path(), memberAccess.name));
@@ -465,13 +464,13 @@ public class ExprValidator implements IVisitor
 		if(expr.type().isNone())
 			throw new RuntimeException("expression does not result in a value");
 
-		Type type = expr.type().unwrap();
+		SemaType type = expr.type().unwrap();
 
-		if(!(type instanceof UserDefined))
+		if(!(type instanceof SemaTypeUserDefined))
 			throw new RuntimeException("type is not a data");
 
-		Data data = ((UserDefined)type).data;
-		Maybe<Data.Field> field = data.findField(memberAccess.name);
+		SemaDeclData data = ((SemaTypeUserDefined)type).data;
+		Maybe<SemaDeclData.Field> field = data.findField(memberAccess.name);
 
 		if(field.isNone())
 		{
@@ -479,15 +478,15 @@ public class ExprValidator implements IVisitor
 			throw new RuntimeException(String.format(fmt, data.name(), memberAccess.name));
 		}
 
-		if(expr instanceof LValueExpr)
-			return new FieldAccessLValue((LValueExpr)expr, field.unwrap());
+		if(expr instanceof SemaExprLValueExpr)
+			return new SemaExprFieldAccessLValue((SemaExprLValueExpr)expr, field.unwrap());
 
-		return new FieldAccessRValue(expr, field.unwrap());
+		return new SemaExprFieldAccessRValue(expr, field.unwrap());
 	}
 
-	private Expr visit(katana.ast.expr.NamedGlobal namedGlobal, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprNamedGlobal namedGlobal, Maybe<SemaType> deduce)
 	{
-		List<Symbol> candidates = scope.find(namedGlobal.name);
+		List<SemaSymbol> candidates = scope.find(namedGlobal.name);
 
 		if(candidates.isEmpty())
 			throw new RuntimeException(String.format("reference to unknown symbol '%s'", namedGlobal.name));
@@ -495,17 +494,17 @@ public class ExprValidator implements IVisitor
 		if(candidates.size() > 1)
 			throw new RuntimeException(String.format("ambiguos reference to symbol '%s'", namedGlobal.name));
 
-		Symbol symbol = candidates.get(0);
+		SemaSymbol symbol = candidates.get(0);
 
-		if(!(symbol instanceof Global))
+		if(!(symbol instanceof SemaDeclGlobal))
 			throw new RuntimeException(String.format("symbol '%s' does not refer to a global", namedGlobal.name));
 
-		return namedDeclExpr((Decl)symbol, true);
+		return namedDeclExpr((SemaDecl)symbol, true);
 	}
 
-	private Expr visit(NamedSymbol namedSymbol, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprNamedSymbol namedSymbol, Maybe<SemaType> deduce)
 	{
-		List<Symbol> candidates = scope.find(namedSymbol.name);
+		List<SemaSymbol> candidates = scope.find(namedSymbol.name);
 
 		if(candidates.isEmpty())
 			throw new RuntimeException(String.format("reference to unknown symbol '%s'", namedSymbol.name));
@@ -513,26 +512,26 @@ public class ExprValidator implements IVisitor
 		if(candidates.size() > 1)
 			throw new RuntimeException(String.format("ambiguous reference to symbol '%s'", namedSymbol.name));
 
-		Symbol symbol = candidates.get(0);
+		SemaSymbol symbol = candidates.get(0);
 
-		if(symbol instanceof RenamedImport)
-			return new NamedRenamedImport((RenamedImport)symbol);
+		if(symbol instanceof SemaDeclRenamedImport)
+			return new SemaExprNamedRenamedImport((SemaDeclRenamedImport)symbol);
 
-		if(symbol instanceof Decl)
-			return namedDeclExpr((Decl)symbol, false);
+		if(symbol instanceof SemaDecl)
+			return namedDeclExpr((SemaDecl)symbol, false);
 
-		if(symbol instanceof DefinedFunction.Local)
-			return new NamedLocal((DefinedFunction.Local)symbol);
+		if(symbol instanceof SemaDeclDefinedFunction.Local)
+			return new SemaExprNamedLocal((SemaDeclDefinedFunction.Local)symbol);
 
-		if(symbol instanceof Function.Param)
-			return new NamedParam((Function.Param)symbol);
+		if(symbol instanceof SemaDeclFunction.Param)
+			return new SemaExprNamedParam((SemaDeclFunction.Param)symbol);
 
 		throw new RuntimeException(String.format("symbol '%s' does not refer to a value", namedSymbol.name));
 	}
 
-	private Expr visit(katana.ast.expr.Offsetof offsetof, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprOffsetof offsetof, Maybe<SemaType> deduce)
 	{
-		List<Symbol> candidates = scope.find(offsetof.type);
+		List<SemaSymbol> candidates = scope.find(offsetof.type);
 
 		if(candidates.isEmpty())
 			throw new RuntimeException(String.format("use of unknown type '%s'", offsetof.type));
@@ -540,21 +539,21 @@ public class ExprValidator implements IVisitor
 		if(candidates.size() > 1)
 			throw new RuntimeException(String.format("ambiguous reference to symbol '%s'", offsetof.type));
 
-		Symbol symbol = candidates.get(0);
+		SemaSymbol symbol = candidates.get(0);
 
-		if(!(symbol instanceof Data))
+		if(!(symbol instanceof SemaDeclData))
 			throw new RuntimeException(String.format("symbol '%s' does not refer to a type", offsetof.type));
 
-		Maybe<Data.Field> field = ((Data)symbol).findField(offsetof.field);
+		Maybe<SemaDeclData.Field> field = ((SemaDeclData)symbol).findField(offsetof.field);
 
 		if(field.isNone())
 			throw new RuntimeException(String.format("data '%s' has no field named '%s'", offsetof.type, offsetof.field));
 
-		return new Offsetof(field.unwrap());
+		return new SemaExprOffsetof(field.unwrap());
 	}
 
-	private Expr visit(katana.ast.expr.Sizeof sizeof, Maybe<Type> deduce)
+	private SemaExpr visit(AstExprSizeof sizeof, Maybe<SemaType> deduce)
 	{
-		return new Sizeof(TypeValidator.validate(sizeof.type, scope, context, validateDecl));
+		return new SemaExprSizeof(TypeValidator.validate(sizeof.type, scope, context, validateDecl));
 	}
 }

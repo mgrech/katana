@@ -24,12 +24,12 @@ import java.util.ArrayList;
 
 public class TypeParser
 {
-	public static Type parse(Scanner scanner)
+	public static AstType parse(Scanner scanner)
 	{
 		return doParse(scanner, false);
 	}
 
-	private static Type doParse(Scanner scanner, boolean const_)
+	private static AstType doParse(Scanner scanner, boolean const_)
 	{
 		if(ParseTools.option(scanner, Token.Type.DECL_FN, true))
 		{
@@ -55,7 +55,7 @@ public class TypeParser
 			if(const_)
 				throw new RuntimeException("duplicate const");
 
-			return new Const(doParse(scanner, true));
+			return new AstTypeConst(doParse(scanner, true));
 		}
 
 		if(ParseTools.option(scanner, Token.Type.TYPE_TYPEOF, true))
@@ -67,29 +67,29 @@ public class TypeParser
 		if(ParseTools.option(scanner, Token.Type.IDENT, false))
 		{
 			String name = ParseTools.consume(scanner).value;
-			return new UserDefined(name);
+			return new AstTypeUserDefined(name);
 		}
 
 		ParseTools.unexpectedToken(scanner, Token.Category.TYPE);
 		throw new AssertionError("unreachable");
 	}
 
-	private static Function parseFunction(Scanner scanner)
+	private static AstTypeFunction parseFunction(Scanner scanner)
 	{
-		ArrayList<Type> params = parseParameters(scanner);
-		Maybe<Type> ret = Maybe.none();
+		ArrayList<AstType> params = parseParameters(scanner);
+		Maybe<AstType> ret = Maybe.none();
 
 		if(ParseTools.option(scanner, Token.Type.PUNCT_RET, true))
 			ret = Maybe.some(parse(scanner));
 
-		return new Function(ret, params);
+		return new AstTypeFunction(ret, params);
 	}
 
-	private static ArrayList<Type> parseParameters(Scanner scanner)
+	private static ArrayList<AstType> parseParameters(Scanner scanner)
 	{
 		return ParseTools.parenthesized(scanner, () ->
 		{
-			ArrayList<Type> params = new ArrayList<>();
+			ArrayList<AstType> params = new ArrayList<>();
 
 			if(!ParseTools.option(scanner, Token.Type.PUNCT_RPAREN, false))
 			{
@@ -103,14 +103,14 @@ public class TypeParser
 		});
 	}
 
-	private static Array parseArray(Scanner scanner)
+	private static AstTypeArray parseArray(Scanner scanner)
 	{
 		String size = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT_DEDUCE).value;
 		ParseTools.expect(scanner, Token.Type.PUNCT_RBRACKET, true);
-		return new Array(BigInteger.valueOf(Integer.parseInt(size)), TypeParser.parse(scanner));
+		return new AstTypeArray(BigInteger.valueOf(Integer.parseInt(size)), TypeParser.parse(scanner));
 	}
 
-	private static Opaque parseOpaque(Scanner scanner)
+	private static AstTypeOpaque parseOpaque(Scanner scanner)
 	{
 		return ParseTools.parenthesized(scanner, () ->
 		{
@@ -119,37 +119,37 @@ public class TypeParser
 			String alignmentString = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT_DEDUCE).value;
 			BigInteger size = BigInteger.valueOf(Integer.parseInt(sizeString));
 			BigInteger alignment = BigInteger.valueOf(Integer.parseInt(alignmentString));
-			return new Opaque(size, alignment);
+			return new AstTypeOpaque(size, alignment);
 		});
 	}
 
-	private static Typeof parseTypeof(Scanner scanner)
+	private static AstTypeTypeof parseTypeof(Scanner scanner)
 	{
-		return ParseTools.parenthesized(scanner, () -> new Typeof(ExprParser.parse(scanner)));
+		return ParseTools.parenthesized(scanner, () -> new AstTypeTypeof(ExprParser.parse(scanner)));
 	}
 
-	private static Builtin parseBuiltin(Scanner scanner)
+	private static AstTypeBuiltin parseBuiltin(Scanner scanner)
 	{
 		Token.Type type = ParseTools.consumeExpected(scanner, Token.Category.TYPE).type;
 
 		switch(type)
 		{
-		case TYPE_BOOL:    return Builtin.BOOL;
-		case TYPE_INT8:    return Builtin.INT8;
-		case TYPE_INT16:   return Builtin.INT16;
-		case TYPE_INT32:   return Builtin.INT32;
-		case TYPE_INT64:   return Builtin.INT64;
-		case TYPE_INT:     return Builtin.INT;
-		case TYPE_PINT:    return Builtin.PINT;
-		case TYPE_UINT8:   return Builtin.UINT8;
-		case TYPE_UINT16:  return Builtin.UINT16;
-		case TYPE_UINT32:  return Builtin.UINT32;
-		case TYPE_UINT64:  return Builtin.UINT64;
-		case TYPE_UINT:    return Builtin.UINT;
-		case TYPE_UPINT:   return Builtin.UPINT;
-		case TYPE_FLOAT32: return Builtin.FLOAT32;
-		case TYPE_FLOAT64: return Builtin.FLOAT64;
-		case TYPE_PTR:     return Builtin.PTR;
+		case TYPE_BOOL:    return AstTypeBuiltin.BOOL;
+		case TYPE_INT8:    return AstTypeBuiltin.INT8;
+		case TYPE_INT16:   return AstTypeBuiltin.INT16;
+		case TYPE_INT32:   return AstTypeBuiltin.INT32;
+		case TYPE_INT64:   return AstTypeBuiltin.INT64;
+		case TYPE_INT:     return AstTypeBuiltin.INT;
+		case TYPE_PINT:    return AstTypeBuiltin.PINT;
+		case TYPE_UINT8:   return AstTypeBuiltin.UINT8;
+		case TYPE_UINT16:  return AstTypeBuiltin.UINT16;
+		case TYPE_UINT32:  return AstTypeBuiltin.UINT32;
+		case TYPE_UINT64:  return AstTypeBuiltin.UINT64;
+		case TYPE_UINT:    return AstTypeBuiltin.UINT;
+		case TYPE_UPINT:   return AstTypeBuiltin.UPINT;
+		case TYPE_FLOAT32: return AstTypeBuiltin.FLOAT32;
+		case TYPE_FLOAT64: return AstTypeBuiltin.FLOAT64;
+		case TYPE_PTR:     return AstTypeBuiltin.PTR;
 
 		default: throw new AssertionError("unreachable");
 		}
