@@ -12,36 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.ast.decl;
+package katana.backend.llvm;
 
-import katana.ast.type.Type;
-import katana.utils.Maybe;
+import katana.sema.decl.Function;
 
-import java.util.List;
-
-public class Function extends Decl
+public class FunctionNameMangler
 {
-	public static class Param
+	public static String mangle(Function function)
 	{
-		public Param(Type type, String name)
+		StringBuilder builder = new StringBuilder();
+
+		for(Function.Param param : function.params)
 		{
-			this.type = type;
-			this.name = name;
+			builder.append('$');
+			builder.append(TypeMangler.mangle(param.type));
 		}
 
-		public Type type;
-		public String name;
+		return function.qualifiedName().toString() + builder.toString();
 	}
-
-	protected Function(boolean exported, boolean opaque, String name, List<Param> params, Maybe<Type> ret)
-	{
-		super(exported, opaque);
-		this.name = name;
-		this.params = params;
-		this.ret = ret;
-	}
-
-	public String name;
-	public List<Param> params;
-	public Maybe<Type> ret;
 }

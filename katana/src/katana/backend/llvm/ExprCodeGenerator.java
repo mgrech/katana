@@ -206,7 +206,7 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(DirectFunctionCall functionCall)
 	{
-		String functionSSA = '@' + functionCall.function.qualifiedName().toString();
+		String functionSSA = '@' + FunctionNameMangler.mangle(functionCall.function);
 		return generateFunctionCall(functionSSA, functionCall.args, functionCall.function.ret, functionCall.inline);
 	}
 
@@ -351,7 +351,7 @@ public class ExprCodeGenerator implements IVisitor
 		if(namedFunc.func instanceof ExternFunction)
 			return Maybe.some("@" + ((ExternFunction)namedFunc.func).externName);
 
-		return Maybe.some("@" + namedFunc.func.qualifiedName());
+		return Maybe.some("@" + FunctionNameMangler.mangle(namedFunc.func));
 	}
 
 	private String visitNamedValue(char prefix, boolean usedAsLValue, Type type, String name)

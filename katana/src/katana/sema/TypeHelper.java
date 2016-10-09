@@ -62,4 +62,9 @@ public class TypeHelper
 
 		return type;
 	}
+
+	public static boolean decayedEqual(Type a, Type b)
+	{
+		return Type.same(removeConst(a), removeConst(b));
+	}
 }

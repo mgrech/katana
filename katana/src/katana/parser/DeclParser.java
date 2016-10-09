@@ -95,7 +95,7 @@ public class DeclParser
 		}
 
 		ArrayList<Stmt> body = parseBody(scanner);
-		return new Function(exported, opaque, name, params, ret, body);
+		return new DefinedFunction(exported, opaque, name, params, ret, body);
 	}
 
 	private static ArrayList<Function.Param> parseParameterList(Scanner scanner)

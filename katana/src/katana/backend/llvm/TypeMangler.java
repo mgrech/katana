@@ -1,0 +1,61 @@
+// Copyright 2016 Markus Grech
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package katana.backend.llvm;
+
+import katana.sema.type.*;
+import katana.visitor.IVisitor;
+
+@SuppressWarnings("unused")
+public class TypeMangler implements IVisitor
+{
+	private static final TypeMangler MANGLER = new TypeMangler();
+
+	private TypeMangler() {}
+
+	public static String mangle(Type type)
+	{
+		return (String)type.accept(MANGLER);
+	}
+
+	private String visit(Builtin builtin)
+	{
+		return builtin.toString();
+	}
+
+	private String visit(Const const_)
+	{
+		return String.format("const-%s", mangle(const_.type));
+	}
+
+	private String visit(Array array)
+	{
+		return String.format("array-%s-%s", array.length, mangle(array.type));
+	}
+
+	private String visit(Opaque opaque)
+	{
+		return String.format("opaque-%s-%s", opaque.size, opaque.alignment);
+	}
+
+	private String visit(UserDefined user)
+	{
+		return user.data.qualifiedName().toString();
+	}
+
+	private String visit(Function function)
+	{
+		throw new AssertionError("unreachable");
+	}
+}

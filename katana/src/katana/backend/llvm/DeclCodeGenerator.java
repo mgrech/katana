@@ -71,12 +71,12 @@ public class DeclCodeGenerator implements IVisitor
 		builder.append(" }\n");
 	}
 
-	private void visit(DefinedFunction function)
+	private void generateDefinedFunction(DefinedFunction function)
 	{
 		builder.append("define private ");
 		builder.append(function.ret.map((type) -> TypeCodeGenerator.generate(type, context)).or("void"));
 		builder.append(" @");
-		builder.append(qualifiedName(function));
+		builder.append(FunctionNameMangler.mangle(function));
 		builder.append('(');
 
 		if(!function.params.isEmpty())
@@ -134,7 +134,7 @@ public class DeclCodeGenerator implements IVisitor
 		builder.append("}\n");
 	}
 
-	private void visit(ExternFunction externFunction)
+	private void generateExternFunction(ExternFunction externFunction)
 	{
 		String retTypeString = externFunction.ret.map((t) -> TypeCodeGenerator.generate(t, context)).or("void");
 		builder.append(String.format("declare %s @%s(", retTypeString, externFunction.externName));
@@ -152,6 +152,21 @@ public class DeclCodeGenerator implements IVisitor
 		}
 
 		builder.append(")\n");
+	}
+
+	private void visit(OverloadSet set)
+	{
+		for(Function overload : set.overloads)
+		{
+			if(overload instanceof DefinedFunction)
+				generateDefinedFunction((DefinedFunction)overload);
+
+			else if(overload instanceof ExternFunction)
+				generateExternFunction((ExternFunction)overload);
+
+			else
+				throw new AssertionError("unreachable");
+		}
 	}
 
 	private void visit(Global global)

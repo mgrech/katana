@@ -36,7 +36,8 @@ public class FileValidator implements IVisitor
 	private Consumer<Decl> validateDecl;
 
 	private IdentityHashMap<Decl, katana.ast.decl.Decl> decls = new IdentityHashMap<>();
-	private IdentityHashMap<DefinedFunction, StmtValidator> funcs = new IdentityHashMap<>();
+	private IdentityHashMap<DefinedFunction, StmtValidator> validators = new IdentityHashMap<>();
+	private Map<String, OverloadSet> overloadSets = new HashMap<>();
 	private Module currentModule = null;
 	private boolean declsSeen = false;
 	private Map<Path, Import> imports = new HashMap<>();
@@ -90,27 +91,41 @@ public class FileValidator implements IVisitor
 
 	public void validate(Decl decl)
 	{
-		Maybe<StmtValidator> validator = DeclValidator.validate(decl, decls.get(decl), scope, context, validateDecl);
+		Map<DefinedFunction, StmtValidator> validators = DeclValidator.validate(decl, decls.get(decl), scope, context, validateDecl);
 
-		if(decl instanceof DefinedFunction)
-			funcs.put((DefinedFunction)decl, validator.unwrap());
+		if(!validators.isEmpty())
+			this.validators.putAll(validators);
+	}
+
+	private void validate(DefinedFunction semaFunction, katana.ast.decl.DefinedFunction function, StmtValidator validator)
+	{
+		for(katana.ast.stmt.Stmt stmt : function.body)
+		{
+			Stmt semaStmt = validator.validate(stmt);
+			semaFunction.add(semaStmt);
+		}
+
+		validator.finalizeValidation();
 	}
 
 	public void finish()
 	{
-		for(Map.Entry<DefinedFunction, StmtValidator> entry : funcs.entrySet())
+		for(OverloadSet set : overloadSets.values())
 		{
-			DefinedFunction semaFunction = entry.getKey();
-			katana.ast.decl.Function function = (katana.ast.decl.Function)decls.get(semaFunction);
-			StmtValidator validator = entry.getValue();
+			OverloadDeclList overloadDecls = (OverloadDeclList)decls.get(set);
 
-			for(katana.ast.stmt.Stmt stmt : function.body)
+			for(int i = 0; i != set.overloads.size(); ++i)
 			{
-				Stmt semaStmt = validator.validate(stmt);
-				semaFunction.add(semaStmt);
-			}
+				Function overload = set.overloads.get(i);
 
-			validator.finalizeValidation();
+				if(!(overload instanceof DefinedFunction))
+					continue;
+
+				DefinedFunction semaFunction = (DefinedFunction)overload;
+				katana.ast.decl.DefinedFunction function = (katana.ast.decl.DefinedFunction)overloadDecls.decls.get(i);
+				StmtValidator validator = validators.get(semaFunction);
+				validate(semaFunction, function, validator);
+			}
 		}
 	}
 
@@ -145,16 +160,36 @@ public class FileValidator implements IVisitor
 		return handleModuleDecl(semaData, data);
 	}
 
+	private Maybe<Decl> handleFunction(Function semaFunction, katana.ast.decl.Function function)
+	{
+		String name = semaFunction.name();
+		OverloadSet set = overloadSets.get(name);
+
+		if(set == null)
+		{
+			set = new OverloadSet(semaFunction.module(), name);
+			set.overloads.add(semaFunction);
+			overloadSets.put(name, set);
+			OverloadDeclList list = new OverloadDeclList();
+			list.decls.add(function);
+			return handleModuleDecl(set, list);
+		}
+
+		set.overloads.add(semaFunction);
+		((OverloadDeclList)decls.get(set)).decls.add(function);
+		return Maybe.none();
+	}
+
 	private Maybe<Decl> visit(katana.ast.decl.ExternFunction function)
 	{
 		ExternFunction semaFunction = new ExternFunction(currentModule, function.exported, function.opaque, function.externName, function.name);
-		return handleModuleDecl(semaFunction, function);
+		return handleFunction(semaFunction, function);
 	}
 
-	private Maybe<Decl> visit(katana.ast.decl.Function function)
+	private Maybe<Decl> visit(katana.ast.decl.DefinedFunction function)
 	{
 		DefinedFunction semaFunction = new DefinedFunction(currentModule, function.exported, function.opaque, function.name);
-		return handleModuleDecl(semaFunction, function);
+		return handleFunction(semaFunction, function);
 	}
 
 	private Maybe<Decl> visit(katana.ast.decl.Global global)

@@ -21,6 +21,9 @@ import katana.sema.type.Type;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
@@ -37,15 +40,15 @@ public class DeclValidator implements IVisitor
 		this.validateDecl = validateDecl;
 	}
 
-	public static Maybe<StmtValidator> validate(Decl semaDecl, katana.ast.decl.Decl decl, FileScope scope, PlatformContext context, Consumer<Decl> validateDecl)
+	public static Map<DefinedFunction, StmtValidator> validate(Decl semaDecl, katana.ast.decl.Decl decl, FileScope scope, PlatformContext context, Consumer<Decl> validateDecl)
 	{
 		DeclValidator validator = new DeclValidator(scope, context, validateDecl);
 		Object result = semaDecl.accept(validator, decl);
 
-		if(semaDecl instanceof DefinedFunction)
-			return Maybe.some((StmtValidator)result);
+		if(semaDecl instanceof OverloadSet)
+			return (Map<DefinedFunction, StmtValidator>)result;
 
-		return Maybe.none();
+		return Collections.emptyMap();
 	}
 
 	private void visit(Data semaData, katana.ast.decl.Data data)
@@ -59,22 +62,7 @@ public class DeclValidator implements IVisitor
 		}
 	}
 
-	private StmtValidator visit(DefinedFunction semaFunction, katana.ast.decl.Function function)
-	{
-		for(katana.ast.decl.Function.Param param : function.params)
-		{
-			Type type = TypeValidator.validate(param.type, scope, context, validateDecl);
-
-			if(!semaFunction.defineParam(param.name, type))
-				throw new RuntimeException(String.format("duplicate parameter name '%s' in function '%s'", param.name, function.name));
-		}
-
-		FunctionScope fscope = new FunctionScope(scope, semaFunction);
-		semaFunction.ret = function.ret.map((type) -> TypeValidator.validate(type, fscope, context, validateDecl));
-		return new StmtValidator(semaFunction, fscope, context, validateDecl);
-	}
-
-	private void visit(ExternFunction semaFunction, katana.ast.decl.ExternFunction function)
+	private Maybe<StmtValidator> validateFunction(Function semaFunction, katana.ast.decl.Function function)
 	{
 		for(katana.ast.decl.Function.Param param : function.params)
 		{
@@ -85,6 +73,65 @@ public class DeclValidator implements IVisitor
 		}
 
 		semaFunction.ret = function.ret.map((type) -> TypeValidator.validate(type, scope, context, validateDecl));
+
+		if(semaFunction instanceof DefinedFunction)
+		{
+			DefinedFunction func = (DefinedFunction)semaFunction;
+			FunctionScope fscope = new FunctionScope(scope, func);
+			return Maybe.some(new StmtValidator(func, fscope, context, validateDecl));
+		}
+
+		return Maybe.none();
+	}
+
+	private boolean sameSignatures(Function a, Function b)
+	{
+		if(a.params.size() != b.params.size())
+			return false;
+
+		for(int i = 0; i != a.params.size(); ++i)
+		{
+			Type paramTypeA = a.params.get(i).type;
+			Type paramTypeB = b.params.get(i).type;
+
+			if(!TypeHelper.decayedEqual(paramTypeA, paramTypeB))
+				return false;
+		}
+
+		return true;
+	}
+
+	private void checkForDuplicates(OverloadSet set)
+	{
+		for(int i = 0; i != set.overloads.size(); ++i)
+			for(int j = 0; j != i; ++j)
+			{
+				Function a = set.overloads.get(i);
+				Function b = set.overloads.get(j);
+
+				if(sameSignatures(a, b))
+					throw new RuntimeException(String.format("duplicate overloads in overload set '%s'", set.name()));
+			}
+
+	}
+
+	private Map<DefinedFunction, StmtValidator> visit(OverloadSet set, OverloadDeclList functions)
+	{
+		Map<DefinedFunction, StmtValidator> validators = new HashMap<>();
+
+		for(int i = 0; i != set.overloads.size(); ++i)
+		{
+			Function semaFunction = set.overloads.get(i);
+			katana.ast.decl.Function function = functions.decls.get(i);
+			Maybe<StmtValidator> validator = validateFunction(semaFunction, function);
+
+			if(validator.isSome())
+				validators.put((DefinedFunction)semaFunction, validator.unwrap());
+		}
+
+		checkForDuplicates(set);
+
+		return validators;
 	}
 
 	private void visit(Global semaGlobal, katana.ast.decl.Global global)

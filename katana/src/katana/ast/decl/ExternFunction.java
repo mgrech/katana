@@ -19,19 +19,13 @@ import katana.utils.Maybe;
 
 import java.util.List;
 
-public class ExternFunction extends Decl
+public class ExternFunction extends Function
 {
-	public ExternFunction(boolean exported, boolean opaque, String externName, String name, List<Function.Param> params, Maybe<Type> ret)
+	public ExternFunction(boolean exported, boolean opaque, String externName, String name, List<Param> params, Maybe<Type> ret)
 	{
-		super(exported, opaque);
+		super(exported, opaque, name, params, ret);
 		this.externName = externName;
-		this.name = name;
-		this.params = params;
-		this.ret = ret;
 	}
 
 	public String externName;
-	public String name;
-	public List<Function.Param> params;
-	public Maybe<Type> ret;
 }

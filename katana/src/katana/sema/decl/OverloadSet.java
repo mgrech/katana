@@ -12,36 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.ast.decl;
+package katana.sema.decl;
 
-import katana.ast.type.Type;
-import katana.utils.Maybe;
+import katana.sema.Module;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class Function extends Decl
+public class OverloadSet extends Decl
 {
-	public static class Param
+	public OverloadSet(Module module, String name)
 	{
-		public Param(Type type, String name)
-		{
-			this.type = type;
-			this.name = name;
-		}
-
-		public Type type;
-		public String name;
+		super(module, false, false);
+		this.name = name;
 	}
 
-	protected Function(boolean exported, boolean opaque, String name, List<Param> params, Maybe<Type> ret)
+	@Override
+	public String name()
 	{
-		super(exported, opaque);
-		this.name = name;
-		this.params = params;
-		this.ret = ret;
+		return name;
 	}
 
 	public String name;
-	public List<Param> params;
-	public Maybe<Type> ret;
+	public List<Function> overloads = new ArrayList<>();
 }

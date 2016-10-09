@@ -26,9 +26,7 @@ import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
@@ -210,9 +208,79 @@ public class ExprValidator implements IVisitor
 		return new Deref(TypeValidator.validate(deref.type, scope, context, validateDecl), expr);
 	}
 
+	private Maybe<List<Expr>> match(Function function, List<katana.ast.expr.Expr> args)
+	{
+		List<Expr> result = new ArrayList<>();
+
+		for(int i = 0; i != function.params.size(); ++i)
+		{
+			Type paramType = function.params.get(i).type;
+			Type paramTypeStripped = TypeHelper.removeConst(paramType);
+
+			Expr arg;
+
+			try
+			{
+				arg = ExprValidator.validate(args.get(i), scope, context, validateDecl, Maybe.some(paramTypeStripped));
+			}
+
+			catch(RuntimeException e)
+			{
+				return Maybe.none();
+			}
+
+			if(arg.type().isNone())
+			{
+				String fmt = "expression passed as argument %s to function %s yields void";
+				throw new RuntimeException(String.format(fmt, i + 1, function.name()));
+			}
+
+			Type argType = arg.type().unwrap();
+			Type argTypeStripped = TypeHelper.removeConst(argType);
+
+			if(!Type.same(paramTypeStripped, argTypeStripped))
+				return Maybe.none();
+
+			result.add(arg);
+		}
+
+		return Maybe.some(result);
+	}
+
+	private Expr resolveOverloadedCall(OverloadSet set, List<katana.ast.expr.Expr> args, Maybe<Boolean> inline)
+	{
+		IdentityHashMap<Function, List<Expr>> candidates = new IdentityHashMap<>();
+
+		for(Function overload : set.overloads)
+		{
+			if(overload.params.size() != args.size())
+				continue;
+
+			Maybe<List<Expr>> semaArgs = match(overload, args);
+
+			if(semaArgs.isSome())
+				candidates.put(overload, semaArgs.unwrap());
+		}
+
+		if(candidates.isEmpty())
+		{
+			String fmt = "no matching function for call to %s out of %s overloads";
+			throw new RuntimeException(String.format(fmt, set.name(), set.overloads.size()));
+		}
+
+		if(candidates.size() > 1)
+			throw new RuntimeException(String.format("ambiguous call to function %s", set.name()));
+
+		Map.Entry<Function, List<Expr>> first = candidates.entrySet().iterator().next();
+		return new DirectFunctionCall(first.getKey(), first.getValue(), inline);
+	}
+
 	private Expr visit(katana.ast.expr.FunctionCall call, Maybe<Type> deduce)
 	{
 		Expr expr = validate(call.expr, scope, context, validateDecl, Maybe.none());
+
+		if(expr instanceof NamedOverloadSet)
+			return resolveOverloadedCall(((NamedOverloadSet)expr).set, call.args, call.inline);
 
 		if(expr.type().isNone() || !(expr.type().unwrap() instanceof katana.sema.type.Function))
 			throw new RuntimeException("expression does not result in function type");
@@ -228,9 +296,6 @@ public class ExprValidator implements IVisitor
 		}
 
 		checkArguments(ftype.params, args);
-
-		if(expr instanceof NamedFunc)
-			return new DirectFunctionCall(((NamedFunc)expr).func, args, call.inline);
 
 		return new IndirectFunctionCall(expr, args);
 	}
@@ -296,7 +361,7 @@ public class ExprValidator implements IVisitor
 		throw new RuntimeException("type of literal could not be deduced");
 	}
 
-	BuiltinType deduceLiteralType(Maybe<Type> maybeType, boolean floatingPoint)
+	private BuiltinType deduceLiteralType(Maybe<Type> maybeType, boolean floatingPoint)
 	{
 		if(maybeType.isNone())
 			errorLiteralTypeDeduction();
@@ -373,8 +438,8 @@ public class ExprValidator implements IVisitor
 		if(globalAccess)
 			throw new RuntimeException("'global' keyword used on reference to symbol that isn't a global");
 
-		if(decl instanceof Function)
-			return new NamedFunc((Function)decl);
+		if(decl instanceof OverloadSet)
+			return new NamedOverloadSet((OverloadSet)decl);
 
 		throw new AssertionError("unreachable");
 	}

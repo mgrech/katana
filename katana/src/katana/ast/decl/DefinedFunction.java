@@ -14,34 +14,20 @@
 
 package katana.ast.decl;
 
+import katana.ast.stmt.Stmt;
 import katana.ast.type.Type;
 import katana.utils.Maybe;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class Function extends Decl
+public class DefinedFunction extends Function
 {
-	public static class Param
+	public DefinedFunction(boolean exported, boolean opaque, String name, List<Param> params, Maybe<Type> ret, ArrayList<Stmt> body)
 	{
-		public Param(Type type, String name)
-		{
-			this.type = type;
-			this.name = name;
-		}
-
-		public Type type;
-		public String name;
+		super(exported, opaque, name, params, ret);
+		this.body = body;
 	}
 
-	protected Function(boolean exported, boolean opaque, String name, List<Param> params, Maybe<Type> ret)
-	{
-		super(exported, opaque);
-		this.name = name;
-		this.params = params;
-		this.ret = ret;
-	}
-
-	public String name;
-	public List<Param> params;
-	public Maybe<Type> ret;
+	public ArrayList<Stmt> body;
 }

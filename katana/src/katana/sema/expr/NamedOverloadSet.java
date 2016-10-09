@@ -12,36 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.ast.decl;
+package katana.sema.expr;
 
-import katana.ast.type.Type;
+import katana.sema.decl.OverloadSet;
+import katana.sema.type.Type;
 import katana.utils.Maybe;
 
-import java.util.List;
-
-public class Function extends Decl
+public class NamedOverloadSet extends Expr
 {
-	public static class Param
+	public NamedOverloadSet(OverloadSet set)
 	{
-		public Param(Type type, String name)
-		{
-			this.type = type;
-			this.name = name;
-		}
-
-		public Type type;
-		public String name;
+		this.set = set;
 	}
 
-	protected Function(boolean exported, boolean opaque, String name, List<Param> params, Maybe<Type> ret)
+	@Override
+	public Maybe<Type> type()
 	{
-		super(exported, opaque);
-		this.name = name;
-		this.params = params;
-		this.ret = ret;
+		throw new AssertionError("typeof on NamedOverloadSet");
 	}
 
-	public String name;
-	public List<Param> params;
-	public Maybe<Type> ret;
+	public OverloadSet set;
 }
