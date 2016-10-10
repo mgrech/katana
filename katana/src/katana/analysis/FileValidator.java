@@ -77,7 +77,9 @@ public class FileValidator implements IVisitor
 			SemaModule module = checkModuleImport(import_.path);
 
 			for(SemaDecl decl : module.decls().values())
-				if(decl.exported)
+				if(decl instanceof SemaDeclOverloadSet)
+					scope.defineSymbol(new SemaDeclImportedOverloadSet((SemaDeclOverloadSet)decl));
+				else if(decl.exported)
 					scope.defineSymbol(decl);
 		}
 
@@ -87,7 +89,10 @@ public class FileValidator implements IVisitor
 			SemaDeclRenamedImport semaImport = new SemaDeclRenamedImport(module, import_.rename);
 
 			for(SemaDecl decl : module.decls().values())
-				semaImport.decls.put(decl.name(), decl);
+				if(decl instanceof SemaDeclOverloadSet)
+					semaImport.decls.put(decl.name(), new SemaDeclImportedOverloadSet((SemaDeclOverloadSet)decl));
+				else
+					semaImport.decls.put(decl.name(), decl);
 
 			scope.defineSymbol(semaImport);
 		}

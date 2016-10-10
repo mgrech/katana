@@ -249,11 +249,11 @@ public class ExprValidator implements IVisitor
 		return Maybe.some(result);
 	}
 
-	private SemaExpr resolveOverloadedCall(SemaDeclOverloadSet set, List<AstExpr> args, Maybe<Boolean> inline)
+	private SemaExpr resolveOverloadedCall(List<SemaDeclFunction> set, String name, List<AstExpr> args, Maybe<Boolean> inline)
 	{
 		IdentityHashMap<SemaDeclFunction, List<SemaExpr>> candidates = new IdentityHashMap<>();
 
-		for(SemaDeclFunction overload : set.overloads)
+		for(SemaDeclFunction overload : set)
 		{
 			if(overload.params.size() != args.size())
 				continue;
@@ -266,12 +266,12 @@ public class ExprValidator implements IVisitor
 
 		if(candidates.isEmpty())
 		{
-			String fmt = "no matching function for call to %s out of %s overloads";
-			throw new RuntimeException(String.format(fmt, set.name(), set.overloads.size()));
+			String fmt = "no matching function for call to '%s' out of %s overloads";
+			throw new RuntimeException(String.format(fmt, name, set.size()));
 		}
 
 		if(candidates.size() > 1)
-			throw new RuntimeException(String.format("ambiguous call to function %s", set.name()));
+			throw new RuntimeException(String.format("ambiguous call to function '%s'", name));
 
 		Map.Entry<SemaDeclFunction, List<SemaExpr>> first = candidates.entrySet().iterator().next();
 		return new SemaExprDirectFunctionCall(first.getKey(), first.getValue(), inline);
@@ -281,8 +281,24 @@ public class ExprValidator implements IVisitor
 	{
 		SemaExpr expr = validate(call.expr, scope, context, validateDecl, Maybe.none());
 
+		if(expr instanceof SemaExprNamedImportedOverloadSet)
+		{
+			SemaDeclOverloadSet set = ((SemaExprNamedImportedOverloadSet)expr).set.set;
+
+			List<SemaDeclFunction> candidates = new ArrayList<>();
+
+			for(SemaDeclFunction function : set.overloads)
+				if(function.exported)
+					candidates.add(function);
+
+			return resolveOverloadedCall(candidates, set.name(), call.args, call.inline);
+		}
+
 		if(expr instanceof SemaExprNamedOverloadSet)
-			return resolveOverloadedCall(((SemaExprNamedOverloadSet)expr).set, call.args, call.inline);
+		{
+			SemaDeclOverloadSet set = ((SemaExprNamedOverloadSet)expr).set;
+			return resolveOverloadedCall(set.overloads, set.name(), call.args, call.inline);
+		}
 
 		if(expr.type().isNone() || !(expr.type().unwrap() instanceof SemaTypeFunction))
 			throw new RuntimeException("expression does not result in function type");
@@ -442,6 +458,9 @@ public class ExprValidator implements IVisitor
 
 		if(decl instanceof SemaDeclOverloadSet)
 			return new SemaExprNamedOverloadSet((SemaDeclOverloadSet)decl);
+
+		if(decl instanceof SemaDeclImportedOverloadSet)
+			return new SemaExprNamedImportedOverloadSet((SemaDeclImportedOverloadSet)decl);
 
 		throw new AssertionError("unreachable");
 	}

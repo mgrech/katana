@@ -20,6 +20,7 @@ import katana.backend.PlatformContext;
 import katana.parser.FileParser;
 import katana.sema.SemaProgram;
 import katana.sema.decl.SemaDecl;
+import katana.sema.decl.SemaDeclImportedOverloadSet;
 import katana.utils.Maybe;
 
 import java.io.IOException;
@@ -35,6 +36,9 @@ public class ProgramValidator
 
 	private void doValidate(SemaDecl decl)
 	{
+		if(decl instanceof SemaDeclImportedOverloadSet)
+			decl = ((SemaDeclImportedOverloadSet)decl).set;
+
 		ValidationState state = statesByDecl.get(decl);
 
 		if(state == null)
