@@ -47,10 +47,12 @@ public class StmtCodeGenerator implements IVisitor
 	public void finish(SemaDeclDefinedFunction func)
 	{
 		if(!preceededByTerminator)
+		{
 			if(func.ret.isNone())
 				builder.append("\tret void\n");
 			else
-				throw new RuntimeException(String.format("at least one path in '%s' returns no value", func.qualifiedName()));
+				builder.append("\tunreachable\n");
+		}
 	}
 
 	private void visit(SemaStmtCompound compound)
