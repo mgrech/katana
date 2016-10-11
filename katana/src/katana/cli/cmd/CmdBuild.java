@@ -24,7 +24,7 @@ import katana.cli.CommandException;
 import katana.sema.SemaModule;
 import katana.sema.SemaProgram;
 import katana.sema.decl.SemaDecl;
-import katana.sema.decl.SemaDeclFunction;
+import katana.sema.decl.SemaDeclOverloadSet;
 import katana.utils.Maybe;
 
 import java.io.FileOutputStream;
@@ -73,37 +73,42 @@ public class CmdBuild
 		return module.unwrap().findDecl(symbol);
 	}
 
-	private static SemaDecl findMainFunction(SemaProgram program, String name)
+	private static SemaDecl findEntryPointFunction(SemaProgram program, String name)
 	{
-		Maybe<SemaDecl> main = resolvePath(program, name);
+		Maybe<SemaDecl> entry = resolvePath(program, name);
 
-		if(main.isNone())
-			throw new RuntimeException("main function not found");
+		if(entry.isNone())
+			throw new RuntimeException(String.format("entry point '%s' could not found", name));
 
-		SemaDecl decl = main.unwrap();
+		SemaDecl decl = entry.unwrap();
 
-		if(!(decl instanceof SemaDeclFunction))
-			throw new RuntimeException("specified symbol is not a function");
+		if(!(decl instanceof SemaDeclOverloadSet))
+			throw new RuntimeException("the specified entry point symbol does not refer to function");
 
-		return decl;
+		SemaDeclOverloadSet set = (SemaDeclOverloadSet)decl;
+
+		if(set.overloads.size() != 1)
+			throw new RuntimeException("entry point function may not be overloaded");
+
+		return set.overloads.get(0);
 	}
 
 	public static void run(String[] args) throws IOException
 	{
 		if(args.length > 1)
-			throw new CommandException("invalid number of arguments, usage: build [main-func]");
+			throw new CommandException("invalid number of arguments, usage: build [entry-point-symbol]");
 
 		PlatformContext context = new PlatformContextLlvmAmd64();
 		List<Path> filePaths = discoverSourceFiles(Paths.get("./source"));
 
 		SemaProgram program = ProgramValidator.validate(filePaths, context);
 
-		Maybe<SemaDecl> main = Maybe.none();
+		Maybe<SemaDecl> entry = Maybe.none();
 
 		if(args.length == 1)
-			main = Maybe.some(findMainFunction(program, args[0]));
+			entry = Maybe.some(findEntryPointFunction(program, args[0]));
 
-		String output = ProgramCodeGenerator.generate(program, context, main);
+		String output = ProgramCodeGenerator.generate(program, context, entry);
 
 		try(OutputStream stream = new FileOutputStream("output/program.ll"))
 		{

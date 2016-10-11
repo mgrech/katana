@@ -27,7 +27,7 @@ public class AstPath
 
 	public AstPath(String... components)
 	{
-		this.components = Arrays.asList(components);
+		this.components = new ArrayList<>(Arrays.asList(components));
 	}
 
 	public AstPath(List<String> components)
@@ -39,7 +39,7 @@ public class AstPath
 
 	public static AstPath fromString(String s)
 	{
-		return new AstPath(Arrays.asList(s.split("\\.")));
+		return new AstPath(new ArrayList<>(Arrays.asList(s.split("\\."))));
 	}
 
 	@Override
