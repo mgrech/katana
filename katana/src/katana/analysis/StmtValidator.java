@@ -14,6 +14,7 @@
 
 package katana.analysis;
 
+import katana.ast.expr.AstExpr;
 import katana.ast.stmt.*;
 import katana.backend.PlatformContext;
 import katana.sema.decl.SemaDecl;
@@ -95,23 +96,42 @@ public class StmtValidator implements IVisitor
 		return semaGoto;
 	}
 
+	private enum ConditionKind
+	{
+		IF,
+		WHILE,
+	}
+
+	private SemaExpr validateCondition(AstExpr expr, ConditionKind kind)
+	{
+		SemaExpr condition = ExprValidator.validate(expr, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.BOOL));
+
+		if(condition.type().isNone())
+		{
+			String fmt = "%s requires condition of type 'bool', got expression yielding 'void'";
+			throw new RuntimeException(String.format(fmt, kind.toString().toLowerCase()));
+		}
+
+		SemaType conditionTypeDecayed = TypeHelper.decay(condition.type().unwrap());
+
+		if(!SemaType.same(conditionTypeDecayed, SemaTypeBuiltin.BOOL))
+		{
+			String fmt = "%s requires condition of type 'bool', got '%s'";
+			throw new RuntimeException(String.format(fmt, kind.toString().toLowerCase(), conditionTypeDecayed));
+		}
+
+		return condition;
+	}
+
 	private SemaStmt visit(AstStmtIf if_)
 	{
-		SemaExpr condition = ExprValidator.validate(if_.condition, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.BOOL));
-
-		if(condition.type().isNone() || !SemaType.same(condition.type().unwrap(), SemaTypeBuiltin.BOOL))
-			throw new RuntimeException("if requires condition of type bool");
-
+		SemaExpr condition = validateCondition(if_.condition, ConditionKind.IF);
 		return new SemaStmtIf(if_.negated, condition, validate(if_.then));
 	}
 
 	private SemaStmt visit(AstStmtIfElse ifelse)
 	{
-		SemaExpr condition = ExprValidator.validate(ifelse.condition, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.BOOL));
-
-		if(condition.type().isNone() || !SemaType.same(condition.type().unwrap(), SemaTypeBuiltin.BOOL))
-			throw new RuntimeException("if requires condition of type bool");
-
+		SemaExpr condition = validateCondition(ifelse.condition, ConditionKind.IF);
 		return new SemaStmtIfElse(ifelse.negated, condition, validate(ifelse.then), validate(ifelse.else_));
 	}
 
@@ -122,11 +142,7 @@ public class StmtValidator implements IVisitor
 
 	private SemaStmt visit(AstStmtWhile while_)
 	{
-		SemaExpr condition = ExprValidator.validate(while_.condition, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.BOOL));
-
-		if(condition.type().isNone() || !SemaType.same(condition.type().unwrap(), SemaTypeBuiltin.BOOL))
-			throw new RuntimeException("while requires condition of type bool");
-
+		SemaExpr condition = validateCondition(while_.condition, ConditionKind.WHILE);
 		return new SemaStmtWhile(while_.negated, condition, validate(while_.body));
 	}
 
@@ -158,11 +174,12 @@ public class StmtValidator implements IVisitor
 
 			SemaType type = maybeType.unwrap();
 			SemaType typeDecayed = TypeHelper.decay(type);
+			SemaType retTypeDecayed = TypeHelper.decay(function.ret.unwrap());
 
-			if(!SemaType.same(function.ret.unwrap(), typeDecayed))
+			if(!SemaType.same(retTypeDecayed, typeDecayed))
 			{
 				String fmt = "function %s returns value of type %s, %s given";
-				throw new RuntimeException(String.format(fmt, function.qualifiedName(), function.ret.unwrap(), typeDecayed));
+				throw new RuntimeException(String.format(fmt, function.qualifiedName(), retTypeDecayed, typeDecayed));
 			}
 		}
 
