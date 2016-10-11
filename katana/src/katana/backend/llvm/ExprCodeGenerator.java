@@ -206,7 +206,18 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprDirectFunctionCall functionCall)
 	{
-		String functionSSA = '@' + FunctionNameMangler.mangle(functionCall.function);
+		String name;
+
+		if(functionCall.function instanceof SemaDeclExternFunction)
+		{
+			SemaDeclExternFunction extfn = (SemaDeclExternFunction)functionCall.function;
+			name = extfn.externName;
+		}
+
+		else
+			name = FunctionNameMangler.mangle(functionCall.function);
+
+		String functionSSA = '@' + name;
 		return generateFunctionCall(functionSSA, functionCall.args, functionCall.function.ret, functionCall.inline);
 	}
 
