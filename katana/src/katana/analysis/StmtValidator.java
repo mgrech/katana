@@ -63,7 +63,7 @@ public class StmtValidator implements IVisitor
 			SemaStmtLabel label = function.labels.get(labelName);
 
 			if(label == null)
-				throw new RuntimeException("unknown label '@" + labelName + "'");
+				throw new RuntimeException(String.format("unknown label '%s'", labelName));
 
 			entry.getKey().target = label;
 		}
@@ -84,7 +84,7 @@ public class StmtValidator implements IVisitor
 		SemaStmtLabel semaLabel = new SemaStmtLabel(label.name);
 
 		if(!function.defineLabel(semaLabel))
-			throw new RuntimeException("duplicate label name '" + label.name + "'");
+			throw new RuntimeException(String.format("duplicate label name '%s'", label.name));
 
 		return semaLabel;
 	}
@@ -152,13 +152,13 @@ public class StmtValidator implements IVisitor
 
 		if(function.ret.isNone() && value.isSome())
 		{
-			String fmt = "function %s returns nothing, value given";
+			String fmt = "function '%s' returns 'void', value given";
 			throw new RuntimeException(String.format(fmt, function.qualifiedName()));
 		}
 
 		if(function.ret.isSome() && value.isNone())
 		{
-			String fmt = "function %s returns value of type %s, none given";
+			String fmt = "function '%s' returns value of type '%s', no value given";
 			throw new RuntimeException(String.format(fmt, function.qualifiedName(), function.ret.unwrap()));
 		}
 
@@ -168,7 +168,7 @@ public class StmtValidator implements IVisitor
 
 			if(maybeType.isNone())
 			{
-				String fmt = "function %s returns value of type %s, expression given results in no value";
+				String fmt = "function '%s' returns value of type '%s', got expression yielding 'void'";
 				throw new RuntimeException(String.format(fmt, function.qualifiedName(), function.ret.unwrap()));
 			}
 
@@ -178,7 +178,7 @@ public class StmtValidator implements IVisitor
 
 			if(!SemaType.same(retTypeDecayed, typeDecayed))
 			{
-				String fmt = "function %s returns value of type %s, %s given";
+				String fmt = "function '%s' returns value of type '%s', '%s' given";
 				throw new RuntimeException(String.format(fmt, function.qualifiedName(), retTypeDecayed, typeDecayed));
 			}
 		}
@@ -199,7 +199,7 @@ public class StmtValidator implements IVisitor
 		SemaExpr init = ExprValidator.validate(local.init, scope, context, validateDecl, maybeDeclaredTypeDecayed);
 
 		if(init.type().isNone())
-			throw new RuntimeException(String.format("initializer for local '%s' yields void", local.name));
+			throw new RuntimeException(String.format("initializer for local '%s' yields 'void'", local.name));
 
 		SemaType initType = init.type().unwrap();
 		SemaType initTypeDecayed = TypeHelper.decay(initType);

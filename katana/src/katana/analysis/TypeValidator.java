@@ -86,7 +86,7 @@ public class TypeValidator implements IVisitor
 	private SemaType visit(AstTypeArray array)
 	{
 		if(array.length.compareTo(BigInteger.ZERO) == -1)
-			throw new RuntimeException(String.format("invalid array length %s", array.length));
+			throw new RuntimeException(String.format("negative array length", array.length));
 
 		return new SemaTypeArray(array.length, validate(array.type, scope, context, validateDecl));
 	}
@@ -139,13 +139,13 @@ public class TypeValidator implements IVisitor
 	private SemaType visit(AstTypeTypeof typeof)
 	{
 		if(scope == null)
-			throw new RuntimeException("typeof is not valid in this context");
+			throw new RuntimeException("'typeof' is not valid in this context");
 
 		SemaExpr expr = ExprValidator.validate(typeof.expr, scope, context, validateDecl, Maybe.none());
 		Maybe<SemaType> type = expr.type();
 
 		if(type.isNone())
-			throw new RuntimeException("expression passed to typeof yields no type");
+			throw new RuntimeException("expression passed to 'typeof' yields 'void'");
 
 		return type.unwrap();
 	}

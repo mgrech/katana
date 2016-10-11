@@ -144,7 +144,7 @@ public class DeclValidator implements IVisitor
 		SemaExprLiteral init = (SemaExprLiteral)ExprValidator.validate(global.init, scope, context, validateDecl, maybeDeclaredTypeDecayed);
 
 		if(init.type().isNone())
-			throw new RuntimeException(String.format("initializer for global %s yields void", global.name));
+			throw new RuntimeException(String.format("initializer for global %s yields 'void'", global.name));
 
 		SemaType initType = init.type().unwrap();
 		SemaType initTypeDecayed = TypeHelper.decay(initType);

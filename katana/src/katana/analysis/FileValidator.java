@@ -141,7 +141,7 @@ public class FileValidator implements IVisitor
 	private void requireModule()
 	{
 		if(currentModule == null)
-			throw new RuntimeException("no module defined");
+			throw new RuntimeException("a module must be defined before other declarations");
 	}
 
 	private void redefinitionError(SemaSymbol symbol)
@@ -216,7 +216,7 @@ public class FileValidator implements IVisitor
 	private Maybe<SemaDecl> visit(AstDeclImport import_)
 	{
 		if(declsSeen)
-			throw new RuntimeException("imports must go before other decls");
+			throw new RuntimeException("imports must go first in a file");
 
 		if(imports.containsKey(import_.path))
 			throw new RuntimeException(String.format("duplicate import '%s'", import_.path));
@@ -229,7 +229,7 @@ public class FileValidator implements IVisitor
 	private Maybe<SemaDecl> visit(AstDeclRenamedImport import_)
 	{
 		if(declsSeen)
-			throw new RuntimeException("imports must go before other decls");
+			throw new RuntimeException("imports must go first in a file");
 
 		if(renamedImports.containsKey(import_.rename))
 			throw new RuntimeException(String.format("duplicate renamed import '%s'", import_.rename));
