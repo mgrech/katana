@@ -130,16 +130,10 @@ public class TypeValidator implements IVisitor
 	{
 		SemaType type = validate(const_.type, scope, context, validateDecl);
 
-		if(type instanceof SemaTypeConst)
-			return type;
-
-		if(type instanceof SemaTypeArray)
-			throw new RuntimeException("forming const array type, did you mean array of const element type?");
-
 		if(type instanceof SemaTypeFunction)
 			throw new RuntimeException("forming const function type");
 
-		return new SemaTypeConst(type);
+		return TypeHelper.addConst(type);
 	}
 
 	private SemaType visit(AstTypeTypeof typeof)
