@@ -19,6 +19,7 @@ import katana.BuiltinType;
 import katana.Limits;
 import katana.ast.expr.*;
 import katana.backend.PlatformContext;
+import katana.diag.TypeString;
 import katana.sema.SemaSymbol;
 import katana.sema.decl.*;
 import katana.sema.expr.*;
@@ -79,7 +80,7 @@ public class ExprValidator implements IVisitor
 			if(!SemaType.same(paramTypeDecayed, argTypeDecayed))
 			{
 				String fmt = "type mismatch in argument %s: expected '%s', got '%s'";
-				throw new RuntimeException(String.format(fmt, argCount, paramTypeDecayed, argTypeDecayed));
+				throw new RuntimeException(String.format(fmt, argCount, TypeString.of(paramTypeDecayed), TypeString.of(argTypeDecayed)));
 			}
 		}
 	}
@@ -147,7 +148,7 @@ public class ExprValidator implements IVisitor
 		if(!SemaType.same(leftTypeDecayed, rightTypeDecayed))
 		{
 			String fmt = "compatible types expected in assignment, got '%s' and '%s'";
-			throw new RuntimeException(String.format(fmt, leftTypeDecayed, rightTypeDecayed));
+			throw new RuntimeException(String.format(fmt, TypeString.of(leftTypeDecayed), TypeString.of(rightTypeDecayed)));
 		}
 
 		SemaExprLValueExpr leftAsLvalue = (SemaExprLValueExpr)left;
@@ -210,7 +211,7 @@ public class ExprValidator implements IVisitor
 		if(expr.type().isNone() || expr.type().unwrap() != SemaTypeBuiltin.PTR)
 		{
 			String fmt = "expected expression of type 'ptr' in 'deref', got '%s'";
-			String typeString = expr.type().map(t -> t.toString()).or("void");
+			String typeString = expr.type().map(TypeString::of).or("void");
 			throw new RuntimeException(String.format(fmt, typeString));
 		}
 
@@ -359,9 +360,9 @@ public class ExprValidator implements IVisitor
 
 			if(elemTypeDecayed.isNone() || !SemaType.same(elemTypeDecayed.unwrap(), typeDecayed))
 			{
-				String gotten = elemTypeDecayed.map(SemaType::toString).or("void");
+				String gotten = elemTypeDecayed.map(TypeString::of).or("void");
 				String fmt = "element in array literal at index %s has type '%s', expected '%s'";
-				throw new RuntimeException(String.format(fmt, i, gotten, typeDecayed));
+				throw new RuntimeException(String.format(fmt, i, gotten, TypeString.of(typeDecayed)));
 			}
 
 			values.add(semaExpr);
@@ -474,7 +475,7 @@ public class ExprValidator implements IVisitor
 
 	private void errorNoSuchField(SemaType type, String fieldName)
 	{
-		throw new RuntimeException(String.format("type '%s' has no field named '%s'", type, fieldName));
+		throw new RuntimeException(String.format("type '%s' has no field named '%s'", TypeString.of(type), fieldName));
 	}
 
 	private SemaExpr visit(AstExprMemberAccess memberAccess, Maybe<SemaType> deduce)

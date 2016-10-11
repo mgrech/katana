@@ -23,6 +23,7 @@ import katana.backend.llvm.ProgramCodeGenerator;
 import katana.backend.llvm.amd64.PlatformContextLlvmAmd64;
 import katana.cli.Command;
 import katana.cli.CommandException;
+import katana.diag.TypeString;
 import katana.sema.SemaModule;
 import katana.sema.SemaProgram;
 import katana.sema.decl.SemaDecl;
@@ -103,7 +104,7 @@ public class CmdBuild
 		SemaType ret = TypeHelper.decay(func.ret.unwrap());
 
 		if(!(ret instanceof SemaTypeBuiltin) || ((SemaTypeBuiltin)ret).which != BuiltinType.INT8)
-			throw new RuntimeException(String.format("entry point must return 'void' or 'int32', got '%s'", ret));
+			throw new RuntimeException(String.format("entry point must return 'void' or 'int32', got '%s'", TypeString.of(ret)));
 
 		return func;
 	}

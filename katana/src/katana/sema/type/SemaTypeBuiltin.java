@@ -61,11 +61,5 @@ public class SemaTypeBuiltin extends SemaType
 		return which == ((SemaTypeBuiltin)other).which;
 	}
 
-	@Override
-	public String toString()
-	{
-		return which.toString().toLowerCase();
-	}
-
 	public BuiltinType which;
 }

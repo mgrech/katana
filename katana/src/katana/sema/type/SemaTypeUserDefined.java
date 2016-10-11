@@ -44,11 +44,5 @@ public class SemaTypeUserDefined extends SemaType
 		return data == ((SemaTypeUserDefined)other).data;
 	}
 
-	@Override
-	public String toString()
-	{
-		return data.qualifiedName().toString();
-	}
-
 	public SemaDeclData data;
 }

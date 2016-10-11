@@ -45,12 +45,6 @@ public class SemaTypeArray extends SemaType
 		return length.equals(o.length) && SemaType.same(type, o.type);
 	}
 
-	@Override
-	public String toString()
-	{
-		return String.format("[%s]%s", length, type);
-	}
-
 	public BigInteger length;
 	public SemaType type;
 }

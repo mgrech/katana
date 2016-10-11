@@ -45,12 +45,6 @@ public class SemaTypeOpaque extends SemaType
 		return size.equals(o.size) && alignment.equals(o.alignment);
 	}
 
-	@Override
-	public String toString()
-	{
-		return String.format("opaque(%s, %s)", size, alignment);
-	}
-
 	public BigInteger size;
 	public BigInteger alignment;
 }

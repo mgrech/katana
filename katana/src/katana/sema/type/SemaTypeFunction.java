@@ -67,27 +67,6 @@ public class SemaTypeFunction extends SemaType
 		return true;
 	}
 
-	@Override
-	public String toString()
-	{
-		StringBuilder paramString = new StringBuilder();
-
-		if(!params.isEmpty())
-		{
-			paramString.append(params.get(0));
-
-			for(int i = 1; i != params.size(); ++i)
-			{
-				paramString.append(", ");
-				paramString.append(params.get(i));
-			}
-		}
-
-		String retString = ret.isNone() ? "" : " => " + ret.unwrap();
-
-		return String.format("fn(%s)%s", paramString, retString);
-	}
-
 	public Maybe<SemaType> ret;
 	public List<SemaType> params;
 }

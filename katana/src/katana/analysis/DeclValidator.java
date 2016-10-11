@@ -16,6 +16,7 @@ package katana.analysis;
 
 import katana.ast.decl.*;
 import katana.backend.PlatformContext;
+import katana.diag.TypeString;
 import katana.sema.decl.*;
 import katana.sema.expr.SemaExprLiteral;
 import katana.sema.scope.SemaScopeFile;
@@ -154,7 +155,7 @@ public class DeclValidator implements IVisitor
 		if(!SemaType.same(globalTypeDecayed, initTypeDecayed))
 		{
 			String fmt = "initializer for global '%s' has wrong type: expected '%s', got '%s'";
-			throw new RuntimeException(String.format(fmt, semaGlobal.name(), globalTypeDecayed, initTypeDecayed));
+			throw new RuntimeException(String.format(fmt, semaGlobal.name(), TypeString.of(globalTypeDecayed), TypeString.of(initTypeDecayed)));
 		}
 
 		semaGlobal.init = init;

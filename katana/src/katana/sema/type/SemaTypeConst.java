@@ -43,11 +43,5 @@ public class SemaTypeConst extends SemaType
 		return SemaType.same(type, ((SemaTypeConst)other).type);
 	}
 
-	@Override
-	public String toString()
-	{
-		return String.format("const %s", type);
-	}
-
 	public SemaType type;
 }

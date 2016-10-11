@@ -17,6 +17,7 @@ package katana.analysis;
 import katana.ast.expr.AstExpr;
 import katana.ast.stmt.*;
 import katana.backend.PlatformContext;
+import katana.diag.TypeString;
 import katana.sema.decl.SemaDecl;
 import katana.sema.decl.SemaDeclDefinedFunction;
 import katana.sema.expr.SemaExpr;
@@ -117,7 +118,7 @@ public class StmtValidator implements IVisitor
 		if(!SemaType.same(conditionTypeDecayed, SemaTypeBuiltin.BOOL))
 		{
 			String fmt = "%s requires condition of type 'bool', got '%s'";
-			throw new RuntimeException(String.format(fmt, kind.toString().toLowerCase(), conditionTypeDecayed));
+			throw new RuntimeException(String.format(fmt, kind.toString().toLowerCase(), TypeString.of(conditionTypeDecayed)));
 		}
 
 		return condition;
@@ -159,7 +160,7 @@ public class StmtValidator implements IVisitor
 		if(function.ret.isSome() && value.isNone())
 		{
 			String fmt = "function '%s' returns value of type '%s', no value given";
-			throw new RuntimeException(String.format(fmt, function.qualifiedName(), function.ret.unwrap()));
+			throw new RuntimeException(String.format(fmt, function.qualifiedName(), TypeString.of(function.ret.unwrap())));
 		}
 
 		if(function.ret.isSome() && value.isSome())
@@ -169,7 +170,7 @@ public class StmtValidator implements IVisitor
 			if(maybeType.isNone())
 			{
 				String fmt = "function '%s' returns value of type '%s', got expression yielding 'void'";
-				throw new RuntimeException(String.format(fmt, function.qualifiedName(), function.ret.unwrap()));
+				throw new RuntimeException(String.format(fmt, function.qualifiedName(), TypeString.of(function.ret.unwrap())));
 			}
 
 			SemaType type = maybeType.unwrap();
@@ -179,7 +180,7 @@ public class StmtValidator implements IVisitor
 			if(!SemaType.same(retTypeDecayed, typeDecayed))
 			{
 				String fmt = "function '%s' returns value of type '%s', '%s' given";
-				throw new RuntimeException(String.format(fmt, function.qualifiedName(), retTypeDecayed, typeDecayed));
+				throw new RuntimeException(String.format(fmt, function.qualifiedName(), TypeString.of(retTypeDecayed), TypeString.of(typeDecayed)));
 			}
 		}
 
@@ -209,7 +210,7 @@ public class StmtValidator implements IVisitor
 		if(!SemaType.same(localTypeDecayed, initTypeDecayed))
 		{
 			String fmt = "initializer for local '%s' has wrong type: expected '%s', got '%s'";
-			throw new RuntimeException(String.format(fmt, local.name, localTypeDecayed, initTypeDecayed));
+			throw new RuntimeException(String.format(fmt, local.name, TypeString.of(localTypeDecayed), TypeString.of(initTypeDecayed)));
 		}
 
 		if(!function.defineLocal(local.name, localType))
