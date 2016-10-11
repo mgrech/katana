@@ -208,7 +208,11 @@ public class ExprValidator implements IVisitor
 		SemaExpr expr = validate(deref.expr, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.PTR));
 
 		if(expr.type().isNone() || expr.type().unwrap() != SemaTypeBuiltin.PTR)
-			throw new RuntimeException("expression of type 'ptr' expected in 'deref'");
+		{
+			String fmt = "expected expression of type 'ptr' in 'deref', got '%s'";
+			String typeString = expr.type().map(t -> t.toString()).or("void");
+			throw new RuntimeException(String.format(fmt, typeString));
+		}
 
 		return new SemaExprDeref(TypeValidator.validate(deref.type, scope, context, validateDecl), expr);
 	}

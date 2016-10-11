@@ -61,7 +61,7 @@ public class DeclValidator implements IVisitor
 			SemaType type = TypeValidator.validate(field.type, scope, context, validateDecl);
 
 			if(!semaData.defineField(field.name, type))
-				throw new RuntimeException(String.format("duplicate field '%s' in data '%s'", field.name, semaData.name()));
+				throw new RuntimeException(String.format("duplicate field '%s' in type '%s'", field.name, semaData.name()));
 		}
 	}
 
