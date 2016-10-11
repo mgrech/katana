@@ -35,12 +35,12 @@ public class ProgramCodeGenerator
 			generator.generate(decl);
 	}
 
-	private static void generateMainWrapper(StringBuilder builder, SemaDecl func)
+	private static void generateEntryPointWrapper(StringBuilder builder, SemaDecl func)
 	{
 		Maybe<SemaType> ret = ((SemaDeclFunction)func).ret;
 
 		if(ret.isSome() && (!(ret.unwrap() instanceof SemaTypeBuiltin) || ((SemaTypeBuiltin)ret.unwrap()).which != BuiltinType.INT32))
-			throw new RuntimeException("main function must return int32 or nothing");
+			throw new AssertionError("unreachable");
 
 		builder.append("define i32 @main()\n{\n");
 
@@ -59,13 +59,13 @@ public class ProgramCodeGenerator
 		builder.append("}\n");
 	}
 
-	public static String generate(SemaProgram program, PlatformContext context, Maybe<SemaDecl> main)
+	public static String generate(SemaProgram program, PlatformContext context, Maybe<SemaDecl> entry)
 	{
 		StringBuilder builder = new StringBuilder();
 		generate(new DeclCodeGenerator(builder, context), program.root);
 
-		if(main.isSome())
-			generateMainWrapper(builder, main.unwrap());
+		if(entry.isSome())
+			generateEntryPointWrapper(builder, entry.unwrap());
 
 		return builder.toString();
 	}

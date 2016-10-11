@@ -14,7 +14,9 @@
 
 package katana.cli.cmd;
 
+import katana.BuiltinType;
 import katana.analysis.ProgramValidator;
+import katana.analysis.TypeHelper;
 import katana.ast.AstPath;
 import katana.backend.PlatformContext;
 import katana.backend.llvm.ProgramCodeGenerator;
@@ -24,7 +26,10 @@ import katana.cli.CommandException;
 import katana.sema.SemaModule;
 import katana.sema.SemaProgram;
 import katana.sema.decl.SemaDecl;
+import katana.sema.decl.SemaDeclFunction;
 import katana.sema.decl.SemaDeclOverloadSet;
+import katana.sema.type.SemaType;
+import katana.sema.type.SemaTypeBuiltin;
 import katana.utils.Maybe;
 
 import java.io.FileOutputStream;
@@ -90,7 +95,17 @@ public class CmdBuild
 		if(set.overloads.size() != 1)
 			throw new RuntimeException("entry point function may not be overloaded");
 
-		return set.overloads.get(0);
+		SemaDeclFunction func = set.overloads.get(0);
+
+		if(func.ret.isNone())
+			return func;
+
+		SemaType ret = TypeHelper.decay(func.ret.unwrap());
+
+		if(!(ret instanceof SemaTypeBuiltin) || ((SemaTypeBuiltin)ret).which != BuiltinType.INT8)
+			throw new RuntimeException(String.format("entry point must return 'void' or 'int32', got '%s'", ret));
+
+		return func;
 	}
 
 	public static void run(String[] args) throws IOException
