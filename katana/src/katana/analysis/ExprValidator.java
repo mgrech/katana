@@ -422,7 +422,7 @@ public class ExprValidator implements IVisitor
 			lit.type = Maybe.some(deduceLiteralType(deduce, true));
 
 		if(!Limits.inRange(lit.value, lit.type.unwrap()))
-			throw new RuntimeException(String.format("floating point literal value is out of range: ", lit.value));
+			throw new RuntimeException(String.format("floating point literal value is out of range: %s", lit.value));
 
 		return new SemaExprLitFloat(lit.value, lit.type.unwrap());
 	}
@@ -433,7 +433,7 @@ public class ExprValidator implements IVisitor
 			lit.type = Maybe.some(deduceLiteralType(deduce, false));
 
 		if(!Limits.inRange(lit.value, lit.type.unwrap(), context))
-			throw new RuntimeException(String.format("integer literal value is out of range: ", lit.value));
+			throw new RuntimeException(String.format("integer literal value is out of range: %s", lit.value));
 
 		return new SemaExprLitInt(lit.value, lit.type.unwrap());
 	}
