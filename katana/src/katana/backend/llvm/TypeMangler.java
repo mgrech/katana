@@ -31,7 +31,7 @@ public class TypeMangler implements IVisitor
 
 	private String visit(SemaTypeBuiltin builtin)
 	{
-		return builtin.toString();
+		return builtin.which.toString().toLowerCase();
 	}
 
 	private String visit(SemaTypeConst const_)
