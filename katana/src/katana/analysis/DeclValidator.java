@@ -15,6 +15,7 @@
 package katana.analysis;
 
 import katana.ast.decl.*;
+import katana.ast.type.AstTypeBuiltin;
 import katana.backend.PlatformContext;
 import katana.diag.TypeString;
 import katana.sema.decl.*;
@@ -76,7 +77,7 @@ public class DeclValidator implements IVisitor
 				throw new RuntimeException(String.format("duplicate parameter name '%s' in function '%s'", param.name, function.name));
 		}
 
-		semaFunction.ret = function.ret.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
+		semaFunction.ret = TypeValidator.validate(function.ret.or(AstTypeBuiltin.VOID), scope, context, validateDecl);
 
 		if(semaFunction instanceof SemaDeclDefinedFunction)
 		{
@@ -116,7 +117,6 @@ public class DeclValidator implements IVisitor
 				if(sameSignatures(a, b))
 					throw new RuntimeException(String.format("duplicate overloads in overload set '%s'", set.qualifiedName()));
 			}
-
 	}
 
 	private Map<SemaDeclDefinedFunction, StmtValidator> visit(SemaDeclOverloadSet set, OverloadDeclList functions)
@@ -144,11 +144,10 @@ public class DeclValidator implements IVisitor
 		Maybe<SemaType> maybeDeclaredTypeDecayed = maybeDeclaredType.map(TypeHelper::decay);
 		SemaExprLiteral init = (SemaExprLiteral)ExprValidator.validate(global.init, scope, context, validateDecl, maybeDeclaredTypeDecayed);
 
-		if(init.type().isNone())
+		if(TypeHelper.isVoidType(init.type()))
 			throw new RuntimeException(String.format("initializer for global %s yields 'void'", global.name));
 
-		SemaType initType = init.type().unwrap();
-		SemaType initTypeDecayed = TypeHelper.decay(initType);
+		SemaType initTypeDecayed = TypeHelper.decay(init.type());
 		SemaType globalType = maybeDeclaredType.or(initTypeDecayed);
 		SemaType globalTypeDecayed = TypeHelper.decay(globalType);
 

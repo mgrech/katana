@@ -14,10 +14,8 @@
 
 package katana.analysis;
 
-import katana.sema.type.SemaType;
-import katana.sema.type.SemaTypeArray;
-import katana.sema.type.SemaTypeConst;
-import katana.sema.type.SemaTypeFunction;
+import katana.BuiltinType;
+import katana.sema.type.*;
 
 public class TypeHelper
 {
@@ -58,6 +56,31 @@ public class TypeHelper
 		}
 
 		return type;
+	}
+
+	public static boolean isVoidType(SemaType type)
+	{
+		return isBuiltinType(type, BuiltinType.VOID);
+	}
+
+	public static boolean isBuiltinType(SemaType type, BuiltinType which)
+	{
+		type = removeConst(type);
+
+		if(!(type instanceof SemaTypeBuiltin))
+			return false;
+
+		return ((SemaTypeBuiltin)type).which == which;
+	}
+
+	public static boolean isArrayType(SemaType type)
+	{
+		return type instanceof SemaTypeArray;
+	}
+
+	public static boolean isFunctionType(SemaType type)
+	{
+		return type instanceof SemaTypeFunction;
 	}
 
 	public static SemaType decay(SemaType type)

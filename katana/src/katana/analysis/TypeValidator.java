@@ -55,6 +55,7 @@ public class TypeValidator implements IVisitor
 	{
 		switch(builtin.which)
 		{
+		case VOID:    return SemaTypeBuiltin.VOID;
 		case INT8:    return SemaTypeBuiltin.INT8;
 		case UINT8:   return SemaTypeBuiltin.UINT8;
 		case INT16:   return SemaTypeBuiltin.INT16;
@@ -99,7 +100,7 @@ public class TypeValidator implements IVisitor
 			params.add(validate(param, scope, context, validateDecl));
 
 		Maybe<SemaType> ret = functionType.ret.map(type -> validate(type, scope, context, validateDecl));
-		return new SemaTypeFunction(ret, params);
+		return new SemaTypeFunction(ret.or(SemaTypeBuiltin.VOID), params);
 	}
 
 	private SemaType visit(AstTypeUserDefined user)
@@ -142,11 +143,11 @@ public class TypeValidator implements IVisitor
 			throw new RuntimeException("'typeof' is not valid in this context");
 
 		SemaExpr expr = ExprValidator.validate(typeof.expr, scope, context, validateDecl, Maybe.none());
-		Maybe<SemaType> type = expr.type();
+		SemaType type = expr.type();
 
-		if(type.isNone())
+		if(TypeHelper.isVoidType(type))
 			throw new RuntimeException("expression passed to 'typeof' yields 'void'");
 
-		return type.unwrap();
+		return type;
 	}
 }

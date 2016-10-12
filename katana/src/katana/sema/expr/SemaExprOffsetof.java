@@ -17,7 +17,6 @@ package katana.sema.expr;
 import katana.sema.decl.SemaDeclData;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeBuiltin;
-import katana.utils.Maybe;
 
 public class SemaExprOffsetof extends SemaExpr
 {
@@ -27,9 +26,9 @@ public class SemaExprOffsetof extends SemaExpr
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
-		return Maybe.some(SemaTypeBuiltin.PINT);
+		return SemaTypeBuiltin.PINT;
 	}
 
 	public SemaDeclData.Field field;

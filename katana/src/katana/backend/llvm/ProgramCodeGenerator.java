@@ -14,14 +14,13 @@
 
 package katana.backend.llvm;
 
-import katana.BuiltinType;
+import katana.analysis.TypeHelper;
 import katana.backend.PlatformContext;
 import katana.sema.SemaModule;
 import katana.sema.SemaProgram;
 import katana.sema.decl.SemaDecl;
 import katana.sema.decl.SemaDeclFunction;
 import katana.sema.type.SemaType;
-import katana.sema.type.SemaTypeBuiltin;
 import katana.utils.Maybe;
 
 public class ProgramCodeGenerator
@@ -37,23 +36,20 @@ public class ProgramCodeGenerator
 
 	private static void generateEntryPointWrapper(StringBuilder builder, SemaDecl func)
 	{
-		Maybe<SemaType> ret = ((SemaDeclFunction)func).ret;
-
-		if(ret.isSome() && (!(ret.unwrap() instanceof SemaTypeBuiltin) || ((SemaTypeBuiltin)ret.unwrap()).which != BuiltinType.INT32))
-			throw new AssertionError("unreachable");
+		SemaType ret = ((SemaDeclFunction)func).ret;
 
 		builder.append("define i32 @main()\n{\n");
 
-		if(ret.isSome())
+		if(TypeHelper.isVoidType(ret))
 		{
-			builder.append(String.format("\t%%1 = call i32 @%s()\n", func.qualifiedName()));
-			builder.append("\tret i32 %1\n");
+			builder.append(String.format("\tcall void @%s()\n", func.qualifiedName()));
+			builder.append("\tret i32 0\n");
 		}
 
 		else
 		{
-			builder.append(String.format("\tcall void @%s()\n", func.qualifiedName()));
-			builder.append("\tret i32 0\n");
+			builder.append(String.format("\t%%1 = call i32 @%s()\n", func.qualifiedName()));
+			builder.append("\tret i32 %1\n");
 		}
 
 		builder.append("}\n");

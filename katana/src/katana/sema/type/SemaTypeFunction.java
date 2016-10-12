@@ -15,7 +15,6 @@
 package katana.sema.type;
 
 import katana.backend.PlatformContext;
-import katana.utils.Maybe;
 
 import java.math.BigInteger;
 import java.util.Iterator;
@@ -23,7 +22,7 @@ import java.util.List;
 
 public class SemaTypeFunction extends SemaType
 {
-	public SemaTypeFunction(Maybe<SemaType> ret, List<SemaType> params)
+	public SemaTypeFunction(SemaType ret, List<SemaType> params)
 	{
 		this.ret = ret;
 		this.params = params;
@@ -46,10 +45,7 @@ public class SemaTypeFunction extends SemaType
 	{
 		SemaTypeFunction o = (SemaTypeFunction)other;
 
-		if(ret.isNone() != o.ret.isNone())
-			return false;
-
-		if(ret.isSome() && !SemaType.same(ret.unwrap(), o.ret.unwrap()))
+		if(!SemaType.same(ret, o.ret))
 			return false;
 
 		if(params.size() != o.params.size())
@@ -67,6 +63,6 @@ public class SemaTypeFunction extends SemaType
 		return true;
 	}
 
-	public Maybe<SemaType> ret;
+	public SemaType ret;
 	public List<SemaType> params;
 }

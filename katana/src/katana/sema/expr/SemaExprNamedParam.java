@@ -16,7 +16,6 @@ package katana.sema.expr;
 
 import katana.sema.decl.SemaDeclFunction;
 import katana.sema.type.SemaType;
-import katana.utils.Maybe;
 
 public class SemaExprNamedParam extends SemaExprSimpleLValueExpr
 {
@@ -26,9 +25,9 @@ public class SemaExprNamedParam extends SemaExprSimpleLValueExpr
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
-		return Maybe.some(param.type);
+		return param.type;
 	}
 
 	public SemaDeclFunction.Param param;

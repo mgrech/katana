@@ -15,7 +15,6 @@
 package katana.sema.expr;
 
 import katana.sema.type.SemaType;
-import katana.utils.Maybe;
 
 public class SemaExprAssign extends SemaExprSimpleLValueExpr
 {
@@ -27,7 +26,7 @@ public class SemaExprAssign extends SemaExprSimpleLValueExpr
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
 		return left.type();
 	}

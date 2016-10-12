@@ -16,7 +16,6 @@ package katana.sema.expr;
 
 import katana.sema.decl.SemaDeclData;
 import katana.sema.type.SemaType;
-import katana.utils.Maybe;
 
 public class SemaExprFieldAccessRValue extends SemaExpr
 {
@@ -27,9 +26,9 @@ public class SemaExprFieldAccessRValue extends SemaExpr
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
-		return Maybe.some(field.type);
+		return field.type;
 	}
 
 	public SemaExpr expr;

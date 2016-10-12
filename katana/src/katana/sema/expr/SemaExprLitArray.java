@@ -17,7 +17,6 @@ package katana.sema.expr;
 import katana.analysis.TypeHelper;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeArray;
-import katana.utils.Maybe;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -32,9 +31,9 @@ public class SemaExprLitArray extends SemaExprLiteral
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
-		return Maybe.some(new SemaTypeArray(length, TypeHelper.addConst(type)));
+		return new SemaTypeArray(length, TypeHelper.addConst(type));
 	}
 
 	public final BigInteger length;

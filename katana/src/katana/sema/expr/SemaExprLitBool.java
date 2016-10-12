@@ -17,11 +17,10 @@ package katana.sema.expr;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeBuiltin;
 import katana.sema.type.SemaTypeConst;
-import katana.utils.Maybe;
 
 public class SemaExprLitBool extends SemaExprLiteral
 {
-	private static final Maybe<SemaType> TYPE = Maybe.some(new SemaTypeConst(SemaTypeBuiltin.BOOL));
+	private static final SemaType TYPE = new SemaTypeConst(SemaTypeBuiltin.BOOL);
 
 	public SemaExprLitBool(boolean value)
 	{
@@ -29,7 +28,7 @@ public class SemaExprLitBool extends SemaExprLiteral
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
 		return TYPE;
 	}

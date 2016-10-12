@@ -30,7 +30,7 @@ public class SemaExprDirectFunctionCall extends SemaExpr
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
 		return function.ret;
 	}

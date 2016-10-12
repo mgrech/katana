@@ -21,6 +21,7 @@ import java.math.BigInteger;
 
 public class SemaTypeBuiltin extends SemaType
 {
+	public static final SemaTypeBuiltin VOID    = new SemaTypeBuiltin(BuiltinType.VOID);
 	public static final SemaTypeBuiltin BOOL    = new SemaTypeBuiltin(BuiltinType.BOOL);
 	public static final SemaTypeBuiltin INT8    = new SemaTypeBuiltin(BuiltinType.INT8);
 	public static final SemaTypeBuiltin INT16   = new SemaTypeBuiltin(BuiltinType.INT16);

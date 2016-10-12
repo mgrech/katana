@@ -18,7 +18,6 @@ import katana.BuiltinType;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeBuiltin;
 import katana.sema.type.SemaTypeConst;
-import katana.utils.Maybe;
 
 import java.math.BigInteger;
 
@@ -50,16 +49,16 @@ public class SemaExprLitInt extends SemaExprLiteral
 		default: throw new AssertionError("unreachable");
 		}
 
-		cachedType = Maybe.some(new SemaTypeConst(semaType));
+		cachedType = new SemaTypeConst(semaType);
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
 		return cachedType;
 	}
 
 	public final BigInteger value;
 	public final BuiltinType type;
-	private final transient Maybe<SemaType> cachedType;
+	private final transient SemaType cachedType;
 }

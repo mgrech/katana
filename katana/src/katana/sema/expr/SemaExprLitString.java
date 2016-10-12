@@ -18,7 +18,6 @@ import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeArray;
 import katana.sema.type.SemaTypeBuiltin;
 import katana.sema.type.SemaTypeConst;
-import katana.utils.Maybe;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -32,15 +31,15 @@ public class SemaExprLitString extends SemaExprLiteral
 		this.value = value;
 
 		BigInteger length = BigInteger.valueOf(value.getBytes(StandardCharsets.UTF_8).length);
-		cachedType = Maybe.some(new SemaTypeArray(length, ELEMENT_TYPE));
+		cachedType = new SemaTypeArray(length, ELEMENT_TYPE);
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
 		return cachedType;
 	}
 
 	public final String value;
-	private final transient Maybe<SemaType> cachedType;
+	private final transient SemaType cachedType;
 }

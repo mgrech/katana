@@ -1,5 +1,6 @@
 package katana.diag;
 
+import katana.analysis.TypeHelper;
 import katana.sema.type.*;
 import katana.visitor.IVisitor;
 
@@ -55,7 +56,7 @@ public class TypeString implements IVisitor
 			}
 		}
 
-		String ret = type.ret.isSome() ? " => " + type.ret.unwrap() : "";
+		String ret = TypeHelper.isVoidType(type.ret) ? "" : " => " + of(type.ret);
 		return String.format("fn(%s)%s", params, ret);
 	}
 }

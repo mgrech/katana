@@ -29,7 +29,7 @@ public abstract class BuiltinFunc
 		this.name = name;
 	}
 
-	public abstract Maybe<SemaType> validateCall(List<SemaType> args);
+	public abstract SemaType validateCall(List<SemaType> args);
 	public abstract Maybe<String> generateCall(SemaExprBuiltinCall call, StringBuilder builder, PlatformContext context, FunctionContext fcontext);
 
 	public String name;

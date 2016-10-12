@@ -14,6 +14,7 @@
 
 package katana.analysis;
 
+import katana.BuiltinType;
 import katana.ast.expr.AstExpr;
 import katana.ast.stmt.*;
 import katana.backend.PlatformContext;
@@ -107,18 +108,17 @@ public class StmtValidator implements IVisitor
 	{
 		SemaExpr condition = ExprValidator.validate(expr, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.BOOL));
 
-		if(condition.type().isNone())
+		if(TypeHelper.isVoidType(condition.type()))
 		{
 			String fmt = "%s requires condition of type 'bool', got expression yielding 'void'";
 			throw new RuntimeException(String.format(fmt, kind.toString().toLowerCase()));
 		}
 
-		SemaType conditionTypeDecayed = TypeHelper.decay(condition.type().unwrap());
-
-		if(!SemaType.same(conditionTypeDecayed, SemaTypeBuiltin.BOOL))
+		if(!TypeHelper.isBuiltinType(condition.type(), BuiltinType.BOOL))
 		{
 			String fmt = "%s requires condition of type 'bool', got '%s'";
-			throw new RuntimeException(String.format(fmt, kind.toString().toLowerCase(), TypeString.of(conditionTypeDecayed)));
+			String gotten = TypeString.of(TypeHelper.decay(condition.type()));
+			throw new RuntimeException(String.format(fmt, kind.toString().toLowerCase(), gotten));
 		}
 
 		return condition;
@@ -149,33 +149,35 @@ public class StmtValidator implements IVisitor
 
 	private SemaStmt visit(AstStmtReturn return_)
 	{
-		Maybe<SemaExpr> value = return_.value.map(retval -> ExprValidator.validate(retval, scope, context, validateDecl, function.ret));
+		Maybe<SemaExpr> value = return_.value.map(retval -> ExprValidator.validate(retval, scope, context, validateDecl, Maybe.some(function.ret)));
 
-		if(function.ret.isNone() && value.isSome())
+		boolean returnsVoid = TypeHelper.isVoidType(function.ret);
+		boolean valueGiven = value.isSome();
+
+		if(returnsVoid && valueGiven)
 		{
 			String fmt = "function '%s' returns 'void', value given";
 			throw new RuntimeException(String.format(fmt, function.qualifiedName()));
 		}
 
-		if(function.ret.isSome() && value.isNone())
+		if(!returnsVoid && !valueGiven)
 		{
 			String fmt = "function '%s' returns value of type '%s', no value given";
-			throw new RuntimeException(String.format(fmt, function.qualifiedName(), TypeString.of(function.ret.unwrap())));
+			throw new RuntimeException(String.format(fmt, function.qualifiedName(), TypeString.of(function.ret)));
 		}
 
-		if(function.ret.isSome() && value.isSome())
+		if(!returnsVoid && valueGiven)
 		{
-			Maybe<SemaType> maybeType = value.unwrap().type();
+			SemaType type = value.unwrap().type();
 
-			if(maybeType.isNone())
+			if(TypeHelper.isVoidType(type))
 			{
 				String fmt = "function '%s' returns value of type '%s', got expression yielding 'void'";
-				throw new RuntimeException(String.format(fmt, function.qualifiedName(), TypeString.of(function.ret.unwrap())));
+				throw new RuntimeException(String.format(fmt, function.qualifiedName(), TypeString.of(function.ret)));
 			}
 
-			SemaType type = maybeType.unwrap();
 			SemaType typeDecayed = TypeHelper.decay(type);
-			SemaType retTypeDecayed = TypeHelper.decay(function.ret.unwrap());
+			SemaType retTypeDecayed = TypeHelper.decay(function.ret);
 
 			if(!SemaType.same(retTypeDecayed, typeDecayed))
 			{
@@ -199,11 +201,10 @@ public class StmtValidator implements IVisitor
 		Maybe<SemaType> maybeDeclaredTypeDecayed = maybeDeclaredType.map(TypeHelper::decay);
 		SemaExpr init = ExprValidator.validate(local.init, scope, context, validateDecl, maybeDeclaredTypeDecayed);
 
-		if(init.type().isNone())
+		if(TypeHelper.isVoidType(init.type()))
 			throw new RuntimeException(String.format("initializer for local '%s' yields 'void'", local.name));
 
-		SemaType initType = init.type().unwrap();
-		SemaType initTypeDecayed = TypeHelper.decay(initType);
+		SemaType initTypeDecayed = TypeHelper.decay(init.type());
 		SemaType localType = maybeDeclaredType.or(initTypeDecayed);
 		SemaType localTypeDecayed = TypeHelper.decay(localType);
 

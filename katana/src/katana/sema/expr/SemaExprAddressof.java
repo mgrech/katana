@@ -16,7 +16,6 @@ package katana.sema.expr;
 
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeBuiltin;
-import katana.utils.Maybe;
 
 public class SemaExprAddressof extends SemaExpr
 {
@@ -26,9 +25,9 @@ public class SemaExprAddressof extends SemaExpr
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
-		return Maybe.some(SemaTypeBuiltin.PTR);
+		return SemaTypeBuiltin.PTR;
 	}
 
 	public SemaExprLValueExpr expr;

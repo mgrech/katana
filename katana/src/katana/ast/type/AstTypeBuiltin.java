@@ -18,7 +18,7 @@ import katana.BuiltinType;
 
 public class AstTypeBuiltin extends AstType
 {
-
+	public static final AstTypeBuiltin VOID    = new AstTypeBuiltin(BuiltinType.VOID);
 	public static final AstTypeBuiltin BOOL    = new AstTypeBuiltin(BuiltinType.BOOL);
 	public static final AstTypeBuiltin INT8    = new AstTypeBuiltin(BuiltinType.INT8);
 	public static final AstTypeBuiltin INT16   = new AstTypeBuiltin(BuiltinType.INT16);

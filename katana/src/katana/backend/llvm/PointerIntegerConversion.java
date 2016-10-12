@@ -40,7 +40,7 @@ public class PointerIntegerConversion extends BuiltinFunc
 	}
 
 	@Override
-	public Maybe<SemaType> validateCall(List<SemaType> args)
+	public SemaType validateCall(List<SemaType> args)
 	{
 		if(args.size() != 1)
 			throw new RuntimeException(String.format("builtin %s expects exactly 1 argument", name));
@@ -54,13 +54,13 @@ public class PointerIntegerConversion extends BuiltinFunc
 			if(!SemaType.same(arg, SemaTypeBuiltin.PTR))
 				throw new RuntimeException(String.format("builtin %s expects argument of type ptr", name));
 
-			return Maybe.some(which == Which.PTR2PINT ? SemaTypeBuiltin.PINT : SemaTypeBuiltin.UPINT);
+			return which == Which.PTR2PINT ? SemaTypeBuiltin.PINT : SemaTypeBuiltin.UPINT;
 
 		case INT2PTR:
 			if(!SemaType.same(arg, SemaTypeBuiltin.UPINT) && !SemaType.same(arg, SemaTypeBuiltin.PINT))
 				throw new RuntimeException(String.format("builtin %s expects argument of type pint or upint", name));
 
-			return Maybe.some(SemaTypeBuiltin.PTR);
+			return SemaTypeBuiltin.PTR;
 
 		default: break;
 		}
@@ -87,7 +87,7 @@ public class PointerIntegerConversion extends BuiltinFunc
 			{
 				SemaExpr arg = call.args.get(0);
 				String argSSA = ExprCodeGenerator.generate(arg, builder, context, fcontext).unwrap();
-				String argTypeString = TypeCodeGenerator.generate(arg.type().unwrap(), context);
+				String argTypeString = TypeCodeGenerator.generate(arg.type(), context);
 				String resultSSA = fcontext.allocateSSA();
 				builder.append(String.format("\t%s = inttoptr %s %s to i8*\n", resultSSA, argTypeString, argSSA));
 				return Maybe.some(resultSSA);

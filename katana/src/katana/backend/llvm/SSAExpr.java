@@ -16,7 +16,6 @@ package katana.backend.llvm;
 
 import katana.sema.expr.SemaExpr;
 import katana.sema.type.SemaType;
-import katana.utils.Maybe;
 
 public class SSAExpr extends SemaExpr
 {
@@ -26,9 +25,9 @@ public class SSAExpr extends SemaExpr
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
-		return null;
+		throw new AssertionError("unreachable");
 	}
 
 	public String name;

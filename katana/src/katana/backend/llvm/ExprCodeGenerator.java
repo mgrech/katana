@@ -15,6 +15,7 @@
 package katana.backend.llvm;
 
 import katana.BuiltinType;
+import katana.analysis.TypeHelper;
 import katana.backend.PlatformContext;
 import katana.sema.decl.SemaDeclData;
 import katana.sema.decl.SemaDeclExternFunction;
@@ -67,7 +68,7 @@ public class ExprCodeGenerator implements IVisitor
 	{
 		String ptrSSA = generate(addressof.expr, builder, context, fcontext).unwrap();
 		String castedPtrSSA = fcontext.allocateSSA();
-		String typeString = TypeCodeGenerator.generate(addressof.expr.type().unwrap(), context);
+		String typeString = TypeCodeGenerator.generate(addressof.expr.type(), context);
 		builder.append(String.format("\t%s = bitcast %s* %s to i8*\n", castedPtrSSA, typeString, ptrSSA));
 		return Maybe.some(castedPtrSSA);
 	}
@@ -79,8 +80,7 @@ public class ExprCodeGenerator implements IVisitor
 
 	private String generateArrayAccess(boolean usedAsLValue, String arraySSA, SemaType arrayType, SemaType fieldType, SemaExpr index)
 	{
-		SemaType indexType = index.type().unwrap();
-		String indexTypeString = TypeCodeGenerator.generate(indexType, context);
+		String indexTypeString = TypeCodeGenerator.generate(index.type(), context);
 		String indexSSA = generate(index, builder, context, fcontext).unwrap();
 		String fieldTypeString = TypeCodeGenerator.generate(fieldType, context);
 		String arrayTypeString = TypeCodeGenerator.generate(arrayType, context);
@@ -99,14 +99,14 @@ public class ExprCodeGenerator implements IVisitor
 		arrayAccess.useAsLValue(true);
 		String arraySSA = generate(arrayAccess.value, builder, context, fcontext).unwrap();
 		arrayAccess.useAsLValue(isUsedAsLValue);
-		SemaType fieldType = arrayAccess.type().unwrap();
-		return Maybe.some(generateArrayAccess(isUsedAsLValue, arraySSA, arrayAccess.value.type().unwrap(), fieldType, arrayAccess.index));
+		SemaType fieldType = arrayAccess.type();
+		return Maybe.some(generateArrayAccess(isUsedAsLValue, arraySSA, arrayAccess.value.type(), fieldType, arrayAccess.index));
 	}
 
 	private Maybe<String> visit(SemaExprArrayAccessRValue arrayAccess)
 	{
 		String arraySSA = generate(arrayAccess.expr, builder, context, fcontext).unwrap();
-		SemaType arrayType = arrayAccess.expr.type().unwrap();
+		SemaType arrayType = arrayAccess.expr.type();
 		String arrayTypeString = TypeCodeGenerator.generate(arrayType, context);
 		BigInteger arrayAlignment = arrayType.alignof(context);
 
@@ -114,15 +114,15 @@ public class ExprCodeGenerator implements IVisitor
 		builder.append(String.format("\t%s = alloca %s, align %s\n", tmpSSA, arrayTypeString, arrayAlignment));
 		generateStore(tmpSSA, arraySSA, arrayTypeString);
 
-		SemaType fieldType = arrayAccess.type().unwrap();
-		SemaType indexType = arrayAccess.index.type().unwrap();
-		return Maybe.some(generateArrayAccess(false, tmpSSA, arrayAccess.expr.type().unwrap(), fieldType, arrayAccess.index));
+		SemaType fieldType = arrayAccess.type();
+		SemaType indexType = arrayAccess.index.type();
+		return Maybe.some(generateArrayAccess(false, tmpSSA, arrayAccess.expr.type(), fieldType, arrayAccess.index));
 	}
 
 	private Maybe<String> visit(SemaExprAssign assign)
 	{
-		SemaType type = assign.right.type().unwrap();
-		String typeString = TypeCodeGenerator.generate(assign.right.type().unwrap(), context);
+		SemaType type = assign.right.type();
+		String typeString = TypeCodeGenerator.generate(assign.right.type(), context);
 		String right = generate(assign.right, builder, context, fcontext).unwrap();
 		String left = generate(assign.left, builder, context, fcontext).unwrap();
 		generateStore(left, right, typeString);
@@ -157,7 +157,7 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some(generateLoad(castedPtrSSA, typeString));
 	}
 
-	private Maybe<String> generateFunctionCall(String functionSSA, List<SemaExpr> args, Maybe<SemaType> ret, Maybe<Boolean> inline)
+	private Maybe<String> generateFunctionCall(String functionSSA, List<SemaExpr> args, SemaType ret, Maybe<Boolean> inline)
 	{
 		List<String> argSSAs = new ArrayList<>();
 
@@ -168,25 +168,25 @@ public class ExprCodeGenerator implements IVisitor
 
 		Maybe<String> retSSA = Maybe.none();
 
-		if(ret.isSome())
+		if(!TypeHelper.isVoidType(ret))
 		{
 			retSSA = Maybe.some(fcontext.allocateSSA());
 			builder.append(String.format("%s = ", retSSA.unwrap()));
 		}
 
-		String retTypeString = ret.map(type -> TypeCodeGenerator.generate(type, context)).or("void");
+		String retTypeString = TypeCodeGenerator.generate(ret, context);
 
 		builder.append(String.format("call %s %s(", retTypeString, functionSSA));
 
 		if(!args.isEmpty())
 		{
-			builder.append(TypeCodeGenerator.generate(args.get(0).type().unwrap(), context));
+			builder.append(TypeCodeGenerator.generate(args.get(0).type(), context));
 			builder.append(' ');
 			builder.append(argSSAs.get(0));
 
 			for(int i = 1; i != argSSAs.size(); ++i)
 			{
-				String argTypeString = TypeCodeGenerator.generate(args.get(i).type().unwrap(), context);
+				String argTypeString = TypeCodeGenerator.generate(args.get(i).type(), context);
 				builder.append(String.format(", %s %s", argTypeString, argSSAs.get(i)));
 			}
 		}
@@ -234,10 +234,10 @@ public class ExprCodeGenerator implements IVisitor
 		String objectSSA = generate(fieldAccess.expr, builder, context, fcontext).unwrap();
 		fieldAccess.useAsLValue(usedAsLValue);
 		String fieldPtrSSA = fcontext.allocateSSA();
-		SemaType fieldType = fieldAccess.type().unwrap();
+		SemaType fieldType = fieldAccess.type();
 		String fieldTypeString = TypeCodeGenerator.generate(fieldType, context);
 		int fieldIndex = fieldAccess.field.index;
-		String objectTypeString = TypeCodeGenerator.generate(fieldAccess.expr.type().unwrap(), context);
+		String objectTypeString = TypeCodeGenerator.generate(fieldAccess.expr.type(), context);
 		builder.append(String.format("\t%s = getelementptr %s, %s* %s, i32 0, i32 %s\n", fieldPtrSSA, objectTypeString, objectTypeString, objectSSA, fieldIndex));
 
 		if(fieldAccess.isUsedAsLValue())
@@ -250,7 +250,7 @@ public class ExprCodeGenerator implements IVisitor
 	{
 		String objectSSA = generate(fieldAccess.expr, builder, context, fcontext).unwrap();
 		String fieldSSA = fcontext.allocateSSA();
-		SemaType objectType = fieldAccess.expr.type().unwrap();
+		SemaType objectType = fieldAccess.expr.type();
 		String objectTypeString = TypeCodeGenerator.generate(objectType, context);
 		int fieldIndex = fieldAccess.field.index;
 		builder.append(String.format("\t%s = extractvalue %s %s, %s\n", fieldSSA, objectTypeString, objectSSA, fieldIndex));
@@ -264,7 +264,7 @@ public class ExprCodeGenerator implements IVisitor
 
 		if(!lit.values.isEmpty())
 		{
-			builder.append(TypeCodeGenerator.generate(lit.values.get(0).type().unwrap(), context));
+			builder.append(TypeCodeGenerator.generate(lit.values.get(0).type(), context));
 			builder.append(' ');
 			builder.append(generate(lit.values.get(0), builder, context, fcontext).unwrap());
 
@@ -272,7 +272,7 @@ public class ExprCodeGenerator implements IVisitor
 			{
 				SemaExpr expr = lit.values.get(i);
 				builder.append(", ");
-				builder.append(TypeCodeGenerator.generate(expr.type().unwrap(), context));
+				builder.append(TypeCodeGenerator.generate(expr.type(), context));
 				builder.append(' ');
 				builder.append(generate(expr, builder, context, fcontext).unwrap());
 			}
@@ -397,7 +397,7 @@ public class ExprCodeGenerator implements IVisitor
 		builder.append(String.format("\t%s = getelementptr %s, %s* null, i32 %s\n", offsetPtrSSA, typeString, typeString, field.index));
 
 		String offsetSSA = fcontext.allocateSSA();
-		String offsetTypeString = TypeCodeGenerator.generate(offsetof.type().unwrap(), context);
+		String offsetTypeString = TypeCodeGenerator.generate(offsetof.type(), context);
 		builder.append(String.format("\t%s = ptrtoint %s* %s to %s\n", offsetSSA, typeString, offsetPtrSSA, offsetTypeString));
 		return Maybe.some(offsetSSA);
 	}

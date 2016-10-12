@@ -16,7 +16,6 @@ package katana.sema.expr;
 
 import katana.sema.decl.SemaDeclImportedOverloadSet;
 import katana.sema.type.SemaType;
-import katana.utils.Maybe;
 
 public class SemaExprNamedImportedOverloadSet extends SemaExpr
 {
@@ -26,7 +25,7 @@ public class SemaExprNamedImportedOverloadSet extends SemaExpr
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
 		throw new AssertionError("unreachable");
 	}

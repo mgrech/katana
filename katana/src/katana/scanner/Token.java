@@ -87,6 +87,7 @@ public class Token
 		PUNCT_ASSIGN,
 		PUNCT_RET,
 
+		TYPE_VOID,
 		TYPE_BOOL,
 		TYPE_INT8,
 		TYPE_INT16,
@@ -155,6 +156,7 @@ public class Token
 	public static final Token PUNCT_ASSIGN   = new Token(Category.PUNCT, Type.PUNCT_ASSIGN,   "=");
 	public static final Token PUNCT_RET      = new Token(Category.PUNCT, Type.PUNCT_RET,      "=>");
 
+	public static final Token TYPE_VOID    = new Token(Category.TYPE, Type.TYPE_VOID,    "void");
 	public static final Token TYPE_BOOL    = new Token(Category.TYPE, Type.TYPE_BOOL,    "bool");
 	public static final Token TYPE_INT8    = new Token(Category.TYPE, Type.TYPE_INT8,    "int8");
 	public static final Token TYPE_INT16   = new Token(Category.TYPE, Type.TYPE_INT16,   "int16");

@@ -69,13 +69,13 @@ public class ExprValidator implements IVisitor
 		for(int argCount = 1; it1.hasNext(); ++argCount)
 		{
 			SemaType paramType = it1.next();
-			Maybe<SemaType> maybeArgType = it2.next().type();
+			SemaType argType = it2.next().type();
 
-			if(maybeArgType.isNone())
+			if(TypeHelper.isVoidType(argType))
 				throw new RuntimeException(String.format("expression given in argument %s yields 'void'", argCount));
 
 			SemaType paramTypeDecayed = TypeHelper.decay(paramType);
-			SemaType argTypeDecayed = TypeHelper.decay(maybeArgType.unwrap());
+			SemaType argTypeDecayed = TypeHelper.decay(argType);
 
 			if(!SemaType.same(paramTypeDecayed, argTypeDecayed))
 			{
@@ -106,12 +106,12 @@ public class ExprValidator implements IVisitor
 	{
 		SemaExpr value = validate(arrayAccess.value, scope, context, validateDecl, Maybe.none());
 		SemaExpr index = validate(arrayAccess.index, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.INT));
-		Maybe<SemaType> indexType = index.type();
+		SemaType indexType = index.type();
 
-		if(indexType.isNone() || indexType.unwrap() != SemaTypeBuiltin.INT)
+		if(TypeHelper.isBuiltinType(indexType, BuiltinType.INT))
 			throw new RuntimeException("array access requires index of type 'int'");
 
-		if(value.type().isNone() || !(value.type().unwrap() instanceof SemaTypeArray))
+		if(TypeHelper.isArrayType(value.type()))
 			throw new RuntimeException("array access requires expression yielding array type");
 
 		if(value instanceof SemaExprLValueExpr)
@@ -124,18 +124,16 @@ public class ExprValidator implements IVisitor
 	{
 		SemaExpr left = validate(assign.left, scope, context, validateDecl, Maybe.none());
 
-		if(left.type().isNone())
+		if(TypeHelper.isVoidType(left.type()))
 			throw new RuntimeException("value expected on left side of assignment, got expression yielding 'void'");
 
-		SemaType leftType = left.type().unwrap();
+		SemaType leftType = left.type();
 		SemaType leftTypeDecayed = TypeHelper.decay(leftType);
 
 		SemaExpr right = validate(assign.right, scope, context, validateDecl, Maybe.some(leftTypeDecayed));
 
-		if(right.type().isNone())
+		if(TypeHelper.isVoidType(right.type()))
 			throw new RuntimeException("value expected on right side of assignment, got expression yielding 'void'");
-
-		SemaType rightType = right.type().unwrap();
 
 		if(TypeHelper.isConst(leftType) || !(left instanceof SemaExprLValueExpr))
 			throw new RuntimeException("non-const lvalue required on left side of assignment");
@@ -143,7 +141,7 @@ public class ExprValidator implements IVisitor
 		if(leftType instanceof SemaTypeFunction)
 			throw new RuntimeException("cannot assign to value of function type");
 
-		SemaType rightTypeDecayed = TypeHelper.decay(rightType);
+		SemaType rightTypeDecayed = TypeHelper.decay(right.type());
 
 		if(!SemaType.same(leftTypeDecayed, rightTypeDecayed))
 		{
@@ -169,20 +167,20 @@ public class ExprValidator implements IVisitor
 		for(int i = 0; i != builtinCall.args.size(); ++i)
 		{
 			SemaExpr semaExpr = validate(builtinCall.args.get(i), scope, context, validateDecl, Maybe.none());
-			Maybe<SemaType> type = semaExpr.type();
+			SemaType type = semaExpr.type();
 
-			if(type.isNone())
+			if(TypeHelper.isVoidType(type))
 			{
 				String fmt = "expression passed to builtin '%s' as argument %s yields 'void'";
 				throw new RuntimeException(String.format(fmt, builtinCall.name, i + 1));
 			}
 
 			args.add(semaExpr);
-			types.add(type.unwrap());
+			types.add(type);
 		}
 
 		BuiltinFunc func = maybeFunc.unwrap();
-		Maybe<SemaType> ret = func.validateCall(types);
+		SemaType ret = func.validateCall(types);
 		return new SemaExprBuiltinCall(func, args, ret);
 	}
 
@@ -190,12 +188,10 @@ public class ExprValidator implements IVisitor
 	{
 		SemaExpr expr = validate(const_.expr, scope, context, validateDecl, deduce);
 
-		if(expr.type().isNone())
+		if(TypeHelper.isVoidType(expr.type()))
 			throw new RuntimeException("expression passed to const operator yields 'void'");
 
-		SemaType type = expr.type().unwrap();
-
-		if(type instanceof SemaTypeFunction)
+		if(TypeHelper.isFunctionType(expr.type()))
 			throw new RuntimeException("const operator applied to value of function type");
 
 		if(expr instanceof SemaExprLValueExpr)
@@ -208,11 +204,10 @@ public class ExprValidator implements IVisitor
 	{
 		SemaExpr expr = validate(deref.expr, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.PTR));
 
-		if(expr.type().isNone() || expr.type().unwrap() != SemaTypeBuiltin.PTR)
+		if(!TypeHelper.isBuiltinType(expr.type(), BuiltinType.PTR))
 		{
 			String fmt = "expected expression of type 'ptr' in 'deref', got '%s'";
-			String typeString = expr.type().map(TypeString::of).or("void");
-			throw new RuntimeException(String.format(fmt, typeString));
+			throw new RuntimeException(String.format(fmt, TypeString.of(expr.type())));
 		}
 
 		return new SemaExprDeref(TypeValidator.validate(deref.type, scope, context, validateDecl), expr);
@@ -239,14 +234,13 @@ public class ExprValidator implements IVisitor
 				return Maybe.none();
 			}
 
-			if(arg.type().isNone())
+			if(TypeHelper.isVoidType(arg.type()))
 			{
 				String fmt = "expression passed as argument %s to function '%s' yields 'void'";
 				throw new RuntimeException(String.format(fmt, i + 1, function.name()));
 			}
 
-			SemaType argType = arg.type().unwrap();
-			SemaType argTypeDecayed = TypeHelper.decay(argType);
+			SemaType argTypeDecayed = TypeHelper.decay(arg.type());
 
 			if(!SemaType.same(paramTypeDecayed, argTypeDecayed))
 				return Maybe.none();
@@ -308,10 +302,10 @@ public class ExprValidator implements IVisitor
 			return resolveOverloadedCall(set.overloads, set.name(), call.args, call.inline);
 		}
 
-		if(expr.type().isNone() || !(expr.type().unwrap() instanceof SemaTypeFunction))
+		if(TypeHelper.isFunctionType(expr.type()))
 			throw new RuntimeException("left side of function call does not yield a function type");
 
-		SemaTypeFunction ftype = (SemaTypeFunction)expr.type().unwrap();
+		SemaTypeFunction ftype = (SemaTypeFunction)expr.type();
 		List<SemaExpr> args = new ArrayList<>();
 
 		for(int i = 0; i != call.args.size(); ++i)
@@ -356,13 +350,12 @@ public class ExprValidator implements IVisitor
 		for(int i = 0; i != lit.values.size(); ++i)
 		{
 			SemaExpr semaExpr = validate(lit.values.get(i), scope, context, validateDecl, maybeType);
-			Maybe<SemaType> elemTypeDecayed = semaExpr.type().map(TypeHelper::decay);
+			SemaType elemTypeDecayed = TypeHelper.decay(semaExpr.type());
 
-			if(elemTypeDecayed.isNone() || !SemaType.same(elemTypeDecayed.unwrap(), typeDecayed))
+			if(!SemaType.same(elemTypeDecayed, typeDecayed))
 			{
-				String gotten = elemTypeDecayed.map(TypeString::of).or("void");
 				String fmt = "element in array literal at index %s has type '%s', expected '%s'";
-				throw new RuntimeException(String.format(fmt, i, gotten, TypeString.of(typeDecayed)));
+				throw new RuntimeException(String.format(fmt, i, TypeString.of(elemTypeDecayed), TypeString.of(typeDecayed)));
 			}
 
 			values.add(semaExpr);
@@ -493,10 +486,10 @@ public class ExprValidator implements IVisitor
 			return namedDeclExpr(decl, memberAccess.global);
 		}
 
-		if(expr.type().isNone())
+		if(TypeHelper.isVoidType(expr.type()))
 			throw new RuntimeException("left side of member access yields 'void'");
 
-		SemaType type = expr.type().unwrap();
+		SemaType type = expr.type();
 
 		if(!(type instanceof SemaTypeUserDefined))
 			errorNoSuchField(type, memberAccess.name);

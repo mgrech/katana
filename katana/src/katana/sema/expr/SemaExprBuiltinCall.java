@@ -16,13 +16,12 @@ package katana.sema.expr;
 
 import katana.BuiltinFunc;
 import katana.sema.type.SemaType;
-import katana.utils.Maybe;
 
 import java.util.List;
 
 public class SemaExprBuiltinCall extends SemaExpr
 {
-	public SemaExprBuiltinCall(BuiltinFunc func, List<SemaExpr> args, Maybe<SemaType> ret)
+	public SemaExprBuiltinCall(BuiltinFunc func, List<SemaExpr> args, SemaType ret)
 	{
 		this.func = func;
 		this.args = args;
@@ -30,12 +29,12 @@ public class SemaExprBuiltinCall extends SemaExpr
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
 		return ret;
 	}
 
 	public BuiltinFunc func;
 	public List<SemaExpr> args;
-	public Maybe<SemaType> ret;
+	public SemaType ret;
 }

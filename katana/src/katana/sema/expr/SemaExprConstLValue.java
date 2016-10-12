@@ -16,7 +16,6 @@ package katana.sema.expr;
 
 import katana.analysis.TypeHelper;
 import katana.sema.type.SemaType;
-import katana.utils.Maybe;
 
 public class SemaExprConstLValue extends SemaExprLValueExpr
 {
@@ -26,9 +25,9 @@ public class SemaExprConstLValue extends SemaExprLValueExpr
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
-		return Maybe.some(TypeHelper.addConst(expr.type().unwrap()));
+		return TypeHelper.addConst(expr.type());
 	}
 
 	@Override

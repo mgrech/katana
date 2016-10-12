@@ -29,8 +29,6 @@ import katana.sema.SemaProgram;
 import katana.sema.decl.SemaDecl;
 import katana.sema.decl.SemaDeclFunction;
 import katana.sema.decl.SemaDeclOverloadSet;
-import katana.sema.type.SemaType;
-import katana.sema.type.SemaTypeBuiltin;
 import katana.utils.Maybe;
 
 import java.io.FileOutputStream;
@@ -98,15 +96,10 @@ public class CmdBuild
 
 		SemaDeclFunction func = set.overloads.get(0);
 
-		if(func.ret.isNone())
+		if(TypeHelper.isVoidType(func.ret) || TypeHelper.isBuiltinType(func.ret, BuiltinType.INT32))
 			return func;
 
-		SemaType ret = TypeHelper.decay(func.ret.unwrap());
-
-		if(!(ret instanceof SemaTypeBuiltin) || ((SemaTypeBuiltin)ret).which != BuiltinType.INT8)
-			throw new RuntimeException(String.format("entry point must return 'void' or 'int32', got '%s'", TypeString.of(ret)));
-
-		return func;
+		throw new RuntimeException(String.format("entry point must return 'void' or 'int32', got '%s'", TypeString.of(func.ret)));
 	}
 
 	public static void run(String[] args) throws IOException

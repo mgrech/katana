@@ -76,7 +76,7 @@ public class BinaryOp extends BuiltinFunc
 	}
 
 	@Override
-	public Maybe<SemaType> validateCall(List<SemaType> args)
+	public SemaType validateCall(List<SemaType> args)
 	{
 		if(args.size() != 2)
 			throw new RuntimeException(String.format("builtin %s expects 2 arguments", name));
@@ -90,7 +90,7 @@ public class BinaryOp extends BuiltinFunc
 			throw new RuntimeException(String.format("builtin %s requires arguments of builtin type", name));
 
 		checkTypeSupport(((SemaTypeBuiltin)argType).which);
-		return Maybe.some(ret.or(argType));
+		return ret.or(argType);
 	}
 
 	private String instrForType(SemaTypeBuiltin type)
@@ -111,7 +111,7 @@ public class BinaryOp extends BuiltinFunc
 	@Override
 	public Maybe<String> generateCall(SemaExprBuiltinCall call, StringBuilder builder, PlatformContext context, FunctionContext fcontext)
 	{
-		SemaTypeBuiltin type = (SemaTypeBuiltin)call.args.get(0).type().unwrap();
+		SemaTypeBuiltin type = (SemaTypeBuiltin)call.args.get(0).type();
 		String typeString = TypeCodeGenerator.generate(type, context);
 		String leftSSA = ExprCodeGenerator.generate(call.args.get(0), builder, context, fcontext).unwrap();
 		String rightSSA = ExprCodeGenerator.generate(call.args.get(1), builder, context, fcontext).unwrap();

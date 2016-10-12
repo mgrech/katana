@@ -16,7 +16,6 @@ package katana.sema.expr;
 
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeFunction;
-import katana.utils.Maybe;
 
 import java.util.List;
 
@@ -29,9 +28,9 @@ public class SemaExprIndirectFunctionCall extends SemaExpr
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
-		return ((SemaTypeFunction)expr.type().unwrap()).ret;
+		return ((SemaTypeFunction)expr.type()).ret;
 	}
 
 	public SemaExpr expr;

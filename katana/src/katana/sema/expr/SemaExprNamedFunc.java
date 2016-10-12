@@ -17,7 +17,6 @@ package katana.sema.expr;
 import katana.sema.decl.SemaDeclFunction;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeFunction;
-import katana.utils.Maybe;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,14 +29,14 @@ public class SemaExprNamedFunc extends SemaExprSimpleLValueExpr
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
 		List<SemaType> params = new ArrayList<>();
 
 		for(SemaDeclFunction.Param param : func.params)
 			params.add(param.type);
 
-		return Maybe.some(new SemaTypeFunction(func.ret, params));
+		return new SemaTypeFunction(func.ret, params);
 	}
 
 	public SemaDeclFunction func;

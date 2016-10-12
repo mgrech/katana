@@ -14,6 +14,7 @@
 
 package katana.backend.llvm;
 
+import katana.analysis.TypeHelper;
 import katana.backend.PlatformContext;
 import katana.sema.decl.SemaDeclDefinedFunction;
 import katana.sema.stmt.*;
@@ -48,7 +49,7 @@ public class StmtCodeGenerator implements IVisitor
 	{
 		if(!preceededByTerminator)
 		{
-			if(func.ret.isNone())
+			if(TypeHelper.isVoidType(func.ret))
 				builder.append("\tret void\n");
 			else
 				builder.append("\tunreachable\n");
@@ -169,7 +170,7 @@ public class StmtCodeGenerator implements IVisitor
 		}
 
 		String expr = ExprCodeGenerator.generate(ret.ret.unwrap(), builder, context, fcontext).unwrap();
-		SemaType type = ret.ret.unwrap().type().unwrap();
+		SemaType type = ret.ret.unwrap().type();
 		String llvmType = TypeCodeGenerator.generate(type, context);
 		builder.append(String.format("\tret %s %s\n\n", llvmType, expr));
 	}

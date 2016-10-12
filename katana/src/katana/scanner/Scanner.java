@@ -252,6 +252,7 @@ public class Scanner
 		case "loop":   return Token.STMT_LOOP;
 		case "while":  return Token.STMT_WHILE;
 
+		case "void":    return Token.TYPE_VOID;
 		case "bool":    return Token.TYPE_BOOL;
 		case "int8":    return Token.TYPE_INT8;
 		case "int16":   return Token.TYPE_INT16;

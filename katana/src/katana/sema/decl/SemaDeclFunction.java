@@ -17,7 +17,6 @@ package katana.sema.decl;
 import katana.sema.SemaModule;
 import katana.sema.SemaSymbol;
 import katana.sema.type.SemaType;
-import katana.utils.Maybe;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,5 +71,5 @@ public abstract class SemaDeclFunction extends SemaDecl
 	private String name;
 	public List<Param> params = new ArrayList<>();
 	public Map<String, Param> paramsByName = new TreeMap<>();
-	public Maybe<SemaType> ret;
+	public SemaType ret;
 }

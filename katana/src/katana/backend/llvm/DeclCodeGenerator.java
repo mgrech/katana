@@ -74,7 +74,7 @@ public class DeclCodeGenerator implements IVisitor
 	private void generateDefinedFunction(SemaDeclDefinedFunction function)
 	{
 		builder.append("define private ");
-		builder.append(function.ret.map(type -> TypeCodeGenerator.generate(type, context)).or("void"));
+		builder.append(TypeCodeGenerator.generate(function.ret, context));
 		builder.append(" @");
 		builder.append(FunctionNameMangler.mangle(function));
 		builder.append('(');
@@ -136,7 +136,7 @@ public class DeclCodeGenerator implements IVisitor
 
 	private void generateExternFunction(SemaDeclExternFunction externFunction)
 	{
-		String retTypeString = externFunction.ret.map(type -> TypeCodeGenerator.generate(type, context)).or("void");
+		String retTypeString = TypeCodeGenerator.generate(externFunction.ret, context);
 		builder.append(String.format("declare %s @%s(", retTypeString, externFunction.externName));
 
 		if(!externFunction.params.isEmpty())

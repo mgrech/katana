@@ -17,14 +17,13 @@ package katana.sema.expr;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeBuiltin;
 import katana.sema.type.SemaTypeConst;
-import katana.utils.Maybe;
 
 public class SemaExprLitNull extends SemaExprLiteral
 {
-	private static final Maybe<SemaType> TYPE = Maybe.some(new SemaTypeConst(SemaTypeBuiltin.PTR));
+	private static final SemaType TYPE = new SemaTypeConst(SemaTypeBuiltin.PTR);
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
 		return TYPE;
 	}

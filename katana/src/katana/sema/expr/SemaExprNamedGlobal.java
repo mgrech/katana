@@ -16,7 +16,6 @@ package katana.sema.expr;
 
 import katana.sema.decl.SemaDeclGlobal;
 import katana.sema.type.SemaType;
-import katana.utils.Maybe;
 
 public class SemaExprNamedGlobal extends SemaExprSimpleLValueExpr
 {
@@ -26,9 +25,9 @@ public class SemaExprNamedGlobal extends SemaExprSimpleLValueExpr
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
-		return Maybe.some(global.type);
+		return global.type;
 	}
 
 	public SemaDeclGlobal global;

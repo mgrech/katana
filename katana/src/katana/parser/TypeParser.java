@@ -135,6 +135,7 @@ public class TypeParser
 
 		switch(type)
 		{
+		case TYPE_VOID:    return AstTypeBuiltin.VOID;
 		case TYPE_BOOL:    return AstTypeBuiltin.BOOL;
 		case TYPE_INT8:    return AstTypeBuiltin.INT8;
 		case TYPE_INT16:   return AstTypeBuiltin.INT16;

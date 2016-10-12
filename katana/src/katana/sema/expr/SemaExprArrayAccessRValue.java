@@ -16,7 +16,6 @@ package katana.sema.expr;
 
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeArray;
-import katana.utils.Maybe;
 
 public class SemaExprArrayAccessRValue extends SemaExpr
 {
@@ -27,9 +26,9 @@ public class SemaExprArrayAccessRValue extends SemaExpr
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
-		return Maybe.some(((SemaTypeArray)(expr.type().unwrap())).type);
+		return ((SemaTypeArray)(expr.type())).type;
 	}
 
 	public SemaExpr expr;

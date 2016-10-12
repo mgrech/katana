@@ -2,7 +2,6 @@ package katana.sema.expr;
 
 import katana.sema.decl.SemaDeclRenamedImport;
 import katana.sema.type.SemaType;
-import katana.utils.Maybe;
 
 public class SemaExprNamedRenamedImport extends SemaExpr
 {
@@ -12,9 +11,9 @@ public class SemaExprNamedRenamedImport extends SemaExpr
 	}
 
 	@Override
-	public Maybe<SemaType> type()
+	public SemaType type()
 	{
-		return null;
+		throw new AssertionError("unreachable");
 	}
 
 	public SemaDeclRenamedImport import_;

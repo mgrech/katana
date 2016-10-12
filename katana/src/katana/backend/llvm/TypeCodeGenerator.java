@@ -58,6 +58,7 @@ public class TypeCodeGenerator implements IVisitor
 		case FLOAT32: return "float";
 		case FLOAT64: return "double";
 		case PTR:     return "i8*";
+		case VOID:    return "void";
 
 		default: break;
 		}
@@ -72,7 +73,7 @@ public class TypeCodeGenerator implements IVisitor
 
 	private String visit(SemaTypeFunction type)
 	{
-		String ret = type.ret.isSome() ? TypeCodeGenerator.generate(type.ret.get(), context) : "void";
+		String ret = TypeCodeGenerator.generate(type.ret, context);
 
 		StringBuilder params = new StringBuilder();
 
