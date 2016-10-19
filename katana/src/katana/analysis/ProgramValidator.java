@@ -15,92 +15,40 @@
 package katana.analysis;
 
 import katana.ast.AstFile;
+import katana.ast.AstProgram;
 import katana.ast.decl.AstDecl;
 import katana.backend.PlatformContext;
-import katana.parser.FileParser;
 import katana.sema.SemaProgram;
 import katana.sema.decl.SemaDecl;
-import katana.sema.decl.SemaDeclImportedOverloadSet;
-import katana.utils.Maybe;
+import katana.sema.scope.SemaScopeFile;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.IdentityHashMap;
-import java.util.List;
+import java.util.Map;
 
 public class ProgramValidator
 {
-	private IdentityHashMap<SemaDecl, FileValidator> validatorsByDecl = new IdentityHashMap<>();
-	private IdentityHashMap<SemaDecl, ValidationState> statesByDecl = new IdentityHashMap<>();
-
-	private void doValidate(SemaDecl decl)
+	public static SemaProgram validate(AstProgram program, PlatformContext context)
 	{
-		if(decl instanceof SemaDeclImportedOverloadSet)
-			decl = ((SemaDeclImportedOverloadSet)decl).set;
+		SemaProgram semaProgram = new SemaProgram();
 
-		ValidationState state = statesByDecl.get(decl);
+		IdentityHashMap<AstFile, SemaScopeFile> files = new IdentityHashMap<>();
+		IdentityHashMap<SemaDecl, DeclInfo> decls = new IdentityHashMap<>();
 
-		if(state == null)
+		for(AstFile file : program.files.values())
 		{
-			statesByDecl.put(decl, ValidationState.ONGOING);
-			FileValidator validator = validatorsByDecl.get(decl);
-			validator.validate(decl);
-			statesByDecl.put(decl, ValidationState.FINISHED);
+			SemaScopeFile scope = new SemaScopeFile();
+			files.put(file, scope);
+
+			for(Map.Entry<SemaDecl, AstDecl> decl : DeclRegisterer.process(semaProgram, file, scope).entrySet())
+				decls.put(decl.getKey(), new DeclInfo(decl.getValue(), scope));
 		}
 
-		else
-		{
-			switch(state)
-			{
-			case ONGOING:
-				throw new RuntimeException("cyclic dependency detected");
+		for(Map.Entry<AstFile, SemaScopeFile> file : files.entrySet())
+			ImportValidator.validate(file.getKey(), file.getValue(), semaProgram);
 
-			case FINISHED:
-				return;
+		DeclDepSolver.solve(decls, context);
+		DeclImplValidator.validate(decls, context);
 
-			default: break;
-			}
-
-			throw new AssertionError("unreachable");
-		}
-	}
-
-	private SemaProgram doValidate(List<Path> filePaths, PlatformContext context) throws IOException
-	{
-		SemaProgram program = new SemaProgram();
-
-		List<FileValidator> validators = new ArrayList<>();
-
-		for(Path filePath : filePaths)
-		{
-			AstFile file = FileParser.parse(filePath);
-			FileValidator validator = new FileValidator(context, program, this::doValidate);
-			validators.add(validator);
-
-			for(AstDecl decl : file.decls)
-			{
-				Maybe<SemaDecl> semaDecl = validator.register(decl);
-
-				if(semaDecl.isSome())
-					validatorsByDecl.put(semaDecl.unwrap(), validator);
-			}
-		}
-
-		for(FileValidator validator : validators)
-			validator.validateImports();
-
-		for(SemaDecl decl : validatorsByDecl.keySet())
-			doValidate(decl);
-
-		for(FileValidator validator : validators)
-			validator.finish();
-
-		return program;
-	}
-
-	public static SemaProgram validate(List<Path> filePaths, PlatformContext context) throws IOException
-	{
-		return new ProgramValidator().doValidate(filePaths, context);
+		return semaProgram;
 	}
 }

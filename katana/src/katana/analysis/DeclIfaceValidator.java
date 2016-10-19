@@ -20,43 +20,34 @@ import katana.backend.PlatformContext;
 import katana.diag.TypeString;
 import katana.sema.decl.*;
 import katana.sema.expr.SemaExprLiteral;
+import katana.sema.scope.SemaScopeDefinedFunction;
 import katana.sema.scope.SemaScopeFile;
 import katana.sema.scope.SemaScopeFunction;
 import katana.sema.type.SemaType;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class DeclValidator implements IVisitor
+public class DeclIfaceValidator implements IVisitor
 {
-	private SemaScopeFile scope;
 	private PlatformContext context;
 	private Consumer<SemaDecl> validateDecl;
 
-	private DeclValidator(SemaScopeFile scope, PlatformContext context, Consumer<SemaDecl> validateDecl)
+	private DeclIfaceValidator(PlatformContext context, Consumer<SemaDecl> validateDecl)
 	{
-		this.scope = scope;
 		this.context = context;
 		this.validateDecl = validateDecl;
 	}
 
-	public static Map<SemaDeclDefinedFunction, StmtValidator> validate(SemaDecl semaDecl, AstDecl decl, SemaScopeFile scope, PlatformContext context, Consumer<SemaDecl> validateDecl)
+	public static void validate(SemaDecl semaDecl, DeclInfo info, PlatformContext context, Consumer<SemaDecl> validateDecl)
 	{
-		DeclValidator validator = new DeclValidator(scope, context, validateDecl);
-		Object result = semaDecl.accept(validator, decl);
-
-		if(semaDecl instanceof SemaDeclOverloadSet)
-			return (Map<SemaDeclDefinedFunction, StmtValidator>)result;
-
-		return Collections.emptyMap();
+		DeclIfaceValidator validator = new DeclIfaceValidator(context, validateDecl);
+		semaDecl.accept(validator, info.astDecl, info.scope);
 	}
 
-	private void visit(SemaDeclData semaData, AstDeclData data)
+	private void visit(SemaDeclData semaData, AstDeclData data, SemaScopeFile scope)
 	{
 		for(AstDeclData.Field field : data.fields)
 		{
@@ -67,26 +58,22 @@ public class DeclValidator implements IVisitor
 		}
 	}
 
-	private Maybe<StmtValidator> validateFunction(SemaDeclFunction semaFunction, AstDeclFunction function)
+	private void validateFunction(SemaDeclFunction semaFunction, AstDeclFunction function, SemaScopeFile scope)
 	{
+		if(semaFunction instanceof SemaDeclDefinedFunction)
+			semaFunction.scope = new SemaScopeDefinedFunction(scope, (SemaDeclDefinedFunction)semaFunction);
+		else
+			semaFunction.scope = new SemaScopeFunction(scope, semaFunction);
+
 		for(AstDeclFunction.Param param : function.params)
 		{
-			SemaType type = TypeValidator.validate(param.type, scope, context, validateDecl);
+			SemaType type = TypeValidator.validate(param.type, semaFunction.scope, context, validateDecl);
 
 			if(!semaFunction.defineParam(param.name, type))
 				throw new RuntimeException(String.format("duplicate parameter name '%s' in function '%s'", param.name, function.name));
 		}
 
-		semaFunction.ret = TypeValidator.validate(function.ret.or(AstTypeBuiltin.VOID), scope, context, validateDecl);
-
-		if(semaFunction instanceof SemaDeclDefinedFunction)
-		{
-			SemaDeclDefinedFunction func = (SemaDeclDefinedFunction)semaFunction;
-			SemaScopeFunction fscope = new SemaScopeFunction(scope, func);
-			return Maybe.some(new StmtValidator(func, fscope, context, validateDecl));
-		}
-
-		return Maybe.none();
+		semaFunction.ret = TypeValidator.validate(function.ret.or(AstTypeBuiltin.VOID), semaFunction.scope, context, validateDecl);
 	}
 
 	private boolean sameSignatures(SemaDeclFunction a, SemaDeclFunction b)
@@ -119,26 +106,19 @@ public class DeclValidator implements IVisitor
 			}
 	}
 
-	private Map<SemaDeclDefinedFunction, StmtValidator> visit(SemaDeclOverloadSet set, OverloadDeclList functions)
+	private void visit(SemaDeclOverloadSet semaSet, AstDeclOverloadSet set, SemaScopeFile scope)
 	{
-		Map<SemaDeclDefinedFunction, StmtValidator> validators = new HashMap<>();
-
-		for(int i = 0; i != set.overloads.size(); ++i)
+		for(int i = 0; i != semaSet.overloads.size(); ++i)
 		{
-			SemaDeclFunction semaFunction = set.overloads.get(i);
-			AstDeclFunction function = functions.decls.get(i);
-			Maybe<StmtValidator> validator = validateFunction(semaFunction, function);
-
-			if(validator.isSome())
-				validators.put((SemaDeclDefinedFunction)semaFunction, validator.unwrap());
+			SemaDeclFunction semaFunction = semaSet.overloads.get(i);
+			AstDeclFunction function = set.overloads.get(i);
+			validateFunction(semaFunction, function, scope);
 		}
 
-		checkForDuplicates(set);
-
-		return validators;
+		checkForDuplicates(semaSet);
 	}
 
-	private void visit(SemaDeclGlobal semaGlobal, AstDeclGlobal global)
+	private void visit(SemaDeclGlobal semaGlobal, AstDeclGlobal global, SemaScopeFile scope)
 	{
 		Maybe<SemaType> maybeDeclaredType = global.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
 		Maybe<SemaType> maybeDeclaredTypeDecayed = maybeDeclaredType.map(TypeHelper::decay);
@@ -161,7 +141,7 @@ public class DeclValidator implements IVisitor
 		semaGlobal.type = globalType;
 	}
 
-	private void visit(SemaDeclTypeAlias semaAlias, AstDeclTypeAlias alias)
+	private void visit(SemaDeclTypeAlias semaAlias, AstDeclTypeAlias alias, SemaScopeFile scope)
 	{
 		semaAlias.type = TypeValidator.validate(alias.type, scope, context, validateDecl);
 	}

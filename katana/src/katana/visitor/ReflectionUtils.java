@@ -37,15 +37,15 @@ public class ReflectionUtils
 				matches.add(method);
 
 		if(matches.isEmpty())
-			throw new RuntimeException("no matching method found in " + clazz.getName());
+			throw new RuntimeException(String.format("no matching method found in '%s'", clazz.getName()));
 
 		if(matches.size() > 1)
-			throw new RuntimeException("ambiguous method call in " + clazz.getName());
+			return tryFindExactMatch(clazz, matches, args);
 
 		return matches.get(0);
 	}
 
-	public static boolean isCallable(Method method, Class[] args)
+	private static boolean isCallable(Method method, Class[] args)
 	{
 		Class<?>[] params = method.getParameterTypes();
 
@@ -54,5 +54,29 @@ public class ReflectionUtils
 				return false;
 
 		return true;
+	}
+
+	private static Method tryFindExactMatch(Class clazz, List<Method> matches, Class[] args)
+	{
+		for(Method method : matches)
+		{
+			Class<?>[] params = method.getParameterTypes();
+
+			boolean exact = true;
+
+			for(int i = 0; i != args.length; ++i)
+			{
+				if(args[i] == null)
+					continue;
+
+				if(params[i] != args[i])
+					exact = false;
+			}
+
+			if(exact)
+				return method;
+		}
+
+		throw new RuntimeException(String.format("ambiguous method call in '%s'", clazz.getName()));
 	}
 }

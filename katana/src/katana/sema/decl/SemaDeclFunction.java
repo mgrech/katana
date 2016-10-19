@@ -16,6 +16,7 @@ package katana.sema.decl;
 
 import katana.sema.SemaModule;
 import katana.sema.SemaSymbol;
+import katana.sema.scope.SemaScopeFunction;
 import katana.sema.type.SemaType;
 
 import java.util.ArrayList;
@@ -72,4 +73,5 @@ public abstract class SemaDeclFunction extends SemaDecl
 	public List<Param> params = new ArrayList<>();
 	public Map<String, Param> paramsByName = new TreeMap<>();
 	public SemaType ret;
+	public SemaScopeFunction scope;
 }

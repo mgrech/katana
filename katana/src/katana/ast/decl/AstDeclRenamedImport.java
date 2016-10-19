@@ -16,15 +16,13 @@ package katana.ast.decl;
 
 import katana.ast.AstPath;
 
-public class AstDeclRenamedImport extends AstDecl
+public class AstDeclRenamedImport extends AstDeclImport
 {
 	public AstDeclRenamedImport(AstPath path, String rename)
 	{
-		super(false, false);
-		this.path = path;
+		super(path);
 		this.rename = rename;
 	}
 
-	public AstPath path;
 	public String rename;
 }

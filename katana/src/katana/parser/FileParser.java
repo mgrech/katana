@@ -15,32 +15,143 @@
 package katana.parser;
 
 import katana.ast.AstFile;
-import katana.ast.decl.AstDecl;
+import katana.ast.AstModule;
+import katana.ast.AstPath;
+import katana.ast.decl.*;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
+import katana.visitor.IVisitor;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-
-public class FileParser
+@SuppressWarnings("unused")
+public class FileParser implements IVisitor
 {
-	public static AstFile parse(Path path) throws IOException
+	private AstFile file;
+	private AstModule module = null;
+
+	private FileParser(AstFile file)
 	{
-		byte[] data = Files.readAllBytes(path);
-		int[] codepoints = new String(data, StandardCharsets.UTF_8).codePoints().toArray();
+		this.file = file;
+	}
 
-		Scanner scanner = new Scanner(codepoints);
-		scanner.advance();
-
-		List<AstDecl> decls = new ArrayList<>();
+	public static AstFile parse(Scanner scanner)
+	{
+		AstFile file = new AstFile(scanner.path());
+		FileParser parser = new FileParser(file);
 
 		while(scanner.state().token.type != Token.Type.END)
-			decls.add(DeclParser.parse(scanner));
+		{
+			AstDecl decl = DeclParser.parse(scanner);
+			decl.accept(parser);
+		}
 
-		return new AstFile(path, decls);
+		return file;
+	}
+
+	private AstModule findOrCreateModule(AstPath path)
+	{
+		AstModule module = file.modules.get(path);
+
+		if(module != null)
+			return module;
+
+		module = new AstModule(path);
+		file.modules.put(path, module);
+		return module;
+	}
+
+	private void visit(AstDeclImport decl)
+	{
+		if(module != null)
+			throw new RuntimeException("imports must go first in a file");
+
+		if(file.imports.get(decl.path) != null)
+			throw new RuntimeException(String.format("duplicate import of module '%s'", decl.path));
+
+		file.imports.put(decl.path, decl);
+	}
+
+	private void visit(AstDeclRenamedImport decl)
+	{
+		if(module != null)
+			throw new RuntimeException("imports must go first in a file");
+
+		if(file.renamedImports.get(decl.rename) != null)
+			throw new RuntimeException(String.format("duplicate renamed import of module '%s' as '%s'", decl.path, decl.rename));
+
+		file.renamedImports.put(decl.rename, decl);
+	}
+
+	private void visit(AstDeclModule decl)
+	{
+		module = findOrCreateModule(decl.path);
+	}
+
+	private void redefinitionError(String name)
+	{
+		throw new RuntimeException(String.format("redefinition of symbol '%s'", name));
+	}
+
+	private void requireModule()
+	{
+		if(module == null)
+			throw new RuntimeException("module definition required");
+	}
+
+	private void handleDecl(AstDecl decl, String name)
+	{
+		requireModule();
+
+		if(module.decls.get(name) != null)
+			redefinitionError(name);
+
+		module.decls.put(name, decl);
+	}
+
+	private void visit(AstDeclData decl)
+	{
+		handleDecl(decl, decl.name);
+	}
+
+	private void visit(AstDeclGlobal decl)
+	{
+		handleDecl(decl, decl.name);
+	}
+
+	private void visit(AstDeclTypeAlias decl)
+	{
+		handleDecl(decl, decl.name);
+	}
+
+	private AstDeclOverloadSet findOrCreateOverloadSet(String name)
+	{
+		requireModule();
+
+		AstDecl decl = module.decls.get(name);
+
+		if(decl != null)
+		{
+			if(decl instanceof AstDeclOverloadSet)
+				return (AstDeclOverloadSet)decl;
+
+			redefinitionError(name);
+		}
+
+		AstDeclOverloadSet set = new AstDeclOverloadSet(name);
+		module.decls.put(name, set);
+		return set;
+	}
+
+	private void visit(AstDeclDefinedFunction decl)
+	{
+		requireModule();
+		AstDeclOverloadSet set = findOrCreateOverloadSet(decl.name);
+		set.overloads.add(decl);
+	}
+
+	private void visit(AstDeclExternFunction decl)
+	{
+		requireModule();
+		AstDeclOverloadSet set = findOrCreateOverloadSet(decl.name);
+		set.overloads.add(decl);
 	}
 }

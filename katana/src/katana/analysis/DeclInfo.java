@@ -15,17 +15,16 @@
 package katana.analysis;
 
 import katana.ast.decl.AstDecl;
-import katana.ast.decl.AstDeclFunction;
+import katana.sema.scope.SemaScopeFile;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class OverloadDeclList extends AstDecl
+public class DeclInfo
 {
-	public OverloadDeclList()
-	{
-		super(false, false);
-	}
+	public AstDecl astDecl;
+	public SemaScopeFile scope;
 
-	public List<AstDeclFunction> decls = new ArrayList<>();
+	public DeclInfo(AstDecl astDecl, SemaScopeFile scope)
+	{
+		this.astDecl = astDecl;
+		this.scope = scope;
+	}
 }

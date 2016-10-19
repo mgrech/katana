@@ -14,7 +14,7 @@
 
 package katana.analysis;
 
-public enum ValidationState
+public enum DepSolveState
 {
 	ONGOING,
 	FINISHED,

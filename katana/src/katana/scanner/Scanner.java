@@ -14,11 +14,19 @@
 
 package katana.scanner;
 
+import java.nio.file.Path;
+
 public class Scanner
 {
-	public Scanner(int[] source)
+	public Scanner(Path path, int[] source)
 	{
+		this.path = path;
 		this.source = source;
+	}
+
+	public Path path()
+	{
+		return path;
 	}
 
 	public ScannerState state()
@@ -496,5 +504,6 @@ public class Scanner
 	}
 
 	private int[] source;
+	private Path path;
 	private ScannerState state = new ScannerState();
 }

@@ -18,12 +18,14 @@ import katana.BuiltinType;
 import katana.analysis.ProgramValidator;
 import katana.analysis.TypeHelper;
 import katana.ast.AstPath;
+import katana.ast.AstProgram;
 import katana.backend.PlatformContext;
 import katana.backend.llvm.ProgramCodeGenerator;
 import katana.backend.llvm.amd64.PlatformContextLlvmAmd64;
 import katana.cli.Command;
 import katana.cli.CommandException;
 import katana.diag.TypeString;
+import katana.parser.ProgramParser;
 import katana.sema.SemaModule;
 import katana.sema.SemaProgram;
 import katana.sema.decl.SemaDecl;
@@ -35,33 +37,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.file.Paths;
 
 @Command(name = "build", desc = "builds project in working directory")
 public class CmdBuild
 {
-	private static List<Path> discoverSourceFiles(Path root) throws IOException
-	{
-		List<Path> paths = new ArrayList<>();
-
-		Files.walkFileTree(root, new SimpleFileVisitor<Path>()
-		{
-			@Override
-			public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException
-			{
-				if(attrs.isRegularFile() && path.toString().endsWith(".kat"))
-					paths.add(path);
-
-				return FileVisitResult.CONTINUE;
-			}
-		});
-
-		return paths;
-	}
-
 	private static Maybe<SemaDecl> resolvePath(SemaProgram program, String pathString)
 	{
 		AstPath path = AstPath.fromString(pathString);
@@ -108,9 +88,9 @@ public class CmdBuild
 			throw new CommandException("invalid number of arguments, usage: build [entry-point-symbol]");
 
 		PlatformContext context = new PlatformContextLlvmAmd64();
-		List<Path> filePaths = discoverSourceFiles(Paths.get("./source"));
 
-		SemaProgram program = ProgramValidator.validate(filePaths, context);
+		AstProgram ast = ProgramParser.parse(Paths.get("./source"));
+		SemaProgram program = ProgramValidator.validate(ast, context);
 
 		Maybe<SemaDecl> entry = Maybe.none();
 

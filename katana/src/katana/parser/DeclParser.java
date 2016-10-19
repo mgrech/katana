@@ -44,7 +44,7 @@ public class DeclParser
 			extern = Maybe.some(ParseTools.consumeExpected(scanner, Token.Type.LIT_STRING).value);
 
 		if(extern.isSome() && scanner.state().token.type != Token.Type.DECL_FN)
-			throw new RuntimeException("extern can only be applied to functions");
+			throw new RuntimeException("extern can only be applied to overloads");
 
 		switch(scanner.state().token.type)
 		{

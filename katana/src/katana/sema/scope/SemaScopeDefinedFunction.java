@@ -12,34 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+
 package katana.sema.scope;
 
 import katana.sema.SemaSymbol;
 import katana.sema.decl.SemaDeclDefinedFunction;
-import katana.sema.decl.SemaDeclFunction;
 
 import java.util.Collections;
 import java.util.List;
 
-public class SemaScopeFunction implements SemaScope
+public class SemaScopeDefinedFunction extends SemaScopeFunction
 {
-	public SemaScopeFunction(SemaScopeFile parent, SemaDeclFunction function)
+	private SemaDeclDefinedFunction function;
+
+	public SemaScopeDefinedFunction(SemaScopeFile parent, SemaDeclDefinedFunction function)
 	{
-		this.parent = parent;
+		super(parent, function);
 		this.function = function;
 	}
 
 	@Override
 	public List<SemaSymbol> find(String name)
 	{
-		SemaDeclFunction.Param param = function.paramsByName.get(name);
+		SemaSymbol local = function.localsByName.get(name);
 
-		if(param != null)
-			return Collections.singletonList(param);
+		if(local != null)
+			return Collections.singletonList(local);
 
-		return parent.find(name);
+		return super.find(name);
 	}
-
-	private SemaScopeFile parent;
-	private SemaDeclFunction function;
 }

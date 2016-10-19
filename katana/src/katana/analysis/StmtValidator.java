@@ -57,7 +57,7 @@ public class StmtValidator implements IVisitor
 		return (SemaStmt)stmt.accept(this);
 	}
 
-	public void finalizeValidation()
+	public void validateGotoTargets()
 	{
 		for(Map.Entry<SemaStmtGoto, String> entry : gotos.entrySet())
 		{
