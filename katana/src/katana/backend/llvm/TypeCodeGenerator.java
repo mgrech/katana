@@ -57,7 +57,6 @@ public class TypeCodeGenerator implements IVisitor
 		case BOOL:    return "i1";
 		case FLOAT32: return "float";
 		case FLOAT64: return "double";
-		case PTR:     return "i8*";
 		case VOID:    return "void";
 
 		default: break;
@@ -104,5 +103,15 @@ public class TypeCodeGenerator implements IVisitor
 	private String visit(SemaTypeConst type)
 	{
 		return generate(type.type, context);
+	}
+
+	private String visit(SemaTypeNullablePointer type)
+	{
+		return String.format("%s*", generate(type.type, context));
+	}
+
+	private String visit(SemaTypePointer type)
+	{
+		return String.format("%s*", generate(type.type, context));
 	}
 }

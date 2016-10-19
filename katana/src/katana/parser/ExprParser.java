@@ -203,10 +203,8 @@ public class ExprParser
 		case MISC_DEREF:
 			return ParseTools.parenthesized(scanner, () ->
 			{
-				AstType dtype = TypeParser.parse(scanner);
-				ParseTools.expect(scanner, Token.Type.PUNCT_COMMA, true);
 				AstExpr dexpr = ExprParser.parse(scanner);
-				return new AstExprDeref(dtype, dexpr);
+				return new AstExprDeref(dexpr);
 			});
 
 		default: throw new AssertionError("unreachable");

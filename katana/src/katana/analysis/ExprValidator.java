@@ -202,15 +202,15 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprDeref deref, Maybe<SemaType> deduce)
 	{
-		SemaExpr expr = validate(deref.expr, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.PTR));
+		SemaExpr expr = validate(deref.expr, scope, context, validateDecl, deduce.map(SemaTypePointer::new));
 
-		if(!TypeHelper.isBuiltinType(expr.type(), BuiltinType.PTR))
+		if(!TypeHelper.isPointerType(expr.type()))
 		{
-			String fmt = "expected expression of type 'ptr' in 'deref', got '%s'";
+			String fmt = "expected expression of pointer type in 'deref', got '%s'";
 			throw new RuntimeException(String.format(fmt, TypeString.of(expr.type())));
 		}
 
-		return new SemaExprDeref(TypeValidator.validate(deref.type, scope, context, validateDecl), expr);
+		return new SemaExprDeref(expr);
 	}
 
 	private Maybe<List<SemaExpr>> match(SemaDeclFunction function, List<AstExpr> args)

@@ -14,16 +14,12 @@
 
 package katana.ast.expr;
 
-import katana.ast.type.AstType;
-
 public class AstExprDeref extends AstExpr
 {
-	public AstExprDeref(AstType type, AstExpr expr)
+	public AstExprDeref(AstExpr expr)
 	{
-		this.type = type;
 		this.expr = expr;
 	}
 
-	public AstType type;
 	public AstExpr expr;
 }

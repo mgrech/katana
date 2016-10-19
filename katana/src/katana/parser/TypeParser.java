@@ -62,6 +62,12 @@ public class TypeParser
 		if(ParseTools.option(scanner, Token.Type.TYPE_TYPEOF, true))
 			return parseTypeof(scanner);
 
+		if(ParseTools.option(scanner, Token.Type.PUNCT_QMARK, true))
+			return new AstTypeNullablePointer(parse(scanner));
+
+		if(ParseTools.option(scanner, Token.Type.PUNCT_EMARK, true))
+			return new AstTypePointer(parse(scanner));
+
 		if(ParseTools.option(scanner, Token.Category.TYPE, false))
 			return parseBuiltin(scanner);
 
@@ -151,7 +157,6 @@ public class TypeParser
 		case TYPE_UPINT:   return AstTypeBuiltin.UPINT;
 		case TYPE_FLOAT32: return AstTypeBuiltin.FLOAT32;
 		case TYPE_FLOAT64: return AstTypeBuiltin.FLOAT64;
-		case TYPE_PTR:     return AstTypeBuiltin.PTR;
 
 		default: throw new AssertionError("unreachable");
 		}

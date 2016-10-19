@@ -12,14 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.ast.type;
+package katana.sema.type;
 
-public class AstTypeUserDefined extends AstType
+import katana.BuiltinType;
+import katana.backend.PlatformContext;
+
+import java.math.BigInteger;
+
+public class SemaTypePointer extends SemaType
 {
-	public AstTypeUserDefined(String name)
+	public SemaTypePointer(SemaType type)
 	{
-		this.name = name;
+		this.type = type;
 	}
 
-	public String name;
+	@Override
+	public BigInteger sizeof(PlatformContext context)
+	{
+		return context.sizeof(BuiltinType.NULL);
+	}
+
+	@Override
+	public BigInteger alignof(PlatformContext context)
+	{
+		return context.alignof(BuiltinType.NULL);
+	}
+
+	@Override
+	protected boolean same(SemaType other)
+	{
+		return SemaType.same(type, ((SemaTypePointer)other).type);
+	}
+
+	public SemaType type;
 }

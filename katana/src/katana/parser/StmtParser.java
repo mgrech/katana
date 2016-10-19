@@ -81,7 +81,7 @@ public class StmtParser
 
 	private static AstStmt parseIf(Scanner scanner)
 	{
-		boolean negated = ParseTools.option(scanner, Token.Type.STMT_NEGATE, true);
+		boolean negated = ParseTools.option(scanner, Token.Type.PUNCT_EMARK, true);
 		AstExpr condition = ParseTools.parenthesized(scanner, () -> ExprParser.parse(scanner));
 		AstStmt then = parse(scanner);
 
@@ -120,7 +120,7 @@ public class StmtParser
 
 	private static AstStmtWhile parseWhile(Scanner scanner)
 	{
-		boolean negated = ParseTools.option(scanner, Token.Type.STMT_NEGATE, true);
+		boolean negated = ParseTools.option(scanner, Token.Type.PUNCT_EMARK, true);
 		ParseTools.expect(scanner, Token.Type.PUNCT_LPAREN, true);
 		AstExpr condition = ExprParser.parse(scanner);
 		ParseTools.expect(scanner, Token.Type.PUNCT_RPAREN, true);

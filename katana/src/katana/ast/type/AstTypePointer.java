@@ -14,12 +14,12 @@
 
 package katana.ast.type;
 
-public class AstTypeUserDefined extends AstType
+public class AstTypePointer extends AstType
 {
-	public AstTypeUserDefined(String name)
+	public AstTypePointer(AstType type)
 	{
-		this.name = name;
+		this.type = type;
 	}
 
-	public String name;
+	public AstType type;
 }

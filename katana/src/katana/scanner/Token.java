@@ -71,7 +71,6 @@ public class Token
 		STMT_LABEL,
 		STMT_LOOP,
 		STMT_WHILE,
-		STMT_NEGATE,
 
 		PUNCT_LPAREN,
 		PUNCT_RPAREN,
@@ -84,6 +83,7 @@ public class Token
 		PUNCT_COLON,
 		PUNCT_SCOLON,
 		PUNCT_QMARK,
+		PUNCT_EMARK,
 		PUNCT_ASSIGN,
 		PUNCT_RET,
 
@@ -103,7 +103,6 @@ public class Token
 		TYPE_UPINT,
 		TYPE_FLOAT32,
 		TYPE_FLOAT64,
-		TYPE_PTR,
 		TYPE_OPAQUE,
 		TYPE_CONST,
 		TYPE_TYPEOF,
@@ -140,7 +139,6 @@ public class Token
 	public static final Token STMT_RETURN = new Token(Category.STMT, Type.STMT_RETURN, "return");
 	public static final Token STMT_LOOP   = new Token(Category.STMT, Type.STMT_LOOP,   "loop");
 	public static final Token STMT_WHILE  = new Token(Category.STMT, Type.STMT_WHILE,  "while");
-	public static final Token STMT_NEGATE = new Token(Category.STMT, Type.STMT_NEGATE, "!");
 
 	public static final Token PUNCT_LPAREN   = new Token(Category.PUNCT, Type.PUNCT_LPAREN,   "(");
 	public static final Token PUNCT_RPAREN   = new Token(Category.PUNCT, Type.PUNCT_RPAREN,   ")");
@@ -153,6 +151,7 @@ public class Token
 	public static final Token PUNCT_COLON    = new Token(Category.PUNCT, Type.PUNCT_COLON,    ":");
 	public static final Token PUNCT_SCOLON   = new Token(Category.PUNCT, Type.PUNCT_SCOLON,   ";");
 	public static final Token PUNCT_QMARK    = new Token(Category.PUNCT, Type.PUNCT_QMARK,    "?");
+	public static final Token PUNCT_EMARK    = new Token(Category.PUNCT, Type.PUNCT_EMARK,    "!");
 	public static final Token PUNCT_ASSIGN   = new Token(Category.PUNCT, Type.PUNCT_ASSIGN,   "=");
 	public static final Token PUNCT_RET      = new Token(Category.PUNCT, Type.PUNCT_RET,      "=>");
 
@@ -172,7 +171,6 @@ public class Token
 	public static final Token TYPE_UPINT   = new Token(Category.TYPE, Type.TYPE_UPINT,   "upint");
 	public static final Token TYPE_FLOAT32 = new Token(Category.TYPE, Type.TYPE_FLOAT32, "float32");
 	public static final Token TYPE_FLOAT64 = new Token(Category.TYPE, Type.TYPE_FLOAT64, "float64");
-	public static final Token TYPE_PTR     = new Token(Category.TYPE, Type.TYPE_PTR,     "ptr");
 	public static final Token TYPE_OPAQUE  = new Token(Category.TYPE, Type.TYPE_OPAQUE,  "opaque");
 	public static final Token TYPE_CONST   = new Token(Category.TYPE, Type.TYPE_CONST,   "const");
 	public static final Token TYPE_TYPEOF  = new Token(Category.TYPE, Type.TYPE_TYPEOF,  "typeof");

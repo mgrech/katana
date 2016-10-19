@@ -68,7 +68,7 @@ public class TypeValidator implements IVisitor
 		case UINT:    return SemaTypeBuiltin.UINT;
 		case PINT:    return SemaTypeBuiltin.PINT;
 		case UPINT:   return SemaTypeBuiltin.UPINT;
-		case PTR:     return SemaTypeBuiltin.PTR;
+		case NULL:    return SemaTypeBuiltin.NULL;
 		case BOOL:    return SemaTypeBuiltin.BOOL;
 		case FLOAT32: return SemaTypeBuiltin.FLOAT32;
 		case FLOAT64: return SemaTypeBuiltin.FLOAT64;
@@ -149,5 +149,15 @@ public class TypeValidator implements IVisitor
 			throw new RuntimeException("expression passed to 'typeof' yields 'void'");
 
 		return type;
+	}
+
+	private SemaType visit(AstTypeNullablePointer pointer)
+	{
+		return new SemaTypeNullablePointer(validate(pointer.type, scope, context, validateDecl));
+	}
+
+	private SemaType visit(AstTypePointer pointer)
+	{
+		return new SemaTypePointer(validate(pointer.type, scope, context, validateDecl));
 	}
 }

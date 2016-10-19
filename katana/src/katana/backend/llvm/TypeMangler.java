@@ -58,4 +58,14 @@ public class TypeMangler implements IVisitor
 	{
 		throw new AssertionError("unreachable");
 	}
+
+	private String visit(SemaTypeNullablePointer pointer)
+	{
+		return String.format("npointer-%s", mangle(pointer.type));
+	}
+
+	private String visit(SemaTypePointer pointer)
+	{
+		return String.format("pointer-%s", mangle(pointer.type));
+	}
 }

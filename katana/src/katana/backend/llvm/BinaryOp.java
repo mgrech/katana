@@ -26,14 +26,13 @@ import java.util.List;
 
 public class BinaryOp extends BuiltinFunc
 {
-	public BinaryOp(String name, Maybe<String> boolInstr, Maybe<String> sintInstr, Maybe<String> uintInstr, Maybe<String> floatInstr, Maybe<String> ptrInstr, Maybe<SemaType> ret)
+	public BinaryOp(String name, Maybe<String> boolInstr, Maybe<String> sintInstr, Maybe<String> uintInstr, Maybe<String> floatInstr, Maybe<SemaType> ret)
 	{
 		super(name);
 		this.boolInstr = boolInstr;
 		this.sintInstr = sintInstr;
 		this.uintInstr = uintInstr;
 		this.floatInstr = floatInstr;
-		this.ptrInstr = ptrInstr;
 		this.ret = ret;
 	}
 
@@ -66,11 +65,6 @@ public class BinaryOp extends BuiltinFunc
 				unsupportedType("floating point types");
 			break;
 
-		case PTR:
-			if(ptrInstr.isNone())
-				unsupportedType("pointers");
-			break;
-
 		default: throw new AssertionError("unreachable");
 		}
 	}
@@ -101,7 +95,6 @@ public class BinaryOp extends BuiltinFunc
 		case INT: return sintInstr.unwrap();
 		case UINT: return uintInstr.unwrap();
 		case FLOAT: return floatInstr.unwrap();
-		case PTR: return ptrInstr.unwrap();
 		default: break;
 		}
 
@@ -125,6 +118,5 @@ public class BinaryOp extends BuiltinFunc
 	private Maybe<String> sintInstr;
 	private Maybe<String> uintInstr;
 	private Maybe<String> floatInstr;
-	private Maybe<String> ptrInstr;
 	private Maybe<SemaType> ret;
 }

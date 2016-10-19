@@ -1,5 +1,6 @@
 package katana.diag;
 
+import katana.BuiltinType;
 import katana.analysis.TypeHelper;
 import katana.sema.type.*;
 import katana.visitor.IVisitor;
@@ -38,6 +39,9 @@ public class TypeString implements IVisitor
 
 	private String visit(SemaTypeBuiltin type)
 	{
+		if(type.which == BuiltinType.NULL)
+			return "<null-type>";
+
 		return type.which.toString().toLowerCase();
 	}
 
@@ -58,5 +62,15 @@ public class TypeString implements IVisitor
 
 		String ret = TypeHelper.isVoidType(type.ret) ? "" : " => " + of(type.ret);
 		return String.format("fn(%s)%s", params, ret);
+	}
+
+	private String visit(SemaTypeNullablePointer type)
+	{
+		return String.format("?%s", of(type.type));
+	}
+
+	private String visit(SemaTypePointer type)
+	{
+		return String.format("!%s", of(type.type));
 	}
 }

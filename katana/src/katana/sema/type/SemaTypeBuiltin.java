@@ -37,7 +37,7 @@ public class SemaTypeBuiltin extends SemaType
 	public static final SemaTypeBuiltin UPINT   = new SemaTypeBuiltin(BuiltinType.UPINT);
 	public static final SemaTypeBuiltin FLOAT32 = new SemaTypeBuiltin(BuiltinType.FLOAT32);
 	public static final SemaTypeBuiltin FLOAT64 = new SemaTypeBuiltin(BuiltinType.FLOAT64);
-	public static final SemaTypeBuiltin PTR     = new SemaTypeBuiltin(BuiltinType.PTR);
+	public static final SemaTypeBuiltin NULL    = new SemaTypeBuiltin(BuiltinType.NULL);
 
 	public SemaTypeBuiltin(BuiltinType which)
 	{

@@ -16,6 +16,7 @@ package katana.sema.expr;
 
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeBuiltin;
+import katana.sema.type.SemaTypePointer;
 
 public class SemaExprAddressof extends SemaExpr
 {
@@ -27,7 +28,7 @@ public class SemaExprAddressof extends SemaExpr
 	@Override
 	public SemaType type()
 	{
-		return SemaTypeBuiltin.PTR;
+		return new SemaTypePointer(expr.type());
 	}
 
 	public SemaExprLValueExpr expr;

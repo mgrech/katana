@@ -26,10 +26,4 @@ public class AstTypeArray extends AstType
 
 	public BigInteger length;
 	public AstType type;
-
-	@Override
-	public String toString()
-	{
-		return String.format("[%s]%s", length, type);
-	}
 }

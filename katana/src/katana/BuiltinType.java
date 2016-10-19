@@ -32,7 +32,7 @@ public enum BuiltinType
 	UPINT  (Kind.UINT),
 	FLOAT32(Kind.FLOAT),
 	FLOAT64(Kind.FLOAT),
-	PTR    (Kind.PTR);
+	NULL   (Kind.NULL);
 
 	public enum Kind
 	{
@@ -41,7 +41,7 @@ public enum BuiltinType
 		INT,
 		UINT,
 		FLOAT,
-		PTR,
+		NULL,
 	}
 
 	BuiltinType(Kind kind)

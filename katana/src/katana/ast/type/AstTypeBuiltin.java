@@ -34,7 +34,7 @@ public class AstTypeBuiltin extends AstType
 	public static final AstTypeBuiltin UPINT   = new AstTypeBuiltin(BuiltinType.UPINT);
 	public static final AstTypeBuiltin FLOAT32 = new AstTypeBuiltin(BuiltinType.FLOAT32);
 	public static final AstTypeBuiltin FLOAT64 = new AstTypeBuiltin(BuiltinType.FLOAT64);
-	public static final AstTypeBuiltin PTR     = new AstTypeBuiltin(BuiltinType.PTR);
+	public static final AstTypeBuiltin NULL    = new AstTypeBuiltin(BuiltinType.NULL);
 
 	private AstTypeBuiltin(BuiltinType which)
 	{
@@ -42,10 +42,4 @@ public class AstTypeBuiltin extends AstType
 	}
 
 	public final BuiltinType which;
-
-	@Override
-	public String toString()
-	{
-		return which.toString().toLowerCase();
-	}
 }

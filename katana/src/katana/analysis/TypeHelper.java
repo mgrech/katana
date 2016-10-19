@@ -44,6 +44,17 @@ public class TypeHelper
 		return new SemaTypeConst(type);
 	}
 
+	public static SemaType removePointer(SemaType type)
+	{
+		if(type instanceof SemaTypeNullablePointer)
+			return ((SemaTypeNullablePointer)type).type;
+
+		if(type instanceof SemaTypePointer)
+			return ((SemaTypePointer)type).type;
+
+		return type;
+	}
+
 	public static SemaType removeConst(SemaType type)
 	{
 		if(type instanceof SemaTypeConst)
@@ -81,6 +92,12 @@ public class TypeHelper
 	public static boolean isFunctionType(SemaType type)
 	{
 		return type instanceof SemaTypeFunction;
+	}
+
+	public static boolean isPointerType(SemaType type)
+	{
+		type = removeConst(type);
+		return type instanceof SemaTypePointer || type instanceof SemaTypeNullablePointer;
 	}
 
 	public static SemaType decay(SemaType type)

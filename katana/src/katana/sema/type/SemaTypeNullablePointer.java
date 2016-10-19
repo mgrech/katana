@@ -12,19 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema.expr;
+package katana.sema.type;
 
-import katana.sema.type.SemaType;
-import katana.sema.type.SemaTypeBuiltin;
-import katana.sema.type.SemaTypeConst;
+import katana.BuiltinType;
+import katana.backend.PlatformContext;
 
-public class SemaExprLitNull extends SemaExprLiteral
+import java.math.BigInteger;
+
+public class SemaTypeNullablePointer extends SemaType
 {
-	private static final SemaType TYPE = new SemaTypeConst(SemaTypeBuiltin.NULL);
+	public SemaTypeNullablePointer(SemaType type)
+	{
+		this.type = type;
+	}
 
 	@Override
-	public SemaType type()
+	public BigInteger sizeof(PlatformContext context)
 	{
-		return TYPE;
+		return context.sizeof(BuiltinType.NULL);
 	}
+
+	@Override
+	public BigInteger alignof(PlatformContext context)
+	{
+		return context.alignof(BuiltinType.NULL);
+	}
+
+	@Override
+	protected boolean same(SemaType other)
+	{
+		return SemaType.same(type, ((SemaTypeNullablePointer)other).type);
+	}
+
+	public SemaType type;
 }

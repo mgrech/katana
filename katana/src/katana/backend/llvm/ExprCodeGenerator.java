@@ -66,11 +66,7 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprAddressof addressof)
 	{
-		String ptrSSA = generate(addressof.expr, builder, context, fcontext).unwrap();
-		String castedPtrSSA = fcontext.allocateSSA();
-		String typeString = TypeCodeGenerator.generate(addressof.expr.type(), context);
-		builder.append(String.format("\t%s = bitcast %s* %s to i8*\n", castedPtrSSA, typeString, ptrSSA));
-		return Maybe.some(castedPtrSSA);
+		return Maybe.some(generate(addressof.expr, builder, context, fcontext).unwrap());
 	}
 
 	private Maybe<String> visit(SemaExprAlignof alignof)
@@ -147,14 +143,12 @@ public class ExprCodeGenerator implements IVisitor
 	private Maybe<String> visit(SemaExprDeref deref)
 	{
 		String ptrSSA = generate(deref.expr, builder, context, fcontext).unwrap();
-		String castedPtrSSA = fcontext.allocateSSA();
-		String typeString = TypeCodeGenerator.generate(deref.type, context);
-		builder.append(String.format("\t%s = bitcast i8* %s to %s*\n", castedPtrSSA, ptrSSA, typeString));
 
-		if(deref.isUsedAsLValue() || deref.type instanceof SemaTypeFunction)
-			return Maybe.some(castedPtrSSA);
+		if(deref.isUsedAsLValue() || deref.type() instanceof SemaTypeFunction)
+			return Maybe.some(ptrSSA);
 
-		return Maybe.some(generateLoad(castedPtrSSA, typeString));
+		String typeString = TypeCodeGenerator.generate(deref.type(), context);
+		return Maybe.some(generateLoad(ptrSSA, typeString));
 	}
 
 	private Maybe<String> generateFunctionCall(String functionSSA, List<SemaExpr> args, SemaType ret, Maybe<Boolean> inline)

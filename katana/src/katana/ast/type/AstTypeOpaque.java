@@ -26,10 +26,4 @@ public class AstTypeOpaque extends AstType
 
 	public BigInteger size;
 	public BigInteger alignment;
-
-	@Override
-	public String toString()
-	{
-		return String.format("opaque(%s, %s)", size, alignment);
-	}
 }

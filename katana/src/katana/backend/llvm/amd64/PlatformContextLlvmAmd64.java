@@ -48,7 +48,7 @@ public class PlatformContextLlvmAmd64 extends PlatformContextLlvm
 		case UINT:
 		case PINT:
 		case UPINT:
-		case PTR:
+		case NULL:
 			return BigInteger.valueOf(8);
 
 		case BOOL:    return BigInteger.ONE;
