@@ -71,34 +71,52 @@ public class DeclCodeGenerator implements IVisitor
 		builder.append(" }\n");
 	}
 
-	private void generateDefinedFunction(SemaDeclDefinedFunction function)
+	private void generateParam(SemaDeclFunction.Param param, boolean isExternal)
 	{
-		builder.append("define private ");
+		builder.append(TypeCodeGenerator.generate(param.type, context));
+
+		if(!isExternal)
+		{
+			builder.append(" %p$");
+			builder.append(param.name);
+		}
+	}
+
+	private void generateSignature(SemaDeclFunction function)
+	{
+		boolean isExternal = function instanceof SemaDeclExternFunction;
+
+		builder.append(isExternal ? "declare " : "define private ");
 		builder.append(TypeCodeGenerator.generate(function.ret, context));
 		builder.append(" @");
-		builder.append(FunctionNameMangler.mangle(function));
+
+		if(isExternal)
+			builder.append(((SemaDeclExternFunction)function).externName);
+		else
+			builder.append(FunctionNameMangler.mangle(function));
+
 		builder.append('(');
 
 		if(!function.params.isEmpty())
 		{
 			SemaDeclFunction.Param first = function.params.get(0);
-
-			builder.append(TypeCodeGenerator.generate(first.type, context));
-			builder.append(" %p$");
-			builder.append(first.name);
+			generateParam(first, isExternal);
 
 			for(int i = 1; i != function.params.size(); ++i)
 			{
 				builder.append(", ");
 
 				SemaDeclFunction.Param param = function.params.get(i);
-				builder.append(TypeCodeGenerator.generate(param.type, context));
-				builder.append(" %p$");
-				builder.append(param.name);
+				generateParam(param, isExternal);
 			}
 		}
 
-		builder.append(")\n{\n");
+		builder.append(")\n");
+	}
+
+	private void generateFunctionBody(SemaDeclDefinedFunction function)
+	{
+		builder.append("{\n");
 
 		for(SemaDeclFunction.Param param : function.params)
 		{
@@ -134,35 +152,18 @@ public class DeclCodeGenerator implements IVisitor
 		builder.append("}\n");
 	}
 
-	private void generateExternFunction(SemaDeclExternFunction externFunction)
-	{
-		String retTypeString = TypeCodeGenerator.generate(externFunction.ret, context);
-		builder.append(String.format("declare %s @%s(", retTypeString, externFunction.externName));
-
-		if(!externFunction.params.isEmpty())
-		{
-			builder.append(TypeCodeGenerator.generate(externFunction.params.get(0).type, context));
-
-			for(int i = 1; i != externFunction.params.size(); ++i)
-			{
-				String typeString = TypeCodeGenerator.generate(externFunction.params.get(i).type, context);
-				builder.append(", ");
-				builder.append(typeString);
-			}
-		}
-
-		builder.append(")\n");
-	}
-
 	private void visit(SemaDeclOverloadSet set)
 	{
 		for(SemaDeclFunction overload : set.overloads)
 		{
 			if(overload instanceof SemaDeclDefinedFunction)
-				generateDefinedFunction((SemaDeclDefinedFunction)overload);
+			{
+				generateSignature(overload);
+				generateFunctionBody((SemaDeclDefinedFunction)overload);
+			}
 
 			else if(overload instanceof SemaDeclExternFunction)
-				generateExternFunction((SemaDeclExternFunction)overload);
+				generateSignature(overload);
 
 			else
 				throw new AssertionError("unreachable");
