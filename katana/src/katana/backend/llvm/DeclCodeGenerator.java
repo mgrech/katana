@@ -20,6 +20,7 @@ import katana.backend.PlatformContext;
 import katana.sema.decl.*;
 import katana.sema.stmt.SemaStmt;
 import katana.sema.type.SemaType;
+import katana.sema.type.SemaTypePointer;
 import katana.visitor.IVisitor;
 
 import java.math.BigInteger;
@@ -74,6 +75,9 @@ public class DeclCodeGenerator implements IVisitor
 	private void generateParam(SemaDeclFunction.Param param, boolean isExternal)
 	{
 		builder.append(TypeCodeGenerator.generate(param.type, context));
+
+		if(param.type instanceof SemaTypePointer)
+			builder.append(" nonnull");
 
 		if(!isExternal)
 		{
