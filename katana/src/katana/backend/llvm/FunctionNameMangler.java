@@ -67,13 +67,14 @@ public class FunctionNameMangler
 	{
 		String op = operator.decl.operator.op;
 		Kind kind = operator.decl.operator.kind;
-		return String.format("op-%s-%s", kind.toString().toLowerCase(), mangleOperatorSymbol(op));
+		String path = operator.decl.module().name();
+		return String.format("op-%s-%s.%s", kind.toString().toLowerCase(), path, mangleOperatorSymbol(op));
 	}
 
 	private static String mangleFunctionName(SemaDeclFunction function)
 	{
 		if(function instanceof SemaDeclDefinedOperator)
-			return mangleOperatorName((SemaDeclDefinedOperator)function);
+			return function.module().name() + "." + mangleOperatorName((SemaDeclDefinedOperator)function);
 
 		return function.qualifiedName().toString();
 	}
