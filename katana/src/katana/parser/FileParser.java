@@ -18,6 +18,7 @@ import katana.ast.AstFile;
 import katana.ast.AstModule;
 import katana.ast.AstPath;
 import katana.ast.decl.*;
+import katana.op.Operator;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
 import katana.visitor.IVisitor;
@@ -40,7 +41,7 @@ public class FileParser implements IVisitor
 
 		while(scanner.state().token.type != Token.Type.END)
 		{
-			AstDecl decl = DeclParser.parse(scanner);
+			AstDecl decl = DeclParser.parse(scanner, file.delayedExprs);
 			decl.accept(parser);
 		}
 
@@ -153,5 +154,10 @@ public class FileParser implements IVisitor
 		requireModule();
 		AstDeclOverloadSet set = findOrCreateOverloadSet(decl.name);
 		set.overloads.add(decl);
+	}
+
+	private void visit(AstDeclOperator decl)
+	{
+		handleDecl(decl, Operator.declName(decl.operator.op, decl.operator.kind));
 	}
 }

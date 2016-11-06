@@ -14,6 +14,7 @@
 
 package katana.parser;
 
+import katana.ast.DelayedExprParseList;
 import katana.ast.expr.AstExpr;
 import katana.ast.stmt.*;
 import katana.ast.type.AstType;
@@ -24,36 +25,42 @@ import katana.utils.Maybe;
 
 public class StmtParser
 {
-	public static AstStmt parse(Scanner scanner)
+	public static AstStmt parse(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
 		if(ParseTools.option(scanner, Token.Type.STMT_LOCAL, true))
-			return parseLocal(scanner);
+			return parseLocal(scanner, delayedExprs);
 
 		if(ParseTools.option(scanner, Token.Type.STMT_IF, true))
-			return parseIf(scanner);
+			return parseIf(scanner, false, delayedExprs);
+
+		if(ParseTools.option(scanner, Token.Type.STMT_UNLESS, true))
+			return parseIf(scanner, true, delayedExprs);
 
 		if(ParseTools.option(scanner, Token.Type.STMT_GOTO, true))
 			return parseGoto(scanner);
 
 		if(ParseTools.option(scanner, Token.Type.STMT_RETURN, true))
-			return parseReturn(scanner);
+			return parseReturn(scanner, delayedExprs);
 
 		if(ParseTools.option(scanner, Token.Type.STMT_LOOP, true))
-			return parseLoop(scanner);
+			return parseLoop(scanner, delayedExprs);
 
 		if(ParseTools.option(scanner, Token.Type.STMT_WHILE, true))
-			return parseWhile(scanner);
+			return parseWhile(scanner, false, delayedExprs);
+
+		if(ParseTools.option(scanner, Token.Type.STMT_UNTIL, true))
+			return parseWhile(scanner, true, delayedExprs);
 
 		if(ParseTools.option(scanner, Token.Type.STMT_LABEL, false))
 			return parseLabel(scanner);
 
 		if(ParseTools.option(scanner, Token.Type.PUNCT_LBRACE, true))
-			return parseCompound(scanner);
+			return parseCompound(scanner, delayedExprs);
 
-		return parseExprStmt(scanner);
+		return parseExprStmt(scanner, delayedExprs);
 	}
 
-	private static AstStmt parseLocal(Scanner scanner)
+	private static AstStmt parseLocal(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
 		ScannerState state = scanner.capture();
 
@@ -61,9 +68,9 @@ public class StmtParser
 		{
 			String name = ParseTools.consume(scanner).value;
 
-			if(ParseTools.option(scanner, Token.Type.PUNCT_ASSIGN, true))
+			if(ParseTools.option(scanner, "=", true))
 			{
-				AstExpr init = ExprParser.parse(scanner);
+				AstExpr init = ExprParser.parse(scanner, delayedExprs);
 				ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
 				return new AstStmtLocal(Maybe.none(), name, init);
 			}
@@ -71,24 +78,23 @@ public class StmtParser
 
 		scanner.backtrack(state);
 
-		AstType type = TypeParser.parse(scanner);
+		AstType type = TypeParser.parse(scanner, delayedExprs);
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
-		ParseTools.expect(scanner, Token.Type.PUNCT_ASSIGN, true);
-		AstExpr init = ExprParser.parse(scanner);
+		ParseTools.expect(scanner, "=", true);
+		AstExpr init = ExprParser.parse(scanner, delayedExprs);
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
 		return new AstStmtLocal(Maybe.some(type), name, init);
 	}
 
-	private static AstStmt parseIf(Scanner scanner)
+	private static AstStmt parseIf(Scanner scanner, boolean negated, DelayedExprParseList delayedExprs)
 	{
-		boolean negated = ParseTools.option(scanner, Token.Type.PUNCT_EMARK, true);
-		AstExpr condition = ParseTools.parenthesized(scanner, () -> ExprParser.parse(scanner));
-		AstStmt then = parse(scanner);
+		AstExpr condition = ParseTools.parenthesized(scanner, () -> ExprParser.parse(scanner, delayedExprs));
+		AstStmt then = parse(scanner, delayedExprs);
 
 		Maybe<AstStmt> else_ = Maybe.none();
 
 		if(ParseTools.option(scanner, Token.Type.STMT_ELSE, true))
-			else_ = Maybe.some(parse(scanner));
+			else_ = Maybe.some(parse(scanner, delayedExprs));
 
 		if(else_.isNone())
 			return new AstStmtIf(negated, condition, then);
@@ -103,51 +109,50 @@ public class StmtParser
 		return new AstStmtGoto(label);
 	}
 
-	private static AstStmtReturn parseReturn(Scanner scanner)
+	private static AstStmtReturn parseReturn(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
 		if(ParseTools.option(scanner, Token.Type.PUNCT_SCOLON, true))
 			return new AstStmtReturn(Maybe.none());
 
-		AstExpr expr = ExprParser.parse(scanner);
+		AstExpr expr = ExprParser.parse(scanner, delayedExprs);
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
 		return new AstStmtReturn(Maybe.some(expr));
 	}
 
-	private static AstStmtLoop parseLoop(Scanner scanner)
+	private static AstStmtLoop parseLoop(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
-		return new AstStmtLoop(parse(scanner));
+		return new AstStmtLoop(parse(scanner, delayedExprs));
 	}
 
-	private static AstStmtWhile parseWhile(Scanner scanner)
+	private static AstStmtWhile parseWhile(Scanner scanner, boolean negated, DelayedExprParseList delayedExprs)
 	{
-		boolean negated = ParseTools.option(scanner, Token.Type.PUNCT_EMARK, true);
 		ParseTools.expect(scanner, Token.Type.PUNCT_LPAREN, true);
-		AstExpr condition = ExprParser.parse(scanner);
+		AstExpr condition = ExprParser.parse(scanner, delayedExprs);
 		ParseTools.expect(scanner, Token.Type.PUNCT_RPAREN, true);
-		AstStmt body = StmtParser.parse(scanner);
+		AstStmt body = StmtParser.parse(scanner, delayedExprs);
 		return new AstStmtWhile(negated, condition, body);
 	}
 
 	private static AstStmtLabel parseLabel(Scanner scanner)
 	{
 		String label = ParseTools.consume(scanner).value;
-		ParseTools.expect(scanner, Token.Type.PUNCT_COLON, true);
+		ParseTools.expect(scanner, ":", true);
 		return new AstStmtLabel(label);
 	}
 
-	private static AstStmtCompound parseCompound(Scanner scanner)
+	private static AstStmtCompound parseCompound(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
 		AstStmtCompound comp = new AstStmtCompound();
 
 		while(!ParseTools.option(scanner, Token.Type.PUNCT_RBRACE, true))
-			comp.body.add(parse(scanner));
+			comp.body.add(parse(scanner, delayedExprs));
 
 		return comp;
 	}
 
-	private static AstStmtExprStmt parseExprStmt(Scanner scanner)
+	private static AstStmtExprStmt parseExprStmt(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
-		AstExpr expr = ExprParser.parse(scanner);
+		AstExpr expr = ExprParser.parse(scanner, delayedExprs);
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
 		return new AstStmtExprStmt(expr);
 	}

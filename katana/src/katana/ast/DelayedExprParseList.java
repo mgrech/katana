@@ -14,23 +14,17 @@
 
 package katana.ast;
 
-import katana.ast.decl.AstDeclImport;
-import katana.ast.decl.AstDeclRenamedImport;
+import katana.ast.expr.AstExpr;
+import katana.ast.expr.AstExprOpInfixList;
+import katana.ast.expr.AstExprOpPostfixSeq;
+import katana.ast.expr.AstExprOpPrefixSeq;
 
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.IdentityHashMap;
+import java.util.function.Consumer;
 
-public class AstFile
+public class DelayedExprParseList
 {
-	public AstFile(Path path)
-	{
-		this.path = path;
-	}
-
-	public Path path;
-	public Map<AstPath, AstDeclImport> imports = new HashMap<>();
-	public Map<String, AstDeclRenamedImport> renamedImports = new HashMap<>();
-	public Map<AstPath, AstModule> modules = new HashMap<>();
-	public DelayedExprParseList delayedExprs = new DelayedExprParseList();
+	public IdentityHashMap<AstExprOpPrefixSeq, Consumer<AstExpr>> prefixSeqs = new IdentityHashMap<>();
+	public IdentityHashMap<AstExprOpInfixList, Consumer<AstExpr>> infixLists = new IdentityHashMap<>();
+	public IdentityHashMap<AstExprOpPostfixSeq, Consumer<AstExpr>> postfixSeqs = new IdentityHashMap<>();
 }

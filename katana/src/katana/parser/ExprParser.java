@@ -16,6 +16,7 @@ package katana.parser;
 
 import katana.BuiltinType;
 import katana.ast.AstPath;
+import katana.ast.DelayedExprParseList;
 import katana.ast.expr.*;
 import katana.ast.type.AstType;
 import katana.scanner.Scanner;
@@ -29,49 +30,93 @@ import java.util.List;
 
 public class ExprParser
 {
-	public static AstExpr parse(Scanner scanner)
+	public static AstExpr parse(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
-		AstExpr expr = parsePrimaryExpr(scanner);
+		AstExpr expr = parsePrefixExpr(scanner, delayedExprs);
+
+		if(!ParseTools.option(scanner, Token.Type.OP_INFIX, false))
+			return expr;
+
+		AstExprOpInfixList list = new AstExprOpInfixList();
+		list.exprs.add(expr);
+
+		do
+		{
+			String op = ParseTools.consume(scanner).value;
+			list.ops.add(op);
+			list.exprs.add(parsePrefixExpr(scanner, delayedExprs));
+		}
+
+		while(ParseTools.option(scanner, Token.Type.OP_INFIX, false));
+
+		AstExprProxy proxy = new AstExprProxy(list);
+		delayedExprs.infixLists.put(list, e -> proxy.expr = e);
+		return proxy;
+	}
+
+	private static AstExpr parsePrefixExpr(Scanner scanner, DelayedExprParseList delayedExprs)
+	{
+		if(ParseTools.option(scanner, Token.Type.OPSEQ_PREFIX, false))
+		{
+			String seq = ParseTools.consume(scanner).value;
+			AstExprOpPrefixSeq prefixSeq = new AstExprOpPrefixSeq(seq, parsePrefixExpr(scanner, delayedExprs));
+			AstExprProxy proxy = new AstExprProxy(prefixSeq);
+			delayedExprs.prefixSeqs.put(prefixSeq, e -> proxy.expr = e);
+			return proxy;
+		}
+
+		return parsePostfixExpr(scanner, delayedExprs);
+	}
+
+	private static AstExpr parsePostfixExpr(Scanner scanner, DelayedExprParseList delayedExprs)
+	{
+		AstExpr expr = parsePrimaryExpr(scanner, delayedExprs);
 
 		for(;;)
 		{
-			Token token = scanner.state().token;
-
-			switch(token.type)
+			if(ParseTools.option(scanner, Token.Type.OPSEQ_POSTFIX, false))
 			{
-			case PUNCT_LPAREN:
-				scanner.advance();
-				expr = parseFunctionCall(scanner, expr, Maybe.none());
-				ParseTools.expect(scanner, Token.Type.PUNCT_RPAREN, true);
-				break;
+				String seq = ParseTools.consume(scanner).value;
+				AstExprOpPostfixSeq postfixSeq = new AstExprOpPostfixSeq(expr, seq);
+				AstExprProxy proxy = new AstExprProxy(postfixSeq);
+				delayedExprs.postfixSeqs.put(postfixSeq, e -> proxy.expr = e);
+				expr = proxy;
+			}
 
-			case PUNCT_LBRACKET:
-				scanner.advance();
-				AstExpr index = ExprParser.parse(scanner);
+			else if(ParseTools.option(scanner, Token.Type.PUNCT_LPAREN, true))
+			{
+				expr = parseFunctionCall(scanner, expr, Maybe.none(), delayedExprs);
+				ParseTools.expect(scanner, Token.Type.PUNCT_RPAREN, true);
+			}
+
+			else if(ParseTools.option(scanner, Token.Type.PUNCT_LBRACKET, true))
+			{
+				AstExpr index = parse(scanner, delayedExprs);
 				expr = new AstExprArrayAccess(expr, index);
 				ParseTools.expect(scanner, Token.Type.PUNCT_RBRACKET, true);
-				break;
+			}
 
-			case PUNCT_DOT:
-				scanner.advance();
+			else if(ParseTools.option(scanner, ".", true))
+			{
 				boolean global = ParseTools.option(scanner, Token.Type.DECL_GLOBAL, true);
 				String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
 				expr = new AstExprMemberAccess(expr, name, global);
-				break;
-
-			case PUNCT_ASSIGN:
-				scanner.advance();
-				AstExpr value = parse(scanner);
-				expr = new AstExprAssign(expr, value);
-				break;
-
-			default: return expr;
 			}
+
+			else
+				return expr;
 		}
 	}
 
-	private static AstExpr parsePrimaryExpr(Scanner scanner)
+	private static AstExpr parsePrimaryExpr(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
+		if(ParseTools.option(scanner, Token.Type.PUNCT_LPAREN, true))
+		{
+			AstExpr expr = parse(scanner, delayedExprs);
+			ParseTools.expect(scanner, Token.Type.PUNCT_RPAREN, true);
+			return new AstExprParens(expr);
+		}
+
 		if(ParseTools.option(scanner, Token.Type.DECL_GLOBAL, true))
 		{
 			String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
@@ -88,31 +133,31 @@ public class ExprParser
 			return parseLiteral(scanner);
 
 		if(ParseTools.option(scanner, Token.Category.MISC, false))
-			return parseMisc(scanner);
+			return parseMisc(scanner, delayedExprs);
 
 		if(ParseTools.option(scanner, Token.Type.PUNCT_LBRACKET, true))
-			return parseArrayLiteral(scanner);
+			return parseArrayLiteral(scanner, delayedExprs);
 
 		if(ParseTools.option(scanner, Token.Type.TYPE_CONST, true))
-			return parseConst(scanner);
+			return parseConst(scanner, delayedExprs);
 
 		ParseTools.unexpectedToken(scanner);
 		throw new AssertionError("unreachable");
 	}
 
-	private static AstExpr parseConst(Scanner scanner)
+	private static AstExpr parseConst(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
 		ParseTools.expect(scanner, Token.Type.PUNCT_LPAREN, true);
-		AstExpr expr = parse(scanner);
+		AstExpr expr = parse(scanner, delayedExprs);
 		ParseTools.expect(scanner, Token.Type.PUNCT_RPAREN, true);
 		return new AstExprConst(expr);
 	}
 
-	private static AstExpr parseArrayLiteral(Scanner scanner)
+	private static AstExpr parseArrayLiteral(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
 		Maybe<BigInteger> size = Maybe.none();
 
-		if(!ParseTools.option(scanner, Token.Type.PUNCT_COLON, true))
+		if(!ParseTools.option(scanner, ":", true))
 		{
 			AstExpr sizeLit = parseLiteral(scanner);
 
@@ -123,22 +168,22 @@ public class ExprParser
 				throw new RuntimeException("length in array literal cannot have a type suffix");
 
 			size = Maybe.some(((AstExprLitInt)sizeLit).value);
-			ParseTools.expect(scanner, Token.Type.PUNCT_COLON, true);
+			ParseTools.expect(scanner, ":", true);
 		}
 
 		Maybe<AstType> type = Maybe.none();
 
-		if(!ParseTools.option(scanner, Token.Type.PUNCT_COLON, true))
+		if(!ParseTools.option(scanner, ":", true))
 		{
-			type = Maybe.some(TypeParser.parse(scanner));
-			ParseTools.expect(scanner, Token.Type.PUNCT_COLON, true);
+			type = Maybe.some(TypeParser.parse(scanner, delayedExprs));
+			ParseTools.expect(scanner, ":", true);
 		}
 
 		List<AstExprLiteral> values = new ArrayList<>();
 
 		if(!ParseTools.option(scanner, Token.Type.PUNCT_RBRACKET, true))
 		{
-			AstExpr first = parse(scanner);
+			AstExpr first = parse(scanner, delayedExprs);
 
 			if(!(first instanceof AstExprLiteral))
 				throw new RuntimeException("array literal elements must be literals themselves");
@@ -147,7 +192,7 @@ public class ExprParser
 
 			while(ParseTools.option(scanner, Token.Type.PUNCT_COMMA, true))
 			{
-				AstExpr next = parse(scanner);
+				AstExpr next = parse(scanner, delayedExprs);
 
 				if(!(next instanceof AstExprLiteral))
 					throw new RuntimeException("array literal elements must be literals themselves");
@@ -161,19 +206,17 @@ public class ExprParser
 		return new AstExprLitArray(size, type, values);
 	}
 
-	private static AstExpr parseMisc(Scanner scanner)
+	private static AstExpr parseMisc(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
 		Token token = ParseTools.consume(scanner);
 
 		switch(token.type)
 		{
 		case MISC_SIZEOF:
-			AstType stype = ParseTools.parenthesized(scanner, () -> TypeParser.parse(scanner));
-			return new AstExprSizeof(stype);
+			return ParseTools.parenthesized(scanner, () -> new AstExprSizeof(TypeParser.parse(scanner, delayedExprs)));
 
 		case MISC_ALIGNOF:
-			AstType atype = ParseTools.parenthesized(scanner, () -> TypeParser.parse(scanner));
-			return new AstExprAlignof(atype);
+			return ParseTools.parenthesized(scanner, () -> new AstExprAlignof(TypeParser.parse(scanner, delayedExprs)));
 
 		case MISC_OFFSETOF:
 			return ParseTools.parenthesized(scanner, () ->
@@ -185,27 +228,22 @@ public class ExprParser
 			});
 
 		case MISC_BUILTIN:
-			return parseBuiltinCall(scanner);
+			return parseBuiltinCall(scanner, delayedExprs);
 
 		case MISC_INLINE:
 			String inline = ParseTools.parenthesized(scanner,
 				() -> ParseTools.consumeExpected(scanner, Token.Type.LIT_BOOL).value);
 			String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
 			ParseTools.expect(scanner, Token.Type.PUNCT_LPAREN, true);
-			AstExpr call = parseFunctionCall(scanner, new AstExprNamedSymbol(name), Maybe.some(inline.equals("true")));
+			AstExpr call = parseFunctionCall(scanner, new AstExprNamedSymbol(name), Maybe.some(inline.equals("true")), delayedExprs);
 			ParseTools.expect(scanner, Token.Type.PUNCT_RPAREN, true);
 			return call;
 
 		case MISC_ADDRESSOF:
-			AstExpr aexpr = ParseTools.parenthesized(scanner, () -> ExprParser.parse(scanner));
-			return new AstExprAddressof(aexpr);
+			return ParseTools.parenthesized(scanner, () -> new AstExprAddressof(parse(scanner, delayedExprs)));
 
 		case MISC_DEREF:
-			return ParseTools.parenthesized(scanner, () ->
-			{
-				AstExpr dexpr = ExprParser.parse(scanner);
-				return new AstExprDeref(dexpr);
-			});
+			return ParseTools.parenthesized(scanner, () -> new AstExprDeref(parse(scanner, delayedExprs)));
 
 		default: throw new AssertionError("unreachable");
 		}
@@ -246,24 +284,24 @@ public class ExprParser
 		}
 	}
 
-	private static AstExprBuiltinCall parseBuiltinCall(Scanner scanner)
+	private static AstExprBuiltinCall parseBuiltinCall(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
 		AstPath path = ParseTools.path(scanner);
-		List<AstExpr> args = ParseTools.parenthesized(scanner, () -> parseArguments(scanner));
+		List<AstExpr> args = ParseTools.parenthesized(scanner, () -> parseArguments(scanner, delayedExprs));
 		return new AstExprBuiltinCall(path.toString(), args);
 	}
 
-	private static AstExprFunctionCall parseFunctionCall(Scanner scanner, AstExpr expr, Maybe<Boolean> inline)
+	private static AstExprFunctionCall parseFunctionCall(Scanner scanner, AstExpr expr, Maybe<Boolean> inline, DelayedExprParseList delayedExprs)
 	{
-		List<AstExpr> args = parseArguments(scanner);
+		List<AstExpr> args = parseArguments(scanner, delayedExprs);
 		return new AstExprFunctionCall(expr, args, inline);
 	}
 
-	private static List<AstExpr> parseArguments(Scanner scanner)
+	private static List<AstExpr> parseArguments(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
 		if(ParseTools.option(scanner, Token.Type.PUNCT_RPAREN, false))
 			return new ArrayList<>();
 
-		return ParseTools.separated(scanner, Token.Type.PUNCT_COMMA, () -> parse(scanner));
+		return ParseTools.separated(scanner, Token.Type.PUNCT_COMMA, () -> parse(scanner, delayedExprs));
 	}
 }

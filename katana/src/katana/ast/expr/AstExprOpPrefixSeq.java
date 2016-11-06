@@ -12,10 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.analysis;
+package katana.ast.expr;
 
-public enum DepSolveState
+public class AstExprOpPrefixSeq extends AstExpr
 {
-	ONGOING,
-	FINISHED,
+	public AstExprOpPrefixSeq(String seq, AstExpr expr)
+	{
+		this.seq = seq;
+		this.expr = expr;
+	}
+
+	public String seq;
+	public AstExpr expr;
 }

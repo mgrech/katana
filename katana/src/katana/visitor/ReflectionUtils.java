@@ -37,7 +37,15 @@ public class ReflectionUtils
 				matches.add(method);
 
 		if(matches.isEmpty())
-			throw new RuntimeException(String.format("no matching method found in '%s'", clazz.getName()));
+		{
+			List<String> argsDesc = new ArrayList<>();
+
+			for(Class arg : args)
+				argsDesc.add(arg == null ? "null" : "'" + arg.getName() + "'");
+
+			String fmt = "no matching method found in class '%s' for argument(s) %s";
+			throw new RuntimeException(String.format(fmt, clazz.getName(), String.join(", ", argsDesc)));
+		}
 
 		if(matches.size() > 1)
 			return tryFindExactMatch(clazz, matches, args);

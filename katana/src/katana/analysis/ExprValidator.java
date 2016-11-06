@@ -20,6 +20,10 @@ import katana.Limits;
 import katana.ast.expr.*;
 import katana.backend.PlatformContext;
 import katana.diag.TypeString;
+import katana.op.AstExprOpPostfix;
+import katana.op.AstExprOpPrefix;
+import katana.op.Kind;
+import katana.op.Operator;
 import katana.sema.SemaSymbol;
 import katana.sema.decl.*;
 import katana.sema.expr.*;
@@ -50,6 +54,11 @@ public class ExprValidator implements IVisitor
 	{
 		ExprValidator validator = new ExprValidator(scope, context, validateDecl);
 		return (SemaExpr)expr.accept(validator, deduce);
+	}
+
+	private SemaExpr visit(AstExprProxy proxy, Maybe<SemaType> deduce)
+	{
+		return (SemaExpr)proxy.expr.accept(this, deduce);
 	}
 
 	private void checkArguments(List<SemaType> params, List<SemaExpr> args)
@@ -189,10 +198,10 @@ public class ExprValidator implements IVisitor
 		SemaExpr expr = validate(const_.expr, scope, context, validateDecl, deduce);
 
 		if(TypeHelper.isVoidType(expr.type()))
-			throw new RuntimeException("expression passed to const operator yields 'void'");
+			throw new RuntimeException("expression passed to const op yields 'void'");
 
 		if(TypeHelper.isFunctionType(expr.type()))
-			throw new RuntimeException("const operator applied to value of function type");
+			throw new RuntimeException("const op applied to value of function type");
 
 		if(expr instanceof SemaExprLValueExpr)
 			return new SemaExprConstLValue((SemaExprLValueExpr)expr);
@@ -302,7 +311,7 @@ public class ExprValidator implements IVisitor
 			return resolveOverloadedCall(set.overloads, set.name(), call.args, call.inline);
 		}
 
-		if(TypeHelper.isFunctionType(expr.type()))
+		if(!TypeHelper.isFunctionType(expr.type()))
 			throw new RuntimeException("left side of function call does not yield a function type");
 
 		SemaTypeFunction ftype = (SemaTypeFunction)expr.type();
@@ -572,6 +581,30 @@ public class ExprValidator implements IVisitor
 			errorNoSuchField(new SemaTypeUserDefined((SemaDeclData)symbol), offsetof.field);
 
 		return new SemaExprOffsetof(field.unwrap());
+	}
+
+	private SemaExpr handleOperatorCall(String op, Kind kind, List<AstExpr> args, Maybe<SemaType> deduce)
+	{
+		List<SemaSymbol> candidates = scope.find(Operator.implName(op, kind));
+
+		if(candidates.isEmpty())
+			throw new RuntimeException(String.format("no implementation of operator '%s' found", op));
+
+		if(candidates.size() > 1)
+			throw new RuntimeException("nyi");
+
+		SemaDeclOverloadSet set = (SemaDeclOverloadSet)candidates.get(0);
+		return resolveOverloadedCall(set.overloads, set.name(), args, Maybe.none());
+	}
+
+	private SemaExpr visit(AstExprOpPrefix op, Maybe<SemaType> deduce)
+	{
+		return handleOperatorCall(op.op, Kind.PREFIX, Collections.singletonList(op.expr), deduce);
+	}
+
+	private SemaExpr visit(AstExprOpPostfix op, Maybe<SemaType> deduce)
+	{
+		return handleOperatorCall(op.op, Kind.POSTFIX, Collections.singletonList(op.expr), deduce);
 	}
 
 	private SemaExpr visit(AstExprSizeof sizeof, Maybe<SemaType> deduce)

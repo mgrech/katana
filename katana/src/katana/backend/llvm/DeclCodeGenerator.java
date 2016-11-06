@@ -185,4 +185,7 @@ public class DeclCodeGenerator implements IVisitor
 
 	private void visit(SemaDeclTypeAlias alias)
 	{}
+
+	private void visit(SemaDeclOperator operator)
+	{}
 }

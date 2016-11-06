@@ -145,4 +145,7 @@ public class DeclIfaceValidator implements IVisitor
 	{
 		semaAlias.type = TypeValidator.validate(alias.type, scope, context, validateDecl);
 	}
+
+	private void visit(SemaDeclOperator semaDecl, AstDeclOperator decl, SemaScopeFile scope)
+	{}
 }

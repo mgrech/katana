@@ -15,6 +15,7 @@
 package katana.cli;
 
 import katana.cli.cmd.*;
+import katana.utils.Rethrow;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -66,15 +67,7 @@ public class Main
 
 		catch(InvocationTargetException ex)
 		{
-			try
-			{
-				throw (RuntimeException)ex.getTargetException();
-			}
-
-			catch(ClassCastException e)
-			{
-				throw new RuntimeException(ex.getTargetException());
-			}
+			Rethrow.of(ex.getTargetException());
 		}
 
 		catch(CommandException ex)

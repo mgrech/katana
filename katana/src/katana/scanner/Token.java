@@ -18,7 +18,7 @@ public class Token
 {
 	public enum Category
 	{
-		IDENT,
+		IDENT, OP,
 		LIT,
 		DECL,
 		STMT,
@@ -33,6 +33,10 @@ public class Token
 	public enum Type
 	{
 		IDENT,
+
+		OPSEQ_PREFIX,
+		OPSEQ_POSTFIX,
+		OP_INFIX,
 
 		LIT_NULL,
 		LIT_BOOL,
@@ -62,15 +66,21 @@ public class Token
 		DECL_FN,
 		DECL_DATA,
 		DECL_TYPE,
+		DECL_OP,
+		DECL_PREFIX,
+		DECL_INFIX,
+		DECL_POSTFIX,
 
 		STMT_LOCAL,
 		STMT_IF,
+		STMT_UNLESS,
 		STMT_ELSE,
 		STMT_GOTO,
 		STMT_RETURN,
 		STMT_LABEL,
 		STMT_LOOP,
 		STMT_WHILE,
+		STMT_UNTIL,
 
 		PUNCT_LPAREN,
 		PUNCT_RPAREN,
@@ -78,14 +88,8 @@ public class Token
 		PUNCT_RBRACKET,
 		PUNCT_LBRACE,
 		PUNCT_RBRACE,
-		PUNCT_DOT,
 		PUNCT_COMMA,
-		PUNCT_COLON,
 		PUNCT_SCOLON,
-		PUNCT_QMARK,
-		PUNCT_EMARK,
-		PUNCT_ASSIGN,
-		PUNCT_RET,
 
 		TYPE_VOID,
 		TYPE_BOOL,
@@ -123,22 +127,28 @@ public class Token
 	public static final Token LIT_BOOL_T = new Token(Category.LIT, Type.LIT_BOOL, "true",  true);
 	public static final Token LIT_BOOL_F = new Token(Category.LIT, Type.LIT_BOOL, "false", false);
 
-	public static final Token DECL_EXPORT = new Token(Category.DECL, Type.DECL_EXPORT, "export");
-	public static final Token DECL_IMPORT = new Token(Category.DECL, Type.DECL_IMPORT, "import");
-	public static final Token DECL_MODULE = new Token(Category.DECL, Type.DECL_MODULE, "module");
-	public static final Token DECL_GLOBAL = new Token(Category.DECL, Type.DECL_GLOBAL, "global");
-	public static final Token DECL_EXTERN = new Token(Category.DECL, Type.DECL_EXTERN, "extern");
-	public static final Token DECL_FN     = new Token(Category.DECL, Type.DECL_FN,     "fn");
-	public static final Token DECL_DATA   = new Token(Category.DECL, Type.DECL_DATA,   "data");
-	public static final Token DECL_TYPE   = new Token(Category.DECL, Type.DECL_TYPE,   "type");
+	public static final Token DECL_EXPORT  = new Token(Category.DECL, Type.DECL_EXPORT,  "export");
+	public static final Token DECL_IMPORT  = new Token(Category.DECL, Type.DECL_IMPORT,  "import");
+	public static final Token DECL_MODULE  = new Token(Category.DECL, Type.DECL_MODULE,  "module");
+	public static final Token DECL_GLOBAL  = new Token(Category.DECL, Type.DECL_GLOBAL,  "global");
+	public static final Token DECL_EXTERN  = new Token(Category.DECL, Type.DECL_EXTERN,  "extern");
+	public static final Token DECL_FN      = new Token(Category.DECL, Type.DECL_FN,      "fn");
+	public static final Token DECL_DATA    = new Token(Category.DECL, Type.DECL_DATA,    "data");
+	public static final Token DECL_TYPE    = new Token(Category.DECL, Type.DECL_TYPE,    "type");
+	public static final Token DECL_OP      = new Token(Category.DECL, Type.DECL_OP,      "operator");
+	public static final Token DECL_PREFIX  = new Token(Category.DECL, Type.DECL_PREFIX,  "prefix");
+	public static final Token DECL_INFIX   = new Token(Category.DECL, Type.DECL_INFIX,   "infix");
+	public static final Token DECL_POSTFIX = new Token(Category.DECL, Type.DECL_POSTFIX, "postfix");
 
 	public static final Token STMT_LOCAL  = new Token(Category.STMT, Type.STMT_LOCAL,  "local");
 	public static final Token STMT_IF     = new Token(Category.STMT, Type.STMT_IF,     "if");
+	public static final Token STMT_UNLESS = new Token(Category.STMT, Type.STMT_UNLESS, "unless");
 	public static final Token STMT_ELSE   = new Token(Category.STMT, Type.STMT_ELSE,   "else");
 	public static final Token STMT_GOTO   = new Token(Category.STMT, Type.STMT_GOTO,   "goto");
 	public static final Token STMT_RETURN = new Token(Category.STMT, Type.STMT_RETURN, "return");
 	public static final Token STMT_LOOP   = new Token(Category.STMT, Type.STMT_LOOP,   "loop");
 	public static final Token STMT_WHILE  = new Token(Category.STMT, Type.STMT_WHILE,  "while");
+	public static final Token STMT_UNTIL  = new Token(Category.STMT, Type.STMT_UNTIL,  "until");
 
 	public static final Token PUNCT_LPAREN   = new Token(Category.PUNCT, Type.PUNCT_LPAREN,   "(");
 	public static final Token PUNCT_RPAREN   = new Token(Category.PUNCT, Type.PUNCT_RPAREN,   ")");
@@ -146,14 +156,8 @@ public class Token
 	public static final Token PUNCT_RBRACKET = new Token(Category.PUNCT, Type.PUNCT_RBRACKET, "]");
 	public static final Token PUNCT_LBRACE   = new Token(Category.PUNCT, Type.PUNCT_LBRACE,   "{");
 	public static final Token PUNCT_RBRACE   = new Token(Category.PUNCT, Type.PUNCT_RBRACE,   "}");
-	public static final Token PUNCT_DOT      = new Token(Category.PUNCT, Type.PUNCT_DOT,      ".");
 	public static final Token PUNCT_COMMA    = new Token(Category.PUNCT, Type.PUNCT_COMMA,    ",");
-	public static final Token PUNCT_COLON    = new Token(Category.PUNCT, Type.PUNCT_COLON,    ":");
 	public static final Token PUNCT_SCOLON   = new Token(Category.PUNCT, Type.PUNCT_SCOLON,   ";");
-	public static final Token PUNCT_QMARK    = new Token(Category.PUNCT, Type.PUNCT_QMARK,    "?");
-	public static final Token PUNCT_EMARK    = new Token(Category.PUNCT, Type.PUNCT_EMARK,    "!");
-	public static final Token PUNCT_ASSIGN   = new Token(Category.PUNCT, Type.PUNCT_ASSIGN,   "=");
-	public static final Token PUNCT_RET      = new Token(Category.PUNCT, Type.PUNCT_RET,      "=>");
 
 	public static final Token TYPE_VOID    = new Token(Category.TYPE, Type.TYPE_VOID,    "void");
 	public static final Token TYPE_BOOL    = new Token(Category.TYPE, Type.TYPE_BOOL,    "bool");
@@ -183,8 +187,8 @@ public class Token
 	public static final Token MISC_DEREF     = new Token(Category.MISC, Type.MISC_DEREF,     "deref");
 	public static final Token MISC_BUILTIN   = new Token(Category.MISC, Type.MISC_BUILTIN,   "builtin");
 
-	public static final Token BEGIN = new Token(Category.BEGIN, Type.BEGIN, null, null);
-	public static final Token END   = new Token(Category.END,   Type.END,   null, null);
+	public static final Token BEGIN = new Token(Category.BEGIN, Type.BEGIN, null);
+	public static final Token END   = new Token(Category.END,   Type.END,   null);
 
 	public final Category category;
 	public final Type type;
@@ -193,7 +197,12 @@ public class Token
 
 	public static Token identifier(String value)
 	{
-		return new Token(Category.IDENT, Type.IDENT, value, null);
+		return new Token(Category.IDENT, Type.IDENT, value);
+	}
+
+	public static Token op(String value, Type type)
+	{
+		return new Token(Category.OP, type, value);
 	}
 
 	public static Token numericLiteral(Type type, String value, int base)
@@ -208,7 +217,7 @@ public class Token
 
 	public static Token label(String value)
 	{
-		return new Token(Category.STMT, Type.STMT_LABEL, value, null);
+		return new Token(Category.STMT, Type.STMT_LABEL, value);
 	}
 
 	@Override

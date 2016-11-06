@@ -14,6 +14,7 @@
 
 package katana.parser;
 
+import katana.ast.DelayedExprParseList;
 import katana.ast.type.*;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
@@ -25,19 +26,19 @@ import java.util.List;
 
 public class TypeParser
 {
-	public static AstType parse(Scanner scanner)
+	public static AstType parse(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
-		return doParse(scanner, false);
+		return doParse(scanner, false, delayedExprs);
 	}
 
-	private static AstType doParse(Scanner scanner, boolean const_)
+	private static AstType doParse(Scanner scanner, boolean const_, DelayedExprParseList delayedExprs)
 	{
 		if(ParseTools.option(scanner, Token.Type.DECL_FN, true))
 		{
 			if(const_)
 				throw new RuntimeException("forming type 'const function'");
 
-			return parseFunction(scanner);
+			return parseFunction(scanner, delayedExprs);
 		}
 
 		if(ParseTools.option(scanner, Token.Type.PUNCT_LBRACKET, true))
@@ -45,7 +46,7 @@ public class TypeParser
 			if(const_)
 				throw new RuntimeException("forming type 'const array'");
 
-			return parseArray(scanner);
+			return parseArray(scanner, delayedExprs);
 		}
 
 		if(ParseTools.option(scanner, Token.Type.TYPE_OPAQUE, true))
@@ -56,17 +57,30 @@ public class TypeParser
 			if(const_)
 				throw new RuntimeException("duplicate const");
 
-			return new AstTypeConst(doParse(scanner, true));
+			return new AstTypeConst(doParse(scanner, true, delayedExprs));
 		}
 
 		if(ParseTools.option(scanner, Token.Type.TYPE_TYPEOF, true))
-			return parseTypeof(scanner);
+			return parseTypeof(scanner, delayedExprs);
 
-		if(ParseTools.option(scanner, Token.Type.PUNCT_QMARK, true))
-			return new AstTypeNullablePointer(parse(scanner));
+		if(ParseTools.option(scanner, Token.Category.OP, false))
+		{
+			String ptrs = ParseTools.consume(scanner).value;
+			AstType type = parse(scanner, delayedExprs);
 
-		if(ParseTools.option(scanner, Token.Type.PUNCT_EMARK, true))
-			return new AstTypePointer(parse(scanner));
+			for(char c : new StringBuilder(ptrs).reverse().toString().toCharArray())
+			{
+				switch(c)
+				{
+				case '!': type = new AstTypePointer(type); break;
+				case '?': type = new AstTypeNullablePointer(type); break;
+				default:
+					throw new RuntimeException(String.format("unexpected character '%s' while parsing type", c));
+				}
+			}
+
+			return type;
+		}
 
 		if(ParseTools.option(scanner, Token.Category.TYPE, false))
 			return parseBuiltin(scanner);
@@ -81,18 +95,18 @@ public class TypeParser
 		throw new AssertionError("unreachable");
 	}
 
-	private static AstTypeFunction parseFunction(Scanner scanner)
+	private static AstTypeFunction parseFunction(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
-		List<AstType> params = parseParameters(scanner);
+		List<AstType> params = parseParameters(scanner, delayedExprs);
 		Maybe<AstType> ret = Maybe.none();
 
-		if(ParseTools.option(scanner, Token.Type.PUNCT_RET, true))
-			ret = Maybe.some(parse(scanner));
+		if(ParseTools.option(scanner, "=>", true))
+			ret = Maybe.some(parse(scanner, delayedExprs));
 
 		return new AstTypeFunction(ret, params);
 	}
 
-	private static List<AstType> parseParameters(Scanner scanner)
+	private static List<AstType> parseParameters(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
 		return ParseTools.parenthesized(scanner, () ->
 		{
@@ -100,21 +114,21 @@ public class TypeParser
 
 			if(!ParseTools.option(scanner, Token.Type.PUNCT_RPAREN, false))
 			{
-				params.add(parse(scanner));
+				params.add(parse(scanner, delayedExprs));
 
 				while(!ParseTools.option(scanner, Token.Type.PUNCT_RPAREN, false))
-					params.add(parse(scanner));
+					params.add(parse(scanner, delayedExprs));
 			}
 
 			return params;
 		});
 	}
 
-	private static AstTypeArray parseArray(Scanner scanner)
+	private static AstTypeArray parseArray(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
 		String size = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT_DEDUCE).value;
 		ParseTools.expect(scanner, Token.Type.PUNCT_RBRACKET, true);
-		return new AstTypeArray(BigInteger.valueOf(Integer.parseInt(size)), TypeParser.parse(scanner));
+		return new AstTypeArray(BigInteger.valueOf(Integer.parseInt(size)), TypeParser.parse(scanner, delayedExprs));
 	}
 
 	private static AstTypeOpaque parseOpaque(Scanner scanner)
@@ -130,9 +144,9 @@ public class TypeParser
 		});
 	}
 
-	private static AstTypeTypeof parseTypeof(Scanner scanner)
+	private static AstTypeTypeof parseTypeof(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
-		return ParseTools.parenthesized(scanner, () -> new AstTypeTypeof(ExprParser.parse(scanner)));
+		return ParseTools.parenthesized(scanner, () -> new AstTypeTypeof(ExprParser.parse(scanner, delayedExprs)));
 	}
 
 	private static AstTypeBuiltin parseBuiltin(Scanner scanner)

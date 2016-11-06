@@ -12,25 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.ast;
+package katana.op;
 
-import katana.ast.decl.AstDeclImport;
-import katana.ast.decl.AstDeclRenamedImport;
+import katana.ast.expr.AstExpr;
 
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-
-public class AstFile
+public class AstExprOpPrefix extends AstExpr
 {
-	public AstFile(Path path)
+	public AstExprOpPrefix(String op, AstExpr expr)
 	{
-		this.path = path;
+		this.op = op;
+		this.expr = expr;
 	}
 
-	public Path path;
-	public Map<AstPath, AstDeclImport> imports = new HashMap<>();
-	public Map<String, AstDeclRenamedImport> renamedImports = new HashMap<>();
-	public Map<AstPath, AstModule> modules = new HashMap<>();
-	public DelayedExprParseList delayedExprs = new DelayedExprParseList();
+	public String op;
+	public AstExpr expr;
 }

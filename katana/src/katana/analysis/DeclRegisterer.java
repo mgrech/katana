@@ -17,13 +17,16 @@ package katana.analysis;
 import katana.ast.AstFile;
 import katana.ast.AstModule;
 import katana.ast.decl.*;
+import katana.op.Operator;
 import katana.sema.SemaModule;
 import katana.sema.SemaProgram;
+import katana.sema.SemaSymbol;
 import katana.sema.decl.*;
 import katana.sema.scope.SemaScopeFile;
 import katana.visitor.IVisitor;
 
 import java.util.IdentityHashMap;
+import java.util.List;
 
 @SuppressWarnings("unused")
 public class DeclRegisterer implements IVisitor
@@ -39,8 +42,11 @@ public class DeclRegisterer implements IVisitor
 
 			for(AstDecl decl : module.decls.values())
 			{
-				SemaDecl semaDecl = (SemaDecl)decl.accept(registerer, scope, semaModule);
-				decls.put(semaDecl, decl);
+				if(!(decl instanceof AstDeclOperator))
+				{
+					SemaDecl semaDecl = (SemaDecl)decl.accept(registerer, scope, semaModule);
+					decls.put(semaDecl, decl);
+				}
 			}
 		}
 
@@ -75,6 +81,28 @@ public class DeclRegisterer implements IVisitor
 			{
 				AstDeclExternFunction extOverload = (AstDeclExternFunction)overload;
 				semaOverload = new SemaDeclExternFunction(module, overload.exported, overload.opaque, extOverload.externName, extOverload.name);
+			}
+
+			else if(overload instanceof AstDeclDefinedOperator)
+			{
+				AstDeclDefinedOperator defOverload = (AstDeclDefinedOperator)overload;
+				List<SemaSymbol> opCandidates = scope.find(Operator.declName(defOverload.op, defOverload.kind));
+
+				if(opCandidates.isEmpty())
+				{
+					String kind = defOverload.kind.toString().toLowerCase();
+					String op = defOverload.op;
+					throw new RuntimeException(String.format("no operator declaration found for '%s %s'", kind, op));
+				}
+
+				if(opCandidates.size() > 1)
+				{
+					String kind = defOverload.kind.toString().toLowerCase();
+					String op = defOverload.op;
+					throw new RuntimeException(String.format("multiple operator declarations found for '%s %s'", kind, op));
+				}
+
+				semaOverload = new SemaDeclDefinedOperator(module, overload.exported, overload.opaque, (SemaDeclOperator)opCandidates.get(0));
 			}
 
 			else if(overload instanceof AstDeclDefinedFunction)

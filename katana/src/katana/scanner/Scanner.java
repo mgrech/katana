@@ -66,31 +66,18 @@ public class Scanner
 		case ']': advanceColumn(); return Token.PUNCT_RBRACKET;
 		case '{': advanceColumn(); return Token.PUNCT_LBRACE;
 		case '}': advanceColumn(); return Token.PUNCT_RBRACE;
-		case '.': advanceColumn(); return Token.PUNCT_DOT;
 		case ',': advanceColumn(); return Token.PUNCT_COMMA;
-		case ':': advanceColumn(); return Token.PUNCT_COLON;
 		case ';': advanceColumn(); return Token.PUNCT_SCOLON;
-		case '?': advanceColumn(); return Token.PUNCT_QMARK;
-		case '!': advanceColumn(); return Token.PUNCT_EMARK;
-
-		case '=':
-			advanceColumn();
-
-			if(!atEnd() && here() == '>')
-			{
-				advanceColumn();
-				return Token.PUNCT_RET;
-			}
-
-			return Token.PUNCT_ASSIGN;
-
 		case '@': advanceColumn(); return label();
 		case '"': advanceColumn(); return stringLiteral();
 
 		default: break;
 		}
 
-		if(cp == '-' || CharClassifier.isDigit(cp))
+		if(CharClassifier.isOpChar(cp))
+			return operatorSeq();
+
+		if(CharClassifier.isDigit(cp))
 			return numericLiteral();
 
 		if(CharClassifier.isIdentifierStart(cp))
@@ -98,6 +85,37 @@ public class Scanner
 
 		error(String.format("invalid character encountered: %s", formatCodepoint(cp)));
 		throw new AssertionError("unreachable");
+	}
+
+	private Token operatorSeq()
+	{
+		int before = state.currentOffset == 0 ? ' ' : source[state.currentOffset - 1];
+
+		StringBuilder builder = new StringBuilder();
+
+		do
+		{
+			builder.appendCodePoint(here());
+			advanceColumn();
+		}
+
+		while(CharClassifier.isOpChar(here()));
+
+		int after = atEnd() ? ' ' : here();
+
+		boolean leftws = " \t\r\n([{;,".indexOf(before) != -1;
+		boolean rightws = " \t\r\n)]};,#".indexOf(after) != -1;
+
+		Token.Type type;
+
+		if(leftws && !rightws)
+			type = Token.Type.OPSEQ_PREFIX;
+		else if(!leftws && rightws)
+			type = Token.Type.OPSEQ_POSTFIX;
+		else
+			type = Token.Type.OP_INFIX;
+
+		return Token.op(builder.toString(), type);
 	}
 
 	private Token label()
@@ -242,22 +260,28 @@ public class Scanner
 		case "true":  return Token.LIT_BOOL_T;
 		case "false": return Token.LIT_BOOL_F;
 
-		case "export": return Token.DECL_EXPORT;
-		case "import": return Token.DECL_IMPORT;
-		case "module": return Token.DECL_MODULE;
-		case "global": return Token.DECL_GLOBAL;
-		case "extern": return Token.DECL_EXTERN;
-		case "fn":     return Token.DECL_FN;
-		case "data":   return Token.DECL_DATA;
-		case "type":   return Token.DECL_TYPE;
+		case "export":   return Token.DECL_EXPORT;
+		case "import":   return Token.DECL_IMPORT;
+		case "module":   return Token.DECL_MODULE;
+		case "global":   return Token.DECL_GLOBAL;
+		case "extern":   return Token.DECL_EXTERN;
+		case "fn":       return Token.DECL_FN;
+		case "data":     return Token.DECL_DATA;
+		case "type":     return Token.DECL_TYPE;
+		case "operator": return Token.DECL_OP;
+		case "prefix":   return Token.DECL_PREFIX;
+		case "infix":    return Token.DECL_INFIX;
+		case "postfix":  return Token.DECL_POSTFIX;
 
 		case "local":  return Token.STMT_LOCAL;
 		case "if":     return Token.STMT_IF;
+		case "unless": return Token.STMT_UNLESS;
 		case "else":   return Token.STMT_ELSE;
 		case "goto":   return Token.STMT_GOTO;
 		case "return": return Token.STMT_RETURN;
 		case "loop":   return Token.STMT_LOOP;
 		case "while":  return Token.STMT_WHILE;
+		case "until":  return Token.STMT_UNTIL;
 
 		case "void":    return Token.TYPE_VOID;
 		case "bool":    return Token.TYPE_BOOL;
@@ -303,14 +327,6 @@ public class Scanner
 	private Token numericLiteral()
 	{
 		StringBuilder literal = new StringBuilder();
-
-		boolean isNegativeLiteral = here() == '-';
-
-		if(isNegativeLiteral)
-		{
-			literal.append('-');
-			advanceColumn();
-		}
 
 		int base = 10;
 
@@ -394,7 +410,6 @@ public class Scanner
 		Token.Type type = null;
 
 		boolean isFloatingPointSuffix = false;
-		boolean isUnsignedSuffix = false;
 
 		switch(suffix.toString())
 		{
@@ -405,12 +420,12 @@ public class Scanner
 		case "i32": type = Token.Type.LIT_INT32; break;
 		case "i64": type = Token.Type.LIT_INT64; break;
 
-		case "u":   type = Token.Type.LIT_UINT;   isUnsignedSuffix = true; break;
-		case "pu":  type = Token.Type.LIT_UPINT;  isUnsignedSuffix = true; break;
-		case "u8":  type = Token.Type.LIT_UINT8;  isUnsignedSuffix = true; break;
-		case "u16": type = Token.Type.LIT_UINT16; isUnsignedSuffix = true; break;
-		case "u32": type = Token.Type.LIT_UINT32; isUnsignedSuffix = true; break;
-		case "u64": type = Token.Type.LIT_UINT64; isUnsignedSuffix = true; break;
+		case "u":   type = Token.Type.LIT_UINT;   break;
+		case "pu":  type = Token.Type.LIT_UPINT;  break;
+		case "u8":  type = Token.Type.LIT_UINT8;  break;
+		case "u16": type = Token.Type.LIT_UINT16; break;
+		case "u32": type = Token.Type.LIT_UINT32; break;
+		case "u64": type = Token.Type.LIT_UINT64; break;
 
 		case "f32": type = Token.Type.LIT_FLOAT32; isFloatingPointSuffix = true; break;
 		case "f64": type = Token.Type.LIT_FLOAT64; isFloatingPointSuffix = true; break;
@@ -428,9 +443,6 @@ public class Scanner
 
 		if(isFloatingPointLiteral && !isFloatingPointSuffix)
 			error("integer suffix used on floating point literal");
-
-		if(isNegativeLiteral && isUnsignedSuffix)
-			error("unsigned integer suffix used on signed number literal");
 
 		return Token.numericLiteral(type, literal.toString(), base);
 	}

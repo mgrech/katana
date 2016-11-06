@@ -48,4 +48,9 @@ public class CharClassifier
 		    || Character.getType(cp) == Character.NON_SPACING_MARK
 		    || Character.getType(cp) == Character.COMBINING_SPACING_MARK;
 	}
+
+	public static boolean isOpChar(int cp)
+	{
+		return ".:?!=<>+-*/%&|^~$".indexOf(cp) != -1;
+	}
 }

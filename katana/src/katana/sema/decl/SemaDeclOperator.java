@@ -12,33 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema.scope;
+package katana.sema.decl;
 
-import katana.sema.SemaSymbol;
-import katana.sema.decl.SemaDeclFunction;
+import katana.op.Operator;
+import katana.sema.SemaModule;
 
-import java.util.Collections;
-import java.util.List;
-
-public class SemaScopeFunction implements SemaScope
+public class SemaDeclOperator extends SemaDecl
 {
-	public SemaScopeFunction(SemaScopeFile parent, SemaDeclFunction function)
+	public SemaDeclOperator(SemaModule module, boolean exported, Operator operator)
 	{
-		this.parent = parent;
-		this.function = function;
+		super(module, exported, false);
+		this.operator = operator;
 	}
 
 	@Override
-	public List<SemaSymbol> find(String name)
+	public String name()
 	{
-		SemaDeclFunction.Param param = function.paramsByName.get(name);
-
-		if(param != null)
-			return Collections.singletonList(param);
-
-		return parent.find(name);
+		return Operator.declName(operator.op, operator.kind);
 	}
 
-	private SemaScopeFile parent;
-	private SemaDeclFunction function;
+	public Operator operator;
 }

@@ -14,10 +14,70 @@
 
 package katana.backend.llvm;
 
+import katana.op.Kind;
+import katana.sema.decl.SemaDeclDefinedOperator;
 import katana.sema.decl.SemaDeclFunction;
+
+import java.util.Map;
+import java.util.TreeMap;
 
 public class FunctionNameMangler
 {
+	private static final Map<Character, String> OP_MANGLING = new TreeMap<>();
+
+	static
+	{
+		OP_MANGLING.put('.', "dot");
+		OP_MANGLING.put(':', "colon");
+		OP_MANGLING.put('?', "questionmark");
+		OP_MANGLING.put('!', "exclamationmark");
+		OP_MANGLING.put('=', "equals");
+		OP_MANGLING.put('<', "lessthan");
+		OP_MANGLING.put('>', "greaterthan");
+		OP_MANGLING.put('+', "plus");
+		OP_MANGLING.put('-', "minus");
+		OP_MANGLING.put('*', "asterisk");
+		OP_MANGLING.put('/', "slash");
+		OP_MANGLING.put('%', "percent");
+		OP_MANGLING.put('&', "ampersand");
+		OP_MANGLING.put('|', "pipe");
+		OP_MANGLING.put('^', "caret");
+		OP_MANGLING.put('~', "tilde");
+		OP_MANGLING.put('$', "dollar");
+	}
+
+	private static String mangleOperatorSymbol(String op)
+	{
+		StringBuilder builder = new StringBuilder();
+
+		for(char c : op.toCharArray())
+		{
+			String mangled = OP_MANGLING.get(c);
+
+			if(mangled == null)
+				throw new AssertionError("unreachable");
+
+			builder.append(mangled);
+		}
+
+		return builder.toString();
+	}
+
+	private static String mangleOperatorName(SemaDeclDefinedOperator operator)
+	{
+		String op = operator.decl.operator.op;
+		Kind kind = operator.decl.operator.kind;
+		return String.format("op-%s-%s", kind.toString().toLowerCase(), mangleOperatorSymbol(op));
+	}
+
+	private static String mangleFunctionName(SemaDeclFunction function)
+	{
+		if(function instanceof SemaDeclDefinedOperator)
+			return mangleOperatorName((SemaDeclDefinedOperator)function);
+
+		return function.qualifiedName().toString();
+	}
+
 	public static String mangle(SemaDeclFunction function)
 	{
 		StringBuilder builder = new StringBuilder();
@@ -28,6 +88,6 @@ public class FunctionNameMangler
 			builder.append(TypeMangler.mangle(param.type));
 		}
 
-		return function.qualifiedName().toString() + builder.toString();
+		return mangleFunctionName(function) + builder.toString();
 	}
 }

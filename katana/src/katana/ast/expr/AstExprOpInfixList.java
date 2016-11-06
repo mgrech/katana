@@ -12,33 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema.scope;
+package katana.ast.expr;
 
-import katana.sema.SemaSymbol;
-import katana.sema.decl.SemaDeclFunction;
-
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
-public class SemaScopeFunction implements SemaScope
+public class AstExprOpInfixList extends AstExpr
 {
-	public SemaScopeFunction(SemaScopeFile parent, SemaDeclFunction function)
-	{
-		this.parent = parent;
-		this.function = function;
-	}
-
-	@Override
-	public List<SemaSymbol> find(String name)
-	{
-		SemaDeclFunction.Param param = function.paramsByName.get(name);
-
-		if(param != null)
-			return Collections.singletonList(param);
-
-		return parent.find(name);
-	}
-
-	private SemaScopeFile parent;
-	private SemaDeclFunction function;
+	public List<AstExpr> exprs = new ArrayList<>();
+	public List<String> ops = new ArrayList<>();
 }

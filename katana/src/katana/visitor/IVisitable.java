@@ -14,6 +14,8 @@
 
 package katana.visitor;
 
+import katana.utils.Rethrow;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -45,17 +47,9 @@ public interface IVisitable
 
 		catch(InvocationTargetException e)
 		{
-			Throwable throwable = e.getTargetException();
-
-			try
-			{
-				throw (RuntimeException)throwable;
-			}
-
-			catch(ClassCastException ex)
-			{
-				throw new RuntimeException(throwable);
-			}
+			Rethrow.of(e.getTargetException());
 		}
+
+		throw new AssertionError("unreachable");
 	}
 }

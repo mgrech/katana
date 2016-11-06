@@ -21,29 +21,29 @@ import katana.sema.decl.SemaDeclImportedOverloadSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-public class DeclDepSolver
+public class DeclDepResolver
 {
 	private PlatformContext context;
-	private IdentityHashMap<SemaDecl, DepSolveState> states = new IdentityHashMap<>();
+	private IdentityHashMap<SemaDecl, DepResolveState> states = new IdentityHashMap<>();
 	private IdentityHashMap<SemaDecl, DeclInfo> infos = new IdentityHashMap<>();
 
-	private DeclDepSolver(PlatformContext context)
+	private DeclDepResolver(PlatformContext context)
 	{
 		this.context = context;
 	}
 
-	private void solve(SemaDecl decl)
+	private void process(SemaDecl decl)
 	{
 		if(decl instanceof SemaDeclImportedOverloadSet)
 			decl = ((SemaDeclImportedOverloadSet)decl).set;
 
-		DepSolveState state = states.get(decl);
+		DepResolveState state = states.get(decl);
 
 		if(state == null)
 		{
-			states.put(decl, DepSolveState.ONGOING);
-			DeclIfaceValidator.validate(decl, infos.get(decl), context, this::solve);
-			states.put(decl, DepSolveState.FINISHED);
+			states.put(decl, DepResolveState.ONGOING);
+			DeclIfaceValidator.validate(decl, infos.get(decl), context, this::process);
+			states.put(decl, DepResolveState.FINISHED);
 			return;
 		}
 
@@ -61,14 +61,14 @@ public class DeclDepSolver
 		throw new AssertionError("unreachable");
 	}
 
-	public static void solve(IdentityHashMap<SemaDecl, DeclInfo> decls, PlatformContext context)
+	public static void process(IdentityHashMap<SemaDecl, DeclInfo> decls, PlatformContext context)
 	{
-		DeclDepSolver solver = new DeclDepSolver(context);
+		DeclDepResolver resolver = new DeclDepResolver(context);
 
 		for(Map.Entry<SemaDecl, DeclInfo> entry : decls.entrySet())
-			solver.infos.put(entry.getKey(), entry.getValue());
+			resolver.infos.put(entry.getKey(), entry.getValue());
 
 		for(SemaDecl decl : decls.keySet())
-			solver.solve(decl);
+			resolver.process(decl);
 	}
 }

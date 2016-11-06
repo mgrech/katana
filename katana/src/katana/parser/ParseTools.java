@@ -28,8 +28,18 @@ public class ParseTools
 	public static AstPath path(Scanner scanner)
 	{
 		Supplier<String> parseComponent = () -> consumeExpected(scanner, Token.Type.IDENT).value;
-		List<String> components = separated(scanner, Token.Type.PUNCT_DOT, parseComponent);
+		List<String> components = separated(scanner, ".", parseComponent);
 		return new AstPath(components);
+	}
+
+	public static <T> List<T> separated(Scanner scanner, String separator, Supplier<T> parser)
+	{
+		List<T> result = new ArrayList<>();
+
+		do result.add(parser.get());
+		while(option(scanner, separator, true));
+
+		return result;
 	}
 
 	public static <T> List<T> separated(Scanner scanner, Token.Type separator, Supplier<T> parser)
@@ -61,6 +71,11 @@ public class ParseTools
 		return true;
 	}
 
+	public static boolean option(Scanner scanner, String value, boolean eat)
+	{
+		return option(scanner, t -> t.value.equals(value), eat);
+	}
+
 	public static boolean option(Scanner scanner, Token.Category category, boolean eat)
 	{
 		return option(scanner, t -> t.category == category, eat);
@@ -69,6 +84,12 @@ public class ParseTools
 	public static boolean option(Scanner scanner, Token.Type type, boolean eat)
 	{
 		return option(scanner, t -> t.type == type, eat);
+	}
+
+	public static void expect(Scanner scanner, String value, boolean eat)
+	{
+		if(!option(scanner, value, eat))
+			unexpectedToken(scanner, value);
 	}
 
 	public static void expect(Scanner scanner, Token.Category category, boolean eat)
@@ -104,13 +125,13 @@ public class ParseTools
 
 	public static <T> void unexpectedToken(Scanner scanner, T expected)
 	{
-		String fmt = "unexpected token %s, expected %s on line %s, column %s";
-		throw new RuntimeException(String.format(fmt, scanner.state().token, expected, scanner.state().line, scanner.state().tokenColumn));
+		String fmt = "unexpected token '%s', expected '%s' on line %s, column %s";
+		throw new RuntimeException(String.format(fmt, scanner.state().token.value, expected, scanner.state().line, scanner.state().tokenColumn));
 	}
 
 	public static void unexpectedToken(Scanner scanner)
 	{
-		String fmt = "unexpected token %s on line %s, column %s";
-		throw new RuntimeException(String.format(fmt, scanner.state().token, scanner.state().line, scanner.state().tokenColumn));
+		String fmt = "unexpected token '%s' on line %s, column %s";
+		throw new RuntimeException(String.format(fmt, scanner.state().token.value, scanner.state().line, scanner.state().tokenColumn));
 	}
 }

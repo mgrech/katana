@@ -12,25 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.ast;
+package katana.utils;
 
-import katana.ast.decl.AstDeclImport;
-import katana.ast.decl.AstDeclRenamedImport;
-
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-
-public class AstFile
+public class Rethrow
 {
-	public AstFile(Path path)
+	public static void of(Throwable throwable)
 	{
-		this.path = path;
-	}
+		if(throwable instanceof Error)
+			throw (Error)throwable;
 
-	public Path path;
-	public Map<AstPath, AstDeclImport> imports = new HashMap<>();
-	public Map<String, AstDeclRenamedImport> renamedImports = new HashMap<>();
-	public Map<AstPath, AstModule> modules = new HashMap<>();
-	public DelayedExprParseList delayedExprs = new DelayedExprParseList();
+		if(throwable instanceof RuntimeException)
+			throw (RuntimeException)throwable;
+
+		throw new RuntimeException(throwable);
+	}
 }

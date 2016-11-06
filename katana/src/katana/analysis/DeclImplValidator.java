@@ -22,8 +22,6 @@ import katana.sema.decl.SemaDecl;
 import katana.sema.decl.SemaDeclDefinedFunction;
 import katana.sema.decl.SemaDeclFunction;
 import katana.sema.decl.SemaDeclOverloadSet;
-import katana.sema.scope.SemaScopeFile;
-import katana.sema.scope.SemaScopeFunction;
 import katana.sema.stmt.SemaStmt;
 import katana.visitor.IVisitor;
 
