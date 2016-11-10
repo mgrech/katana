@@ -141,6 +141,9 @@ public class ExprParser
 		if(ParseTools.option(scanner, Token.Type.TYPE_CONST, true))
 			return parseConst(scanner, delayedExprs);
 
+		if(ParseTools.option(scanner, Token.Type.PUNCT_SCOLON, true))
+			throw new RuntimeException("';' does not denote a valid empty statement, use '{}' instead");
+
 		ParseTools.unexpectedToken(scanner);
 		throw new AssertionError("unreachable");
 	}
