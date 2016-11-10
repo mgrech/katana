@@ -32,6 +32,7 @@ import katana.visitor.IVisitor;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 public class ExprValidator implements IVisitor
@@ -595,7 +596,11 @@ public class ExprValidator implements IVisitor
 			? (SemaDeclOverloadSet)symbol
 			: ((SemaDeclImportedOverloadSet)symbol).set;
 
-		return resolveOverloadedCall(set.overloads, set.name(), args, Maybe.none());
+		List<SemaDeclFunction> overloads = set.overloads.stream()
+		                                                .filter(o -> o.exported)
+		                                                .collect(Collectors.toList());
+
+		return resolveOverloadedCall(overloads, set.name(), args, Maybe.none());
 	}
 
 	private SemaExpr visit(AstExprOpInfix op, Maybe<SemaType> deduce)
