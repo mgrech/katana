@@ -22,6 +22,7 @@ import katana.ast.expr.AstExprLiteral;
 import katana.ast.stmt.AstStmt;
 import katana.ast.type.AstType;
 import katana.op.Associativity;
+import katana.op.BuiltinOps;
 import katana.op.Kind;
 import katana.op.Operator;
 import katana.scanner.Scanner;
@@ -105,6 +106,12 @@ public class DeclParser
 		String op = ParseTools.consumeExpected(scanner, Token.Category.OP).value;
 		Kind kind = parseOpKind(scanner);
 
+		if(BuiltinOps.isBuiltin(op, kind))
+		{
+			String fmt = "redefinition of built-in operator '%s %s'";
+			throw new RuntimeException(String.format(fmt, kind.toString().toLowerCase(), op));
+		}
+
 		if(kind == Kind.PREFIX)
 		{
 			ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
@@ -157,6 +164,12 @@ public class DeclParser
 		{
 			op = ParseTools.consume(scanner).value;
 			kind = parseOpKind(scanner);
+
+			if(BuiltinOps.isBuiltin(op, kind))
+			{
+				String fmt = "built-in operator '%s %s' cannot be overloaded";
+				throw new RuntimeException(String.format(fmt, kind.toString().toLowerCase(), op));
+			}
 		}
 
 		else
