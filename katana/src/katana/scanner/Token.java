@@ -18,7 +18,8 @@ public class Token
 {
 	public enum Category
 	{
-		IDENT, OP,
+		IDENT,
+		OP,
 		LIT,
 		DECL,
 		STMT,
