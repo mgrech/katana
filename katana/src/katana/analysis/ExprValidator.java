@@ -609,6 +609,11 @@ public class ExprValidator implements IVisitor
 		return handleOperatorCall(op.decl.operator.symbol, Kind.POSTFIX, Collections.singletonList(op.expr), deduce);
 	}
 
+	private SemaExpr visit(AstExprParens parens, Maybe<SemaType> deduce)
+	{
+		return validate(parens.expr, scope, context, validateDecl, deduce);
+	}
+
 	private SemaExpr visit(AstExprSizeof sizeof, Maybe<SemaType> deduce)
 	{
 		return new SemaExprSizeof(TypeValidator.validate(sizeof.type, scope, context, validateDecl));
