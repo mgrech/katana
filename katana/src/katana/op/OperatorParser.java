@@ -15,10 +15,7 @@
 package katana.op;
 
 import katana.ast.DelayedExprParseList;
-import katana.ast.expr.AstExpr;
-import katana.ast.expr.AstExprOpInfixList;
-import katana.ast.expr.AstExprOpPostfixSeq;
-import katana.ast.expr.AstExprOpPrefixSeq;
+import katana.ast.expr.*;
 import katana.sema.SemaSymbol;
 import katana.sema.decl.SemaDeclOperator;
 import katana.sema.scope.SemaScopeFile;
@@ -66,14 +63,30 @@ public class OperatorParser
 		return result;
 	}
 
+	private static AstExpr createPrefixOp(AstExpr expr, SemaDeclOperator decl)
+	{
+		if(decl.operator.symbol.equals("&"))
+			return new AstExprAddressof(expr);
+
+		if(decl.operator.symbol.equals("*"))
+			return new AstExprDeref(expr);
+
+		return new AstExprOpPrefix(expr, decl);
+	}
+
 	private static void replacePrefixOpSeq(AstExprOpPrefixSeq seq, Consumer<AstExpr> replace, SemaScopeFile scope)
 	{
 		List<SemaDeclOperator> ops = parseOpSeq(scope, seq.seq, Kind.PREFIX);
 
 		for(int i = ops.size() - 1; i != -1; --i)
-			seq.expr = new AstExprOpPrefix(seq.expr, ops.get(i));
+			seq.expr = createPrefixOp(seq.expr, ops.get(i));
 
 		replace.accept(seq.expr);
+	}
+
+	private static AstExpr createPostfixOp(AstExpr expr, SemaDeclOperator decl)
+	{
+		return new AstExprOpPostfix(expr, decl);
 	}
 
 	private static void replacePostfixOpSeq(AstExprOpPostfixSeq seq, Consumer<AstExpr> replace, SemaScopeFile scope)
@@ -81,7 +94,7 @@ public class OperatorParser
 		List<SemaDeclOperator> ops = parseOpSeq(scope, seq.seq, Kind.POSTFIX);
 
 		for(int i = 0; i != ops.size(); ++i)
-			seq.expr = new AstExprOpPostfix(seq.expr, ops.get(i));
+			seq.expr = createPostfixOp(seq.expr, ops.get(i));
 
 		replace.accept(seq.expr);
 	}
@@ -153,13 +166,21 @@ public class OperatorParser
 		return true;
 	}
 
+	private static AstExpr createInfixOp(AstExpr left, AstExpr right, SemaDeclOperator decl)
+	{
+		if(decl.operator.symbol.equals("="))
+			return new AstExprAssign(left, right);
+
+		return new AstExprOpInfix(left, right, decl);
+	}
+
 	private static AstExpr parse(List<AstExpr> exprs, List<SemaDeclOperator> ops, IndexRange range)
 	{
 		if(range.beginIncl == range.endExcl)
 			return exprs.get(range.beginIncl);
 
 		if(range.beginIncl + 1 == range.endExcl)
-			return new AstExprOpInfix(exprs.get(range.beginIncl), exprs.get(range.endExcl), ops.get(range.beginIncl));
+			return createInfixOp(exprs.get(range.beginIncl), exprs.get(range.endExcl), ops.get(range.beginIncl));
 
 		int lowestPrec = IntStream.range(range.beginIncl, range.endExcl)
 		                          .mapToObj(ops::get)
@@ -191,11 +212,11 @@ public class OperatorParser
 
 		if(leftAssociative)
 			for(int i = 1; i != children.size(); ++i)
-				expr = new AstExprOpInfix(expr, children.get(i), ops.get(lowestPrecIdxs.get(i - 1)));
+				expr = createInfixOp(expr, children.get(i), ops.get(lowestPrecIdxs.get(i - 1)));
 
 		else
 			for(int i = children.size() - 2; i != -1; --i)
-				expr = new AstExprOpInfix(children.get(i), expr, ops.get(lowestPrecIdxs.get(i)));
+				expr = createInfixOp(children.get(i), expr, ops.get(lowestPrecIdxs.get(i)));
 
 		return expr;
 	}

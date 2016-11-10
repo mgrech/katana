@@ -1,28 +1,31 @@
 package katana.op;
 
+import katana.sema.decl.SemaDeclOperator;
+import katana.utils.Maybe;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class BuiltinOps
 {
-	public static final Map<String, Operator> PREFIX_OPS = new HashMap<>();
-	public static final Map<String, Operator> INFIX_OPS = new HashMap<>();
-	public static final Map<String, Operator> POSTFIX_OPS = new HashMap<>();
+	public static final Map<String, SemaDeclOperator> PREFIX_OPS = new HashMap<>();
+	public static final Map<String, SemaDeclOperator> INFIX_OPS = new HashMap<>();
+	public static final Map<String, SemaDeclOperator> POSTFIX_OPS = new HashMap<>();
 
 	static
 	{
-		PREFIX_OPS.put("&", Operator.prefix("&"));
-		PREFIX_OPS.put("*", Operator.prefix("*"));
-		INFIX_OPS.put("=", Operator.infix("=", Associativity.NONE, 0));
+		PREFIX_OPS.put("&", new SemaDeclOperator(null, true, Operator.prefix("&")));
+		PREFIX_OPS.put("*", new SemaDeclOperator(null, true, Operator.prefix("*")));
+		INFIX_OPS .put("=", new SemaDeclOperator(null, true, Operator.infix("=", Associativity.NONE, 0)));
 	}
 
-	public static boolean isBuiltin(String symbol, Kind kind)
+	public static Maybe<SemaDeclOperator> find(String symbol, Kind kind)
 	{
 		switch(kind)
 		{
-		case PREFIX:  return PREFIX_OPS .get(symbol) != null;
-		case INFIX:   return INFIX_OPS  .get(symbol) != null;
-		case POSTFIX: return POSTFIX_OPS.get(symbol) != null;
+		case PREFIX:  return Maybe.wrap(PREFIX_OPS .get(symbol));
+		case INFIX:   return Maybe.wrap(INFIX_OPS  .get(symbol));
+		case POSTFIX: return Maybe.wrap(POSTFIX_OPS.get(symbol));
 		default: break;
 		}
 

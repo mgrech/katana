@@ -23,6 +23,7 @@ import katana.ast.decl.AstDeclImport;
 import katana.ast.decl.AstDeclOperator;
 import katana.ast.decl.AstDeclRenamedImport;
 import katana.backend.PlatformContext;
+import katana.op.BuiltinOps;
 import katana.op.OperatorParser;
 import katana.sema.SemaModule;
 import katana.sema.SemaProgram;
@@ -168,6 +169,21 @@ public class ProgramValidator
 			OperatorParser.replace(scope.getKey().delayedExprs, scope.getValue());
 	}
 
+	private static void registerBuiltinOps(Collection<SemaScopeFile> scopes)
+	{
+		for(SemaScopeFile scope : scopes)
+		{
+			for(SemaDeclOperator decl : BuiltinOps.PREFIX_OPS.values())
+				scope.defineSymbol(decl);
+
+			for(SemaDeclOperator decl : BuiltinOps.INFIX_OPS.values())
+				scope.defineSymbol(decl);
+
+			for(SemaDeclOperator decl : BuiltinOps.POSTFIX_OPS.values())
+				scope.defineSymbol(decl);
+		}
+	}
+
 	public static SemaProgram validate(AstProgram program, PlatformContext context)
 	{
 		SemaProgram semaProgram = new SemaProgram();
@@ -178,6 +194,7 @@ public class ProgramValidator
 
 		IdentityHashMap<SemaDecl, DeclInfo> decls = registerDecls(semaProgram, scopes);
 		validateImports(semaProgram, scopes);
+		registerBuiltinOps(scopes.values());
 		parseOperators(scopes);
 
 		DeclDepResolver.process(decls, context);

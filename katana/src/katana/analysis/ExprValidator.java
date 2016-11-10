@@ -212,7 +212,7 @@ public class ExprValidator implements IVisitor
 
 		if(!TypeHelper.isPointerType(expr.type()))
 		{
-			String fmt = "expected expression of pointer type in 'deref', got '%s'";
+			String fmt = "expected expression of pointer type in dereference operator ('prefix *'), got '%s'";
 			throw new RuntimeException(String.format(fmt, TypeString.of(expr.type())));
 		}
 

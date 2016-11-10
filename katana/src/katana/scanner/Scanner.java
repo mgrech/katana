@@ -307,8 +307,6 @@ public class Scanner
 		case "alignof":   return Token.MISC_ALIGNOF;
 		case "offsetof":  return Token.MISC_OFFSETOF;
 		case "inline":    return Token.MISC_INLINE;
-		case "addressof": return Token.MISC_ADDRESSOF;
-		case "deref":     return Token.MISC_DEREF;
 		case "builtin":   return Token.MISC_BUILTIN;
 
 		default: return Token.identifier(value);

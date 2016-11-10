@@ -106,7 +106,7 @@ public class DeclParser
 		String op = ParseTools.consumeExpected(scanner, Token.Category.OP).value;
 		Kind kind = parseOpKind(scanner);
 
-		if(BuiltinOps.isBuiltin(op, kind))
+		if(BuiltinOps.find(op, kind).isSome())
 		{
 			String fmt = "redefinition of built-in operator '%s %s'";
 			throw new RuntimeException(String.format(fmt, kind.toString().toLowerCase(), op));
@@ -165,7 +165,7 @@ public class DeclParser
 			op = ParseTools.consume(scanner).value;
 			kind = parseOpKind(scanner);
 
-			if(BuiltinOps.isBuiltin(op, kind))
+			if(BuiltinOps.find(op, kind).isSome())
 			{
 				String fmt = "built-in operator '%s %s' cannot be overloaded";
 				throw new RuntimeException(String.format(fmt, kind.toString().toLowerCase(), op));

@@ -239,12 +239,6 @@ public class ExprParser
 			ParseTools.expect(scanner, Token.Type.PUNCT_RPAREN, true);
 			return call;
 
-		case MISC_ADDRESSOF:
-			return ParseTools.parenthesized(scanner, () -> new AstExprAddressof(parse(scanner, delayedExprs)));
-
-		case MISC_DEREF:
-			return ParseTools.parenthesized(scanner, () -> new AstExprDeref(parse(scanner, delayedExprs)));
-
 		default: throw new AssertionError("unreachable");
 		}
 	}
