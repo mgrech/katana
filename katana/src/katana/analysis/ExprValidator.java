@@ -590,7 +590,11 @@ public class ExprValidator implements IVisitor
 		if(candidates.size() > 1)
 			throw new RuntimeException("nyi");
 
-		SemaDeclOverloadSet set = (SemaDeclOverloadSet)candidates.get(0);
+		SemaSymbol symbol = candidates.get(0);
+		SemaDeclOverloadSet set = symbol instanceof SemaDeclOverloadSet
+			? (SemaDeclOverloadSet)symbol
+			: ((SemaDeclImportedOverloadSet)symbol).set;
+
 		return resolveOverloadedCall(set.overloads, set.name(), args, Maybe.none());
 	}
 
