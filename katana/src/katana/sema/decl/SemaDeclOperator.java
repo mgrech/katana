@@ -28,7 +28,7 @@ public class SemaDeclOperator extends SemaDecl
 	@Override
 	public String name()
 	{
-		return Operator.declName(operator.op, operator.kind);
+		return Operator.declName(operator.symbol, operator.kind);
 	}
 
 	public Operator operator;

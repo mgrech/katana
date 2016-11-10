@@ -62,7 +62,7 @@ public class ProgramValidator
 
 						if(!semaModule.declare(semaDecl))
 						{
-							String op = semaDecl.operator.op;
+							String op = semaDecl.operator.symbol;
 							String kind = semaDecl.operator.kind.toString().toLowerCase();
 							String fmt = "redefinition of operator '%s %s'";
 							throw new RuntimeException(String.format(fmt, op, kind));

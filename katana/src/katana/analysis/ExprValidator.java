@@ -20,10 +20,7 @@ import katana.Limits;
 import katana.ast.expr.*;
 import katana.backend.PlatformContext;
 import katana.diag.TypeString;
-import katana.op.AstExprOpPostfix;
-import katana.op.AstExprOpPrefix;
-import katana.op.Kind;
-import katana.op.Operator;
+import katana.op.*;
 import katana.sema.SemaSymbol;
 import katana.sema.decl.*;
 import katana.sema.expr.*;
@@ -198,10 +195,10 @@ public class ExprValidator implements IVisitor
 		SemaExpr expr = validate(const_.expr, scope, context, validateDecl, deduce);
 
 		if(TypeHelper.isVoidType(expr.type()))
-			throw new RuntimeException("expression passed to const op yields 'void'");
+			throw new RuntimeException("expression passed to const symbol yields 'void'");
 
 		if(TypeHelper.isFunctionType(expr.type()))
-			throw new RuntimeException("const op applied to value of function type");
+			throw new RuntimeException("const symbol applied to value of function type");
 
 		if(expr instanceof SemaExprLValueExpr)
 			return new SemaExprConstLValue((SemaExprLValueExpr)expr);
@@ -597,14 +594,19 @@ public class ExprValidator implements IVisitor
 		return resolveOverloadedCall(set.overloads, set.name(), args, Maybe.none());
 	}
 
+	private SemaExpr visit(AstExprOpInfix op, Maybe<SemaType> deduce)
+	{
+		return handleOperatorCall(op.decl.operator.symbol, Kind.INFIX, Arrays.asList(op.left, op.right), deduce);
+	}
+
 	private SemaExpr visit(AstExprOpPrefix op, Maybe<SemaType> deduce)
 	{
-		return handleOperatorCall(op.op, Kind.PREFIX, Collections.singletonList(op.expr), deduce);
+		return handleOperatorCall(op.decl.operator.symbol, Kind.PREFIX, Collections.singletonList(op.expr), deduce);
 	}
 
 	private SemaExpr visit(AstExprOpPostfix op, Maybe<SemaType> deduce)
 	{
-		return handleOperatorCall(op.op, Kind.POSTFIX, Collections.singletonList(op.expr), deduce);
+		return handleOperatorCall(op.decl.operator.symbol, Kind.POSTFIX, Collections.singletonList(op.expr), deduce);
 	}
 
 	private SemaExpr visit(AstExprSizeof sizeof, Maybe<SemaType> deduce)

@@ -158,6 +158,6 @@ public class FileParser implements IVisitor
 
 	private void visit(AstDeclOperator decl)
 	{
-		handleDecl(decl, Operator.declName(decl.operator.op, decl.operator.kind));
+		handleDecl(decl, Operator.declName(decl.operator.symbol, decl.operator.kind));
 	}
 }

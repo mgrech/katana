@@ -15,15 +15,16 @@
 package katana.op;
 
 import katana.ast.expr.AstExpr;
+import katana.sema.decl.SemaDeclOperator;
 
 public class AstExprOpPostfix extends AstExpr
 {
-	public AstExprOpPostfix(AstExpr expr, String op)
+	public AstExpr expr;
+	public SemaDeclOperator decl;
+
+	public AstExprOpPostfix(AstExpr expr, SemaDeclOperator decl)
 	{
 		this.expr = expr;
-		this.op = op;
+		this.decl = decl;
 	}
-
-	public AstExpr expr;
-	public String op;
 }

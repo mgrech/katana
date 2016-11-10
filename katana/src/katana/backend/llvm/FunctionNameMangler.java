@@ -65,7 +65,7 @@ public class FunctionNameMangler
 
 	private static String mangleOperatorName(SemaDeclDefinedOperator operator)
 	{
-		String op = operator.decl.operator.op;
+		String op = operator.decl.operator.symbol;
 		Kind kind = operator.decl.operator.kind;
 		String path = operator.decl.module().name();
 		return String.format("op-%s-%s.%s", kind.toString().toLowerCase(), path, mangleOperatorSymbol(op));

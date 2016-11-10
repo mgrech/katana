@@ -16,12 +16,12 @@ package katana.op;
 
 public class Operator
 {
-	private Operator(String op, Kind kind, Associativity assoc, int prio)
+	private Operator(String symbol, Kind kind, Associativity associativity, int precedence)
 	{
-		this.op = op;
+		this.symbol = symbol;
 		this.kind = kind;
-		this.assoc = assoc;
-		this.prio = prio;
+		this.associativity = associativity;
+		this.precedence = precedence;
 	}
 
 	public static Operator prefix(String op)
@@ -34,9 +34,9 @@ public class Operator
 		return new Operator(op, Kind.POSTFIX, Associativity.NONE, 0);
 	}
 
-	public static Operator infix(String op, Associativity assoc, int prio)
+	public static Operator infix(String op, Associativity associativity, int precedence)
 	{
-		return new Operator(op, Kind.INFIX, assoc, prio);
+		return new Operator(op, Kind.INFIX, associativity, precedence);
 	}
 
 	public static String declName(String op, Kind kind)
@@ -49,8 +49,8 @@ public class Operator
 		return String.format("%s %s", kind.toString().toLowerCase(), op);
 	}
 
-	public String op;
+	public String symbol;
 	public Kind kind;
-	public Associativity assoc;
-	public int prio;
+	public Associativity associativity;
+	public int precedence;
 }

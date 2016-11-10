@@ -20,18 +20,21 @@ import katana.ast.expr.AstExprOpInfixList;
 import katana.ast.expr.AstExprOpPostfixSeq;
 import katana.ast.expr.AstExprOpPrefixSeq;
 import katana.sema.SemaSymbol;
+import katana.sema.decl.SemaDeclOperator;
 import katana.sema.scope.SemaScopeFile;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class OperatorParser
 {
-	private static List<String> parseOpSeq(SemaScopeFile scope, String seq, Kind kind)
+	private static List<SemaDeclOperator> parseOpSeq(SemaScopeFile scope, String seq, Kind kind)
 	{
-		List<String> result = new ArrayList<>();
+		List<SemaDeclOperator> result = new ArrayList<>();
 
 		while(!seq.isEmpty())
 		{
@@ -45,7 +48,7 @@ public class OperatorParser
 
 				if(symbols.size() == 1)
 				{
-					result.add(op);
+					result.add((SemaDeclOperator)symbols.get(0));
 					seq = seq.substring(op.length());
 					break;
 				}
@@ -65,17 +68,17 @@ public class OperatorParser
 
 	private static void replacePrefixOpSeq(AstExprOpPrefixSeq seq, Consumer<AstExpr> replace, SemaScopeFile scope)
 	{
-		List<String> ops = parseOpSeq(scope, seq.seq, Kind.PREFIX);
+		List<SemaDeclOperator> ops = parseOpSeq(scope, seq.seq, Kind.PREFIX);
 
 		for(int i = ops.size() - 1; i != -1; --i)
-			seq.expr = new AstExprOpPrefix(ops.get(i), seq.expr);
+			seq.expr = new AstExprOpPrefix(seq.expr, ops.get(i));
 
 		replace.accept(seq.expr);
 	}
 
 	private static void replacePostfixOpSeq(AstExprOpPostfixSeq seq, Consumer<AstExpr> replace, SemaScopeFile scope)
 	{
-		List<String> ops = parseOpSeq(scope, seq.seq, Kind.POSTFIX);
+		List<SemaDeclOperator> ops = parseOpSeq(scope, seq.seq, Kind.POSTFIX);
 
 		for(int i = 0; i != ops.size(); ++i)
 			seq.expr = new AstExprOpPostfix(seq.expr, ops.get(i));
@@ -83,9 +86,125 @@ public class OperatorParser
 		replace.accept(seq.expr);
 	}
 
+	private static List<SemaDeclOperator> findOperators(SemaScopeFile scope, List<String> symbols)
+	{
+		List<SemaDeclOperator> operators = new ArrayList<>();
+
+		for(String symbol : symbols)
+		{
+			List<SemaSymbol> candidates = scope.find(Operator.declName(symbol, Kind.INFIX));
+
+			if(candidates.isEmpty())
+				throw new RuntimeException(String.format("operator 'infix %s' could not be found", symbol));
+
+			if(candidates.size() > 1)
+				throw new RuntimeException(String.format("multiple definitions for operator 'infix %s'", symbol));
+
+			operators.add((SemaDeclOperator)candidates.get(0));
+		}
+
+		return operators;
+	}
+
+	private static class IndexRange
+	{
+		public int beginIncl;
+		public int endExcl;
+
+		public IndexRange(int beginIncl, int endExcl)
+		{
+			this.beginIncl = beginIncl;
+			this.endExcl = endExcl;
+		}
+	}
+
+	private static void splitAddRange(List<IndexRange> ranges, int beginIncl, int endExcl)
+	{
+		if(beginIncl == endExcl)
+			ranges.add(new IndexRange(beginIncl, beginIncl));
+		else
+			ranges.add(new IndexRange(beginIncl + 1, endExcl));
+	}
+
+	private static List<IndexRange> splitIndexRange(IndexRange range, List<Integer> splitPointsExcl)
+	{
+		if(splitPointsExcl.isEmpty())
+			throw new AssertionError("splitIndexRange: no split points");
+
+		List<IndexRange> ranges = new ArrayList<>();
+		splitAddRange(ranges, range.beginIncl, splitPointsExcl.get(0));
+
+		for(int i = 0; i != splitPointsExcl.size() - 1; ++i)
+			splitAddRange(ranges, splitPointsExcl.get(i), splitPointsExcl.get(i + 1));
+
+		splitAddRange(ranges, splitPointsExcl.get(splitPointsExcl.size() - 1), range.endExcl);
+
+		return ranges;
+	}
+
+	private static boolean sameAssociativity(List<SemaDeclOperator> ops, List<Integer> indices)
+	{
+		Associativity assoc = ops.get(indices.get(0)).operator.associativity;
+
+		for(int i = 1; i != indices.size(); ++i)
+			if(ops.get(indices.get(i)).operator.associativity != assoc)
+				return false;
+
+		return true;
+	}
+
+	private static AstExpr parse(List<AstExpr> exprs, List<SemaDeclOperator> ops, IndexRange range)
+	{
+		if(range.beginIncl == range.endExcl)
+			return exprs.get(range.beginIncl);
+
+		if(range.beginIncl + 1 == range.endExcl)
+			return new AstExprOpInfix(exprs.get(range.beginIncl), exprs.get(range.endExcl), ops.get(range.beginIncl));
+
+		int lowestPrec = IntStream.range(range.beginIncl, range.endExcl)
+		                          .mapToObj(ops::get)
+		                          .min((a, b) -> a.operator.precedence - b.operator.precedence)
+		                          .get().operator.precedence;
+
+		List<Integer> lowestPrecIdxs = IntStream.range(range.beginIncl, range.endExcl)
+		                                        .filter(i -> ops.get(i).operator.precedence == lowestPrec)
+		                                        .mapToObj(i -> i)
+		                                        .collect(Collectors.toList());
+
+		if(lowestPrecIdxs.size() > 1)
+		{
+			for(int idx : lowestPrecIdxs)
+				if(ops.get(idx).operator.associativity == Associativity.NONE)
+					throw new RuntimeException(String.format("operator 'infix %s' is non-associative", ops.get(idx).operator.symbol));
+
+			if(!sameAssociativity(ops, lowestPrecIdxs))
+				throw new RuntimeException("operators of same precedence used within an expression must also have the same associativity");
+		}
+
+		List<AstExpr> children = splitIndexRange(range, lowestPrecIdxs).stream()
+		                                                               .map(r ->parse(exprs, ops, r))
+		                                                               .collect(Collectors.toList());
+
+		boolean leftAssociative = ops.get(lowestPrecIdxs.get(0)).operator.associativity == Associativity.LEFT;
+
+		AstExpr expr = leftAssociative ? children.get(0) : children.get(children.size() - 1);
+
+		if(leftAssociative)
+			for(int i = 1; i != children.size(); ++i)
+				expr = new AstExprOpInfix(expr, children.get(i), ops.get(lowestPrecIdxs.get(i - 1)));
+
+		else
+			for(int i = children.size() - 2; i != -1; --i)
+				expr = new AstExprOpInfix(children.get(i), expr, ops.get(lowestPrecIdxs.get(i)));
+
+		return expr;
+	}
+
 	private static void replaceInfixOpList(AstExprOpInfixList list, Consumer<AstExpr> replace, SemaScopeFile scope)
 	{
-		throw new RuntimeException("nyi");
+		List<SemaDeclOperator> ops = findOperators(scope, list.ops);
+		AstExpr replacement = parse(list.exprs, ops, new IndexRange(0, ops.size()));
+		replace.accept(replacement);
 	}
 
 	public static void replace(DelayedExprParseList list, SemaScopeFile scope)

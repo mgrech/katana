@@ -131,18 +131,18 @@ public class DeclParser
 			throw new AssertionError("unreachable");
 		}
 
-		String prioStr = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT_DEDUCE).value;
-		BigInteger prio = new BigInteger(prioStr);
+		String precStr = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT_DEDUCE).value;
+		BigInteger prec = new BigInteger(precStr);
 
-		// prio < 0 || prio > 1000
-		if(prio.compareTo(BigInteger.ZERO) == -1 || prio.compareTo(BigInteger.valueOf(1000)) == 1)
+		// precedence < 0 || precedence > 1000
+		if(prec.compareTo(BigInteger.ZERO) == -1 || prec.compareTo(BigInteger.valueOf(1000)) == 1)
 		{
-			String fmt = "priority for operator '%s' (%s) is out of range, valid values are from [0, 1000]";
-			throw new RuntimeException(String.format(fmt, op, prioStr));
+			String fmt = "precedence for operator '%s' (%s) is out of range, valid values are from [0, 1000]";
+			throw new RuntimeException(String.format(fmt, op, precStr));
 		}
 
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-		return new AstDeclOperator(exported, Operator.infix(op, assoc, prio.intValue()));
+		return new AstDeclOperator(exported, Operator.infix(op, assoc, prec.intValue()));
 	}
 
 	private static AstDecl parseFunction(Scanner scanner, boolean exported, boolean opaque, Maybe<String> extern, DelayedExprParseList delayedExprs)
