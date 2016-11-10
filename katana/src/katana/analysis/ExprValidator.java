@@ -116,10 +116,10 @@ public class ExprValidator implements IVisitor
 		SemaType indexType = index.type();
 
 		if(TypeHelper.isBuiltinType(indexType, BuiltinType.INT))
-			throw new RuntimeException("array access requires index of type 'int'");
+			throw new RuntimeException(String.format("array access requires index of type 'int', got '%s'", TypeString.of(indexType)));
 
 		if(TypeHelper.isArrayType(value.type()))
-			throw new RuntimeException("array access requires expression yielding array type");
+			throw new RuntimeException(String.format("array access requires expression yielding array type, got '%s'", TypeString.of(value.type())));
 
 		if(value instanceof SemaExprLValueExpr)
 			return new SemaExprArrayAccessLValue((SemaExprLValueExpr)value, index);
