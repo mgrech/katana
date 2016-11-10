@@ -73,7 +73,6 @@ public class ProgramValidator
 
 						if(semaDecl.exported)
 							map.put(semaDecl.name(), semaDecl);
-
 					}
 
 		return result;
@@ -93,7 +92,6 @@ public class ProgramValidator
 				if(importedOps != null)
 					for(SemaDeclOperator operator : importedOps.values())
 						scope.defineSymbol(operator);
-
 			}
 		}
 	}
