@@ -12,11 +12,22 @@ public class BuiltinOps
 	public static final Map<String, SemaDeclOperator> INFIX_OPS = new HashMap<>();
 	public static final Map<String, SemaDeclOperator> POSTFIX_OPS = new HashMap<>();
 
+	private static void registerBuiltinOp(Operator op)
+	{
+		switch(op.kind)
+		{
+		case PREFIX:  PREFIX_OPS .put(op.symbol, new SemaDeclOperator(null, true, Operator.prefix(op.symbol))); break;
+		case INFIX:   INFIX_OPS  .put(op.symbol, new SemaDeclOperator(null, true, Operator.infix(op.symbol, op.associativity, op.precedence))); break;
+		case POSTFIX: POSTFIX_OPS.put(op.symbol, new SemaDeclOperator(null, true, Operator.postfix(op.symbol))); break;
+		default: throw new AssertionError("unreachable");
+		}
+	}
+
 	static
 	{
-		PREFIX_OPS.put("&", new SemaDeclOperator(null, true, Operator.prefix("&")));
-		PREFIX_OPS.put("*", new SemaDeclOperator(null, true, Operator.prefix("*")));
-		INFIX_OPS .put("=", new SemaDeclOperator(null, true, Operator.infix("=", Associativity.NONE, 0)));
+		registerBuiltinOp(Operator.prefix("&"));
+		registerBuiltinOp(Operator.prefix("*"));
+		registerBuiltinOp(Operator.infix("=", Associativity.NONE, 0));
 	}
 
 	public static Maybe<SemaDeclOperator> find(String symbol, Kind kind)
