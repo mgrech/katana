@@ -156,9 +156,11 @@ public class OperatorParser
 	private static List<Integer> lowestPrecedenceIndices(List<Object> expr)
 	{
 		List<Integer> result = new ArrayList<>();
-		int precedence = Integer.MAX_VALUE;
 
-		for(int i = 1; i != expr.size(); i += 2)
+		int precedence = ((SemaDeclOperator)expr.get(1)).operator.precedence;
+		result.add(1);
+
+		for(int i = 3; i != expr.size(); i += 2)
 		{
 			SemaDeclOperator op = (SemaDeclOperator)expr.get(i);
 
@@ -169,6 +171,7 @@ public class OperatorParser
 			{
 				result.clear();
 				result.add(i);
+				precedence = op.operator.precedence;
 			}
 		}
 
