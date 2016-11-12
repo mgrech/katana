@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class OperatorParser
 {
@@ -99,7 +98,7 @@ public class OperatorParser
 		replace.accept(seq.expr);
 	}
 
-	private static List<SemaDeclOperator> findOperators(SemaScopeFile scope, List<String> symbols)
+	private static List<SemaDeclOperator> findInfixOperators(SemaScopeFile scope, List<String> symbols)
 	{
 		List<SemaDeclOperator> operators = new ArrayList<>();
 
@@ -119,53 +118,6 @@ public class OperatorParser
 		return operators;
 	}
 
-	private static class IndexRange
-	{
-		public int beginIncl;
-		public int endExcl;
-
-		public IndexRange(int beginIncl, int endExcl)
-		{
-			this.beginIncl = beginIncl;
-			this.endExcl = endExcl;
-		}
-	}
-
-	private static void splitAddRange(List<IndexRange> ranges, int beginIncl, int endExcl)
-	{
-		if(beginIncl == endExcl)
-			ranges.add(new IndexRange(beginIncl, beginIncl));
-		else
-			ranges.add(new IndexRange(beginIncl + 1, endExcl));
-	}
-
-	private static List<IndexRange> splitIndexRange(IndexRange range, List<Integer> splitPointsExcl)
-	{
-		if(splitPointsExcl.isEmpty())
-			throw new AssertionError("splitIndexRange: no split points");
-
-		List<IndexRange> ranges = new ArrayList<>();
-		splitAddRange(ranges, range.beginIncl, splitPointsExcl.get(0));
-
-		for(int i = 0; i != splitPointsExcl.size() - 1; ++i)
-			splitAddRange(ranges, splitPointsExcl.get(i), splitPointsExcl.get(i + 1));
-
-		splitAddRange(ranges, splitPointsExcl.get(splitPointsExcl.size() - 1), range.endExcl);
-
-		return ranges;
-	}
-
-	private static boolean sameAssociativity(List<SemaDeclOperator> ops, List<Integer> indices)
-	{
-		Associativity assoc = ops.get(indices.get(0)).operator.associativity;
-
-		for(int i = 1; i != indices.size(); ++i)
-			if(ops.get(indices.get(i)).operator.associativity != assoc)
-				return false;
-
-		return true;
-	}
-
 	private static AstExpr createInfixOp(AstExpr left, AstExpr right, SemaDeclOperator decl)
 	{
 		if(decl.operator.symbol.equals("="))
@@ -174,57 +126,129 @@ public class OperatorParser
 		return new AstExprOpInfix(left, right, decl);
 	}
 
-	private static AstExpr parse(List<AstExpr> exprs, List<SemaDeclOperator> ops, IndexRange range)
+	private static boolean sameAssociativity(List<SemaDeclOperator> ops)
 	{
-		if(range.beginIncl == range.endExcl)
-			return exprs.get(range.beginIncl);
+		Associativity assoc = ops.get(0).operator.associativity;
 
-		if(range.beginIncl + 1 == range.endExcl)
-			return createInfixOp(exprs.get(range.beginIncl), exprs.get(range.endExcl), ops.get(range.beginIncl));
+		for(int i = 1; i != ops.size(); ++i)
+			if(ops.get(i).operator.associativity != assoc)
+				return false;
 
-		int lowestPrec = IntStream.range(range.beginIncl, range.endExcl)
-		                          .mapToObj(ops::get)
-		                          .min((a, b) -> a.operator.precedence - b.operator.precedence)
-		                          .get().operator.precedence;
+		return true;
+	}
 
-		List<Integer> lowestPrecIdxs = IntStream.range(range.beginIncl, range.endExcl)
-		                                        .filter(i -> ops.get(i).operator.precedence == lowestPrec)
-		                                        .mapToObj(i -> i)
-		                                        .collect(Collectors.toList());
+	private static List<List<Object>> split(List<Object> list, List<Integer> splitPoints)
+	{
+		List<List<Object>> result = new ArrayList<>();
 
-		if(lowestPrecIdxs.size() > 1)
+		int previousSplitPoint = -1;
+
+		for(int splitPoint : splitPoints)
 		{
-			for(int idx : lowestPrecIdxs)
-				if(ops.get(idx).operator.associativity == Associativity.NONE)
-					throw new RuntimeException(String.format("operator 'infix %s' is non-associative", ops.get(idx).operator.symbol));
-
-			if(!sameAssociativity(ops, lowestPrecIdxs))
-				throw new RuntimeException("operators of same precedence used within an expression must also have the same associativity");
+			result.add(list.subList(previousSplitPoint + 1, splitPoint));
+			previousSplitPoint = splitPoint;
 		}
 
-		List<AstExpr> children = splitIndexRange(range, lowestPrecIdxs).stream()
-		                                                               .map(r ->parse(exprs, ops, r))
-		                                                               .collect(Collectors.toList());
+		result.add(list.subList(previousSplitPoint + 1, list.size()));
+		return result;
+	}
 
-		boolean leftAssociative = ops.get(lowestPrecIdxs.get(0)).operator.associativity == Associativity.LEFT;
+	private static List<Integer> lowestPrecedenceIndices(List<Object> expr)
+	{
+		List<Integer> result = new ArrayList<>();
+		int precedence = Integer.MAX_VALUE;
 
-		AstExpr expr = leftAssociative ? children.get(0) : children.get(children.size() - 1);
+		for(int i = 1; i != expr.size(); i += 2)
+		{
+			SemaDeclOperator op = (SemaDeclOperator)expr.get(i);
 
-		if(leftAssociative)
-			for(int i = 1; i != children.size(); ++i)
-				expr = createInfixOp(expr, children.get(i), ops.get(lowestPrecIdxs.get(i - 1)));
+			if(op.operator.precedence == precedence)
+				result.add(i);
 
-		else
+			else if(op.operator.precedence < precedence)
+			{
+				result.clear();
+				result.add(i);
+			}
+		}
+
+		return result;
+	}
+
+	private static Associativity checkAssoc(List<SemaDeclOperator> ops)
+	{
+		if(ops.size() == 0)
+			throw new AssertionError("unreachable");
+
+		if(ops.size() == 1)
+			return ops.get(0).operator.associativity;
+
+		for(SemaDeclOperator op : ops)
+			if(op.operator.associativity == Associativity.NONE)
+				throw new RuntimeException(String.format("operator 'infix %s' is non-associative", op.operator.symbol));
+
+		if(!sameAssociativity(ops))
+			throw new RuntimeException("operators of same precedence used within an expression must also have the same associativity");
+
+		return ops.get(0).operator.associativity;
+	}
+
+	private static AstExpr parse(List<Object> expr)
+	{
+		if(expr.size() % 2 == 0)
+			throw new AssertionError("unreachable");
+
+		if(expr.size() == 1)
+			return (AstExpr)expr.get(0);
+
+		if(expr.size() == 3)
+			return new AstExprOpInfix((AstExpr)expr.get(0), (AstExpr)expr.get(2), (SemaDeclOperator)expr.get(1));
+
+		List<Integer> opIndices = lowestPrecedenceIndices(expr);
+
+		List<SemaDeclOperator> ops = opIndices.stream()
+		                                      .map(expr::get)
+		                                      .map(o -> (SemaDeclOperator)o)
+		                                      .collect(Collectors.toList());
+
+		Associativity associativity = checkAssoc(ops);
+
+		List<AstExpr> children = split(expr, opIndices).stream()
+		                                               .map(OperatorParser::parse)
+		                                               .collect(Collectors.toList());
+
+		if(associativity == Associativity.RIGHT)
+		{
+			AstExpr result = children.get(children.size() - 1);
+
 			for(int i = children.size() - 2; i != -1; --i)
-				expr = createInfixOp(children.get(i), expr, ops.get(lowestPrecIdxs.get(i)));
+				result = createInfixOp(children.get(i), result, ops.get(i));
 
-		return expr;
+			return result;
+		}
+
+		AstExpr result = children.get(0);
+
+		for(int i = 1; i != children.size(); ++i)
+			result = createInfixOp(result, children.get(i), ops.get(i - 1));
+
+		return result;
 	}
 
 	private static void replaceInfixOpList(AstExprOpInfixList list, Consumer<AstExpr> replace, SemaScopeFile scope)
 	{
-		List<SemaDeclOperator> ops = findOperators(scope, list.ops);
-		AstExpr replacement = parse(list.exprs, ops, new IndexRange(0, ops.size()));
+		List<SemaDeclOperator> ops = findInfixOperators(scope, list.ops);
+		List<Object> expr = new ArrayList<>();
+
+		for(int i = 0; i != ops.size(); ++i)
+		{
+			expr.add(list.exprs.get(i));
+			expr.add(ops.get(i));
+		}
+
+		expr.add(list.exprs.get(list.exprs.size() - 1));
+
+		AstExpr replacement = parse(expr);
 		replace.accept(replacement);
 	}
 
