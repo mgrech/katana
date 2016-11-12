@@ -66,12 +66,6 @@ public class Main
 			run.invoke(null, (Object)commandArgs);
 		}
 
-		catch(CompileException ex)
-		{
-			System.err.println(ex.getMessage());
-			ex.printStackTrace();
-		}
-
 		catch(InvocationTargetException ex)
 		{
 			Rethrow.of(ex.getTargetException());

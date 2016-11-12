@@ -90,19 +90,27 @@ public class CmdBuild
 
 		PlatformContext context = new PlatformContextLlvmAmd64();
 
-		AstProgram ast = ProgramParser.parse(Paths.get("./source"));
-		SemaProgram program = ProgramValidator.validate(ast, context);
-
-		Maybe<SemaDecl> entry = Maybe.none();
-
-		if(args.length == 1)
-			entry = Maybe.some(findEntryPointFunction(program, args[0]));
-
-		String output = ProgramCodeGenerator.generate(program, context, entry);
-
-		try(OutputStream stream = new FileOutputStream("output/program.ll"))
+		try
 		{
-			stream.write(output.getBytes(StandardCharsets.UTF_8));
+			AstProgram ast = ProgramParser.parse(Paths.get("./source"));
+			SemaProgram program = ProgramValidator.validate(ast, context);
+
+			Maybe<SemaDecl> entry = Maybe.none();
+
+			if(args.length == 1)
+				entry = Maybe.some(findEntryPointFunction(program, args[0]));
+
+			String output = ProgramCodeGenerator.generate(program, context, entry);
+
+			try(OutputStream stream = new FileOutputStream("output/program.ll"))
+			{
+				stream.write(output.getBytes(StandardCharsets.UTF_8));
+			}
+		}
+
+		catch(CompileException e)
+		{
+			System.err.println(e.getMessage());
 		}
 	}
 }
