@@ -21,6 +21,7 @@ import katana.ast.expr.AstExpr;
 import katana.ast.expr.AstExprLiteral;
 import katana.ast.stmt.AstStmt;
 import katana.ast.type.AstType;
+import katana.diag.CompileException;
 import katana.op.Associativity;
 import katana.op.BuiltinOps;
 import katana.op.Kind;
@@ -42,7 +43,7 @@ public class DeclParser
 		boolean opaque = ParseTools.option(scanner, Token.Type.TYPE_OPAQUE, true);
 
 		if(opaque && !exported)
-			throw new RuntimeException("'opaque' must go after 'export'");
+			throw new CompileException("'opaque' must go after 'export'");
 
 		Maybe<String> extern = Maybe.none();
 
@@ -50,7 +51,7 @@ public class DeclParser
 			extern = Maybe.some(ParseTools.consumeExpected(scanner, Token.Type.LIT_STRING).value);
 
 		if(extern.isSome() && scanner.state().token.type != Token.Type.DECL_FN)
-			throw new RuntimeException("extern can only be applied to overloads");
+			throw new CompileException("extern can only be applied to overloads");
 
 		switch(scanner.state().token.type)
 		{
@@ -61,19 +62,19 @@ public class DeclParser
 
 		case DECL_IMPORT:
 			if(exported)
-				throw new RuntimeException("imports cannot be exported");
+				throw new CompileException("imports cannot be exported");
 
 			return parseImport(scanner);
 
 		case DECL_MODULE:
 			if(exported)
-				throw new RuntimeException("modules cannot be exported");
+				throw new CompileException("modules cannot be exported");
 
 			return parseModule(scanner);
 
 		case DECL_TYPE:
 			if(opaque)
-				throw new RuntimeException("type aliases cannot be exported opaquely");
+				throw new CompileException("type aliases cannot be exported opaquely");
 
 			return parseTypeAlias(scanner, exported, delayedExprs);
 
@@ -109,7 +110,7 @@ public class DeclParser
 		if(BuiltinOps.find(op, kind).isSome())
 		{
 			String fmt = "redefinition of built-in operator '%s %s'";
-			throw new RuntimeException(String.format(fmt, kind.toString().toLowerCase(), op));
+			throw new CompileException(String.format(fmt, kind.toString().toLowerCase(), op));
 		}
 
 		if(kind == Kind.PREFIX)
@@ -145,7 +146,7 @@ public class DeclParser
 		if(prec.compareTo(BigInteger.ZERO) == -1 || prec.compareTo(BigInteger.valueOf(1000)) == 1)
 		{
 			String fmt = "precedence for operator '%s' (%s) is out of range, valid values are from [0, 1000]";
-			throw new RuntimeException(String.format(fmt, op, precStr));
+			throw new CompileException(String.format(fmt, op, precStr));
 		}
 
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
@@ -168,7 +169,7 @@ public class DeclParser
 			if(BuiltinOps.find(op, kind).isSome())
 			{
 				String fmt = "built-in operator '%s %s' cannot be overloaded";
-				throw new RuntimeException(String.format(fmt, kind.toString().toLowerCase(), op));
+				throw new CompileException(String.format(fmt, kind.toString().toLowerCase(), op));
 			}
 		}
 
@@ -178,10 +179,10 @@ public class DeclParser
 		List<AstDeclFunction.Param> params = parseParameterList(scanner, delayedExprs);
 
 		if((kind == Kind.PREFIX || kind == Kind.POSTFIX) && params.size() != 1)
-			throw new RuntimeException("unary operator requires exactly one parameter");
+			throw new CompileException("unary operator requires exactly one parameter");
 
 		if(kind == Kind.INFIX && params.size() != 2)
-			throw new RuntimeException("binary operator requires exactly two parameters");
+			throw new CompileException("binary operator requires exactly two parameters");
 
 		Maybe<AstType> ret = Maybe.none();
 
@@ -277,7 +278,7 @@ public class DeclParser
 				AstExpr init = ExprParser.parse(scanner, delayedExprs);
 
 				if(!(init instanceof AstExprLiteral))
-					throw new RuntimeException("global initializer must be literal");
+					throw new CompileException("global initializer must be literal");
 
 				ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
 				return new AstDeclGlobal(exported, opaque, Maybe.none(), name, (AstExprLiteral)init);
@@ -292,7 +293,7 @@ public class DeclParser
 		AstExpr init = ExprParser.parse(scanner, delayedExprs);
 
 		if(!(init instanceof AstExprLiteral))
-			throw new RuntimeException("global initializer must be literal");
+			throw new CompileException("global initializer must be literal");
 
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
 		return new AstDeclGlobal(exported, opaque, Maybe.some(type), name, (AstExprLiteral)init);

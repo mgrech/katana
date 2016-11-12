@@ -17,6 +17,7 @@ package katana.analysis;
 import katana.ast.decl.*;
 import katana.ast.type.AstTypeBuiltin;
 import katana.backend.PlatformContext;
+import katana.diag.CompileException;
 import katana.diag.TypeString;
 import katana.sema.decl.*;
 import katana.sema.expr.SemaExprLiteral;
@@ -54,7 +55,7 @@ public class DeclIfaceValidator implements IVisitor
 			SemaType type = TypeValidator.validate(field.type, scope, context, validateDecl);
 
 			if(!semaData.defineField(field.name, type))
-				throw new RuntimeException(String.format("duplicate field '%s' in type '%s'", field.name, semaData.name()));
+				throw new CompileException(String.format("duplicate field '%s' in type '%s'", field.name, semaData.name()));
 		}
 	}
 
@@ -70,7 +71,7 @@ public class DeclIfaceValidator implements IVisitor
 			SemaType type = TypeValidator.validate(param.type, semaFunction.scope, context, validateDecl);
 
 			if(!semaFunction.defineParam(param.name, type))
-				throw new RuntimeException(String.format("duplicate parameter name '%s' in function '%s'", param.name, function.name));
+				throw new CompileException(String.format("duplicate parameter name '%s' in function '%s'", param.name, function.name));
 		}
 
 		semaFunction.ret = TypeValidator.validate(function.ret.or(AstTypeBuiltin.VOID), semaFunction.scope, context, validateDecl);
@@ -102,7 +103,7 @@ public class DeclIfaceValidator implements IVisitor
 				SemaDeclFunction b = set.overloads.get(j);
 
 				if(sameSignatures(a, b))
-					throw new RuntimeException(String.format("duplicate overloads in overload set '%s'", set.qualifiedName()));
+					throw new CompileException(String.format("duplicate overloads in overload set '%s'", set.qualifiedName()));
 			}
 	}
 
@@ -125,7 +126,7 @@ public class DeclIfaceValidator implements IVisitor
 		SemaExprLiteral init = (SemaExprLiteral)ExprValidator.validate(global.init, scope, context, validateDecl, maybeDeclaredTypeDecayed);
 
 		if(TypeHelper.isVoidType(init.type()))
-			throw new RuntimeException(String.format("initializer for global %s yields 'void'", global.name));
+			throw new CompileException(String.format("initializer for global %s yields 'void'", global.name));
 
 		SemaType initTypeDecayed = TypeHelper.decay(init.type());
 		SemaType globalType = maybeDeclaredType.or(initTypeDecayed);
@@ -134,7 +135,7 @@ public class DeclIfaceValidator implements IVisitor
 		if(!SemaType.same(globalTypeDecayed, initTypeDecayed))
 		{
 			String fmt = "initializer for global '%s' has wrong type: expected '%s', got '%s'";
-			throw new RuntimeException(String.format(fmt, semaGlobal.name(), TypeString.of(globalTypeDecayed), TypeString.of(initTypeDecayed)));
+			throw new CompileException(String.format(fmt, semaGlobal.name(), TypeString.of(globalTypeDecayed), TypeString.of(initTypeDecayed)));
 		}
 
 		semaGlobal.init = init;

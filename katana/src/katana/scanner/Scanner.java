@@ -14,6 +14,8 @@
 
 package katana.scanner;
 
+import katana.diag.CompileException;
+
 import java.nio.file.Path;
 
 public class Scanner
@@ -508,7 +510,7 @@ public class Scanner
 
 	private void error(String message)
 	{
-		throw new RuntimeException(String.format("%s on line %s", message, state.line));
+		throw new CompileException(String.format("%s on line %s", message, state.line));
 	}
 
 	private int[] source;

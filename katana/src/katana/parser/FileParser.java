@@ -18,6 +18,7 @@ import katana.ast.AstFile;
 import katana.ast.AstModule;
 import katana.ast.AstPath;
 import katana.ast.decl.*;
+import katana.diag.CompileException;
 import katana.op.Operator;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
@@ -63,10 +64,10 @@ public class FileParser implements IVisitor
 	private void visit(AstDeclImport decl)
 	{
 		if(module != null)
-			throw new RuntimeException("imports must go first in a file");
+			throw new CompileException("imports must go first in a file");
 
 		if(file.imports.get(decl.path) != null)
-			throw new RuntimeException(String.format("duplicate import of module '%s'", decl.path));
+			throw new CompileException(String.format("duplicate import of module '%s'", decl.path));
 
 		file.imports.put(decl.path, decl);
 	}
@@ -74,10 +75,10 @@ public class FileParser implements IVisitor
 	private void visit(AstDeclRenamedImport decl)
 	{
 		if(module != null)
-			throw new RuntimeException("imports must go first in a file");
+			throw new CompileException("imports must go first in a file");
 
 		if(file.renamedImports.get(decl.rename) != null)
-			throw new RuntimeException(String.format("duplicate renamed import of module '%s' as '%s'", decl.path, decl.rename));
+			throw new CompileException(String.format("duplicate renamed import of module '%s' as '%s'", decl.path, decl.rename));
 
 		file.renamedImports.put(decl.rename, decl);
 	}
@@ -89,13 +90,13 @@ public class FileParser implements IVisitor
 
 	private void redefinitionError(String name)
 	{
-		throw new RuntimeException(String.format("redefinition of symbol '%s'", name));
+		throw new CompileException(String.format("redefinition of symbol '%s'", name));
 	}
 
 	private void requireModule()
 	{
 		if(module == null)
-			throw new RuntimeException("module definition required");
+			throw new CompileException("module definition required");
 	}
 
 	private void handleDecl(AstDecl decl, String name)

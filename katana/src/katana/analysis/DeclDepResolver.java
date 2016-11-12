@@ -15,6 +15,7 @@
 package katana.analysis;
 
 import katana.backend.PlatformContext;
+import katana.diag.CompileException;
 import katana.sema.decl.SemaDecl;
 import katana.sema.decl.SemaDeclImportedOverloadSet;
 
@@ -50,7 +51,7 @@ public class DeclDepResolver
 		switch(state)
 		{
 		case ONGOING:
-			throw new RuntimeException("cyclic dependency detected");
+			throw new CompileException("cyclic dependency detected");
 
 		case FINISHED:
 			return;

@@ -19,6 +19,7 @@ import katana.ast.AstPath;
 import katana.ast.DelayedExprParseList;
 import katana.ast.expr.*;
 import katana.ast.type.AstType;
+import katana.diag.CompileException;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
 import katana.utils.Maybe;
@@ -142,7 +143,7 @@ public class ExprParser
 			return parseConst(scanner, delayedExprs);
 
 		if(ParseTools.option(scanner, Token.Type.PUNCT_SCOLON, true))
-			throw new RuntimeException("';' does not denote a valid empty statement, use '{}' instead");
+			throw new CompileException("';' does not denote a valid empty statement, use '{}' instead");
 
 		ParseTools.unexpectedToken(scanner);
 		throw new AssertionError("unreachable");
@@ -165,10 +166,10 @@ public class ExprParser
 			AstExpr sizeLit = parseLiteral(scanner);
 
 			if(!(sizeLit instanceof AstExprLitInt))
-				throw new RuntimeException("expected integer literal as length in array literal");
+				throw new CompileException("expected integer literal as length in array literal");
 
 			if(((AstExprLitInt)sizeLit).type.isSome())
-				throw new RuntimeException("length in array literal cannot have a type suffix");
+				throw new CompileException("length in array literal cannot have a type suffix");
 
 			size = Maybe.some(((AstExprLitInt)sizeLit).value);
 			ParseTools.expect(scanner, ":", true);
@@ -189,7 +190,7 @@ public class ExprParser
 			AstExpr first = parse(scanner, delayedExprs);
 
 			if(!(first instanceof AstExprLiteral))
-				throw new RuntimeException("array literal elements must be literals themselves");
+				throw new CompileException("array literal elements must be literals themselves");
 
 			values.add((AstExprLiteral)first);
 
@@ -198,7 +199,7 @@ public class ExprParser
 				AstExpr next = parse(scanner, delayedExprs);
 
 				if(!(next instanceof AstExprLiteral))
-					throw new RuntimeException("array literal elements must be literals themselves");
+					throw new CompileException("array literal elements must be literals themselves");
 
 				values.add((AstExprLiteral)next);
 			}

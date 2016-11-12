@@ -19,6 +19,7 @@ import katana.BuiltinType;
 import katana.Limits;
 import katana.ast.expr.*;
 import katana.backend.PlatformContext;
+import katana.diag.CompileException;
 import katana.diag.TypeString;
 import katana.op.*;
 import katana.sema.SemaSymbol;
@@ -67,7 +68,7 @@ public class ExprValidator implements IVisitor
 		if(actual != expected)
 		{
 			String fmt = "invalid number of arguments: expected %s, %s given";
-			throw new RuntimeException(String.format(fmt, expected, actual));
+			throw new CompileException(String.format(fmt, expected, actual));
 		}
 
 		Iterator<SemaType> it1 = params.iterator();
@@ -79,7 +80,7 @@ public class ExprValidator implements IVisitor
 			SemaType argType = it2.next().type();
 
 			if(TypeHelper.isVoidType(argType))
-				throw new RuntimeException(String.format("expression given in argument %s yields 'void'", argCount));
+				throw new CompileException(String.format("expression given in argument %s yields 'void'", argCount));
 
 			SemaType paramTypeDecayed = TypeHelper.decay(paramType);
 			SemaType argTypeDecayed = TypeHelper.decay(argType);
@@ -87,7 +88,7 @@ public class ExprValidator implements IVisitor
 			if(!SemaType.same(paramTypeDecayed, argTypeDecayed))
 			{
 				String fmt = "type mismatch in argument %s: expected '%s', got '%s'";
-				throw new RuntimeException(String.format(fmt, argCount, TypeString.of(paramTypeDecayed), TypeString.of(argTypeDecayed)));
+				throw new CompileException(String.format(fmt, argCount, TypeString.of(paramTypeDecayed), TypeString.of(argTypeDecayed)));
 			}
 		}
 	}
@@ -97,7 +98,7 @@ public class ExprValidator implements IVisitor
 		SemaExpr expr = validate(addressof.expr, scope, context, validateDecl, Maybe.none());
 
 		if(!(expr instanceof SemaExprLValueExpr))
-			throw new RuntimeException("'addressof' requires lvalue operand");
+			throw new CompileException("'addressof' requires lvalue operand");
 
 		SemaExprLValueExpr lvalue = (SemaExprLValueExpr)expr;
 		lvalue.useAsLValue(true);
@@ -116,10 +117,10 @@ public class ExprValidator implements IVisitor
 		SemaType indexType = index.type();
 
 		if(!TypeHelper.isBuiltinType(indexType, BuiltinType.INT))
-			throw new RuntimeException(String.format("array access requires index of type 'int', got '%s'", TypeString.of(indexType)));
+			throw new CompileException(String.format("array access requires index of type 'int', got '%s'", TypeString.of(indexType)));
 
 		if(!TypeHelper.isArrayType(value.type()))
-			throw new RuntimeException(String.format("array access requires expression yielding array type, got '%s'", TypeString.of(value.type())));
+			throw new CompileException(String.format("array access requires expression yielding array type, got '%s'", TypeString.of(value.type())));
 
 		if(value instanceof SemaExprLValueExpr)
 			return new SemaExprArrayAccessLValue((SemaExprLValueExpr)value, index);
@@ -132,7 +133,7 @@ public class ExprValidator implements IVisitor
 		SemaExpr left = validate(assign.left, scope, context, validateDecl, Maybe.none());
 
 		if(TypeHelper.isVoidType(left.type()))
-			throw new RuntimeException("value expected on left side of assignment, got expression yielding 'void'");
+			throw new CompileException("value expected on left side of assignment, got expression yielding 'void'");
 
 		SemaType leftType = left.type();
 		SemaType leftTypeDecayed = TypeHelper.decay(leftType);
@@ -140,20 +141,20 @@ public class ExprValidator implements IVisitor
 		SemaExpr right = validate(assign.right, scope, context, validateDecl, Maybe.some(leftTypeDecayed));
 
 		if(TypeHelper.isVoidType(right.type()))
-			throw new RuntimeException("value expected on right side of assignment, got expression yielding 'void'");
+			throw new CompileException("value expected on right side of assignment, got expression yielding 'void'");
 
 		if(TypeHelper.isConst(leftType) || !(left instanceof SemaExprLValueExpr))
-			throw new RuntimeException("non-const lvalue required on left side of assignment");
+			throw new CompileException("non-const lvalue required on left side of assignment");
 
 		if(leftType instanceof SemaTypeFunction)
-			throw new RuntimeException("cannot assign to value of function type");
+			throw new CompileException("cannot assign to value of function type");
 
 		SemaType rightTypeDecayed = TypeHelper.decay(right.type());
 
 		if(!SemaType.same(leftTypeDecayed, rightTypeDecayed))
 		{
 			String fmt = "compatible types expected in assignment, got '%s' and '%s'";
-			throw new RuntimeException(String.format(fmt, TypeString.of(leftTypeDecayed), TypeString.of(rightTypeDecayed)));
+			throw new CompileException(String.format(fmt, TypeString.of(leftTypeDecayed), TypeString.of(rightTypeDecayed)));
 		}
 
 		SemaExprLValueExpr leftAsLvalue = (SemaExprLValueExpr)left;
@@ -166,7 +167,7 @@ public class ExprValidator implements IVisitor
 		Maybe<BuiltinFunc> maybeFunc = context.findBuiltin(builtinCall.name);
 
 		if(maybeFunc.isNone())
-			throw new RuntimeException(String.format("builtin '%s' not found", builtinCall.name));
+			throw new CompileException(String.format("builtin '%s' not found", builtinCall.name));
 
 		List<SemaExpr> args = new ArrayList<>();
 		List<SemaType> types = new ArrayList<>();
@@ -179,7 +180,7 @@ public class ExprValidator implements IVisitor
 			if(TypeHelper.isVoidType(type))
 			{
 				String fmt = "expression passed to builtin '%s' as argument %s yields 'void'";
-				throw new RuntimeException(String.format(fmt, builtinCall.name, i + 1));
+				throw new CompileException(String.format(fmt, builtinCall.name, i + 1));
 			}
 
 			args.add(semaExpr);
@@ -196,10 +197,10 @@ public class ExprValidator implements IVisitor
 		SemaExpr expr = validate(const_.expr, scope, context, validateDecl, deduce);
 
 		if(TypeHelper.isVoidType(expr.type()))
-			throw new RuntimeException("expression passed to const symbol yields 'void'");
+			throw new CompileException("expression passed to const symbol yields 'void'");
 
 		if(TypeHelper.isFunctionType(expr.type()))
-			throw new RuntimeException("const symbol applied to value of function type");
+			throw new CompileException("const symbol applied to value of function type");
 
 		if(expr instanceof SemaExprLValueExpr)
 			return new SemaExprConstLValue((SemaExprLValueExpr)expr);
@@ -214,7 +215,7 @@ public class ExprValidator implements IVisitor
 		if(!TypeHelper.isPointerType(expr.type()))
 		{
 			String fmt = "expected expression of pointer type in dereference operator ('prefix *'), got '%s'";
-			throw new RuntimeException(String.format(fmt, TypeString.of(expr.type())));
+			throw new CompileException(String.format(fmt, TypeString.of(expr.type())));
 		}
 
 		return new SemaExprDeref(expr);
@@ -236,7 +237,7 @@ public class ExprValidator implements IVisitor
 				arg = ExprValidator.validate(args.get(i), scope, context, validateDecl, Maybe.some(paramTypeDecayed));
 			}
 
-			catch(RuntimeException e)
+			catch(CompileException e)
 			{
 				return Maybe.none();
 			}
@@ -244,7 +245,7 @@ public class ExprValidator implements IVisitor
 			if(TypeHelper.isVoidType(arg.type()))
 			{
 				String fmt = "expression passed as argument %s to function '%s' yields 'void'";
-				throw new RuntimeException(String.format(fmt, i + 1, function.name()));
+				throw new CompileException(String.format(fmt, i + 1, function.name()));
 			}
 
 			SemaType argTypeDecayed = TypeHelper.decay(arg.type());
@@ -276,7 +277,7 @@ public class ExprValidator implements IVisitor
 		if(candidates.isEmpty())
 		{
 			String fmt = "no matching function for call to '%s' out of %s overloads";
-			throw new RuntimeException(String.format(fmt, name, set.size()));
+			throw new CompileException(String.format(fmt, name, set.size()));
 		}
 
 		if(candidates.size() > 1)
@@ -310,7 +311,7 @@ public class ExprValidator implements IVisitor
 		}
 
 		if(!TypeHelper.isFunctionType(expr.type()))
-			throw new RuntimeException("left side of function call does not yield a function type");
+			throw new CompileException("left side of function call does not yield a function type");
 
 		SemaTypeFunction ftype = (SemaTypeFunction)expr.type();
 		List<SemaExpr> args = new ArrayList<>();
@@ -347,7 +348,7 @@ public class ExprValidator implements IVisitor
 			length = Maybe.some(BigInteger.valueOf(lit.values.size()));
 
 		if(maybeType.isNone())
-			throw new RuntimeException("element type of array literal could not be deduced");
+			throw new CompileException("element type of array literal could not be deduced");
 
 		SemaType type = maybeType.unwrap();
 		SemaType typeDecayed = TypeHelper.decay(type);
@@ -362,7 +363,7 @@ public class ExprValidator implements IVisitor
 			if(!SemaType.same(elemTypeDecayed, typeDecayed))
 			{
 				String fmt = "element in array literal at index %s has type '%s', expected '%s'";
-				throw new RuntimeException(String.format(fmt, i, TypeString.of(elemTypeDecayed), TypeString.of(typeDecayed)));
+				throw new CompileException(String.format(fmt, i, TypeString.of(elemTypeDecayed), TypeString.of(typeDecayed)));
 			}
 
 			values.add(semaExpr);
@@ -371,7 +372,7 @@ public class ExprValidator implements IVisitor
 		if(BigInteger.valueOf(values.size()).compareTo(length.unwrap()) != 0)
 		{
 			String fmt = "invalid number of elements in array literal: got %s, expected %s";
-			throw new RuntimeException(String.format(fmt, values.size(), length.unwrap()));
+			throw new CompileException(String.format(fmt, values.size(), length.unwrap()));
 		}
 
 		return new SemaExprLitArray(length.unwrap(), maybeType.unwrap(), values);
@@ -384,7 +385,7 @@ public class ExprValidator implements IVisitor
 
 	private void errorLiteralTypeDeduction()
 	{
-		throw new RuntimeException("type of literal could not be deduced");
+		throw new CompileException("type of literal could not be deduced");
 	}
 
 	private BuiltinType deduceLiteralType(Maybe<SemaType> maybeType, boolean floatingPoint)
@@ -423,7 +424,7 @@ public class ExprValidator implements IVisitor
 			lit.type = Maybe.some(deduceLiteralType(deduce, true));
 
 		if(!Limits.inRange(lit.value, lit.type.unwrap()))
-			throw new RuntimeException(String.format("floating point literal value is out of range: %s", lit.value));
+			throw new CompileException(String.format("floating point literal value is out of range: %s", lit.value));
 
 		return new SemaExprLitFloat(lit.value, lit.type.unwrap());
 	}
@@ -434,7 +435,7 @@ public class ExprValidator implements IVisitor
 			lit.type = Maybe.some(deduceLiteralType(deduce, false));
 
 		if(!Limits.inRange(lit.value, lit.type.unwrap(), context))
-			throw new RuntimeException(String.format("integer literal value is out of range: %s", lit.value));
+			throw new CompileException(String.format("integer literal value is out of range: %s", lit.value));
 
 		return new SemaExprLitInt(lit.value, lit.type.unwrap());
 	}
@@ -456,13 +457,13 @@ public class ExprValidator implements IVisitor
 		if(decl instanceof SemaDeclGlobal)
 		{
 			if(!globalAccess)
-				throw new RuntimeException("reference to global requires 'global' keyword");
+				throw new CompileException("reference to global requires 'global' keyword");
 
 			return new SemaExprNamedGlobal((SemaDeclGlobal)decl);
 		}
 
 		if(globalAccess)
-			throw new RuntimeException("'global' keyword used on reference to symbol that is not a global");
+			throw new CompileException("'global' keyword used on reference to symbol that is not a global");
 
 		if(decl instanceof SemaDeclOverloadSet)
 			return new SemaExprNamedOverloadSet((SemaDeclOverloadSet)decl);
@@ -475,7 +476,7 @@ public class ExprValidator implements IVisitor
 
 	private void errorNoSuchField(SemaType type, String fieldName)
 	{
-		throw new RuntimeException(String.format("type '%s' has no field named '%s'", TypeString.of(type), fieldName));
+		throw new CompileException(String.format("type '%s' has no field named '%s'", TypeString.of(type), fieldName));
 	}
 
 	private SemaExpr visit(AstExprMemberAccess memberAccess, Maybe<SemaType> deduce)
@@ -488,13 +489,13 @@ public class ExprValidator implements IVisitor
 			SemaDecl decl = import_.decls.get(memberAccess.name);
 
 			if(decl == null)
-				throw new RuntimeException(String.format("reference to unknown symbol '%s.%s'", import_.module.path(), memberAccess.name));
+				throw new CompileException(String.format("reference to unknown symbol '%s.%s'", import_.module.path(), memberAccess.name));
 
 			return namedDeclExpr(decl, memberAccess.global);
 		}
 
 		if(TypeHelper.isVoidType(expr.type()))
-			throw new RuntimeException("left side of member access yields 'void'");
+			throw new CompileException("left side of member access yields 'void'");
 
 		SemaType type = expr.type();
 
@@ -518,15 +519,15 @@ public class ExprValidator implements IVisitor
 		List<SemaSymbol> candidates = scope.find(namedGlobal.name);
 
 		if(candidates.isEmpty())
-			throw new RuntimeException(String.format("reference to unknown symbol '%s'", namedGlobal.name));
+			throw new CompileException(String.format("reference to unknown symbol '%s'", namedGlobal.name));
 
 		if(candidates.size() > 1)
-			throw new RuntimeException(String.format("ambiguos reference to symbol '%s'", namedGlobal.name));
+			throw new CompileException(String.format("ambiguos reference to symbol '%s'", namedGlobal.name));
 
 		SemaSymbol symbol = candidates.get(0);
 
 		if(!(symbol instanceof SemaDeclGlobal))
-			throw new RuntimeException(String.format("symbol '%s' does not refer to a global", namedGlobal.name));
+			throw new CompileException(String.format("symbol '%s' does not refer to a global", namedGlobal.name));
 
 		return namedDeclExpr((SemaDecl)symbol, true);
 	}
@@ -536,10 +537,10 @@ public class ExprValidator implements IVisitor
 		List<SemaSymbol> candidates = scope.find(namedSymbol.name);
 
 		if(candidates.isEmpty())
-			throw new RuntimeException(String.format("reference to unknown symbol '%s'", namedSymbol.name));
+			throw new CompileException(String.format("reference to unknown symbol '%s'", namedSymbol.name));
 
 		if(candidates.size() > 1)
-			throw new RuntimeException(String.format("ambiguous reference to symbol '%s'", namedSymbol.name));
+			throw new CompileException(String.format("ambiguous reference to symbol '%s'", namedSymbol.name));
 
 		SemaSymbol symbol = candidates.get(0);
 
@@ -555,7 +556,7 @@ public class ExprValidator implements IVisitor
 		if(symbol instanceof SemaDeclFunction.Param)
 			return new SemaExprNamedParam((SemaDeclFunction.Param)symbol);
 
-		throw new RuntimeException(String.format("symbol '%s' does not refer to a value", namedSymbol.name));
+		throw new CompileException(String.format("symbol '%s' does not refer to a value", namedSymbol.name));
 	}
 
 	private SemaExpr visit(AstExprOffsetof offsetof, Maybe<SemaType> deduce)
@@ -563,15 +564,15 @@ public class ExprValidator implements IVisitor
 		List<SemaSymbol> candidates = scope.find(offsetof.type);
 
 		if(candidates.isEmpty())
-			throw new RuntimeException(String.format("use of unknown type '%s'", offsetof.type));
+			throw new CompileException(String.format("use of unknown type '%s'", offsetof.type));
 
 		if(candidates.size() > 1)
-			throw new RuntimeException(String.format("ambiguous reference to symbol '%s'", offsetof.type));
+			throw new CompileException(String.format("ambiguous reference to symbol '%s'", offsetof.type));
 
 		SemaSymbol symbol = candidates.get(0);
 
 		if(!(symbol instanceof SemaDeclData))
-			throw new RuntimeException(String.format("symbol '%s' does not refer to a type", offsetof.type));
+			throw new CompileException(String.format("symbol '%s' does not refer to a type", offsetof.type));
 
 		Maybe<SemaDeclData.Field> field = ((SemaDeclData)symbol).findField(offsetof.field);
 
@@ -586,10 +587,10 @@ public class ExprValidator implements IVisitor
 		List<SemaSymbol> candidates = scope.find(Operator.implName(op, kind));
 
 		if(candidates.isEmpty())
-			throw new RuntimeException(String.format("no implementation of operator '%s' found", op));
+			throw new CompileException(String.format("no implementation of operator '%s' found", op));
 
 		if(candidates.size() > 1)
-			throw new RuntimeException("nyi");
+			throw new CompileException("nyi");
 
 		SemaSymbol symbol = candidates.get(0);
 		SemaDeclOverloadSet set = symbol instanceof SemaDeclOverloadSet

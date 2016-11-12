@@ -15,6 +15,7 @@
 package katana.parser;
 
 import katana.ast.AstPath;
+import katana.diag.CompileException;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
 
@@ -126,12 +127,12 @@ public class ParseTools
 	public static <T> void unexpectedToken(Scanner scanner, T expected)
 	{
 		String fmt = "unexpected token '%s', expected '%s' on line %s, column %s";
-		throw new RuntimeException(String.format(fmt, scanner.state().token.value, expected, scanner.state().line, scanner.state().tokenColumn));
+		throw new CompileException(String.format(fmt, scanner.state().token.value, expected, scanner.state().line, scanner.state().tokenColumn));
 	}
 
 	public static void unexpectedToken(Scanner scanner)
 	{
 		String fmt = "unexpected token '%s' on line %s, column %s";
-		throw new RuntimeException(String.format(fmt, scanner.state().token.value, scanner.state().line, scanner.state().tokenColumn));
+		throw new CompileException(String.format(fmt, scanner.state().token.value, scanner.state().line, scanner.state().tokenColumn));
 	}
 }

@@ -17,6 +17,7 @@ package katana.analysis;
 import katana.ast.AstFile;
 import katana.ast.AstModule;
 import katana.ast.decl.*;
+import katana.diag.CompileException;
 import katana.op.Operator;
 import katana.sema.SemaModule;
 import katana.sema.SemaProgram;
@@ -56,7 +57,7 @@ public class DeclRegisterer implements IVisitor
 	private static void handleDecl(SemaDecl decl, SemaScopeFile scope, SemaModule module)
 	{
 		if(!module.declare(decl))
-			throw new RuntimeException(String.format("redefinition of symbol '%s'", decl.qualifiedName()));
+			throw new CompileException(String.format("redefinition of symbol '%s'", decl.qualifiedName()));
 
 		scope.defineSymbol(decl);
 	}
@@ -92,14 +93,14 @@ public class DeclRegisterer implements IVisitor
 				{
 					String kind = defOverload.kind.toString().toLowerCase();
 					String op = defOverload.op;
-					throw new RuntimeException(String.format("no operator declaration found for '%s %s'", kind, op));
+					throw new CompileException(String.format("no operator declaration found for '%s %s'", kind, op));
 				}
 
 				if(opCandidates.size() > 1)
 				{
 					String kind = defOverload.kind.toString().toLowerCase();
 					String op = defOverload.op;
-					throw new RuntimeException(String.format("multiple operator declarations found for '%s %s'", kind, op));
+					throw new CompileException(String.format("multiple operator declarations found for '%s %s'", kind, op));
 				}
 
 				semaOverload = new SemaDeclDefinedOperator(module, overload.exported, overload.opaque, (SemaDeclOperator)opCandidates.get(0));

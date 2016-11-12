@@ -18,6 +18,7 @@ import katana.BuiltinFunc;
 import katana.BuiltinType;
 import katana.analysis.TypeHelper;
 import katana.backend.PlatformContext;
+import katana.diag.CompileException;
 import katana.sema.expr.SemaExprBuiltinCall;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeBuiltin;
@@ -39,7 +40,7 @@ public class BinaryOp extends BuiltinFunc
 
 	private void unsupportedType(String what)
 	{
-		throw new RuntimeException(String.format("builtin %s does not support %s", name, what));
+		throw new CompileException(String.format("builtin %s does not support %s", name, what));
 	}
 
 	private void checkTypeSupport(BuiltinType type)
@@ -74,15 +75,15 @@ public class BinaryOp extends BuiltinFunc
 	public SemaType validateCall(List<SemaType> args)
 	{
 		if(args.size() != 2)
-			throw new RuntimeException(String.format("builtin %s expects 2 arguments", name));
+			throw new CompileException(String.format("builtin %s expects 2 arguments", name));
 
 		SemaType argType = TypeHelper.decay(args.get(0));
 
 		if(!TypeHelper.decayedEqual(argType, TypeHelper.decay(args.get(1))))
-			throw new RuntimeException(String.format("arguments to builtin %s must be of same type", name));
+			throw new CompileException(String.format("arguments to builtin %s must be of same type", name));
 
 		if(!(argType instanceof SemaTypeBuiltin))
-			throw new RuntimeException(String.format("builtin %s requires arguments of builtin type", name));
+			throw new CompileException(String.format("builtin %s requires arguments of builtin type", name));
 
 		checkTypeSupport(((SemaTypeBuiltin)argType).which);
 		return ret.or(argType);

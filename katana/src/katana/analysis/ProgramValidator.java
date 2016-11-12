@@ -23,6 +23,7 @@ import katana.ast.decl.AstDeclImport;
 import katana.ast.decl.AstDeclOperator;
 import katana.ast.decl.AstDeclRenamedImport;
 import katana.backend.PlatformContext;
+import katana.diag.CompileException;
 import katana.op.BuiltinOps;
 import katana.op.OperatorParser;
 import katana.sema.SemaModule;
@@ -66,7 +67,7 @@ public class ProgramValidator
 							String op = semaDecl.operator.symbol;
 							String kind = semaDecl.operator.kind.toString().toLowerCase();
 							String fmt = "redefinition of operator '%s %s'";
-							throw new RuntimeException(String.format(fmt, op, kind));
+							throw new CompileException(String.format(fmt, op, kind));
 						}
 
 						file.getValue().defineSymbol(semaDecl);
@@ -122,7 +123,7 @@ public class ProgramValidator
 		Maybe<SemaModule> module = program.findModule(import_.path);
 
 		if(module.isNone())
-			throw new RuntimeException(String.format("import of unknown module '%s'", import_.path));
+			throw new CompileException(String.format("import of unknown module '%s'", import_.path));
 
 		return module.unwrap();
 	}

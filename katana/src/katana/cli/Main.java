@@ -15,6 +15,7 @@
 package katana.cli;
 
 import katana.cli.cmd.*;
+import katana.diag.CompileException;
 import katana.utils.Rethrow;
 
 import java.lang.reflect.InvocationTargetException;
@@ -63,6 +64,12 @@ public class Main
 		{
 			Method run = command.getMethod("run", String[].class);
 			run.invoke(null, (Object)commandArgs);
+		}
+
+		catch(CompileException ex)
+		{
+			System.err.println(ex.getMessage());
+			ex.printStackTrace();
 		}
 
 		catch(InvocationTargetException ex)

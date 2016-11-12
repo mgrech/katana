@@ -16,6 +16,7 @@ package katana.backend.llvm.amd64;
 
 import katana.BuiltinType;
 import katana.backend.llvm.PlatformContextLlvm;
+import katana.diag.CompileException;
 import katana.sema.decl.SemaDeclData;
 
 import java.math.BigInteger;
@@ -70,7 +71,7 @@ public class PlatformContextLlvmAmd64 extends PlatformContextLlvm
 	@Override
 	public BigInteger sizeof(SemaDeclData data)
 	{
-		throw new RuntimeException("nyi");
+		throw new CompileException("nyi");
 	}
 
 	@Override

@@ -16,6 +16,7 @@ package katana.analysis;
 
 import katana.ast.type.*;
 import katana.backend.PlatformContext;
+import katana.diag.CompileException;
 import katana.sema.SemaSymbol;
 import katana.sema.decl.SemaDecl;
 import katana.sema.decl.SemaDeclData;
@@ -87,7 +88,7 @@ public class TypeValidator implements IVisitor
 	private SemaType visit(AstTypeArray array)
 	{
 		if(array.length.compareTo(BigInteger.ZERO) == -1)
-			throw new RuntimeException(String.format("negative array length", array.length));
+			throw new CompileException(String.format("negative array length", array.length));
 
 		return new SemaTypeArray(array.length, validate(array.type, scope, context, validateDecl));
 	}
@@ -108,10 +109,10 @@ public class TypeValidator implements IVisitor
 		List<SemaSymbol> candidates = scope.find(user.name);
 
 		if(candidates.isEmpty())
-			throw new RuntimeException(String.format("use of unknown type '%s'", user.name));
+			throw new CompileException(String.format("use of unknown type '%s'", user.name));
 
 		if(candidates.size() > 1)
-			throw new RuntimeException(String.format("ambiguous reference to symbol '%s'", user.name));
+			throw new CompileException(String.format("ambiguous reference to symbol '%s'", user.name));
 
 		SemaSymbol symbol = candidates.get(0);
 
@@ -124,7 +125,7 @@ public class TypeValidator implements IVisitor
 		if(symbol instanceof SemaDeclData)
 			return new SemaTypeUserDefined((SemaDeclData)symbol);
 
-		throw new RuntimeException(String.format("symbol '%s' does not refer to a type"));
+		throw new CompileException(String.format("symbol '%s' does not refer to a type"));
 	}
 
 	private SemaType visit(AstTypeConst const_)
@@ -132,7 +133,7 @@ public class TypeValidator implements IVisitor
 		SemaType type = validate(const_.type, scope, context, validateDecl);
 
 		if(type instanceof SemaTypeFunction)
-			throw new RuntimeException("forming const function type");
+			throw new CompileException("forming const function type");
 
 		return TypeHelper.addConst(type);
 	}
@@ -140,13 +141,13 @@ public class TypeValidator implements IVisitor
 	private SemaType visit(AstTypeTypeof typeof)
 	{
 		if(scope == null)
-			throw new RuntimeException("'typeof' is not valid in this context");
+			throw new CompileException("'typeof' is not valid in this context");
 
 		SemaExpr expr = ExprValidator.validate(typeof.expr, scope, context, validateDecl, Maybe.none());
 		SemaType type = expr.type();
 
 		if(TypeHelper.isVoidType(type))
-			throw new RuntimeException("expression passed to 'typeof' yields 'void'");
+			throw new CompileException("expression passed to 'typeof' yields 'void'");
 
 		return type;
 	}

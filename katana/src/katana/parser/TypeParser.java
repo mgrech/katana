@@ -16,6 +16,7 @@ package katana.parser;
 
 import katana.ast.DelayedExprParseList;
 import katana.ast.type.*;
+import katana.diag.CompileException;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
 import katana.utils.Maybe;
@@ -36,7 +37,7 @@ public class TypeParser
 		if(ParseTools.option(scanner, Token.Type.DECL_FN, true))
 		{
 			if(const_)
-				throw new RuntimeException("forming type 'const function'");
+				throw new CompileException("forming type 'const function'");
 
 			return parseFunction(scanner, delayedExprs);
 		}
@@ -44,7 +45,7 @@ public class TypeParser
 		if(ParseTools.option(scanner, Token.Type.PUNCT_LBRACKET, true))
 		{
 			if(const_)
-				throw new RuntimeException("forming type 'const array'");
+				throw new CompileException("forming type 'const array'");
 
 			return parseArray(scanner, delayedExprs);
 		}
@@ -55,7 +56,7 @@ public class TypeParser
 		if(ParseTools.option(scanner, Token.Type.TYPE_CONST, true))
 		{
 			if(const_)
-				throw new RuntimeException("duplicate const");
+				throw new CompileException("duplicate const");
 
 			return new AstTypeConst(doParse(scanner, true, delayedExprs));
 		}
@@ -75,7 +76,7 @@ public class TypeParser
 				case '!': type = new AstTypePointer(type); break;
 				case '?': type = new AstTypeNullablePointer(type); break;
 				default:
-					throw new RuntimeException(String.format("unexpected character '%s' while parsing type", c));
+					throw new CompileException(String.format("unexpected character '%s' while parsing type", c));
 				}
 			}
 

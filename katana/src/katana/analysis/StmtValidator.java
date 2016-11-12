@@ -18,6 +18,7 @@ import katana.BuiltinType;
 import katana.ast.expr.AstExpr;
 import katana.ast.stmt.*;
 import katana.backend.PlatformContext;
+import katana.diag.CompileException;
 import katana.diag.TypeString;
 import katana.sema.decl.SemaDecl;
 import katana.sema.decl.SemaDeclDefinedFunction;
@@ -65,7 +66,7 @@ public class StmtValidator implements IVisitor
 			SemaStmtLabel label = function.labels.get(labelName);
 
 			if(label == null)
-				throw new RuntimeException(String.format("unknown label '%s'", labelName));
+				throw new CompileException(String.format("unknown label '%s'", labelName));
 
 			entry.getKey().target = label;
 		}
@@ -86,7 +87,7 @@ public class StmtValidator implements IVisitor
 		SemaStmtLabel semaLabel = new SemaStmtLabel(label.name);
 
 		if(!function.defineLabel(semaLabel))
-			throw new RuntimeException(String.format("duplicate label name '%s'", label.name));
+			throw new CompileException(String.format("duplicate label name '%s'", label.name));
 
 		return semaLabel;
 	}
@@ -111,14 +112,14 @@ public class StmtValidator implements IVisitor
 		if(TypeHelper.isVoidType(condition.type()))
 		{
 			String fmt = "%s requires condition of type 'bool', got expression yielding 'void'";
-			throw new RuntimeException(String.format(fmt, kind.toString().toLowerCase()));
+			throw new CompileException(String.format(fmt, kind.toString().toLowerCase()));
 		}
 
 		if(!TypeHelper.isBuiltinType(condition.type(), BuiltinType.BOOL))
 		{
 			String fmt = "%s requires condition of type 'bool', got '%s'";
 			String gotten = TypeString.of(TypeHelper.decay(condition.type()));
-			throw new RuntimeException(String.format(fmt, kind.toString().toLowerCase(), gotten));
+			throw new CompileException(String.format(fmt, kind.toString().toLowerCase(), gotten));
 		}
 
 		return condition;
@@ -157,13 +158,13 @@ public class StmtValidator implements IVisitor
 		if(returnsVoid && valueGiven)
 		{
 			String fmt = "function '%s' returns 'void', value given";
-			throw new RuntimeException(String.format(fmt, function.qualifiedName()));
+			throw new CompileException(String.format(fmt, function.qualifiedName()));
 		}
 
 		if(!returnsVoid && !valueGiven)
 		{
 			String fmt = "function '%s' returns value of type '%s', no value given";
-			throw new RuntimeException(String.format(fmt, function.qualifiedName(), TypeString.of(function.ret)));
+			throw new CompileException(String.format(fmt, function.qualifiedName(), TypeString.of(function.ret)));
 		}
 
 		if(!returnsVoid && valueGiven)
@@ -173,7 +174,7 @@ public class StmtValidator implements IVisitor
 			if(TypeHelper.isVoidType(type))
 			{
 				String fmt = "function '%s' returns value of type '%s', got expression yielding 'void'";
-				throw new RuntimeException(String.format(fmt, function.qualifiedName(), TypeString.of(function.ret)));
+				throw new CompileException(String.format(fmt, function.qualifiedName(), TypeString.of(function.ret)));
 			}
 
 			SemaType typeDecayed = TypeHelper.decay(type);
@@ -182,7 +183,7 @@ public class StmtValidator implements IVisitor
 			if(!SemaType.same(retTypeDecayed, typeDecayed))
 			{
 				String fmt = "function '%s' returns value of type '%s', '%s' given";
-				throw new RuntimeException(String.format(fmt, function.qualifiedName(), TypeString.of(retTypeDecayed), TypeString.of(typeDecayed)));
+				throw new CompileException(String.format(fmt, function.qualifiedName(), TypeString.of(retTypeDecayed), TypeString.of(typeDecayed)));
 			}
 		}
 
@@ -202,7 +203,7 @@ public class StmtValidator implements IVisitor
 		SemaExpr init = ExprValidator.validate(local.init, scope, context, validateDecl, maybeDeclaredTypeDecayed);
 
 		if(TypeHelper.isVoidType(init.type()))
-			throw new RuntimeException(String.format("initializer for local '%s' yields 'void'", local.name));
+			throw new CompileException(String.format("initializer for local '%s' yields 'void'", local.name));
 
 		SemaType initTypeDecayed = TypeHelper.decay(init.type());
 		SemaType localType = maybeDeclaredType.or(initTypeDecayed);
@@ -211,11 +212,11 @@ public class StmtValidator implements IVisitor
 		if(!SemaType.same(localTypeDecayed, initTypeDecayed))
 		{
 			String fmt = "initializer for local '%s' has wrong type: expected '%s', got '%s'";
-			throw new RuntimeException(String.format(fmt, local.name, TypeString.of(localTypeDecayed), TypeString.of(initTypeDecayed)));
+			throw new CompileException(String.format(fmt, local.name, TypeString.of(localTypeDecayed), TypeString.of(initTypeDecayed)));
 		}
 
 		if(!function.defineLocal(local.name, localType))
-			throw new RuntimeException(String.format("redefinition of local '%s'", local.name));
+			throw new CompileException(String.format("redefinition of local '%s'", local.name));
 
 		SemaDeclDefinedFunction.Local semaLocal = function.localsByName.get(local.name);
 		SemaExprNamedLocal localref = new SemaExprNamedLocal(semaLocal);

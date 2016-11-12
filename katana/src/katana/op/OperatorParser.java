@@ -16,6 +16,7 @@ package katana.op;
 
 import katana.ast.DelayedExprParseList;
 import katana.ast.expr.*;
+import katana.diag.CompileException;
 import katana.sema.SemaSymbol;
 import katana.sema.decl.SemaDeclOperator;
 import katana.sema.scope.SemaScopeFile;
@@ -50,13 +51,13 @@ public class OperatorParser
 				}
 
 				else if(symbols.size() > 1)
-					throw new RuntimeException(String.format("multiple definitions for operator '%s %s'", kind.toString().toLowerCase(), op));
+					throw new CompileException(String.format("multiple definitions for operator '%s %s'", kind.toString().toLowerCase(), op));
 
 				builder.deleteCharAt(builder.length() - 1);
 			}
 
 			if(builder.length() == 0)
-				throw new RuntimeException(String.format("operator '%s' could not be found", seq));
+				throw new CompileException(String.format("operator '%s' could not be found", seq));
 		}
 
 		return result;
@@ -107,10 +108,10 @@ public class OperatorParser
 			List<SemaSymbol> candidates = scope.find(Operator.declName(symbol, Kind.INFIX));
 
 			if(candidates.isEmpty())
-				throw new RuntimeException(String.format("operator 'infix %s' could not be found", symbol));
+				throw new CompileException(String.format("operator 'infix %s' could not be found", symbol));
 
 			if(candidates.size() > 1)
-				throw new RuntimeException(String.format("multiple definitions for operator 'infix %s'", symbol));
+				throw new CompileException(String.format("multiple definitions for operator 'infix %s'", symbol));
 
 			operators.add((SemaDeclOperator)candidates.get(0));
 		}
@@ -188,10 +189,10 @@ public class OperatorParser
 
 		for(SemaDeclOperator op : ops)
 			if(op.operator.associativity == Associativity.NONE)
-				throw new RuntimeException(String.format("operator 'infix %s' is non-associative", op.operator.symbol));
+				throw new CompileException(String.format("operator 'infix %s' is non-associative", op.operator.symbol));
 
 		if(!sameAssociativity(ops))
-			throw new RuntimeException("operators of same precedence used within an expression must also have the same associativity");
+			throw new CompileException("operators of same precedence used within an expression must also have the same associativity");
 
 		return ops.get(0).operator.associativity;
 	}
