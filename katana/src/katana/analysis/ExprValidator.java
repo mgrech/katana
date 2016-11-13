@@ -98,7 +98,7 @@ public class ExprValidator implements IVisitor
 		SemaExpr expr = validate(addressof.expr, scope, context, validateDecl, Maybe.none());
 
 		if(!(expr instanceof SemaExprLValueExpr))
-			throw new CompileException("'addressof' requires lvalue operand");
+			throw new CompileException("address-of operator ('prefix &') requires lvalue operand");
 
 		SemaExprLValueExpr lvalue = (SemaExprLValueExpr)expr;
 		lvalue.useAsLValue(true);
@@ -221,9 +221,9 @@ public class ExprValidator implements IVisitor
 		return new SemaExprDeref(expr);
 	}
 
-	private Maybe<List<SemaExpr>> match(SemaDeclFunction function, List<AstExpr> args)
+	private boolean match(SemaDeclFunction function, List<AstExpr> args, List<Maybe<SemaExpr>> result)
 	{
-		List<SemaExpr> result = new ArrayList<>();
+		boolean failed = false;
 
 		for(int i = 0; i != function.params.size(); ++i)
 		{
@@ -235,56 +235,154 @@ public class ExprValidator implements IVisitor
 			try
 			{
 				arg = ExprValidator.validate(args.get(i), scope, context, validateDecl, Maybe.some(paramTypeDecayed));
+
+				SemaType argTypeDecayed = TypeHelper.decay(arg.type());
+
+				if(TypeHelper.isVoidType(arg.type()) || !SemaType.same(paramTypeDecayed, argTypeDecayed))
+					failed = true;
+
+				result.add(Maybe.some(arg));
 			}
 
 			catch(CompileException e)
 			{
-				return Maybe.none();
+				failed = true;
+				result.add(Maybe.none());
 			}
-
-			if(TypeHelper.isVoidType(arg.type()))
-			{
-				String fmt = "expression passed as argument %s to function '%s' yields 'void'";
-				throw new CompileException(String.format(fmt, i + 1, function.name()));
-			}
-
-			SemaType argTypeDecayed = TypeHelper.decay(arg.type());
-
-			if(!SemaType.same(paramTypeDecayed, argTypeDecayed))
-				return Maybe.none();
-
-			result.add(arg);
 		}
 
-		return Maybe.some(result);
+		return !failed;
+	}
+
+	private static void appendSignature(StringBuilder builder, SemaDeclFunction overload)
+	{
+		builder.append(overload.name());
+		builder.append('(');
+
+		if(!overload.params.isEmpty())
+		{
+			builder.append(TypeString.of(overload.params.get(0).type));
+
+			for(int i = 1; i != overload.params.size(); ++i)
+			{
+				builder.append(", ");
+				builder.append(TypeString.of(overload.params.get(i).type));
+			}
+		}
+
+		builder.append(')');
+	}
+
+	private static void appendArg(StringBuilder builder, Maybe<SemaExpr> arg)
+	{
+		if(arg.isSome())
+			builder.append(TypeString.of(arg.unwrap().type()));
+		else
+			builder.append("<deduction-failed>");
+	}
+
+	private static void appendArgs(StringBuilder builder, List<Maybe<SemaExpr>> args)
+	{
+		builder.append('(');
+
+		if(!args.isEmpty())
+		{
+			appendArg(builder, args.get(0));
+
+			for(int i = 1; i != args.size(); ++i)
+			{
+				builder.append(", ");
+				appendArg(builder, args.get(i));
+			}
+		}
+
+		builder.append(')');
+	}
+
+	private static void appendDeducedOverloads(StringBuilder builder, IdentityHashMap<SemaDeclFunction, List<Maybe<SemaExpr>>> overloads)
+	{
+		for(Map.Entry<SemaDeclFunction, List<Maybe<SemaExpr>>> entry : overloads.entrySet())
+		{
+			builder.append("\t\t");
+			appendSignature(builder, entry.getKey());
+			builder.append(" with arguments deduced to ");
+			appendArgs(builder, entry.getValue());
+			builder.append('\n');
+		}
+	}
+
+	private static void appendOverloadInfo(StringBuilder builder, IdentityHashMap<SemaDeclFunction, List<Maybe<SemaExpr>>> failed, Set<SemaDeclFunction> invalidNumArgs)
+	{
+		if(!failed.isEmpty())
+		{
+			builder.append("\tmatching failed for the following overloads:\n");
+			appendDeducedOverloads(builder, failed);
+		}
+
+		if(!invalidNumArgs.isEmpty())
+		{
+			builder.append("\tthe following overloads have a non-matching number of parameters:\n");
+
+			for(SemaDeclFunction overload : invalidNumArgs)
+			{
+				builder.append("\t\t");
+				appendSignature(builder, overload);
+				builder.append('\n');
+			}
+		}
 	}
 
 	private SemaExpr resolveOverloadedCall(List<SemaDeclFunction> set, String name, List<AstExpr> args, Maybe<Boolean> inline)
 	{
-		IdentityHashMap<SemaDeclFunction, List<SemaExpr>> candidates = new IdentityHashMap<>();
+		IdentityHashMap<SemaDeclFunction, List<Maybe<SemaExpr>>> candidates = new IdentityHashMap<>();
+		IdentityHashMap<SemaDeclFunction, List<Maybe<SemaExpr>>> failed = new IdentityHashMap<>();
+		Set<SemaDeclFunction> other = Collections.newSetFromMap(new IdentityHashMap<>());
 
 		for(SemaDeclFunction overload : set)
 		{
 			if(overload.params.size() != args.size())
+			{
+				other.add(overload);
 				continue;
+			}
 
-			Maybe<List<SemaExpr>> semaArgs = match(overload, args);
+			List<Maybe<SemaExpr>> semaArgs = new ArrayList<>();
 
-			if(semaArgs.isSome())
-				candidates.put(overload, semaArgs.unwrap());
+			if(match(overload, args, semaArgs))
+				candidates.put(overload, semaArgs);
+			else
+				failed.put(overload, semaArgs);
 		}
 
 		if(candidates.isEmpty())
 		{
-			String fmt = "no matching function for call to '%s' out of %s overloads";
-			throw new CompileException(String.format(fmt, name, set.size()));
+			StringBuilder builder = new StringBuilder();
+			builder.append(String.format("no matching function for call to '%s' out of %s overloads:\n", name, set.size()));
+			appendOverloadInfo(builder, failed, other);
+			throw new CompileException(builder.toString());
 		}
 
 		if(candidates.size() > 1)
-			throw new RuntimeException(String.format("ambiguous call to function '%s'", name));
+		{
+			StringBuilder builder = new StringBuilder();
+			builder.append(String.format("ambiguous call to function '%s', %s candidates:\n", candidates.size(), name));
 
-		Map.Entry<SemaDeclFunction, List<SemaExpr>> first = candidates.entrySet().iterator().next();
-		return new SemaExprDirectFunctionCall(first.getKey(), first.getValue(), inline);
+			builder.append("\tmatching succeeded for the following overloads:\n");
+			appendDeducedOverloads(builder, candidates);
+
+			appendOverloadInfo(builder, failed, other);
+
+			throw new CompileException(builder.toString());
+		}
+
+		Map.Entry<SemaDeclFunction, List<Maybe<SemaExpr>>> first = candidates.entrySet().iterator().next();
+
+		List<SemaExpr> semaArgs = new ArrayList<>();
+
+		for(Maybe<SemaExpr> arg : first.getValue())
+			semaArgs.add(arg.unwrap());
+
+		return new SemaExprDirectFunctionCall(first.getKey(), semaArgs, inline);
 	}
 
 	private SemaExpr visit(AstExprFunctionCall call, Maybe<SemaType> deduce)
@@ -393,10 +491,7 @@ public class ExprValidator implements IVisitor
 		if(maybeType.isNone())
 			errorLiteralTypeDeduction();
 
-		SemaType type = maybeType.unwrap();
-
-		if(type instanceof SemaTypeConst)
-			type = ((SemaTypeConst)type).type;
+		SemaType type = TypeHelper.removeConst(maybeType.unwrap());
 
 		if(!(type instanceof SemaTypeBuiltin))
 			errorLiteralTypeDeduction();
