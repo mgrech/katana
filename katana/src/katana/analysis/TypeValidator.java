@@ -144,12 +144,7 @@ public class TypeValidator implements IVisitor
 			throw new CompileException("'typeof' is not valid in this context");
 
 		SemaExpr expr = ExprValidator.validate(typeof.expr, scope, context, validateDecl, Maybe.none());
-		SemaType type = expr.type();
-
-		if(TypeHelper.isVoidType(type))
-			throw new CompileException("expression passed to 'typeof' yields 'void'");
-
-		return type;
+		return expr.type();
 	}
 
 	private SemaType visit(AstTypeNullablePointer pointer)
