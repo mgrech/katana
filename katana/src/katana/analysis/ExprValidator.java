@@ -230,11 +230,9 @@ public class ExprValidator implements IVisitor
 			SemaType paramType = function.params.get(i).type;
 			SemaType paramTypeDecayed = TypeHelper.decay(paramType);
 
-			SemaExpr arg;
-
 			try
 			{
-				arg = ExprValidator.validate(args.get(i), scope, context, validateDecl, Maybe.some(paramTypeDecayed));
+				SemaExpr arg = ExprValidator.validate(args.get(i), scope, context, validateDecl, Maybe.some(paramTypeDecayed));
 
 				SemaType argTypeDecayed = TypeHelper.decay(arg.type());
 
