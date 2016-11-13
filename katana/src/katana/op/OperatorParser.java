@@ -71,6 +71,9 @@ public class OperatorParser
 		if(decl.operator.symbol.equals("*"))
 			return new AstExprDeref(expr);
 
+		if(decl.operator.symbol.equals("-") && expr instanceof AstExprLitInt)
+			return new AstExprLitInt(((AstExprLitInt)expr).value.negate(), ((AstExprLitInt)expr).type);
+
 		return new AstExprOpPrefix(expr, decl);
 	}
 
