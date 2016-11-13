@@ -513,24 +513,28 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprLitFloat lit, Maybe<SemaType> deduce)
 	{
-		if(lit.type.isNone())
-			lit.type = Maybe.some(deduceLiteralType(deduce, true));
+		Maybe<BuiltinType> type = lit.type;
 
-		if(!Limits.inRange(lit.value, lit.type.unwrap()))
+		if(type.isNone())
+			type = Maybe.some(deduceLiteralType(deduce, true));
+
+		if(!Limits.inRange(lit.value, type.unwrap()))
 			throw new CompileException(String.format("floating point literal value is out of range: %s", lit.value));
 
-		return new SemaExprLitFloat(lit.value, lit.type.unwrap());
+		return new SemaExprLitFloat(lit.value, type.unwrap());
 	}
 
 	private SemaExpr visit(AstExprLitInt lit, Maybe<SemaType> deduce)
 	{
-		if(lit.type.isNone())
-			lit.type = Maybe.some(deduceLiteralType(deduce, false));
+		Maybe<BuiltinType> type = lit.type;
 
-		if(!Limits.inRange(lit.value, lit.type.unwrap(), context))
+		if(type.isNone())
+			type = Maybe.some(deduceLiteralType(deduce, false));
+
+		if(!Limits.inRange(lit.value, type.unwrap(), context))
 			throw new CompileException(String.format("integer literal value is out of range: %s", lit.value));
 
-		return new SemaExprLitInt(lit.value, lit.type.unwrap());
+		return new SemaExprLitInt(lit.value, type.unwrap());
 	}
 
 	private SemaExpr visit(AstExprLitNull lit, Maybe<SemaType> deduce)
