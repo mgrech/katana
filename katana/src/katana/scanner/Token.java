@@ -117,6 +117,7 @@ public class Token
 		MISC_OFFSETOF,
 		MISC_INLINE,
 		MISC_BUILTIN,
+		MISC_UNDEF,
 
 		BEGIN,
 		END,
@@ -183,6 +184,7 @@ public class Token
 	public static final Token MISC_OFFSETOF  = new Token(Category.MISC, Type.MISC_OFFSETOF,  "offsetof");
 	public static final Token MISC_INLINE    = new Token(Category.MISC, Type.MISC_INLINE,    "inline");
 	public static final Token MISC_BUILTIN   = new Token(Category.MISC, Type.MISC_BUILTIN,   "builtin");
+	public static final Token MISC_UNDEF     = new Token(Category.MISC, Type.MISC_UNDEF,     "undef");
 
 	public static final Token BEGIN = new Token(Category.BEGIN, Type.BEGIN, null);
 	public static final Token END   = new Token(Category.END,   Type.END,   null);

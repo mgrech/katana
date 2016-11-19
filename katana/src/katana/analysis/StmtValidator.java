@@ -200,7 +200,19 @@ public class StmtValidator implements IVisitor
 	{
 		Maybe<SemaType> maybeDeclaredType = local.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
 		Maybe<SemaType> maybeDeclaredTypeDecayed = maybeDeclaredType.map(TypeHelper::decay);
-		SemaExpr init = ExprValidator.validate(local.init, scope, context, validateDecl, maybeDeclaredTypeDecayed);
+
+		if(local.init.isNone())
+		{
+			if(maybeDeclaredType.isNone())
+				throw new CompileException(String.format("local '%s' with 'undef' initializer has no explicit type", local.name));
+
+			if(!function.defineLocal(local.name, maybeDeclaredType.unwrap()))
+				throw new CompileException(String.format("redefinition of local '%s'", local.name));
+
+			return new SemaStmtNullStmt();
+		}
+
+		SemaExpr init = ExprValidator.validate(local.init.unwrap(), scope, context, validateDecl, maybeDeclaredTypeDecayed);
 
 		if(TypeHelper.isVoidType(init.type()))
 			throw new CompileException(String.format("initializer for local '%s' yields 'void'", local.name));

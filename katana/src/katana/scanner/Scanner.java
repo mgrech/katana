@@ -305,11 +305,12 @@ public class Scanner
 		case "const":   return Token.TYPE_CONST;
 		case "typeof":  return Token.TYPE_TYPEOF;
 
-		case "sizeof":    return Token.MISC_SIZEOF;
-		case "alignof":   return Token.MISC_ALIGNOF;
-		case "offsetof":  return Token.MISC_OFFSETOF;
-		case "inline":    return Token.MISC_INLINE;
-		case "builtin":   return Token.MISC_BUILTIN;
+		case "sizeof":   return Token.MISC_SIZEOF;
+		case "alignof":  return Token.MISC_ALIGNOF;
+		case "offsetof": return Token.MISC_OFFSETOF;
+		case "inline":   return Token.MISC_INLINE;
+		case "builtin":  return Token.MISC_BUILTIN;
+		case "undef":    return Token.MISC_UNDEF;
 
 		default: return Token.identifier(value);
 		}

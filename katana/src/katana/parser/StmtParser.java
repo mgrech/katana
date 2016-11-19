@@ -60,6 +60,19 @@ public class StmtParser
 		return parseExprStmt(scanner, delayedExprs);
 	}
 
+	private static Maybe<AstExpr> parseLocalInitAndScolon(Scanner scanner, DelayedExprParseList delayedExprs)
+	{
+		if(ParseTools.option(scanner, "undef", true))
+		{
+			ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
+			return Maybe.none();
+		}
+
+		AstExpr init = ExprParser.parse(scanner, delayedExprs);
+		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
+		return Maybe.some(init);
+	}
+
 	private static AstStmt parseLocal(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
 		ScannerState state = scanner.capture();
@@ -70,8 +83,7 @@ public class StmtParser
 
 			if(ParseTools.option(scanner, "=", true))
 			{
-				AstExpr init = ExprParser.parse(scanner, delayedExprs);
-				ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
+				Maybe<AstExpr> init = parseLocalInitAndScolon(scanner, delayedExprs);
 				return new AstStmtLocal(Maybe.none(), name, init);
 			}
 		}
@@ -81,8 +93,8 @@ public class StmtParser
 		AstType type = TypeParser.parse(scanner, delayedExprs);
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
 		ParseTools.expect(scanner, "=", true);
-		AstExpr init = ExprParser.parse(scanner, delayedExprs);
-		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
+
+		Maybe<AstExpr> init = parseLocalInitAndScolon(scanner, delayedExprs);
 		return new AstStmtLocal(Maybe.some(type), name, init);
 	}
 

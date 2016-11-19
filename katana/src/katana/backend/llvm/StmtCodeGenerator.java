@@ -174,4 +174,7 @@ public class StmtCodeGenerator implements IVisitor
 		String llvmType = TypeCodeGenerator.generate(type, context);
 		builder.append(String.format("\tret %s %s\n\n", llvmType, expr));
 	}
+
+	private void visit(SemaStmtNullStmt nullStmt)
+	{}
 }
