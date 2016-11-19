@@ -15,7 +15,6 @@
 package katana.cli;
 
 import katana.cli.cmd.*;
-import katana.diag.CompileException;
 import katana.utils.Rethrow;
 
 import java.lang.reflect.InvocationTargetException;
