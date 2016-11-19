@@ -178,7 +178,7 @@ public class DeclCodeGenerator implements IVisitor
 	{
 		String qualifiedName = qualifiedName(global);
 		String typeString = TypeCodeGenerator.generate(global.type, context);
-		String initializerString = ExprCodeGenerator.generate(global.init, builder, context, null).unwrap();
+		String initializerString = global.init.map(i -> ExprCodeGenerator.generate(i, builder, context, null).unwrap()).or("zeroinitializer");
 		String kind = TypeHelper.isConst(global.type) ? "constant" : "global";
 		builder.append(String.format("@%s = private %s %s %s\n", qualifiedName, kind, typeString, initializerString));
 	}

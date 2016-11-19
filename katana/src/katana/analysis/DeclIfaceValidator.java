@@ -123,7 +123,18 @@ public class DeclIfaceValidator implements IVisitor
 	{
 		Maybe<SemaType> maybeDeclaredType = global.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
 		Maybe<SemaType> maybeDeclaredTypeDecayed = maybeDeclaredType.map(TypeHelper::decay);
-		SemaExprLiteral init = (SemaExprLiteral)ExprValidator.validate(global.init, scope, context, validateDecl, maybeDeclaredTypeDecayed);
+
+		if(global.init.isNone())
+		{
+			if(maybeDeclaredType.isNone())
+				throw new CompileException(String.format("global '%s' with 'undef' initializer has no explicit type", global.name));
+
+			semaGlobal.init = Maybe.none();
+			semaGlobal.type = maybeDeclaredType.unwrap();
+			return;
+		}
+
+		SemaExprLiteral init = (SemaExprLiteral)ExprValidator.validate(global.init.unwrap(), scope, context, validateDecl, maybeDeclaredTypeDecayed);
 
 		if(TypeHelper.isVoidType(init.type()))
 			throw new CompileException(String.format("initializer for global %s yields 'void'", global.name));
@@ -138,7 +149,7 @@ public class DeclIfaceValidator implements IVisitor
 			throw new CompileException(String.format(fmt, semaGlobal.name(), TypeString.of(globalTypeDecayed), TypeString.of(initTypeDecayed)));
 		}
 
-		semaGlobal.init = init;
+		semaGlobal.init = Maybe.some(init);
 		semaGlobal.type = globalType;
 	}
 

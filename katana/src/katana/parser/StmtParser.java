@@ -62,7 +62,7 @@ public class StmtParser
 
 	private static Maybe<AstExpr> parseLocalInitAndScolon(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
-		if(ParseTools.option(scanner, "undef", true))
+		if(ParseTools.option(scanner, Token.Type.MISC_UNDEF, true))
 		{
 			ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
 			return Maybe.none();

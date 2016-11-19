@@ -263,6 +263,23 @@ public class DeclParser
 		return new AstDeclData.Field(type, name);
 	}
 
+	private static Maybe<AstExprLiteral> parseGlobalInitAndScolon(Scanner scanner, DelayedExprParseList delayedExprs)
+	{
+		if(ParseTools.option(scanner, Token.Type.MISC_UNDEF, true))
+		{
+			ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
+			return Maybe.none();
+		}
+
+		AstExpr init = ExprParser.parse(scanner, delayedExprs);
+
+		if(!(init instanceof AstExprLiteral))
+			throw new CompileException("global initializer must be literal");
+
+		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
+		return Maybe.some((AstExprLiteral)init);
+	}
+
 	private static AstDeclGlobal parseGlobal(Scanner scanner, boolean exported, boolean opaque, DelayedExprParseList delayedExprs)
 	{
 		scanner.advance();
@@ -275,13 +292,8 @@ public class DeclParser
 
 			if(ParseTools.option(scanner, "=", true))
 			{
-				AstExpr init = ExprParser.parse(scanner, delayedExprs);
-
-				if(!(init instanceof AstExprLiteral))
-					throw new CompileException("global initializer must be literal");
-
-				ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-				return new AstDeclGlobal(exported, opaque, Maybe.none(), name, (AstExprLiteral)init);
+				Maybe<AstExprLiteral> init = parseGlobalInitAndScolon(scanner, delayedExprs);
+				return new AstDeclGlobal(exported, opaque, Maybe.none(), name, init);
 			}
 		}
 
@@ -290,13 +302,9 @@ public class DeclParser
 		AstType type = TypeParser.parse(scanner, delayedExprs);
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
 		ParseTools.expect(scanner, "=", true);
-		AstExpr init = ExprParser.parse(scanner, delayedExprs);
 
-		if(!(init instanceof AstExprLiteral))
-			throw new CompileException("global initializer must be literal");
-
-		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-		return new AstDeclGlobal(exported, opaque, Maybe.some(type), name, (AstExprLiteral)init);
+		Maybe<AstExprLiteral> init = parseGlobalInitAndScolon(scanner, delayedExprs);
+		return new AstDeclGlobal(exported, opaque, Maybe.some(type), name, init);
 	}
 
 	private static AstDecl parseImport(Scanner scanner)

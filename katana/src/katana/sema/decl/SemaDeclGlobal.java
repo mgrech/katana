@@ -17,6 +17,7 @@ package katana.sema.decl;
 import katana.sema.SemaModule;
 import katana.sema.expr.SemaExprLiteral;
 import katana.sema.type.SemaType;
+import katana.utils.Maybe;
 
 public class SemaDeclGlobal extends SemaDecl
 {
@@ -34,5 +35,5 @@ public class SemaDeclGlobal extends SemaDecl
 
 	public String name;
 	public SemaType type;
-	public SemaExprLiteral init;
+	public Maybe<SemaExprLiteral> init;
 }
