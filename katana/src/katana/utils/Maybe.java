@@ -85,7 +85,7 @@ public class Maybe<T>
 
 	public T or(Supplier<T> func)
 	{
-		return this.value == null ? value : func.get();
+		return this.value != null ? value : func.get();
 	}
 
 	private T value;
