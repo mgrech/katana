@@ -51,6 +51,6 @@ public class CharClassifier
 
 	public static boolean isOpChar(int cp)
 	{
-		return ".:?!=<>+-*/%&|^~$".indexOf(cp) != -1;
+		return ".:?!=<>+-*/%&|^~".indexOf(cp) != -1;
 	}
 }

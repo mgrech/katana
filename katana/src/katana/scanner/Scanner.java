@@ -70,6 +70,7 @@ public class Scanner
 		case '}': advanceColumn(); return Token.PUNCT_RBRACE;
 		case ',': advanceColumn(); return Token.PUNCT_COMMA;
 		case ';': advanceColumn(); return Token.PUNCT_SCOLON;
+		case '$': advanceColumn(); return Token.PUNCT_DOLOLOLLAR;
 		case '@': advanceColumn(); return label();
 		case '"': advanceColumn(); return stringLiteral();
 
@@ -305,12 +306,15 @@ public class Scanner
 		case "const":   return Token.TYPE_CONST;
 		case "typeof":  return Token.TYPE_TYPEOF;
 
-		case "sizeof":   return Token.MISC_SIZEOF;
-		case "alignof":  return Token.MISC_ALIGNOF;
-		case "offsetof": return Token.MISC_OFFSETOF;
-		case "inline":   return Token.MISC_INLINE;
-		case "builtin":  return Token.MISC_BUILTIN;
-		case "undef":    return Token.MISC_UNDEF;
+		case "sizeof":      return Token.MISC_SIZEOF;
+		case "alignof":     return Token.MISC_ALIGNOF;
+		case "offsetof":    return Token.MISC_OFFSETOF;
+		case "inline":      return Token.MISC_INLINE;
+		case "builtin":     return Token.MISC_BUILTIN;
+		case "undef":       return Token.MISC_UNDEF;
+		case "narrow_cast": return Token.MISC_NARROW_CAST;
+		case "widen_cast":  return Token.MISC_WIDEN_CAST;
+		case "sign_cast":   return Token.MISC_SIGN_CAST;
 
 		default: return Token.identifier(value);
 		}

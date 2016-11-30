@@ -91,6 +91,7 @@ public class Token
 		PUNCT_RBRACE,
 		PUNCT_COMMA,
 		PUNCT_SCOLON,
+		PUNCT_DOLOLOLLAR,
 
 		TYPE_VOID,
 		TYPE_BOOL,
@@ -118,6 +119,9 @@ public class Token
 		MISC_INLINE,
 		MISC_BUILTIN,
 		MISC_UNDEF,
+		MISC_NARROW_CAST,
+		MISC_WIDEN_CAST,
+		MISC_SIGN_CAST,
 
 		BEGIN,
 		END,
@@ -150,14 +154,15 @@ public class Token
 	public static final Token STMT_WHILE  = new Token(Category.STMT, Type.STMT_WHILE,  "while");
 	public static final Token STMT_UNTIL  = new Token(Category.STMT, Type.STMT_UNTIL,  "until");
 
-	public static final Token PUNCT_LPAREN   = new Token(Category.PUNCT, Type.PUNCT_LPAREN,   "(");
-	public static final Token PUNCT_RPAREN   = new Token(Category.PUNCT, Type.PUNCT_RPAREN,   ")");
-	public static final Token PUNCT_LBRACKET = new Token(Category.PUNCT, Type.PUNCT_LBRACKET, "[");
-	public static final Token PUNCT_RBRACKET = new Token(Category.PUNCT, Type.PUNCT_RBRACKET, "]");
-	public static final Token PUNCT_LBRACE   = new Token(Category.PUNCT, Type.PUNCT_LBRACE,   "{");
-	public static final Token PUNCT_RBRACE   = new Token(Category.PUNCT, Type.PUNCT_RBRACE,   "}");
-	public static final Token PUNCT_COMMA    = new Token(Category.PUNCT, Type.PUNCT_COMMA,    ",");
-	public static final Token PUNCT_SCOLON   = new Token(Category.PUNCT, Type.PUNCT_SCOLON,   ";");
+	public static final Token PUNCT_LPAREN     = new Token(Category.PUNCT, Type.PUNCT_LPAREN,     "(");
+	public static final Token PUNCT_RPAREN     = new Token(Category.PUNCT, Type.PUNCT_RPAREN,     ")");
+	public static final Token PUNCT_LBRACKET   = new Token(Category.PUNCT, Type.PUNCT_LBRACKET,   "[");
+	public static final Token PUNCT_RBRACKET   = new Token(Category.PUNCT, Type.PUNCT_RBRACKET,   "]");
+	public static final Token PUNCT_LBRACE     = new Token(Category.PUNCT, Type.PUNCT_LBRACE,     "{");
+	public static final Token PUNCT_RBRACE     = new Token(Category.PUNCT, Type.PUNCT_RBRACE,     "}");
+	public static final Token PUNCT_COMMA      = new Token(Category.PUNCT, Type.PUNCT_COMMA,      ",");
+	public static final Token PUNCT_SCOLON     = new Token(Category.PUNCT, Type.PUNCT_SCOLON,     ";");
+	public static final Token PUNCT_DOLOLOLLAR = new Token(Category.PUNCT, Type.PUNCT_DOLOLOLLAR, "$");
 
 	public static final Token TYPE_VOID    = new Token(Category.TYPE, Type.TYPE_VOID,    "void");
 	public static final Token TYPE_BOOL    = new Token(Category.TYPE, Type.TYPE_BOOL,    "bool");
@@ -179,12 +184,15 @@ public class Token
 	public static final Token TYPE_CONST   = new Token(Category.TYPE, Type.TYPE_CONST,   "const");
 	public static final Token TYPE_TYPEOF  = new Token(Category.TYPE, Type.TYPE_TYPEOF,  "typeof");
 
-	public static final Token MISC_SIZEOF    = new Token(Category.MISC, Type.MISC_SIZEOF,    "sizeof");
-	public static final Token MISC_ALIGNOF   = new Token(Category.MISC, Type.MISC_ALIGNOF,   "alignof");
-	public static final Token MISC_OFFSETOF  = new Token(Category.MISC, Type.MISC_OFFSETOF,  "offsetof");
-	public static final Token MISC_INLINE    = new Token(Category.MISC, Type.MISC_INLINE,    "inline");
-	public static final Token MISC_BUILTIN   = new Token(Category.MISC, Type.MISC_BUILTIN,   "builtin");
-	public static final Token MISC_UNDEF     = new Token(Category.MISC, Type.MISC_UNDEF,     "undef");
+	public static final Token MISC_SIZEOF      = new Token(Category.MISC, Type.MISC_SIZEOF,      "sizeof");
+	public static final Token MISC_ALIGNOF     = new Token(Category.MISC, Type.MISC_ALIGNOF,     "alignof");
+	public static final Token MISC_OFFSETOF    = new Token(Category.MISC, Type.MISC_OFFSETOF,    "offsetof");
+	public static final Token MISC_INLINE      = new Token(Category.MISC, Type.MISC_INLINE,      "inline");
+	public static final Token MISC_BUILTIN     = new Token(Category.MISC, Type.MISC_BUILTIN,     "builtin");
+	public static final Token MISC_UNDEF       = new Token(Category.MISC, Type.MISC_UNDEF,       "undef");
+	public static final Token MISC_NARROW_CAST = new Token(Category.MISC, Type.MISC_NARROW_CAST, "narrow_cast");
+	public static final Token MISC_WIDEN_CAST  = new Token(Category.MISC, Type.MISC_WIDEN_CAST,  "widen_cast");
+	public static final Token MISC_SIGN_CAST   = new Token(Category.MISC, Type.MISC_SIGN_CAST,   "sign_cast");
 
 	public static final Token BEGIN = new Token(Category.BEGIN, Type.BEGIN, null);
 	public static final Token END   = new Token(Category.END,   Type.END,   null);

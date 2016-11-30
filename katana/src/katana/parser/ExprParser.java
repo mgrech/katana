@@ -210,6 +210,23 @@ public class ExprParser
 		return new AstExprLitArray(size, type, values);
 	}
 
+	private static AstExpr parseCast(Scanner scanner, Token.Type castType, DelayedExprParseList delayedExprs)
+	{
+		ParseTools.expect(scanner, Token.Type.PUNCT_DOLOLOLLAR, true);
+		AstType type = TypeParser.parse(scanner, delayedExprs);
+		AstExpr expr = ParseTools.parenthesized(scanner, () -> parse(scanner, delayedExprs));
+
+		switch(castType)
+		{
+		case MISC_WIDEN_CAST:  return new AstExprWidenCast (type, expr);
+		case MISC_NARROW_CAST: return new AstExprNarrowCast(type, expr);
+		case MISC_SIGN_CAST:   return new AstExprSignCast  (type, expr);
+		default: break;
+		}
+
+		throw new AssertionError("unreachable");
+	}
+
 	private static AstExpr parseMisc(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
 		Token token = ParseTools.consume(scanner);
@@ -242,6 +259,11 @@ public class ExprParser
 			AstExpr call = parseFunctionCall(scanner, new AstExprNamedSymbol(name), Maybe.some(inline.equals("true")), delayedExprs);
 			ParseTools.expect(scanner, Token.Type.PUNCT_RPAREN, true);
 			return call;
+
+		case MISC_NARROW_CAST:
+		case MISC_WIDEN_CAST:
+		case MISC_SIGN_CAST:
+			return parseCast(scanner, token.type, delayedExprs);
 
 		default: throw new AssertionError("unreachable");
 		}
