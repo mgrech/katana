@@ -27,6 +27,8 @@ import katana.cli.CommandException;
 import katana.diag.CompileException;
 import katana.diag.TypeString;
 import katana.parser.ProgramParser;
+import katana.project.ProjectConfig;
+import katana.project.ProjectManager;
 import katana.sema.SemaModule;
 import katana.sema.SemaProgram;
 import katana.sema.decl.SemaDecl;
@@ -38,6 +40,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Command(name = "build", desc = "builds project in working directory")
@@ -85,24 +88,26 @@ public class CmdBuild
 
 	public static void run(String[] args) throws IOException
 	{
-		if(args.length > 1)
-			throw new CommandException("invalid number of arguments, usage: build [entry-point-symbol]");
+		if(args.length != 1)
+			throw new CommandException("invalid number of arguments, usage: build <source-dir>");
 
+		Path root = Paths.get(args[0]).toAbsolutePath().normalize();
+		ProjectConfig config = ProjectManager.load(root);
 		PlatformContext context = new PlatformContextLlvmAmd64();
 
 		try
 		{
-			AstProgram ast = ProgramParser.parse(Paths.get("./source"));
+			AstProgram ast = ProgramParser.parse(root, config);
 			SemaProgram program = ProgramValidator.validate(ast, context);
 
 			Maybe<SemaDecl> entry = Maybe.none();
 
-			if(args.length == 1)
-				entry = Maybe.some(findEntryPointFunction(program, args[0]));
+			if(config.entryPoint != null)
+				entry = Maybe.some(findEntryPointFunction(program, config.entryPoint));
 
 			String output = ProgramCodeGenerator.generate(program, context, entry);
 
-			try(OutputStream stream = new FileOutputStream("output/program.ll"))
+			try(OutputStream stream = new FileOutputStream("program.ll"))
 			{
 				stream.write(output.getBytes(StandardCharsets.UTF_8));
 			}

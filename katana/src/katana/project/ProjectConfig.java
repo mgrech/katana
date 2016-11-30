@@ -12,19 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.utils;
+package katana.project;
 
-import katana.cli.cmd.CmdCheader;
+import java.util.List;
 
-import java.io.InputStream;
-import java.util.Scanner;
-
-public class ResourceLoader
+public class ProjectConfig
 {
-	public static byte[] load(String location)
-	{
-		InputStream stream = CmdCheader.class.getClassLoader().getResourceAsStream("resources/" + location);
-		Scanner scanner = new Scanner(stream).useDelimiter("\\A");
-		return scanner.hasNext() ? scanner.next().getBytes() : new byte[0];
-	}
+	public String katanaVersion;
+	public List<String> sourcePaths;
+	public String entryPoint; // can be null
 }

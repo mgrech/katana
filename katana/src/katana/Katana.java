@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class Version
+public class Katana
 {
 	private static final String VERSION_STRING = loadVersion();
 
@@ -26,7 +26,7 @@ public class Version
 	{
 		try
 		{
-			InputStream is = Version.class.getClassLoader().getResourceAsStream("version.txt");
+			InputStream is = Katana.class.getClassLoader().getResourceAsStream("resources/version.txt");
 			Properties properties = new Properties();
 			properties.load(is);
 			return properties.getProperty("version");
@@ -38,8 +38,10 @@ public class Version
 		}
 	}
 
-	public static String asString()
+	public static String version()
 	{
 		return VERSION_STRING;
 	}
+
+	public static final String SOURCE_FILE_EXTENSION = ".ks";
 }

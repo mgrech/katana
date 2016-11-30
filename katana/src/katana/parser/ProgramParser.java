@@ -14,8 +14,10 @@
 
 package katana.parser;
 
+import katana.Katana;
 import katana.ast.AstFile;
 import katana.ast.AstProgram;
+import katana.project.ProjectConfig;
 import katana.scanner.Scanner;
 
 import java.io.IOException;
@@ -30,9 +32,9 @@ import java.util.List;
 
 public class ProgramParser
 {
-	public static AstProgram parse(Path root) throws IOException
+	public static AstProgram parse(Path root, ProjectConfig config) throws IOException
 	{
-		List<Path> files = discoverSourceFiles(root);
+		List<Path> files = discoverSourceFiles(root, config);
 		AstProgram program = new AstProgram();
 
 		for(Path path : files)
@@ -50,21 +52,29 @@ public class ProgramParser
 		return program;
 	}
 
-	private static List<Path> discoverSourceFiles(Path root) throws IOException
+	private static List<Path> discoverSourceFiles(Path root, ProjectConfig config) throws IOException
 	{
 		List<Path> paths = new ArrayList<>();
 
-		Files.walkFileTree(root, new SimpleFileVisitor<Path>()
+		for(String pathString : config.sourcePaths)
 		{
-			@Override
-			public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException
-			{
-				if(attrs.isRegularFile() && path.toString().endsWith(".kat"))
-					paths.add(path);
+			Path path = root.resolve(pathString);
 
-				return FileVisitResult.CONTINUE;
-			}
-		});
+			if(path.toFile().isDirectory())
+				Files.walkFileTree(path, new SimpleFileVisitor<Path>()
+				{
+					@Override
+					public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException
+					{
+						if(attrs.isRegularFile() && path.toString().endsWith(Katana.SOURCE_FILE_EXTENSION))
+							paths.add(path);
+
+						return FileVisitResult.CONTINUE;
+					}
+				});
+			else
+				paths.add(path);
+		}
 
 		return paths;
 	}

@@ -1,0 +1,14 @@
+{
+	// version of katana this project requires
+	"katana-version": "${project.version}",
+
+	// source paths - can either be files or directories
+	// must point to a location below the project root
+	"source-paths": [
+		"source"
+	],
+
+	// full module path of function to use as the entry point
+	// leave out if building a library
+	"entry-point": "main.main"
+}

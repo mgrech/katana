@@ -16,9 +16,9 @@ package katana.cli.cmd;
 
 import katana.cli.Command;
 import katana.cli.CommandException;
+import katana.project.ProjectManager;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 
 @Command(name = "init", desc = "initializes new project in working directory")
@@ -29,7 +29,6 @@ public class CmdInit
 		if(args.length != 0)
 			throw new CommandException("invalid arguments, usage: katana init");
 
-		Files.createDirectories(Paths.get("./source"));
-		Files.createDirectories(Paths.get("./output"));
+		ProjectManager.createDefaultProject(Paths.get(""));
 	}
 }

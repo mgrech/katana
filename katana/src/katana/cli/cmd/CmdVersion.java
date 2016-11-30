@@ -14,6 +14,7 @@
 
 package katana.cli.cmd;
 
+import katana.Katana;
 import katana.cli.Command;
 
 @Command(name = "version", desc = "prints out version information")
@@ -21,6 +22,6 @@ public class CmdVersion
 {
 	public static void run(String[] args)
 	{
-		System.out.println(katana.Version.asString());
+		System.out.println(Katana.version());
 	}
 }
