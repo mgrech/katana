@@ -209,7 +209,7 @@ public class OperatorParser
 			return (AstExpr)expr.get(0);
 
 		if(expr.size() == 3)
-			return new AstExprOpInfix((AstExpr)expr.get(0), (AstExpr)expr.get(2), (SemaDeclOperator)expr.get(1));
+			return createInfixOp((AstExpr)expr.get(0), (AstExpr)expr.get(2), (SemaDeclOperator)expr.get(1));
 
 		List<Integer> opIndices = lowestPrecedenceIndices(expr);
 
