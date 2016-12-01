@@ -130,6 +130,88 @@ public class ExprCodeGenerator implements IVisitor
 		return builtinCall.func.generateCall(builtinCall, builder, context, fcontext);
 	}
 
+	private String instrForCast(SemaType targetType, SemaExprCast.Kind kind)
+	{
+		switch(kind)
+		{
+		case WIDEN_CAST:
+			if(TypeHelper.isFloatingPointType(targetType))
+				return "fpext";
+
+			if(TypeHelper.isSigned(targetType))
+				return "sext";
+
+			if(TypeHelper.isUnsigned(targetType))
+				return "zext";
+
+			throw new AssertionError("unreachable");
+
+		case NARROW_CAST:
+			if(TypeHelper.isFloatingPointType(targetType))
+				return "fptrunc";
+
+			if(TypeHelper.isIntegerType(targetType))
+				return "trunc";
+
+			throw new AssertionError("unreachable");
+
+		default: break;
+		}
+
+		throw new AssertionError("unreachable");
+	}
+
+	private String generateCast(String valueSSA, SemaType sourceType, SemaType targetType, SemaExprCast.Kind kind)
+	{
+		String resultSSA = fcontext.allocateSSA();
+		String sourceTypeString = TypeCodeGenerator.generate(sourceType, context);
+		String targetTypeString = TypeCodeGenerator.generate(targetType, context);
+
+		String instr = instrForCast(targetType, kind);
+		builder.append(String.format("\t%s = %s %s %s to %s\n", resultSSA, instr, sourceTypeString, valueSSA, targetTypeString));
+		return resultSSA;
+	}
+
+	private Maybe<String> visit(SemaExprCast cast)
+	{
+		String valueSSA = generate(cast.expr, builder, context, fcontext).unwrap();
+		String resultSSA;
+
+		SemaType sourceType = cast.expr.type();
+		SemaType targetType = cast.type;
+
+		switch(cast.kind)
+		{
+		case SIGN_CAST:
+			resultSSA = valueSSA;
+			break;
+
+		case WIDEN_CAST:
+			if(sourceType.sizeof(context).equals(targetType.sizeof(context)))
+			{
+				resultSSA = valueSSA;
+				break;
+			}
+
+			resultSSA = generateCast(valueSSA, sourceType, targetType, SemaExprCast.Kind.WIDEN_CAST);
+			break;
+
+		case NARROW_CAST:
+			if(sourceType.sizeof(context).equals(targetType.sizeof(context)))
+			{
+				resultSSA = valueSSA;
+				break;
+			}
+
+			resultSSA = generateCast(valueSSA, sourceType, targetType, SemaExprCast.Kind.NARROW_CAST);
+			break;
+
+		default: throw new AssertionError("unreachable");
+		}
+
+		return Maybe.some(resultSSA);
+	}
+
 	private Maybe<String> visit(SemaExprConstLValue const_)
 	{
 		return generate(const_.expr, builder, context, fcontext);
