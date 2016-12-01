@@ -14,15 +14,17 @@
 
 package katana.sema.expr;
 
+import katana.analysis.TypeHelper;
 import katana.sema.decl.SemaDeclData;
 import katana.sema.type.SemaType;
 
 public class SemaExprFieldAccessLValue extends SemaExprLValueExpr
 {
-	public SemaExprFieldAccessLValue(SemaExprLValueExpr expr, SemaDeclData.Field field)
+	public SemaExprFieldAccessLValue(SemaExprLValueExpr expr, SemaDeclData.Field field, boolean const_)
 	{
 		this.expr = expr;
 		this.field = field;
+		this.const_ = const_;
 	}
 
 	@Override
@@ -40,9 +42,10 @@ public class SemaExprFieldAccessLValue extends SemaExprLValueExpr
 	@Override
 	public SemaType type()
 	{
-		return field.type;
+		return const_ ? TypeHelper.addConst(field.type) : field.type;
 	}
 
 	public SemaExprLValueExpr expr;
 	public SemaDeclData.Field field;
+	public boolean const_;
 }

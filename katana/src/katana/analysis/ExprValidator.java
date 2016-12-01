@@ -596,20 +596,21 @@ public class ExprValidator implements IVisitor
 			throw new CompileException("left side of member access yields 'void'");
 
 		SemaType type = expr.type();
+		SemaType typeNoConst = TypeHelper.removeConst(type);
 
-		if(!(type instanceof SemaTypeUserDefined))
+		if(!(typeNoConst instanceof SemaTypeUserDefined))
 			errorNoSuchField(type, memberAccess.name);
 
-		SemaDeclData data = ((SemaTypeUserDefined)type).data;
+		SemaDeclData data = ((SemaTypeUserDefined)typeNoConst).data;
 		Maybe<SemaDeclData.Field> field = data.findField(memberAccess.name);
 
 		if(field.isNone())
 			errorNoSuchField(type, memberAccess.name);
 
 		if(expr instanceof SemaExprLValueExpr)
-			return new SemaExprFieldAccessLValue((SemaExprLValueExpr)expr, field.unwrap());
+			return new SemaExprFieldAccessLValue((SemaExprLValueExpr)expr, field.unwrap(), TypeHelper.isConst(type));
 
-		return new SemaExprFieldAccessRValue(expr, field.unwrap());
+		return new SemaExprFieldAccessRValue(expr, field.unwrap(), TypeHelper.isConst(type));
 	}
 
 	private SemaExpr visit(AstExprNamedGlobal namedGlobal, Maybe<SemaType> deduce)
