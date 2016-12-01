@@ -18,6 +18,7 @@ import katana.BuiltinFunc;
 import katana.BuiltinType;
 import katana.Limits;
 import katana.ast.expr.*;
+import katana.ast.type.AstType;
 import katana.backend.PlatformContext;
 import katana.diag.CompileException;
 import katana.diag.TypeString;
@@ -656,6 +657,26 @@ public class ExprValidator implements IVisitor
 		throw new CompileException(String.format("symbol '%s' does not refer to a value", namedSymbol.name));
 	}
 
+	private SemaExpr validateCast(AstType type, AstExpr expr, SemaExprCast.Kind kind)
+	{
+		SemaType targetType = TypeValidator.validate(type, scope, context, validateDecl);
+		SemaExpr semaExpr = validate(expr, scope, context, validateDecl, Maybe.none());
+		SemaType sourceType = semaExpr.type();
+
+		if(!CastValidator.isValidCast(sourceType, targetType, kind, context))
+		{
+			String fmt = "%s from expression of type '%s' to type '%s' is not valid";
+			throw new CompileException(String.format(fmt, kind.toString().toLowerCase(), TypeString.of(sourceType), TypeString.of(targetType)));
+		}
+
+		return new SemaExprCast(targetType, semaExpr, kind);
+	}
+
+	private SemaExpr visit(AstExprNarrowCast cast, Maybe<SemaType> deduce)
+	{
+		return validateCast(cast.type, cast.expr, SemaExprCast.Kind.NARROW_CAST);
+	}
+
 	private SemaExpr visit(AstExprOffsetof offsetof, Maybe<SemaType> deduce)
 	{
 		List<SemaSymbol> candidates = scope.find(offsetof.type);
@@ -721,8 +742,18 @@ public class ExprValidator implements IVisitor
 		return validate(parens.expr, scope, context, validateDecl, deduce);
 	}
 
+	private SemaExpr visit(AstExprSignCast cast, Maybe<SemaType> deduce)
+	{
+		return validateCast(cast.type, cast.expr, SemaExprCast.Kind.SIGN_CAST);
+	}
+
 	private SemaExpr visit(AstExprSizeof sizeof, Maybe<SemaType> deduce)
 	{
 		return new SemaExprSizeof(TypeValidator.validate(sizeof.type, scope, context, validateDecl));
+	}
+
+	private SemaExpr visit(AstExprWidenCast cast, Maybe<SemaType> deduce)
+	{
+		return validateCast(cast.type, cast.expr, SemaExprCast.Kind.WIDEN_CAST);
 	}
 }

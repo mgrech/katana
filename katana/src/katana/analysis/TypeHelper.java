@@ -84,6 +84,36 @@ public class TypeHelper
 		return ((SemaTypeBuiltin)type).which == which;
 	}
 
+	public static boolean isBuiltinKind(SemaType type, BuiltinType.Kind kind)
+	{
+		type = removeConst(type);
+
+		if(!(type instanceof SemaTypeBuiltin))
+			return false;
+
+		return ((SemaTypeBuiltin)type).which.kind == kind;
+	}
+
+	public static boolean isSigned(SemaType type)
+	{
+		return isBuiltinKind(type, BuiltinType.Kind.INT);
+	}
+
+	public static boolean isUnsigned(SemaType type)
+	{
+		return isBuiltinKind(type, BuiltinType.Kind.UINT);
+	}
+
+	public static boolean isIntegerType(SemaType type)
+	{
+		return isSigned(type) || isUnsigned(type);
+	}
+
+	public static boolean isFloatingPointType(SemaType type)
+	{
+		return isBuiltinKind(type, BuiltinType.Kind.FLOAT);
+	}
+
 	public static boolean isArrayType(SemaType type)
 	{
 		return type instanceof SemaTypeArray;
