@@ -18,7 +18,6 @@ import katana.sema.type.SemaType;
 
 public class SemaExprAssign extends SemaExprSimpleLValueExpr
 {
-
 	public SemaExprAssign(SemaExprLValueExpr left, SemaExpr right)
 	{
 		this.left = left;
