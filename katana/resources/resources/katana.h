@@ -39,7 +39,7 @@
 #if defined(_M_X64) || defined(__x86_64__)
 #define KATANA_ARCH_AMD64
 #elif defined(_M_IX32) || defined(__i386__)
-#define KATANA_ARCH_I386
+#define KATANA_ARCH_X86
 #else
 #error "architecture unsupported"
 #endif
@@ -66,7 +66,7 @@ typedef kint64  kint;
 typedef kuint64 kuint;
 typedef kint64  kpint;
 typedef kuint64 kupint;
-#elif defined(KATANA_ARCH_I386)
+#elif defined(KATANA_ARCH_X86)
 typedef kint32  kint;
 typedef kuint32 kuint;
 typedef kint32  kpint;
