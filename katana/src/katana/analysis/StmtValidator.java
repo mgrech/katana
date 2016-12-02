@@ -118,7 +118,7 @@ public class StmtValidator implements IVisitor
 		if(!TypeHelper.isBuiltinType(condition.type(), BuiltinType.BOOL))
 		{
 			String fmt = "%s requires condition of type 'bool', got '%s'";
-			String gotten = TypeString.of(TypeHelper.decay(condition.type()));
+			String gotten = TypeString.of(TypeHelper.removeConst(condition.type()));
 			throw new CompileException(String.format(fmt, kind.toString().toLowerCase(), gotten));
 		}
 
@@ -177,13 +177,13 @@ public class StmtValidator implements IVisitor
 				throw new CompileException(String.format(fmt, function.qualifiedName(), TypeString.of(function.ret)));
 			}
 
-			SemaType typeDecayed = TypeHelper.decay(type);
-			SemaType retTypeDecayed = TypeHelper.decay(function.ret);
+			SemaType typeNoConst = TypeHelper.removeConst(type);
+			SemaType retTypeNoConst = TypeHelper.removeConst(function.ret);
 
-			if(!SemaType.same(retTypeDecayed, typeDecayed))
+			if(!SemaType.same(retTypeNoConst, typeNoConst))
 			{
 				String fmt = "function '%s' returns value of type '%s', '%s' given";
-				throw new CompileException(String.format(fmt, function.qualifiedName(), TypeString.of(retTypeDecayed), TypeString.of(typeDecayed)));
+				throw new CompileException(String.format(fmt, function.qualifiedName(), TypeString.of(retTypeNoConst), TypeString.of(typeNoConst)));
 			}
 		}
 
@@ -199,7 +199,7 @@ public class StmtValidator implements IVisitor
 	private SemaStmt visit(AstStmtLocal local)
 	{
 		Maybe<SemaType> maybeDeclaredType = local.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
-		Maybe<SemaType> maybeDeclaredTypeDecayed = maybeDeclaredType.map(TypeHelper::decay);
+		Maybe<SemaType> maybeDeclaredTypeNoConst = maybeDeclaredType.map(TypeHelper::removeConst);
 
 		if(local.init.isNone())
 		{
@@ -212,19 +212,19 @@ public class StmtValidator implements IVisitor
 			return new SemaStmtNullStmt();
 		}
 
-		SemaExpr init = ExprValidator.validate(local.init.unwrap(), scope, context, validateDecl, maybeDeclaredTypeDecayed);
+		SemaExpr init = ExprValidator.validate(local.init.unwrap(), scope, context, validateDecl, maybeDeclaredTypeNoConst);
 
 		if(TypeHelper.isVoidType(init.type()))
 			throw new CompileException(String.format("initializer for local '%s' yields 'void'", local.name));
 
-		SemaType initTypeDecayed = TypeHelper.decay(init.type());
-		SemaType localType = maybeDeclaredType.or(initTypeDecayed);
-		SemaType localTypeDecayed = TypeHelper.decay(localType);
+		SemaType initTypeNoConst = TypeHelper.removeConst(init.type());
+		SemaType localType = maybeDeclaredType.or(initTypeNoConst);
+		SemaType localTypeNoConst = TypeHelper.removeConst(localType);
 
-		if(!SemaType.same(localTypeDecayed, initTypeDecayed))
+		if(!SemaType.same(localTypeNoConst, initTypeNoConst))
 		{
 			String fmt = "initializer for local '%s' has wrong type: expected '%s', got '%s'";
-			throw new CompileException(String.format(fmt, local.name, TypeString.of(localTypeDecayed), TypeString.of(initTypeDecayed)));
+			throw new CompileException(String.format(fmt, local.name, TypeString.of(localTypeNoConst), TypeString.of(initTypeNoConst)));
 		}
 
 		if(!function.defineLocal(local.name, localType))

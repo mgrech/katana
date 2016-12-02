@@ -83,13 +83,13 @@ public class ExprValidator implements IVisitor
 			if(TypeHelper.isVoidType(argType))
 				throw new CompileException(String.format("expression given in argument %s yields 'void'", argCount));
 
-			SemaType paramTypeDecayed = TypeHelper.decay(paramType);
-			SemaType argTypeDecayed = TypeHelper.decay(argType);
+			SemaType paramTypeNoConst = TypeHelper.removeConst(paramType);
+			SemaType argTypeNoConst = TypeHelper.removeConst(argType);
 
-			if(!SemaType.same(paramTypeDecayed, argTypeDecayed))
+			if(!SemaType.same(paramTypeNoConst, argTypeNoConst))
 			{
 				String fmt = "type mismatch in argument %s: expected '%s', got '%s'";
-				throw new CompileException(String.format(fmt, argCount, TypeString.of(paramTypeDecayed), TypeString.of(argTypeDecayed)));
+				throw new CompileException(String.format(fmt, argCount, TypeString.of(paramTypeNoConst), TypeString.of(argTypeNoConst)));
 			}
 		}
 	}
@@ -137,9 +137,9 @@ public class ExprValidator implements IVisitor
 			throw new CompileException("value expected on left side of assignment, got expression yielding 'void'");
 
 		SemaType leftType = left.type();
-		SemaType leftTypeDecayed = TypeHelper.decay(leftType);
+		SemaType leftTypeNoConst = TypeHelper.removeConst(leftType);
 
-		SemaExpr right = validate(assign.right, scope, context, validateDecl, Maybe.some(leftTypeDecayed));
+		SemaExpr right = validate(assign.right, scope, context, validateDecl, Maybe.some(leftTypeNoConst));
 
 		if(TypeHelper.isVoidType(right.type()))
 			throw new CompileException("value expected on right side of assignment, got expression yielding 'void'");
@@ -150,12 +150,12 @@ public class ExprValidator implements IVisitor
 		if(leftType instanceof SemaTypeFunction)
 			throw new CompileException("cannot assign to value of function type");
 
-		SemaType rightTypeDecayed = TypeHelper.decay(right.type());
+		SemaType rightTypeNoConst = TypeHelper.removeConst(right.type());
 
-		if(!SemaType.same(leftTypeDecayed, rightTypeDecayed))
+		if(!SemaType.same(leftTypeNoConst, rightTypeNoConst))
 		{
 			String fmt = "compatible types expected in assignment, got '%s' and '%s'";
-			throw new CompileException(String.format(fmt, TypeString.of(leftTypeDecayed), TypeString.of(rightTypeDecayed)));
+			throw new CompileException(String.format(fmt, TypeString.of(leftTypeNoConst), TypeString.of(rightTypeNoConst)));
 		}
 
 		SemaExprLValueExpr leftAsLvalue = (SemaExprLValueExpr)left;
@@ -229,15 +229,14 @@ public class ExprValidator implements IVisitor
 		for(int i = 0; i != function.params.size(); ++i)
 		{
 			SemaType paramType = function.params.get(i).type;
-			SemaType paramTypeDecayed = TypeHelper.decay(paramType);
+			SemaType paramTypeNoConst = TypeHelper.removeConst(paramType);
 
 			try
 			{
-				SemaExpr arg = ExprValidator.validate(args.get(i), scope, context, validateDecl, Maybe.some(paramTypeDecayed));
+				SemaExpr arg = ExprValidator.validate(args.get(i), scope, context, validateDecl, Maybe.some(paramTypeNoConst));
+				SemaType argTypeNoConst = TypeHelper.removeConst(arg.type());
 
-				SemaType argTypeDecayed = TypeHelper.decay(arg.type());
-
-				if(TypeHelper.isVoidType(arg.type()) || !SemaType.same(paramTypeDecayed, argTypeDecayed))
+				if(TypeHelper.isVoidType(arg.type()) || !SemaType.same(paramTypeNoConst, argTypeNoConst))
 					failed = true;
 
 				result.add(Maybe.some(arg));
@@ -448,19 +447,19 @@ public class ExprValidator implements IVisitor
 			throw new CompileException("element type of array literal could not be deduced");
 
 		SemaType type = maybeType.unwrap();
-		SemaType typeDecayed = TypeHelper.decay(type);
+		SemaType typeNoConst = TypeHelper.removeConst(type);
 
 		List<SemaExpr> values = new ArrayList<>();
 
 		for(int i = 0; i != lit.values.size(); ++i)
 		{
 			SemaExpr semaExpr = validate(lit.values.get(i), scope, context, validateDecl, maybeType);
-			SemaType elemTypeDecayed = TypeHelper.decay(semaExpr.type());
+			SemaType elemTypeNoConst = TypeHelper.removeConst(semaExpr.type());
 
-			if(!SemaType.same(elemTypeDecayed, typeDecayed))
+			if(!SemaType.same(elemTypeNoConst, typeNoConst))
 			{
 				String fmt = "element in array literal at index %s has type '%s', expected '%s'";
-				throw new CompileException(String.format(fmt, i, TypeString.of(elemTypeDecayed), TypeString.of(typeDecayed)));
+				throw new CompileException(String.format(fmt, i, TypeString.of(elemTypeNoConst), TypeString.of(typeNoConst)));
 			}
 
 			values.add(semaExpr);

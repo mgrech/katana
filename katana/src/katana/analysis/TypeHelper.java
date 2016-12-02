@@ -129,14 +129,4 @@ public class TypeHelper
 		type = removeConst(type);
 		return type instanceof SemaTypePointer || type instanceof SemaTypeNullablePointer;
 	}
-
-	public static SemaType decay(SemaType type)
-	{
-		return removeConst(type);
-	}
-
-	public static boolean decayedEqual(SemaType a, SemaType b)
-	{
-		return SemaType.same(decay(a), decay(b));
-	}
 }

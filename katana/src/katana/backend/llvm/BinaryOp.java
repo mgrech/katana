@@ -77,9 +77,9 @@ public class BinaryOp extends BuiltinFunc
 		if(args.size() != 2)
 			throw new CompileException(String.format("builtin %s expects 2 arguments", name));
 
-		SemaType argType = TypeHelper.decay(args.get(0));
+		SemaType argType = TypeHelper.removeConst(args.get(0));
 
-		if(!TypeHelper.decayedEqual(argType, TypeHelper.decay(args.get(1))))
+		if(!SemaType.same(argType, TypeHelper.removeConst(args.get(1))))
 			throw new CompileException(String.format("arguments to builtin %s must be of same type", name));
 
 		if(!(argType instanceof SemaTypeBuiltin))

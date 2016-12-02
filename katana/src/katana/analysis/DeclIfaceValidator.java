@@ -84,10 +84,10 @@ public class DeclIfaceValidator implements IVisitor
 
 		for(int i = 0; i != a.params.size(); ++i)
 		{
-			SemaType paramTypeA = a.params.get(i).type;
-			SemaType paramTypeB = b.params.get(i).type;
+			SemaType paramTypeA = TypeHelper.removeConst(a.params.get(i).type);
+			SemaType paramTypeB = TypeHelper.removeConst(b.params.get(i).type);
 
-			if(!TypeHelper.decayedEqual(paramTypeA, paramTypeB))
+			if(!SemaType.same(paramTypeA, paramTypeB))
 				return false;
 		}
 
@@ -122,7 +122,7 @@ public class DeclIfaceValidator implements IVisitor
 	private void visit(SemaDeclGlobal semaGlobal, AstDeclGlobal global, SemaScopeFile scope)
 	{
 		Maybe<SemaType> maybeDeclaredType = global.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
-		Maybe<SemaType> maybeDeclaredTypeDecayed = maybeDeclaredType.map(TypeHelper::decay);
+		Maybe<SemaType> maybeDeclaredTypeNoConst = maybeDeclaredType.map(TypeHelper::removeConst);
 
 		if(global.init.isNone())
 		{
@@ -134,19 +134,19 @@ public class DeclIfaceValidator implements IVisitor
 			return;
 		}
 
-		SemaExprLiteral init = (SemaExprLiteral)ExprValidator.validate(global.init.unwrap(), scope, context, validateDecl, maybeDeclaredTypeDecayed);
+		SemaExprLiteral init = (SemaExprLiteral)ExprValidator.validate(global.init.unwrap(), scope, context, validateDecl, maybeDeclaredTypeNoConst);
 
 		if(TypeHelper.isVoidType(init.type()))
 			throw new CompileException(String.format("initializer for global %s yields 'void'", global.name));
 
-		SemaType initTypeDecayed = TypeHelper.decay(init.type());
-		SemaType globalType = maybeDeclaredType.or(initTypeDecayed);
-		SemaType globalTypeDecayed = TypeHelper.decay(globalType);
+		SemaType initTypeNoConst = TypeHelper.removeConst(init.type());
+		SemaType globalType = maybeDeclaredType.or(initTypeNoConst);
+		SemaType globalTypeNoConst = TypeHelper.removeConst(globalType);
 
-		if(!SemaType.same(globalTypeDecayed, initTypeDecayed))
+		if(!SemaType.same(globalTypeNoConst, initTypeNoConst))
 		{
 			String fmt = "initializer for global '%s' has wrong type: expected '%s', got '%s'";
-			throw new CompileException(String.format(fmt, semaGlobal.name(), TypeString.of(globalTypeDecayed), TypeString.of(initTypeDecayed)));
+			throw new CompileException(String.format(fmt, semaGlobal.name(), TypeString.of(globalTypeNoConst), TypeString.of(initTypeNoConst)));
 		}
 
 		semaGlobal.init = Maybe.some(init);
