@@ -20,13 +20,14 @@ import katana.analysis.TypeHelper;
 import katana.ast.AstPath;
 import katana.ast.AstProgram;
 import katana.backend.PlatformContext;
+import katana.backend.llvm.PlatformContextLlvm;
 import katana.backend.llvm.ProgramCodeGenerator;
-import katana.backend.llvm.amd64.PlatformContextLlvmAmd64;
 import katana.cli.Command;
 import katana.cli.CommandException;
 import katana.diag.CompileException;
 import katana.diag.TypeString;
 import katana.parser.ProgramParser;
+import katana.platform.TargetTriple;
 import katana.project.ProjectConfig;
 import katana.project.ProjectManager;
 import katana.sema.SemaModule;
@@ -93,7 +94,7 @@ public class CmdBuild
 
 		Path root = Paths.get(args[0]).toAbsolutePath().normalize();
 		ProjectConfig config = ProjectManager.load(root);
-		PlatformContext context = new PlatformContextLlvmAmd64();
+		PlatformContext context = new PlatformContextLlvm(TargetTriple.NATIVE);
 
 		try
 		{

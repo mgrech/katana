@@ -16,18 +16,97 @@ package katana.backend;
 
 import katana.BuiltinFunc;
 import katana.BuiltinType;
+import katana.diag.CompileException;
+import katana.platform.TargetTriple;
 import katana.sema.decl.SemaDeclData;
 import katana.utils.Maybe;
 
 import java.math.BigInteger;
+import java.util.List;
 
-public interface PlatformContext
+public abstract class PlatformContext
 {
-	Maybe<BuiltinFunc> findBuiltin(String name);
+	private static final BigInteger TWO = BigInteger.valueOf(2);
+	private static final BigInteger FOUR = BigInteger.valueOf(4);
+	private static final BigInteger EIGHT = BigInteger.valueOf(8);
 
-	BigInteger sizeof(BuiltinType builtin);
-	BigInteger sizeof(SemaDeclData data);
+	private final TargetTriple triple;
 
-	BigInteger alignof(BuiltinType builtin);
-	BigInteger alignof(SemaDeclData data);
+	protected PlatformContext(TargetTriple triple)
+	{
+		this.triple = triple;
+	}
+
+	public abstract Maybe<BuiltinFunc> findBuiltin(String name);
+
+	public BigInteger sizeof(BuiltinType builtin)
+	{
+		switch(builtin)
+		{
+		case VOID:
+			throw new CompileException("sizeof applied to void type");
+
+		case BOOL:
+		case INT8:
+		case UINT8:
+			return BigInteger.ONE;
+
+		case INT16:
+		case UINT16:
+			return TWO;
+
+		case INT32:
+		case UINT32:
+		case FLOAT32:
+			return FOUR;
+
+		case INT64:
+		case UINT64:
+		case FLOAT64:
+			return EIGHT;
+
+		case INT:
+		case UINT:
+			return BigInteger.valueOf(triple.arch.intSize);
+
+		case PINT:
+		case UPINT:
+		case NULL:
+			return BigInteger.valueOf(triple.arch.pointerSize);
+
+		default: break;
+		}
+
+		throw new AssertionError("unreachable");
+	}
+
+	public BigInteger alignof(BuiltinType builtin)
+	{
+		return sizeof(builtin);
+	}
+
+	public BigInteger sizeof(SemaDeclData data)
+	{
+		throw new AssertionError("nyi");
+	}
+
+	public BigInteger alignof(SemaDeclData data)
+	{
+		List<SemaDeclData.Field> fields = data.fieldsByIndex();
+
+		if(fields.isEmpty())
+			return BigInteger.ONE;
+
+		BigInteger max = fields.get(0).type.alignof(this);
+
+		for(int i = 1; i != fields.size(); ++i)
+		{
+			BigInteger align = fields.get(i).type.alignof(this);
+
+			if(align.compareTo(max) == 1)
+				max = align;
+		}
+
+		return max;
+	}
 }

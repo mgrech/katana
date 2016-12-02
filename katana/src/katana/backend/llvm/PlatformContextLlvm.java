@@ -16,13 +16,14 @@ package katana.backend.llvm;
 
 import katana.BuiltinFunc;
 import katana.backend.PlatformContext;
+import katana.platform.TargetTriple;
 import katana.sema.type.SemaTypeBuiltin;
 import katana.utils.Maybe;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class PlatformContextLlvm implements PlatformContext
+public class PlatformContextLlvm extends PlatformContext
 {
 	private static final Map<String, BuiltinFunc> BUILTINS = new HashMap<>();
 
@@ -51,6 +52,11 @@ public abstract class PlatformContextLlvm implements PlatformContext
 		registerBinaryOp("and", "and", "and",  "and",  null, null);
 		registerBinaryOp("or",  "or",  "or",   "or",   null, null);
 		registerBinaryOp("xor", "xor", "xor",  "xor",  null, null);
+	}
+
+	public PlatformContextLlvm(TargetTriple triple)
+	{
+		super(triple);
 	}
 
 	@Override

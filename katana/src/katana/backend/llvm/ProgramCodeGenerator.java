@@ -16,6 +16,7 @@ package katana.backend.llvm;
 
 import katana.analysis.TypeHelper;
 import katana.backend.PlatformContext;
+import katana.platform.TargetTriple;
 import katana.sema.SemaModule;
 import katana.sema.SemaProgram;
 import katana.sema.decl.SemaDecl;
@@ -58,6 +59,8 @@ public class ProgramCodeGenerator
 	public static String generate(SemaProgram program, PlatformContext context, Maybe<SemaDecl> entry)
 	{
 		StringBuilder builder = new StringBuilder();
+		builder.append(String.format("platform triple = \"%s\"\n\n", TargetTriple.NATIVE));
+
 		generate(new DeclCodeGenerator(builder, context), program.root);
 
 		if(entry.isSome())
