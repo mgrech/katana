@@ -109,10 +109,12 @@ public class ProgramCodeGenerator
 
 	public static void generate(Project project, SemaProgram program, PlatformContext context) throws IOException
 	{
+		TargetTriple triple = TargetTriple.NATIVE;
+
 		try(OutputStream stream = new FileOutputStream("program.ll"))
 		{
 			StringBuilder builder = new StringBuilder();
-			builder.append(String.format("target triple = \"%s\"\n\n", TargetTriple.NATIVE));
+			builder.append(String.format("target triple = \"%s\"\n\n", triple));
 
 			generateDecls(new DeclCodeGenerator(builder, context), program.root);
 
@@ -121,5 +123,7 @@ public class ProgramCodeGenerator
 
 			stream.write(builder.toString().getBytes(StandardCharsets.UTF_8));
 		}
+
+		ClangRunner.build(project, triple);
 	}
 }
