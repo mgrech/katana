@@ -14,10 +14,7 @@
 
 package katana.cli.cmd;
 
-import katana.BuiltinType;
 import katana.analysis.ProgramValidator;
-import katana.analysis.TypeHelper;
-import katana.ast.AstPath;
 import katana.ast.AstProgram;
 import katana.backend.PlatformContext;
 import katana.backend.llvm.PlatformContextLlvm;
@@ -25,93 +22,33 @@ import katana.backend.llvm.ProgramCodeGenerator;
 import katana.cli.Command;
 import katana.cli.CommandException;
 import katana.diag.CompileException;
-import katana.diag.TypeString;
 import katana.parser.ProgramParser;
 import katana.platform.TargetTriple;
-import katana.project.ProjectConfig;
+import katana.project.Project;
 import katana.project.ProjectManager;
-import katana.sema.SemaModule;
 import katana.sema.SemaProgram;
-import katana.sema.decl.SemaDecl;
-import katana.sema.decl.SemaDeclFunction;
-import katana.sema.decl.SemaDeclOverloadSet;
-import katana.utils.Maybe;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Command(name = "build", desc = "builds project in working directory")
 public class CmdBuild
 {
-	private static Maybe<SemaDecl> resolvePath(SemaProgram program, String pathString)
-	{
-		AstPath path = AstPath.fromString(pathString);
-		int last = path.components.size() - 1;
-		String symbol = path.components.get(last);
-		path.components.remove(last);
-
-		Maybe<SemaModule> module = program.findModule(path);
-
-		if(module.isNone())
-			return Maybe.none();
-
-		return module.unwrap().findDecl(symbol);
-	}
-
-	private static SemaDecl findEntryPointFunction(SemaProgram program, String name)
-	{
-		Maybe<SemaDecl> entry = resolvePath(program, name);
-
-		if(entry.isNone())
-			throw new CompileException(String.format("entry point '%s' could not found", name));
-
-		SemaDecl decl = entry.unwrap();
-
-		if(!(decl instanceof SemaDeclOverloadSet))
-			throw new CompileException("the specified entry point symbol does not refer to function");
-
-		SemaDeclOverloadSet set = (SemaDeclOverloadSet)decl;
-
-		if(set.overloads.size() != 1)
-			throw new CompileException("entry point function may not be overloaded");
-
-		SemaDeclFunction func = set.overloads.get(0);
-
-		if(TypeHelper.isVoidType(func.ret) || TypeHelper.isBuiltinType(func.ret, BuiltinType.INT32))
-			return func;
-
-		throw new CompileException(String.format("entry point must return 'void' or 'int32', got '%s'", TypeString.of(func.ret)));
-	}
-
 	public static void run(String[] args) throws IOException
 	{
 		if(args.length != 1)
 			throw new CommandException("invalid number of arguments, usage: build <source-dir>");
 
 		Path root = Paths.get(args[0]).toAbsolutePath().normalize();
-		ProjectConfig config = ProjectManager.load(root);
+		Project project = ProjectManager.load(root);
 		PlatformContext context = new PlatformContextLlvm(TargetTriple.NATIVE);
 
 		try
 		{
-			AstProgram ast = ProgramParser.parse(root, config);
+			AstProgram ast = ProgramParser.parse(project);
 			SemaProgram program = ProgramValidator.validate(ast, context);
-
-			Maybe<SemaDecl> entry = Maybe.none();
-
-			if(config.entryPoint != null)
-				entry = Maybe.some(findEntryPointFunction(program, config.entryPoint));
-
-			String output = ProgramCodeGenerator.generate(program, context, entry);
-
-			try(OutputStream stream = new FileOutputStream("program.ll"))
-			{
-				stream.write(output.getBytes(StandardCharsets.UTF_8));
-			}
+			ProgramCodeGenerator.generate(project, program, context);
 		}
 
 		catch(CompileException e)

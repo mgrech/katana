@@ -43,5 +43,6 @@ public class Katana
 		return VERSION_STRING;
 	}
 
-	public static final String SOURCE_FILE_EXTENSION = ".ks";
+	public static final String KATANA_SOURCE_FILE_EXTENSION = ".ks";
+	public static final String C_SOURCE_FILE_EXTENSION = ".c";
 }

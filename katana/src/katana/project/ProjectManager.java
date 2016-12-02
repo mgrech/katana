@@ -18,15 +18,16 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
+import katana.Katana;
+import katana.diag.CompileException;
+import katana.utils.Maybe;
 import katana.utils.ResourceExtractor;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 
 public class ProjectManager
 {
@@ -50,7 +51,7 @@ public class ProjectManager
 			throw new InvalidPathException(path.toString(), "given source path is not a child of the project root");
 	}
 
-	public static ProjectConfig load(Path root) throws IOException
+	private static ProjectConfig loadConfig(Path root) throws IOException
 	{
 		byte[] bytes = Files.readAllBytes(root.resolve(PROJECT_CONFIG_NAME));
 		ProjectConfig project = GSON.fromJson(new StringReader(new String(bytes, StandardCharsets.UTF_8)), ProjectConfig.class);
@@ -61,6 +62,54 @@ public class ProjectManager
 		for(String sourcePath : project.sourcePaths)
 			validatePath(sourcePath, root);
 
+		return project;
+	}
+
+	private static void discoverSourceFiles(Path root, ProjectConfig config, Project project) throws IOException
+	{
+		for(String sourcePath : config.sourcePaths)
+		{
+			Path path = root.resolve(sourcePath);
+
+			if(path.toFile().isDirectory())
+				Files.walkFileTree(path, new SimpleFileVisitor<Path>()
+				{
+					@Override
+					public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException
+					{
+						if(attrs.isRegularFile())
+						{
+							String pathString = path.toString();
+
+							if(pathString.endsWith(Katana.KATANA_SOURCE_FILE_EXTENSION))
+								project.katanaFiles.add(path);
+							else if(pathString.endsWith(Katana.C_SOURCE_FILE_EXTENSION))
+								project.cFiles.add(path);
+						}
+
+						return FileVisitResult.CONTINUE;
+					}
+				});
+
+			else
+			{
+				String pathString = path.toString();
+
+				if(pathString.endsWith(Katana.KATANA_SOURCE_FILE_EXTENSION))
+					project.katanaFiles.add(path);
+				else if(pathString.endsWith(Katana.C_SOURCE_FILE_EXTENSION))
+					project.cFiles.add(path);
+				else
+					throw new CompileException(String.format("source file path '%s' refers to unknown file type", pathString));
+			}
+		}
+	}
+
+	public static Project load(Path root) throws IOException
+	{
+		ProjectConfig config = loadConfig(root);
+		Project project = new Project(root, Maybe.wrap(config.entryPoint));
+		discoverSourceFiles(root, config, project);
 		return project;
 	}
 
