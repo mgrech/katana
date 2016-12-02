@@ -742,6 +742,11 @@ public class ExprValidator implements IVisitor
 		return validate(parens.expr, scope, context, validateDecl, deduce);
 	}
 
+	private SemaExpr visit(AstExprPointegerCast cast, Maybe<SemaType> deduce)
+	{
+		return validateCast(cast.type, cast.expr, SemaExprCast.Kind.POINTEGER_CAST);
+	}
+
 	private SemaExpr visit(AstExprSignCast cast, Maybe<SemaType> deduce)
 	{
 		return validateCast(cast.type, cast.expr, SemaExprCast.Kind.SIGN_CAST);

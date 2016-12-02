@@ -218,9 +218,10 @@ public class ExprParser
 
 		switch(castType)
 		{
-		case MISC_WIDEN_CAST:  return new AstExprWidenCast (type, expr);
-		case MISC_NARROW_CAST: return new AstExprNarrowCast(type, expr);
-		case MISC_SIGN_CAST:   return new AstExprSignCast  (type, expr);
+		case MISC_WIDEN_CAST:     return new AstExprWidenCast    (type, expr);
+		case MISC_NARROW_CAST:    return new AstExprNarrowCast   (type, expr);
+		case MISC_SIGN_CAST:      return new AstExprSignCast     (type, expr);
+		case MISC_POINTEGER_CAST: return new AstExprPointegerCast(type, expr);
 		default: break;
 		}
 
@@ -263,6 +264,7 @@ public class ExprParser
 		case MISC_NARROW_CAST:
 		case MISC_WIDEN_CAST:
 		case MISC_SIGN_CAST:
+		case MISC_POINTEGER_CAST:
 			return parseCast(scanner, token.type, delayedExprs);
 
 		default: throw new AssertionError("unreachable");

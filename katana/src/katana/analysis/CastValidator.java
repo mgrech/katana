@@ -51,13 +51,30 @@ public class CastValidator
 		return TypeHelper.isFloatingPointType(sourceType) && TypeHelper.isFloatingPointType(targetType);
 	}
 
+	public static boolean isValidPointegerCast(SemaType sourceType, SemaType targetType, PlatformContext context)
+	{
+		boolean sourceIsPointer = TypeHelper.isPointerType(sourceType);
+		boolean sourceIsPointerInteger = isOneOf(sourceType, BuiltinType.PINT, BuiltinType.UPINT);
+		boolean targetIsPointer = TypeHelper.isPointerType(targetType);
+		boolean targetIsPointerInteger = isOneOf(targetType, BuiltinType.PINT, BuiltinType.UPINT);
+
+		if(!sourceIsPointer && !sourceIsPointerInteger || !targetIsPointer && !targetIsPointerInteger)
+			return false;
+
+		if(SemaType.same(TypeHelper.removeConst(sourceType), TypeHelper.removeConst(targetType)))
+			return true;
+
+		return sourceIsPointer != targetIsPointer;
+	}
+
 	public static boolean isValidCast(SemaType sourceType, SemaType targetType, SemaExprCast.Kind kind, PlatformContext context)
 	{
 		switch(kind)
 		{
-		case SIGN_CAST:   return isValidSignCast(sourceType, targetType, context);
-		case WIDEN_CAST:  return isValidWidenCast(sourceType, targetType, context);
-		case NARROW_CAST: return isValidNarrowCast(sourceType, targetType, context);
+		case SIGN_CAST:      return isValidSignCast(sourceType, targetType, context);
+		case WIDEN_CAST:     return isValidWidenCast(sourceType, targetType, context);
+		case NARROW_CAST:    return isValidNarrowCast(sourceType, targetType, context);
+		case POINTEGER_CAST: return isValidPointegerCast(sourceType, targetType, context);
 		default: break;
 		}
 

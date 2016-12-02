@@ -155,6 +155,12 @@ public class ExprCodeGenerator implements IVisitor
 
 			throw new AssertionError("unreachable");
 
+		case POINTEGER_CAST:
+			if(TypeHelper.isPointerType(targetType))
+				return "inttoptr";
+
+			return "ptrtoint";
+
 		default: break;
 		}
 
@@ -204,6 +210,16 @@ public class ExprCodeGenerator implements IVisitor
 			}
 
 			resultSSA = generateCast(valueSSA, sourceType, targetType, SemaExprCast.Kind.NARROW_CAST);
+			break;
+
+		case POINTEGER_CAST:
+			if(SemaType.same(TypeHelper.removeConst(sourceType), TypeHelper.removeConst(targetType)))
+			{
+				resultSSA = valueSSA;
+				break;
+			}
+
+			resultSSA = generateCast(valueSSA, sourceType, targetType, SemaExprCast.Kind.POINTEGER_CAST);
 			break;
 
 		default: throw new AssertionError("unreachable");
