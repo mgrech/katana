@@ -4,7 +4,7 @@ public enum Os
 {
 	UNKNOWN("unknown"),
 	LINUX("linux"),
-	MACOS("macosx"),
+	MACOS("darwin"),
 	WINDOWS("windows");
 
 	private final String value;
