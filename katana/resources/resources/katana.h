@@ -14,42 +14,9 @@
 
 #pragma once
 
-#if defined(_MSC_VER)
-#define KATANA_COMPILER_MSVC
-#elif defined(__clang__)
-#define KATANA_COMPILER_CLANG
-#elif defined(__GNUC__)
-#define KATANA_COMPILER_GCC
-#else
-#error "compiler unsupported"
-#endif
+#define KEXPORT __attribute__((visibility("default")))
 
-#ifdef __cplusplus
-#define KEXTERNC extern "C"
-#else
-#define KEXTERNC
-#endif
-
-#if defined(KATANA_COMPILER_MSVC)
-#define KEXPORT KEXTERNC
-#elif defined(KATANA_COMPILER_CLANG) || defined(KATANA_COMPILER_GCC)
-#define KEXPORT KEXTERNC __attribute__((visibility("default")))
-#endif
-
-#if defined(_M_X64) || defined(__x86_64__)
-#define KATANA_ARCH_AMD64
-#elif defined(_M_IX32) || defined(__i386__)
-#define KATANA_ARCH_X86
-#else
-#error "architecture unsupported"
-#endif
-
-#if defined(__cplusplus)
-typedef bool kbool;
-#else
-typedef _Bool kbool;
-#endif
-
+typedef _Bool              kbool;
 typedef signed char        kint8;
 typedef unsigned char      kuint8;
 typedef short              kint16;
@@ -73,11 +40,7 @@ typedef kint32  kpint;
 typedef kuint32 kupint;
 #endif
 
-#ifdef __cplusplus
-#define KSTATIC_ASSERT(expr) static_assert(expr, #expr);
-#else
 #define KSTATIC_ASSERT(expr) _Static_assert(expr, #expr);
-#endif
 
 KSTATIC_ASSERT(sizeof(kbool) == 1)
 

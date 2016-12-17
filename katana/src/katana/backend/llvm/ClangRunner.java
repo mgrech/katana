@@ -37,6 +37,11 @@ public class ClangRunner
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang");
+
+		command.add("-undef");
+		command.add("-DKATANA_ARCH_" + triple.arch.name());
+		command.add("-DKATANA_OS_" + triple.os.name());
+
 		command.add("-c");
 		command.add("-nostdinc");
 		command.add("-ffreestanding");
