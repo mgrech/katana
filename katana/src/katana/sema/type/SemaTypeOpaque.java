@@ -14,8 +14,6 @@
 
 package katana.sema.type;
 
-import katana.backend.PlatformContext;
-
 import java.math.BigInteger;
 
 public class SemaTypeOpaque extends SemaType
@@ -24,18 +22,6 @@ public class SemaTypeOpaque extends SemaType
 	{
 		this.size = size;
 		this.alignment = alignment;
-	}
-
-	@Override
-	public BigInteger sizeof(PlatformContext context)
-	{
-		return size;
-	}
-
-	@Override
-	public BigInteger alignof(PlatformContext context)
-	{
-		return alignment;
 	}
 
 	@Override

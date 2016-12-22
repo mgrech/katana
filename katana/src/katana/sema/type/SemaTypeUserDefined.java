@@ -14,28 +14,13 @@
 
 package katana.sema.type;
 
-import katana.backend.PlatformContext;
 import katana.sema.decl.SemaDeclData;
-
-import java.math.BigInteger;
 
 public class SemaTypeUserDefined extends SemaType
 {
 	public SemaTypeUserDefined(SemaDeclData data)
 	{
 		this.data = data;
-	}
-
-	@Override
-	public BigInteger sizeof(PlatformContext context)
-	{
-		return context.sizeof(data);
-	}
-
-	@Override
-	public BigInteger alignof(PlatformContext context)
-	{
-		return context.alignof(data);
 	}
 
 	@Override

@@ -14,9 +14,6 @@
 
 package katana.sema.type;
 
-import katana.backend.PlatformContext;
-
-import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.List;
 
@@ -26,18 +23,6 @@ public class SemaTypeFunction extends SemaType
 	{
 		this.ret = ret;
 		this.params = params;
-	}
-
-	@Override
-	public BigInteger sizeof(PlatformContext context)
-	{
-		throw new UnsupportedOperationException("sizeof");
-	}
-
-	@Override
-	public BigInteger alignof(PlatformContext context)
-	{
-		throw new UnsupportedOperationException("alignof");
 	}
 
 	@Override

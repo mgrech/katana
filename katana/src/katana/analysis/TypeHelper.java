@@ -15,6 +15,7 @@
 package katana.analysis;
 
 import katana.BuiltinType;
+import katana.backend.PlatformContext;
 import katana.sema.type.*;
 
 public class TypeHelper
@@ -128,5 +129,15 @@ public class TypeHelper
 	{
 		type = removeConst(type);
 		return type instanceof SemaTypePointer || type instanceof SemaTypeNullablePointer;
+	}
+
+	public static boolean equalSizes(SemaType first, SemaType second, PlatformContext context)
+	{
+		return TypeSize.of(first, context).equals(TypeSize.of(second, context));
+	}
+
+	public static int compareSizes(SemaType first, SemaType second, PlatformContext context)
+	{
+		return TypeSize.of(first, context).compareTo(TypeSize.of(second, context));
 	}
 }

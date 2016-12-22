@@ -1,5 +1,7 @@
 package katana.platform;
 
+import java.math.BigInteger;
+
 public enum Arch
 {
 	UNKNOWN("unknown", -1, -1),
@@ -7,14 +9,14 @@ public enum Arch
 	X86("x86", 4, 4);
 
 	private final String value;
-	public final int intSize;
-	public final int pointerSize;
+	public final BigInteger intSize;
+	public final BigInteger pointerSize;
 
 	Arch(String value, int intSize, int pointerSize)
 	{
 		this.value = value;
-		this.intSize = intSize;
-		this.pointerSize = pointerSize;
+		this.intSize = BigInteger.valueOf(intSize);
+		this.pointerSize = BigInteger.valueOf(pointerSize);
 	}
 
 	@Override

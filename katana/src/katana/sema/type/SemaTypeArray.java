@@ -14,8 +14,6 @@
 
 package katana.sema.type;
 
-import katana.backend.PlatformContext;
-
 import java.math.BigInteger;
 
 public class SemaTypeArray extends SemaType
@@ -24,18 +22,6 @@ public class SemaTypeArray extends SemaType
 	{
 		this.length = length;
 		this.type = type;
-	}
-
-	@Override
-	public BigInteger sizeof(PlatformContext context)
-	{
-		return length.multiply(type.sizeof(context));
-	}
-
-	@Override
-	public BigInteger alignof(PlatformContext context)
-	{
-		return type.alignof(context);
 	}
 
 	@Override

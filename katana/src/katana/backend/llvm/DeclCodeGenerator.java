@@ -14,6 +14,7 @@
 
 package katana.backend.llvm;
 
+import katana.analysis.TypeAlignment;
 import katana.analysis.TypeHelper;
 import katana.ast.AstPath;
 import katana.backend.PlatformContext;
@@ -125,7 +126,7 @@ public class DeclCodeGenerator implements IVisitor
 		for(SemaDeclFunction.Param param : function.params)
 		{
 			String typeString = TypeCodeGenerator.generate(param.type, context);
-			BigInteger alignment = param.type.alignof(context);
+			BigInteger alignment = TypeAlignment.of(param.type, context);
 			builder.append(String.format("\t%%%s = alloca %s, align %s\n", param.name, typeString, alignment));
 			builder.append(String.format("\tstore %s %%p$%s, %s* %%%s\n", typeString, param.name, typeString, param.name));
 		}
@@ -139,7 +140,7 @@ public class DeclCodeGenerator implements IVisitor
 		{
 			SemaType type = entry.getValue().type;
 			String llvmType = TypeCodeGenerator.generate(type, context);
-			BigInteger align = type.alignof(context);
+			BigInteger align = TypeAlignment.of(type, context);
 			builder.append(String.format("\t%%%s = alloca %s, align %s\n", entry.getKey(), llvmType, align));
 		}
 

@@ -15,7 +15,9 @@
 package katana.backend.llvm;
 
 import katana.BuiltinType;
+import katana.analysis.TypeAlignment;
 import katana.analysis.TypeHelper;
+import katana.analysis.TypeSize;
 import katana.backend.PlatformContext;
 import katana.sema.decl.SemaDeclData;
 import katana.sema.decl.SemaDeclExternFunction;
@@ -71,7 +73,7 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprAlignof alignof)
 	{
-		return Maybe.some("" + alignof.type.alignof(context));
+		return Maybe.some("" + TypeAlignment.of(alignof.type, context));
 	}
 
 	private String generateArrayAccess(boolean usedAsLValue, String arraySSA, SemaType arrayType, SemaType fieldType, SemaExpr index)
@@ -104,7 +106,7 @@ public class ExprCodeGenerator implements IVisitor
 		String arraySSA = generate(arrayAccess.expr, builder, context, fcontext).unwrap();
 		SemaType arrayType = arrayAccess.expr.type();
 		String arrayTypeString = TypeCodeGenerator.generate(arrayType, context);
-		BigInteger arrayAlignment = arrayType.alignof(context);
+		BigInteger arrayAlignment = TypeAlignment.of(arrayType, context);
 
 		String tmpSSA = fcontext.allocateSSA();
 		builder.append(String.format("\t%s = alloca %s, align %s\n", tmpSSA, arrayTypeString, arrayAlignment));
@@ -193,7 +195,7 @@ public class ExprCodeGenerator implements IVisitor
 			break;
 
 		case WIDEN_CAST:
-			if(sourceType.sizeof(context).equals(targetType.sizeof(context)))
+			if(TypeHelper.equalSizes(sourceType, targetType, context))
 			{
 				resultSSA = valueSSA;
 				break;
@@ -203,7 +205,7 @@ public class ExprCodeGenerator implements IVisitor
 			break;
 
 		case NARROW_CAST:
-			if(sourceType.sizeof(context).equals(targetType.sizeof(context)))
+			if(TypeHelper.equalSizes(sourceType, targetType, context))
 			{
 				resultSSA = valueSSA;
 				break;
@@ -496,7 +498,7 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprSizeof sizeof)
 	{
-		return Maybe.some("" + sizeof.type.sizeof(context));
+		return Maybe.some("" + TypeSize.of(sizeof.type, context));
 	}
 
 	private Maybe<String> visit(SSAExpr ssa)

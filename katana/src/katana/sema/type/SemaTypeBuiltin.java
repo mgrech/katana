@@ -15,9 +15,6 @@
 package katana.sema.type;
 
 import katana.BuiltinType;
-import katana.backend.PlatformContext;
-
-import java.math.BigInteger;
 
 public class SemaTypeBuiltin extends SemaType
 {
@@ -42,18 +39,6 @@ public class SemaTypeBuiltin extends SemaType
 	public SemaTypeBuiltin(BuiltinType which)
 	{
 		this.which = which;
-	}
-
-	@Override
-	public BigInteger sizeof(PlatformContext context)
-	{
-		return context.sizeof(which);
-	}
-
-	@Override
-	public BigInteger alignof(PlatformContext context)
-	{
-		return context.alignof(which);
 	}
 
 	@Override

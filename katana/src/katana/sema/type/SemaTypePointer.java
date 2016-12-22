@@ -14,28 +14,11 @@
 
 package katana.sema.type;
 
-import katana.BuiltinType;
-import katana.backend.PlatformContext;
-
-import java.math.BigInteger;
-
 public class SemaTypePointer extends SemaType
 {
 	public SemaTypePointer(SemaType type)
 	{
 		this.type = type;
-	}
-
-	@Override
-	public BigInteger sizeof(PlatformContext context)
-	{
-		return context.sizeof(BuiltinType.NULL);
-	}
-
-	@Override
-	public BigInteger alignof(PlatformContext context)
-	{
-		return context.alignof(BuiltinType.NULL);
 	}
 
 	@Override

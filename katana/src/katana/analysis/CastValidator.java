@@ -12,7 +12,7 @@ public class CastValidator
 		if(!TypeHelper.isIntegerType(sourceType) || !TypeHelper.isIntegerType(targetType))
 			return false;
 
-		return sourceType.sizeof(context).equals(sourceType.sizeof(context));
+		return TypeHelper.equalSizes(sourceType, targetType, context);
 	}
 
 	private static boolean isOneOf(SemaType type, BuiltinType... builtinTypes)
@@ -31,7 +31,7 @@ public class CastValidator
 			return false;
 
 		if(TypeHelper.isIntegerType(sourceType) && TypeHelper.isIntegerType(targetType))
-			return sourceType.sizeof(context).compareTo(targetType.sizeof(context)) != 1;
+			return TypeHelper.compareSizes(sourceType, targetType, context) != 1;
 
 		return TypeHelper.isFloatingPointType(sourceType) && TypeHelper.isBuiltinType(targetType, BuiltinType.FLOAT64);
 	}
@@ -43,7 +43,7 @@ public class CastValidator
 			return false;
 
 		if(TypeHelper.isIntegerType(sourceType) && TypeHelper.isIntegerType(targetType))
-			return sourceType.sizeof(context).compareTo(targetType.sizeof(context)) != -1;
+			return TypeHelper.compareSizes(sourceType, targetType, context) != -1;
 
 		if(TypeHelper.isBuiltinType(sourceType, BuiltinType.FLOAT32) && TypeHelper.isBuiltinType(targetType, BuiltinType.FLOAT64))
 			return false;

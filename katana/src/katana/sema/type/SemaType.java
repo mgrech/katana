@@ -14,16 +14,10 @@
 
 package katana.sema.type;
 
-import katana.backend.PlatformContext;
 import katana.visitor.IVisitable;
-
-import java.math.BigInteger;
 
 public abstract class SemaType implements IVisitable
 {
-	public abstract BigInteger sizeof(PlatformContext context);
-	public abstract BigInteger alignof(PlatformContext context);
-
 	protected abstract boolean same(SemaType other);
 
 	public static boolean same(SemaType first, SemaType second)
