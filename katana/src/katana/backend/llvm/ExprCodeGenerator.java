@@ -485,15 +485,7 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprOffsetof offsetof)
 	{
-		String offsetPtrSSA = fcontext.allocateSSA();
-		SemaDeclStruct.Field field = offsetof.field;
-		String typeString = TypeCodeGenerator.generate(new SemaTypeUserDefined(field.struct()), context);
-		builder.append(String.format("\t%s = getelementptr %s, %s* null, i32 %s\n", offsetPtrSSA, typeString, typeString, field.index));
-
-		String offsetSSA = fcontext.allocateSSA();
-		String offsetTypeString = TypeCodeGenerator.generate(offsetof.type(), context);
-		builder.append(String.format("\t%s = ptrtoint %s* %s to %s\n", offsetSSA, typeString, offsetPtrSSA, offsetTypeString));
-		return Maybe.some(offsetSSA);
+		return Maybe.some("" + offsetof.field.offsetof());
 	}
 
 	private Maybe<String> visit(SemaExprSizeof sizeof)
