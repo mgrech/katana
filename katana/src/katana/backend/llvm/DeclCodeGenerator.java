@@ -51,13 +51,13 @@ public class DeclCodeGenerator implements IVisitor
 		return modulePath.toString() + "." + decl.name();
 	}
 
-	private void visit(SemaDeclData data)
+	private void visit(SemaDeclStruct struct)
 	{
 		builder.append('%');
-		builder.append(qualifiedName(data));
+		builder.append(qualifiedName(struct));
 		builder.append(" = type { ");
 
-		List<SemaDeclData.Field> fields = data.fieldsByIndex();
+		List<SemaDeclStruct.Field> fields = struct.fieldsByIndex();
 
 		if(!fields.isEmpty())
 		{

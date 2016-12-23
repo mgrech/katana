@@ -18,7 +18,7 @@ import katana.ast.type.AstType;
 
 import java.util.List;
 
-public class AstDeclData extends AstDecl
+public class AstDeclStruct extends AstDecl
 {
 	public static class Field
 	{
@@ -38,7 +38,7 @@ public class AstDeclData extends AstDecl
 		}
 	}
 
-	public AstDeclData(boolean exported, boolean opaque, String name, List<Field> fields)
+	public AstDeclStruct(boolean exported, boolean opaque, String name, List<Field> fields)
 	{
 		super(exported, opaque);
 		this.name = name;

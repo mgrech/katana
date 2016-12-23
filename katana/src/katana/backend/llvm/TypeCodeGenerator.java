@@ -93,7 +93,7 @@ public class TypeCodeGenerator implements IVisitor
 
 	private String visit(SemaTypeUserDefined type)
 	{
-		return '%' + type.data.qualifiedName().toString();
+		return '%' + type.decl.qualifiedName().toString();
 	}
 
 	private String visit(SemaTypeArray type)

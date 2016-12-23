@@ -15,12 +15,12 @@
 package katana.sema.expr;
 
 import katana.analysis.TypeHelper;
-import katana.sema.decl.SemaDeclData;
+import katana.sema.decl.SemaDeclStruct;
 import katana.sema.type.SemaType;
 
 public class SemaExprFieldAccessRValue extends SemaExpr
 {
-	public SemaExprFieldAccessRValue(SemaExpr expr, SemaDeclData.Field field, boolean const_)
+	public SemaExprFieldAccessRValue(SemaExpr expr, SemaDeclStruct.Field field, boolean const_)
 	{
 		this.expr = expr;
 		this.field = field;
@@ -34,6 +34,6 @@ public class SemaExprFieldAccessRValue extends SemaExpr
 	}
 
 	public SemaExpr expr;
-	public SemaDeclData.Field field;
+	public SemaDeclStruct.Field field;
 	public boolean const_;
 }

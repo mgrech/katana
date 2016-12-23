@@ -51,7 +51,7 @@ public class TypeMangler implements IVisitor
 
 	private String visit(SemaTypeUserDefined user)
 	{
-		return user.data.qualifiedName().toString();
+		return user.decl.qualifiedName().toString();
 	}
 
 	private String visit(SemaTypeFunction function)

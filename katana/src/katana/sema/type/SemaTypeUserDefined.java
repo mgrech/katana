@@ -14,20 +14,20 @@
 
 package katana.sema.type;
 
-import katana.sema.decl.SemaDeclData;
+import katana.sema.decl.SemaDeclStruct;
 
 public class SemaTypeUserDefined extends SemaType
 {
-	public SemaTypeUserDefined(SemaDeclData data)
+	public SemaTypeUserDefined(SemaDeclStruct decl)
 	{
-		this.data = data;
+		this.decl = decl;
 	}
 
 	@Override
 	protected boolean same(SemaType other)
 	{
-		return data == ((SemaTypeUserDefined)other).data;
+		return decl == ((SemaTypeUserDefined)other).decl;
 	}
 
-	public SemaDeclData data;
+	public SemaDeclStruct decl;
 }

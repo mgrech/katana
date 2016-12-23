@@ -109,7 +109,7 @@ public class FileParser implements IVisitor
 		module.decls.put(name, decl);
 	}
 
-	private void visit(AstDeclData decl)
+	private void visit(AstDeclStruct decl)
 	{
 		handleDecl(decl, decl.name);
 	}

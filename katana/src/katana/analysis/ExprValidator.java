@@ -600,8 +600,8 @@ public class ExprValidator implements IVisitor
 		if(!(typeNoConst instanceof SemaTypeUserDefined))
 			errorNoSuchField(type, memberAccess.name);
 
-		SemaDeclData data = ((SemaTypeUserDefined)typeNoConst).data;
-		Maybe<SemaDeclData.Field> field = data.findField(memberAccess.name);
+		SemaDeclStruct struct = ((SemaTypeUserDefined)typeNoConst).decl;
+		Maybe<SemaDeclStruct.Field> field = struct.findField(memberAccess.name);
 
 		if(field.isNone())
 			errorNoSuchField(type, memberAccess.name);
@@ -689,13 +689,13 @@ public class ExprValidator implements IVisitor
 
 		SemaSymbol symbol = candidates.get(0);
 
-		if(!(symbol instanceof SemaDeclData))
+		if(!(symbol instanceof SemaDeclStruct))
 			throw new CompileException(String.format("symbol '%s' does not refer to a type", offsetof.type));
 
-		Maybe<SemaDeclData.Field> field = ((SemaDeclData)symbol).findField(offsetof.field);
+		Maybe<SemaDeclStruct.Field> field = ((SemaDeclStruct)symbol).findField(offsetof.field);
 
 		if(field.isNone())
-			errorNoSuchField(new SemaTypeUserDefined((SemaDeclData)symbol), offsetof.field);
+			errorNoSuchField(new SemaTypeUserDefined((SemaDeclStruct)symbol), offsetof.field);
 
 		return new SemaExprOffsetof(field.unwrap());
 	}

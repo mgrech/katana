@@ -19,7 +19,7 @@ import katana.backend.PlatformContext;
 import katana.diag.CompileException;
 import katana.sema.SemaSymbol;
 import katana.sema.decl.SemaDecl;
-import katana.sema.decl.SemaDeclData;
+import katana.sema.decl.SemaDeclStruct;
 import katana.sema.decl.SemaDeclTypeAlias;
 import katana.sema.expr.SemaExpr;
 import katana.sema.scope.SemaScope;
@@ -122,8 +122,8 @@ public class TypeValidator implements IVisitor
 		if(symbol instanceof SemaDeclTypeAlias)
 			return ((SemaDeclTypeAlias)symbol).type;
 
-		if(symbol instanceof SemaDeclData)
-			return new SemaTypeUserDefined((SemaDeclData)symbol);
+		if(symbol instanceof SemaDeclStruct)
+			return new SemaTypeUserDefined((SemaDeclStruct)symbol);
 
 		throw new CompileException(String.format("symbol '%s' does not refer to a type"));
 	}

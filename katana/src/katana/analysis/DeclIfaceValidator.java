@@ -48,14 +48,14 @@ public class DeclIfaceValidator implements IVisitor
 		semaDecl.accept(validator, info.astDecl, info.scope);
 	}
 
-	private void visit(SemaDeclData semaData, AstDeclData data, SemaScopeFile scope)
+	private void visit(SemaDeclStruct semaStruct, AstDeclStruct struct, SemaScopeFile scope)
 	{
-		for(AstDeclData.Field field : data.fields)
+		for(AstDeclStruct.Field field : struct.fields)
 		{
 			SemaType type = TypeValidator.validate(field.type, scope, context, validateDecl);
 
-			if(!semaData.defineField(field.name, type))
-				throw new CompileException(String.format("duplicate field '%s' in type '%s'", field.name, semaData.name()));
+			if(!semaStruct.defineField(field.name, type))
+				throw new CompileException(String.format("duplicate field '%s' in type '%s'", field.name, semaStruct.name()));
 		}
 	}
 

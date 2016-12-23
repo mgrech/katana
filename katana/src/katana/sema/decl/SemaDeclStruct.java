@@ -20,7 +20,7 @@ import katana.utils.Maybe;
 
 import java.util.*;
 
-public class SemaDeclData extends SemaDecl
+public class SemaDeclStruct extends SemaDecl
 {
 	public class Field
 	{
@@ -31,9 +31,9 @@ public class SemaDeclData extends SemaDecl
 			this.index = index;
 		}
 
-		public SemaDeclData data()
+		public SemaDeclStruct struct()
 		{
-			return SemaDeclData.this;
+			return SemaDeclStruct.this;
 		}
 
 		public String name;
@@ -41,7 +41,7 @@ public class SemaDeclData extends SemaDecl
 		public int index;
 	}
 
-	public SemaDeclData(SemaModule module, boolean exported, boolean opaque, String name)
+	public SemaDeclStruct(SemaModule module, boolean exported, boolean opaque, String name)
 	{
 		super(module, exported, opaque);
 		this.name = name;

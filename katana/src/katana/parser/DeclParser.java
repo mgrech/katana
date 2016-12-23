@@ -56,7 +56,7 @@ public class DeclParser
 		switch(scanner.state().token.type)
 		{
 		case DECL_FN:     return parseFunction(scanner, exported, opaque, extern, delayedExprs);
-		case DECL_DATA:   return parseData(scanner, exported, opaque, delayedExprs);
+		case DECL_DATA:   return parseStruct(scanner, exported, opaque, delayedExprs);
 		case DECL_GLOBAL: return parseGlobal(scanner, exported, opaque, delayedExprs);
 		case DECL_OP:     return parseOperator(scanner, exported);
 
@@ -238,29 +238,29 @@ public class DeclParser
 		return body;
 	}
 
-	private static AstDeclData parseData(Scanner scanner, boolean exported, boolean opaque, DelayedExprParseList delayedExprs)
+	private static AstDeclStruct parseStruct(Scanner scanner, boolean exported, boolean opaque, DelayedExprParseList delayedExprs)
 	{
 		scanner.advance();
 
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
 		ParseTools.expect(scanner, Token.Type.PUNCT_LBRACE, true);
 
-		List<AstDeclData.Field> fields = new ArrayList<>();
+		List<AstDeclStruct.Field> fields = new ArrayList<>();
 
 		while(!ParseTools.option(scanner, Token.Type.PUNCT_RBRACE, false))
 			fields.add(parseField(scanner, delayedExprs));
 
 		ParseTools.expect(scanner, Token.Type.PUNCT_RBRACE, true);
 
-		return new AstDeclData(exported, opaque, name, fields);
+		return new AstDeclStruct(exported, opaque, name, fields);
 	}
 
-	private static AstDeclData.Field parseField(Scanner scanner, DelayedExprParseList delayedExprs)
+	private static AstDeclStruct.Field parseField(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
 		AstType type = TypeParser.parse(scanner, delayedExprs);
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
 		ParseTools.expect(scanner, Token.Type.PUNCT_SCOLON, true);
-		return new AstDeclData.Field(type, name);
+		return new AstDeclStruct.Field(type, name);
 	}
 
 	private static Maybe<AstExprLiteral> parseGlobalInitAndScolon(Scanner scanner, DelayedExprParseList delayedExprs)

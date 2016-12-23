@@ -19,8 +19,8 @@ import katana.analysis.TypeAlignment;
 import katana.analysis.TypeHelper;
 import katana.analysis.TypeSize;
 import katana.backend.PlatformContext;
-import katana.sema.decl.SemaDeclData;
 import katana.sema.decl.SemaDeclExternFunction;
+import katana.sema.decl.SemaDeclStruct;
 import katana.sema.expr.*;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeFunction;
@@ -486,8 +486,8 @@ public class ExprCodeGenerator implements IVisitor
 	private Maybe<String> visit(SemaExprOffsetof offsetof)
 	{
 		String offsetPtrSSA = fcontext.allocateSSA();
-		SemaDeclData.Field field = offsetof.field;
-		String typeString = TypeCodeGenerator.generate(new SemaTypeUserDefined(field.data()), context);
+		SemaDeclStruct.Field field = offsetof.field;
+		String typeString = TypeCodeGenerator.generate(new SemaTypeUserDefined(field.struct()), context);
 		builder.append(String.format("\t%s = getelementptr %s, %s* null, i32 %s\n", offsetPtrSSA, typeString, typeString, field.index));
 
 		String offsetSSA = fcontext.allocateSSA();

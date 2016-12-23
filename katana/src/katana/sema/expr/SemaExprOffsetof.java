@@ -14,13 +14,13 @@
 
 package katana.sema.expr;
 
-import katana.sema.decl.SemaDeclData;
+import katana.sema.decl.SemaDeclStruct;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeBuiltin;
 
 public class SemaExprOffsetof extends SemaExpr
 {
-	public SemaExprOffsetof(SemaDeclData.Field field)
+	public SemaExprOffsetof(SemaDeclStruct.Field field)
 	{
 		this.field = field;
 	}
@@ -31,5 +31,5 @@ public class SemaExprOffsetof extends SemaExpr
 		return SemaTypeBuiltin.PINT;
 	}
 
-	public SemaDeclData.Field field;
+	public SemaDeclStruct.Field field;
 }
