@@ -108,7 +108,7 @@ public class TypeSize implements IVisitor
 
 	private BigInteger visit(SemaTypeUserDefined userDefinedType)
 	{
-		throw new AssertionError("nyi");
+		return userDefinedType.decl.layout.sizeof();
 	}
 
 	public static BigInteger of(SemaType type, PlatformContext context)

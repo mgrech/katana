@@ -57,6 +57,13 @@ public class DeclIfaceValidator implements IVisitor
 			if(!semaStruct.defineField(field.name, type))
 				throw new CompileException(String.format("duplicate field '%s' in type '%s'", field.name, semaStruct.name()));
 		}
+
+		StructLayoutBuilder builder = new StructLayoutBuilder(context);
+
+		for(SemaDeclStruct.Field field : semaStruct.fieldsByIndex())
+			builder.appendField(field.type);
+
+		semaStruct.layout = builder.build();
 	}
 
 	private void validateFunction(SemaDeclFunction semaFunction, AstDeclFunction function, SemaScopeFile scope)

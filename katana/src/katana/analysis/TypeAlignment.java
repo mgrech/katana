@@ -72,7 +72,7 @@ public class TypeAlignment implements IVisitor
 
 	private BigInteger visit(SemaTypeUserDefined userDefinedType)
 	{
-		throw new AssertionError("nyi");
+		return userDefinedType.decl.layout.alignof();
 	}
 
 	public static BigInteger of(SemaType type, PlatformContext context)

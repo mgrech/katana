@@ -14,14 +14,27 @@
 
 package katana.sema.decl;
 
+import katana.analysis.StructLayout;
 import katana.sema.SemaModule;
 import katana.sema.type.SemaType;
 import katana.utils.Maybe;
 
+import java.math.BigInteger;
 import java.util.*;
 
 public class SemaDeclStruct extends SemaDecl
 {
+	private String name;
+	private final List<Field> fields = new ArrayList<>();
+	private final Map<String, Field> fieldsByName = new TreeMap<>();
+	public StructLayout layout;
+
+	public SemaDeclStruct(SemaModule module, boolean exported, boolean opaque, String name)
+	{
+		super(module, exported, opaque);
+		this.name = name;
+	}
+
 	public class Field
 	{
 		public Field(String name, SemaType type, int index)
@@ -29,6 +42,11 @@ public class SemaDeclStruct extends SemaDecl
 			this.name = name;
 			this.type = type;
 			this.index = index;
+		}
+
+		public BigInteger offsetof()
+		{
+			return struct().layout.offsetof(index);
 		}
 
 		public SemaDeclStruct struct()
@@ -39,12 +57,6 @@ public class SemaDeclStruct extends SemaDecl
 		public String name;
 		public SemaType type;
 		public int index;
-	}
-
-	public SemaDeclStruct(SemaModule module, boolean exported, boolean opaque, String name)
-	{
-		super(module, exported, opaque);
-		this.name = name;
 	}
 
 	public boolean defineField(String name, SemaType type)
@@ -79,8 +91,4 @@ public class SemaDeclStruct extends SemaDecl
 	{
 		return name;
 	}
-
-	private String name;
-	private final List<Field> fields = new ArrayList<>();
-	private final Map<String, Field> fieldsByName = new TreeMap<>();
 }
