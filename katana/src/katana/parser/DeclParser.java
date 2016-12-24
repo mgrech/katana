@@ -243,6 +243,7 @@ public class DeclParser
 		scanner.advance();
 
 		String name = ParseTools.consumeExpected(scanner, Token.Type.IDENT).value;
+		boolean abiCompat = ParseTools.option(scanner, Token.Type.DECL_ABI, true);
 		ParseTools.expect(scanner, Token.Type.PUNCT_LBRACE, true);
 
 		List<AstDeclStruct.Field> fields = new ArrayList<>();
@@ -252,7 +253,7 @@ public class DeclParser
 
 		ParseTools.expect(scanner, Token.Type.PUNCT_RBRACE, true);
 
-		return new AstDeclStruct(exported, opaque, name, fields);
+		return new AstDeclStruct(exported, opaque, name, abiCompat, fields);
 	}
 
 	private static AstDeclStruct.Field parseField(Scanner scanner, DelayedExprParseList delayedExprs)

@@ -25,14 +25,16 @@ import java.util.*;
 public class SemaDeclStruct extends SemaDecl
 {
 	private String name;
+	public boolean abiCompat;
 	private final List<Field> fields = new ArrayList<>();
 	private final Map<String, Field> fieldsByName = new TreeMap<>();
 	public StructLayout layout;
 
-	public SemaDeclStruct(SemaModule module, boolean exported, boolean opaque, String name)
+	public SemaDeclStruct(SemaModule module, boolean exported, boolean opaque, String name, boolean abiCompat)
 	{
 		super(module, exported, opaque);
 		this.name = name;
+		this.abiCompat = abiCompat;
 	}
 
 	public class Field

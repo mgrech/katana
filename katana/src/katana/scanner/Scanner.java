@@ -275,6 +275,7 @@ public class Scanner
 		case "prefix":   return Token.DECL_PREFIX;
 		case "infix":    return Token.DECL_INFIX;
 		case "postfix":  return Token.DECL_POSTFIX;
+		case "abi":      return Token.DECL_ABI;
 
 		case "local":  return Token.STMT_LOCAL;
 		case "if":     return Token.STMT_IF;

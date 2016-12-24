@@ -123,7 +123,7 @@ public class DeclRegisterer implements IVisitor
 
 	public SemaDecl visit(AstDeclStruct decl, SemaScopeFile scope, SemaModule module)
 	{
-		SemaDeclStruct semaDecl = new SemaDeclStruct(module, decl.exported, decl.opaque, decl.name);
+		SemaDeclStruct semaDecl = new SemaDeclStruct(module, decl.exported, decl.opaque, decl.name, decl.abiCompat);
 		handleDecl(semaDecl, scope, module);
 		return semaDecl;
 	}

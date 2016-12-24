@@ -71,6 +71,7 @@ public class Token
 		DECL_PREFIX,
 		DECL_INFIX,
 		DECL_POSTFIX,
+		DECL_ABI,
 
 		STMT_LOCAL,
 		STMT_IF,
@@ -144,6 +145,7 @@ public class Token
 	public static final Token DECL_PREFIX  = new Token(Category.DECL, Type.DECL_PREFIX,  "prefix");
 	public static final Token DECL_INFIX   = new Token(Category.DECL, Type.DECL_INFIX,   "infix");
 	public static final Token DECL_POSTFIX = new Token(Category.DECL, Type.DECL_POSTFIX, "postfix");
+	public static final Token DECL_ABI     = new Token(Category.DECL, Type.DECL_ABI,     "abi");
 
 	public static final Token STMT_LOCAL  = new Token(Category.STMT, Type.STMT_LOCAL,  "local");
 	public static final Token STMT_IF     = new Token(Category.STMT, Type.STMT_IF,     "if");

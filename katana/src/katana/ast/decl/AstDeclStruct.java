@@ -38,13 +38,15 @@ public class AstDeclStruct extends AstDecl
 		}
 	}
 
-	public AstDeclStruct(boolean exported, boolean opaque, String name, List<Field> fields)
+	public AstDeclStruct(boolean exported, boolean opaque, String name, boolean abiCompat, List<Field> fields)
 	{
 		super(exported, opaque);
 		this.name = name;
+		this.abiCompat = abiCompat;
 		this.fields = fields;
 	}
 
+	public boolean abiCompat;
 	public String name;
 	public List<Field> fields;
 
