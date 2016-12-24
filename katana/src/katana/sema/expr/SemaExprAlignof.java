@@ -27,7 +27,7 @@ public class SemaExprAlignof extends SemaExpr
 	@Override
 	public SemaType type()
 	{
-		return SemaTypeBuiltin.INT;
+		return SemaTypeBuiltin.PINT;
 	}
 
 	public SemaType type;
