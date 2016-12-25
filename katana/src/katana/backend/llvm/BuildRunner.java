@@ -48,10 +48,18 @@ public class BuildRunner
 		command.add("-ffreestanding");
 		command.add("-fno-strict-aliasing");
 
-		if(type == ProjectType.LIBRARY)
+		switch(type)
 		{
+		case EXECUTABLE:
+			command.add("-fPIE");
+			break;
+
+		case LIBRARY:
 			command.add("-fPIC");
 			command.add("-fvisibility=hidden");
+			break;
+
+		default: throw new AssertionError("unreachable");
 		}
 
 		if(target.os == Os.WINDOWS)
@@ -77,8 +85,18 @@ public class BuildRunner
 		command.add("-c");
 		command.add("-Wno-override-module");
 
-		if(project.type == ProjectType.LIBRARY)
+		switch(project.type)
+		{
+		case EXECUTABLE:
+			command.add("-fPIE");
+			break;
+
+		case LIBRARY:
 			command.add("-fPIC");
+			break;
+
+		default: throw new AssertionError("unreachable");
+		}
 
 		command.add(path.toString());
 		command.add("-o");
