@@ -183,6 +183,11 @@ public class BuildRunner
 			command.add("-rpath");
 			command.add("$ORIGIN");
 
+			command.add("-z");
+			command.add("nodefaultlib");
+			command.add("-z");
+			command.add("now");
+
 			command.add("-o");
 			command.add(binaryName);
 		}
