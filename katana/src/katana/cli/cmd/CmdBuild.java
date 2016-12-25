@@ -17,6 +17,7 @@ package katana.cli.cmd;
 import katana.analysis.ProgramValidator;
 import katana.ast.AstProgram;
 import katana.backend.PlatformContext;
+import katana.backend.llvm.BuildRunner;
 import katana.backend.llvm.PlatformContextLlvm;
 import katana.backend.llvm.ProgramCodeGenerator;
 import katana.cli.Command;
@@ -40,15 +41,16 @@ public class CmdBuild
 		if(args.length != 1)
 			throw new CommandException("invalid number of arguments, usage: build <source-dir>");
 
-		Path root = Paths.get(args[0]).toAbsolutePath().normalize();
-		Project project = ProjectManager.load(root);
 		PlatformContext context = new PlatformContextLlvm(TargetTriple.NATIVE);
+		Path root = Paths.get(args[0]).toAbsolutePath().normalize();
 
 		try
 		{
+			Project project = ProjectManager.load(root);
 			AstProgram ast = ProgramParser.parse(project);
 			SemaProgram program = ProgramValidator.validate(ast, context);
 			ProgramCodeGenerator.generate(project, program, context);
+			BuildRunner.build(project, context.target());
 		}
 
 		catch(CompileException e)

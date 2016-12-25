@@ -20,8 +20,11 @@ import katana.ast.AstPath;
 import katana.backend.PlatformContext;
 import katana.diag.CompileException;
 import katana.diag.TypeString;
+import katana.platform.Arch;
+import katana.platform.Os;
 import katana.platform.TargetTriple;
 import katana.project.Project;
+import katana.project.ProjectType;
 import katana.sema.SemaModule;
 import katana.sema.SemaProgram;
 import katana.sema.decl.SemaDecl;
@@ -42,15 +45,14 @@ public class ProgramCodeGenerator
 		for(SemaModule child : module.children().values())
 			generateDecls(generator, child);
 
-		for(SemaDecl decl : module.decls().values())
-			generator.generate(decl);
+		module.decls().values().forEach(generator::generate);
 	}
 
 	private static void generateEntryPointWrapper(StringBuilder builder, SemaDecl func)
 	{
 		SemaType ret = ((SemaDeclFunction)func).ret;
 
-		builder.append("define i32 @main()\n{\n");
+		builder.append("define i32 @_Katana_main()\n{\n");
 
 		if(TypeHelper.isVoidType(ret))
 		{
@@ -107,23 +109,35 @@ public class ProgramCodeGenerator
 		throw new CompileException(String.format("entry point must return 'void' or 'int32', got '%s'", TypeString.of(func.ret)));
 	}
 
+	private static void generateDllMain(StringBuilder builder, TargetTriple target)
+	{
+		builder.append("define");
+
+		// http://llvm.org/docs/doxygen/html/CallingConv_8h_source.html#l00081
+		if(target.arch == Arch.X86)
+			builder.append(" cc 64"); // stdcall
+
+		builder.append(" void @_Katana_DllMain()\n{\n\tret void\n}\n");
+	}
+
 	public static void generate(Project project, SemaProgram program, PlatformContext context) throws IOException
 	{
-		TargetTriple triple = TargetTriple.NATIVE;
+		StringBuilder builder = new StringBuilder();
+		builder.append(String.format("target triple = \"%s\"\n\n", context.target()));
 
-		try(OutputStream stream = new FileOutputStream("program.ll"))
+		generateDecls(new DeclCodeGenerator(builder, context), program.root);
+
+		if(project.entryPoint.isSome())
+			generateEntryPointWrapper(builder, findEntryPointFunction(program, project.entryPoint.unwrap()));
+
+		else if(project.type == ProjectType.LIBRARY && context.target().os == Os.WINDOWS)
+			generateDllMain(builder, context.target());
+
+		byte[] output = builder.toString().getBytes(StandardCharsets.UTF_8);
+
+		try(OutputStream stream = new FileOutputStream(project.name + ".ll"))
 		{
-			StringBuilder builder = new StringBuilder();
-			builder.append(String.format("target triple = \"%s\"\n\n", triple));
-
-			generateDecls(new DeclCodeGenerator(builder, context), program.root);
-
-			if(project.entryPoint.isSome())
-				generateEntryPointWrapper(builder, findEntryPointFunction(program, project.entryPoint.unwrap()));
-
-			stream.write(builder.toString().getBytes(StandardCharsets.UTF_8));
+			stream.write(output);
 		}
-
-		ClangRunner.build(project, triple);
 	}
 }

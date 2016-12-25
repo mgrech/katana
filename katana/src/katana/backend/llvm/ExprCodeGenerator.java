@@ -20,11 +20,9 @@ import katana.analysis.TypeHelper;
 import katana.analysis.TypeSize;
 import katana.backend.PlatformContext;
 import katana.sema.decl.SemaDeclExternFunction;
-import katana.sema.decl.SemaDeclStruct;
 import katana.sema.expr.*;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeFunction;
-import katana.sema.type.SemaTypeUserDefined;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 

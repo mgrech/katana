@@ -1,6 +1,6 @@
 {
-	// version of katana this project requires
-	"katana-version": "${project.version}",
+	// name of this project
+	"name": "program",
 
 	// source paths - can either be files or directories
 	// must point to a location below the project root
@@ -8,7 +8,13 @@
 		"source"
 	],
 
-	// full module path of function to use as the entry point
-	// leave out if building a library
-	"entry-point": "main.main"
+	// binary type to generate - executable or library
+	"type": "executable",
+
+	// if building executable
+	// function to use as the entry point
+	"entry-point": "main.main",
+
+	// version of katana this project requires
+	"katana-version": "${project.version}"
 }

@@ -105,10 +105,52 @@ public class ProjectManager
 		}
 	}
 
+	private static void configError(String fmt, Object... values)
+	{
+		throw new CompileException(String.format("%s: %s", PROJECT_CONFIG_NAME, String.format(fmt, values)));
+	}
+
+	private static void configErrorMissingProperty(String name)
+	{
+		configError("missing property '%s'", name);
+	}
+
+	private static void validatePropertyValue(String name, String value, String pattern)
+	{
+		if(!value.matches(pattern))
+			configError("property '%s' does not match pattern '%s', got '%s'", name, pattern, value);
+	}
+
+	private static void validateConfig(ProjectConfig config)
+	{
+		if(config.name == null)
+			configErrorMissingProperty("name");
+
+		validatePropertyValue("name", config.name, "[-A-Za-z0-9]+");
+
+		if(config.sourcePaths == null)
+			configErrorMissingProperty("source-paths");
+
+		if(config.type == null)
+			configErrorMissingProperty("type");
+
+		if(config.katanaVersion == null)
+			configErrorMissingProperty("katana-version");
+
+		boolean isExecutable = config.type.toLowerCase().equals("executable");
+
+		if(isExecutable && config.entryPoint == null)
+			configErrorMissingProperty("entry-point");
+
+		if(!isExecutable && config.entryPoint != null)
+			configError("property 'entry-point' is only applicable to executables");
+	}
+
 	public static Project load(Path root) throws IOException
 	{
 		ProjectConfig config = loadConfig(root);
-		Project project = new Project(root, Maybe.wrap(config.entryPoint));
+		validateConfig(config);
+		Project project = new Project(root, config.name, ProjectType.valueOf(config.type.toUpperCase()), Maybe.wrap(config.entryPoint));
 		discoverSourceFiles(root, config, project);
 		return project;
 	}

@@ -14,13 +14,8 @@
 
 package katana.project;
 
-import java.util.List;
-
-public class ProjectConfig
+public enum ProjectType
 {
-	public String name;
-	public List<String> sourcePaths;
-	public String type;
-	public String entryPoint; // can be null
-	public String katanaVersion;
+	EXECUTABLE,
+	LIBRARY,
 }
