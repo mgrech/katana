@@ -18,6 +18,7 @@ import katana.analysis.TypeAlignment;
 import katana.analysis.TypeHelper;
 import katana.ast.AstPath;
 import katana.backend.PlatformContext;
+import katana.project.Project;
 import katana.sema.decl.*;
 import katana.sema.stmt.SemaStmt;
 import katana.sema.type.SemaType;
@@ -32,11 +33,13 @@ import java.util.Map;
 public class DeclCodeGenerator implements IVisitor
 {
 	private StringBuilder builder;
+	private Project project;
 	private PlatformContext context;
 
-	public DeclCodeGenerator(StringBuilder builder, PlatformContext context)
+	public DeclCodeGenerator(StringBuilder builder, Project project, PlatformContext context)
 	{
 		this.builder = builder;
+		this.project = project;
 		this.context = context;
 	}
 
@@ -91,7 +94,21 @@ public class DeclCodeGenerator implements IVisitor
 	{
 		boolean isExternal = function instanceof SemaDeclExternFunction;
 
-		builder.append(isExternal ? "declare " : "define private ");
+		builder.append(isExternal ? "declare " : "define ");
+
+		if(function.exported)
+		{
+			switch(project.type)
+			{
+			case LIBRARY: builder.append("dllexport "); break;
+			case EXECUTABLE: break;
+			default: throw new AssertionError("unreachable");
+			}
+		}
+
+		else
+			builder.append("private ");
+
 		builder.append(TypeCodeGenerator.generate(function.ret, context));
 		builder.append(" @");
 

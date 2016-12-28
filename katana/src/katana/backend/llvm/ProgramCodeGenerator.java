@@ -125,7 +125,7 @@ public class ProgramCodeGenerator
 		StringBuilder builder = new StringBuilder();
 		builder.append(String.format("target triple = \"%s\"\n\n", context.target()));
 
-		generateDecls(new DeclCodeGenerator(builder, context), program.root);
+		generateDecls(new DeclCodeGenerator(builder, project, context), program.root);
 
 		if(project.entryPoint.isSome())
 			generateEntryPointWrapper(builder, findEntryPointFunction(program, project.entryPoint.unwrap()));
