@@ -14,33 +14,22 @@
 
 package katana.project;
 
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
 import katana.Katana;
 import katana.diag.CompileException;
+import katana.utils.JsonUtils;
 import katana.utils.Maybe;
 import katana.utils.ResourceExtractor;
 
 import java.io.IOException;
-import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 
 public class ProjectManager
 {
-	private static final Gson GSON = new GsonBuilder().disableHtmlEscaping()
-	                                                  .serializeSpecialFloatingPointValues()
-	                                                  .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_DASHES)
-	                                                  .setLenient()
-	                                                  .setPrettyPrinting()
-	                                                  .create();
-
 	private static final String PROJECT_CONFIG_NAME = "project.json";
 
-	private static void validatePath(String pathString, Path root)
+	private static void validatePath(Path root, String pathString)
 	{
 		Path path = Paths.get(pathString);
 
@@ -51,25 +40,11 @@ public class ProjectManager
 			throw new InvalidPathException(path.toString(), "given source path is not a child of the project root");
 	}
 
-	private static ProjectConfig loadConfig(Path root) throws IOException
+	private static void discoverSourceFiles(Project project, List<String> sourcePaths) throws IOException
 	{
-		byte[] bytes = Files.readAllBytes(root.resolve(PROJECT_CONFIG_NAME));
-		ProjectConfig project = GSON.fromJson(new StringReader(new String(bytes, StandardCharsets.UTF_8)), ProjectConfig.class);
-
-		if(project == null)
-			throw new JsonSyntaxException(String.format("%s is empty", PROJECT_CONFIG_NAME));
-
-		for(String sourcePath : project.sourcePaths)
-			validatePath(sourcePath, root);
-
-		return project;
-	}
-
-	private static void discoverSourceFiles(Path root, ProjectConfig config, Project project) throws IOException
-	{
-		for(String sourcePath : config.sourcePaths)
+		for(String sourcePath : sourcePaths)
 		{
-			Path path = root.resolve(sourcePath);
+			Path path = project.root.resolve(sourcePath);
 
 			if(path.toFile().isDirectory())
 				Files.walkFileTree(path, new SimpleFileVisitor<Path>()
@@ -121,7 +96,7 @@ public class ProjectManager
 			configError("property '%s' does not match pattern '%s', got '%s'", name, pattern, value);
 	}
 
-	private static void validateConfig(ProjectConfig config)
+	private static void validateConfig(Path root, ProjectConfig config)
 	{
 		if(config.name == null)
 			configErrorMissingProperty("name");
@@ -131,27 +106,31 @@ public class ProjectManager
 		if(config.sourcePaths == null)
 			configErrorMissingProperty("source-paths");
 
+		for(String sourcePath : config.sourcePaths)
+			validatePath(root, sourcePath);
+
 		if(config.type == null)
 			configErrorMissingProperty("type");
 
 		if(config.katanaVersion == null)
 			configErrorMissingProperty("katana-version");
 
-		boolean isExecutable = config.type.toLowerCase().equals("executable");
-
-		if(isExecutable && config.entryPoint == null)
+		if(config.type == ProjectType.EXECUTABLE && config.entryPoint == null)
 			configErrorMissingProperty("entry-point");
 
-		if(!isExecutable && config.entryPoint != null)
+		if(config.type != ProjectType.EXECUTABLE && config.entryPoint != null)
 			configError("property 'entry-point' is only applicable to executables");
 	}
 
 	public static Project load(Path root) throws IOException
 	{
-		ProjectConfig config = loadConfig(root);
-		validateConfig(config);
-		Project project = new Project(root, config.name, ProjectType.valueOf(config.type.toUpperCase()), Maybe.wrap(config.entryPoint));
-		discoverSourceFiles(root, config, project);
+		Path configPath = root.resolve(PROJECT_CONFIG_NAME);
+		ProjectConfig config = JsonUtils.loadObject(configPath, ProjectConfig.class);
+		validateConfig(root, config);
+
+		Project project = new Project(root, config.name, config.type, Maybe.wrap(config.entryPoint));
+		discoverSourceFiles(project, config.sourcePaths);
+
 		return project;
 	}
 
