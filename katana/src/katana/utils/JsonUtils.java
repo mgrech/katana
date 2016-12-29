@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,6 +55,15 @@ public class JsonUtils
 				{
 					Method valueOf = targetType.getMethod("valueOf", String.class);
 					return valueOf.invoke(null, value.toUpperCase());
+				}
+
+				catch(InvocationTargetException ex)
+				{
+					if(ex.getTargetException() instanceof IllegalArgumentException)
+						return NOT_HANDLED;
+
+					Rethrow.of(ex.getTargetException());
+					throw new AssertionError("unreachable");
 				}
 
 				catch(ReflectiveOperationException ex)

@@ -15,7 +15,6 @@
 package katana.cli;
 
 import katana.cli.cmd.*;
-import katana.utils.Rethrow;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -37,7 +36,7 @@ public class Main
 		}
 	}
 
-	public static void main(String[] args) throws ReflectiveOperationException
+	public static void main(String[] args) throws Throwable
 	{
 		registerCommands();
 
@@ -67,7 +66,7 @@ public class Main
 
 		catch(InvocationTargetException ex)
 		{
-			Rethrow.of(ex.getTargetException());
+			throw ex.getTargetException();
 		}
 
 		catch(CommandException ex)
