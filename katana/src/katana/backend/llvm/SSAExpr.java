@@ -17,9 +17,9 @@ package katana.backend.llvm;
 import katana.sema.expr.SemaExpr;
 import katana.sema.type.SemaType;
 
-public class SSAExpr extends SemaExpr
+public class SsaExpr extends SemaExpr
 {
-	public SSAExpr(String name)
+	public SsaExpr(String name)
 	{
 		this.name = name;
 	}

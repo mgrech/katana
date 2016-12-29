@@ -491,7 +491,7 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some("" + TypeSize.of(sizeof.type, context));
 	}
 
-	private Maybe<String> visit(SSAExpr ssa)
+	private Maybe<String> visit(SsaExpr ssa)
 	{
 		return Maybe.some(ssa.name);
 	}
