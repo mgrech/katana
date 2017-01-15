@@ -1,5 +1,6 @@
 package katana.backend.llvm;
 
+import katana.Katana;
 import katana.platform.Os;
 import katana.platform.TargetTriple;
 import katana.project.Project;
@@ -133,6 +134,9 @@ public class BuildRunner
 		throw new AssertionError("unreachable");
 	}
 
+	private static final Path LIBDIR = Katana.HOME.resolve("lib");
+	private static final String RTLIB = "krt";
+
 	private static boolean link(Project project, List<Path> filePaths, TargetTriple target) throws IOException
 	{
 		String binaryName = project.name + fileExtensionFor(project.type, target);
@@ -159,6 +163,10 @@ public class BuildRunner
 			}
 
 			command.add("/nodefaultlib");
+
+			command.add("/libpath:" + LIBDIR);
+			command.add(RTLIB + ".dll");
+
 			command.add("/out:" + binaryName);
 		}
 
@@ -187,6 +195,9 @@ public class BuildRunner
 			command.add("nodefaultlib");
 			command.add("-z");
 			command.add("now");
+
+			command.add("-L" + LIBDIR);
+			command.add("-l" + RTLIB);
 
 			command.add("-o");
 			command.add(binaryName);

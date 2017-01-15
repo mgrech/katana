@@ -16,6 +16,8 @@ package katana;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 public class Katana
@@ -38,6 +40,16 @@ public class Katana
 		}
 	}
 
+	private static Path locateHome()
+	{
+		String homePath = System.getenv("KATANA_HOME");
+
+		if(homePath == null)
+			throw new RuntimeException("KATANA_HOME not found");
+
+		return Paths.get(homePath);
+	}
+
 	public static String version()
 	{
 		return VERSION_STRING;
@@ -45,4 +57,5 @@ public class Katana
 
 	public static final String KATANA_SOURCE_FILE_EXTENSION = ".ks";
 	public static final String C_SOURCE_FILE_EXTENSION = ".c";
+	public static final Path HOME = locateHome();
 }
