@@ -51,7 +51,6 @@ public class BuildRunner
 
 	private static void addPpCompileFlags(List<String> command, TargetTriple target)
 	{
-		command.add("-undef");
 		command.add("-DKATANA_ARCH_" + target.arch.name());
 		command.add("-DKATANA_OS_" + target.os.name());
 	}
@@ -72,22 +71,16 @@ public class BuildRunner
 		}
 	}
 
-	private static final Path INCDIR = Katana.HOME.resolve("include");
+	private static final Path INCDIR = Katana.HOME.resolve("include").toAbsolutePath().normalize();
 
 	private static void addCommonLangCompileFlags(List<String> command, TargetTriple target)
 	{
-		if(target.os == Os.WINDOWS)
-			command.add("-fno-ms-extensions");
-
 		command.add("-pedantic");
 		command.add("-Wall");
-
-		command.add("-nostdinc");
-		command.add("-ffreestanding");
 		command.add("-fno-strict-aliasing");
 		command.add("-fvisibility=hidden");
 
-		command.add("-I" + INCDIR.toAbsolutePath().normalize());
+		command.add("-I" + INCDIR);
 	}
 
 	private static Maybe<Path> compileAsmFile(Path path, ProjectType type) throws IOException
@@ -191,7 +184,7 @@ public class BuildRunner
 		throw new AssertionError("unreachable");
 	}
 
-	private static final Path LIBDIR = Katana.HOME.resolve("lib");
+	private static final Path LIBDIR = Katana.HOME.resolve("lib").toAbsolutePath().normalize();
 	private static final String RTLIB = "krt";
 
 	private static boolean link(Project project, List<Path> filePaths, TargetTriple target) throws IOException
@@ -204,24 +197,13 @@ public class BuildRunner
 		{
 			command.add("lld-link");
 
-			switch(project.type)
-			{
-			case EXECUTABLE:
+			if(project.type == ProjectType.EXECUTABLE)
 				command.add("/subsystem:console");
-				command.add("/entry:_Katana_main");
-				break;
 
-			case LIBRARY:
+			if(project.type == ProjectType.LIBRARY)
 				command.add("/dll");
-				command.add("/entry:_Katana_DllMain");
-				break;
 
-			default: throw new AssertionError("unreachable");
-			}
-
-			command.add("/nodefaultlib");
-
-			command.add("/libpath:" + LIBDIR.toAbsolutePath().normalize());
+			command.add("/libpath:" + LIBDIR);
 			command.add(RTLIB + ".dll");
 
 			command.add("/out:" + binaryName);
@@ -231,27 +213,16 @@ public class BuildRunner
 		{
 			command.add("ld");
 
-			switch(project.type)
-			{
-			case EXECUTABLE:
-				command.add("-e_Katana_main");
-				break;
-
-			case LIBRARY:
+			if(project.type == ProjectType.LIBRARY)
 				command.add("-shared");
-				break;
 
-			default: throw new AssertionError("unreachable");
-			}
-
-			command.add("-nostdlib");
 			command.add("-rpath");
 			command.add("$ORIGIN");
 
 			command.add("-z");
-			command.add("nodefaultlib");
-			command.add("-z");
 			command.add("now");
+			command.add("-z");
+			command.add("relro");
 
 			command.add("-L" + LIBDIR);
 			command.add("-l" + RTLIB);

@@ -52,7 +52,7 @@ public class ProgramCodeGenerator
 	{
 		SemaType ret = ((SemaDeclFunction)func).ret;
 
-		builder.append("define i32 @_Katana_main()\n{\n");
+		builder.append("define i32 @main()\n{\n");
 
 		if(TypeHelper.isVoidType(ret))
 		{
@@ -109,17 +109,6 @@ public class ProgramCodeGenerator
 		throw new CompileException(String.format("entry point must return 'void' or 'int32', got '%s'", TypeString.of(func.ret)));
 	}
 
-	private static void generateDllMain(StringBuilder builder, TargetTriple target)
-	{
-		builder.append("define");
-
-		// http://llvm.org/docs/doxygen/html/CallingConv_8h_source.html#l00081
-		if(target.arch == Arch.X86)
-			builder.append(" cc 64"); // stdcall
-
-		builder.append(" void @_Katana_DllMain()\n{\n\tret void\n}\n");
-	}
-
 	public static void generate(Project project, SemaProgram program, PlatformContext context) throws IOException
 	{
 		StringBuilder builder = new StringBuilder();
@@ -129,9 +118,6 @@ public class ProgramCodeGenerator
 
 		if(project.entryPoint.isSome())
 			generateEntryPointWrapper(builder, findEntryPointFunction(program, project.entryPoint.unwrap()));
-
-		else if(project.type == ProjectType.LIBRARY && context.target().os == Os.WINDOWS)
-			generateDllMain(builder, context.target());
 
 		byte[] output = builder.toString().getBytes(StandardCharsets.UTF_8);
 
