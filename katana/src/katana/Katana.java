@@ -57,5 +57,6 @@ public class Katana
 
 	public static final String KATANA_SOURCE_FILE_EXTENSION = ".ks";
 	public static final String C_SOURCE_FILE_EXTENSION = ".c";
+	public static final String CPP_SOURCE_FILE_EXTENSION = ".cpp";
 	public static final Path HOME = locateHome();
 }

@@ -35,20 +35,15 @@ public class BuildRunner
 		throw new AssertionError("unreachable");
 	}
 
-	private static Maybe<Path> compileCFile(Path path, TargetTriple target, ProjectType type) throws IOException
+	private static void addPpCompileFlags(List<String> command, TargetTriple target)
 	{
-		List<String> command = new ArrayList<>();
-		command.add("clang");
-
 		command.add("-undef");
 		command.add("-DKATANA_ARCH_" + target.arch.name());
 		command.add("-DKATANA_OS_" + target.os.name());
+	}
 
-		command.add("-c");
-		command.add("-nostdinc");
-		command.add("-ffreestanding");
-		command.add("-fno-strict-aliasing");
-
+	private static void addSymbolCompileFlags(List<String> command, ProjectType type)
+	{
 		switch(type)
 		{
 		case EXECUTABLE:
@@ -62,14 +57,52 @@ public class BuildRunner
 
 		default: throw new AssertionError("unreachable");
 		}
+	}
 
+	private static void addCommonLangCompileFlags(List<String> command, TargetTriple target)
+	{
 		if(target.os == Os.WINDOWS)
 			command.add("-fno-ms-extensions");
 
-		command.add("-std=c11");
 		command.add("-pedantic");
 		command.add("-Wall");
 
+		command.add("-nostdinc");
+		command.add("-ffreestanding");
+		command.add("-fno-strict-aliasing");
+	}
+
+	private static Maybe<Path> compileCFile(Path path, TargetTriple target, ProjectType type) throws IOException
+	{
+		List<String> command = new ArrayList<>();
+		command.add("clang");
+
+		command.add("-std=c11");
+		addPpCompileFlags(command, target);
+		addCommonLangCompileFlags(command, target);
+		addSymbolCompileFlags(command, type);
+
+		command.add("-c");
+		command.add(path.toString());
+		command.add("-o");
+
+		String filename = path.getFileName() + ".o";
+		command.add(filename);
+
+		return runCommand(command) ? Maybe.some(Paths.get(filename)) : Maybe.none();
+	}
+
+	private static Maybe<Path> compileCppFile(Path path, TargetTriple target, ProjectType type) throws IOException
+	{
+		List<String> command = new ArrayList<>();
+		command.add("clang");
+
+		command.add("-std=c++14");
+		addPpCompileFlags(command, target);
+		addCommonLangCompileFlags(command, target);
+		addSymbolCompileFlags(command, type);
+
+		command.add("-c");
 		command.add(path.toString());
 		command.add("-o");
 
@@ -83,22 +116,11 @@ public class BuildRunner
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang");
-		command.add("-c");
+
 		command.add("-Wno-override-module");
+		addSymbolCompileFlags(command, project.type);
 
-		switch(project.type)
-		{
-		case EXECUTABLE:
-			command.add("-fPIE");
-			break;
-
-		case LIBRARY:
-			command.add("-fPIC");
-			break;
-
-		default: throw new AssertionError("unreachable");
-		}
-
+		command.add("-c");
 		command.add(path.toString());
 		command.add("-o");
 
@@ -225,6 +247,16 @@ public class BuildRunner
 		for(Path path : project.cFiles)
 		{
 			Maybe<Path> objectFile = compileCFile(path, target, project.type);
+
+			if(objectFile.isNone())
+				return;
+
+			objectFiles.add(objectFile.unwrap());
+		}
+
+		for(Path path : project.cppFiles)
+		{
+			Maybe<Path> objectFile = compileCppFile(path, target, project.type);
 
 			if(objectFile.isNone())
 				return;

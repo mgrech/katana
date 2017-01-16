@@ -12,6 +12,7 @@ public class Project
 	public final String name;
 	public final List<Path> katanaFiles = new ArrayList<>();
 	public final List<Path> cFiles = new ArrayList<>();
+	public final List<Path> cppFiles = new ArrayList<>();
 	public final ProjectType type;
 	public final Maybe<String> entryPoint;
 

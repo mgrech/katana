@@ -60,6 +60,8 @@ public class ProjectManager
 								project.katanaFiles.add(path);
 							else if(pathString.endsWith(Katana.C_SOURCE_FILE_EXTENSION))
 								project.cFiles.add(path);
+							else if(pathString.endsWith(Katana.CPP_SOURCE_FILE_EXTENSION))
+								project.cppFiles.add(path);
 						}
 
 						return FileVisitResult.CONTINUE;
@@ -74,6 +76,8 @@ public class ProjectManager
 					project.katanaFiles.add(path);
 				else if(pathString.endsWith(Katana.C_SOURCE_FILE_EXTENSION))
 					project.cFiles.add(path);
+				else if(path.endsWith(Katana.CPP_SOURCE_FILE_EXTENSION))
+					project.cppFiles.add(path);
 				else
 					throw new CompileException(String.format("source file path '%s' refers to unknown file type", pathString));
 			}
