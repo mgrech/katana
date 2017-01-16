@@ -40,6 +40,37 @@ public class ProjectManager
 			throw new InvalidPathException(path.toString(), "given source path is not a child of the project root");
 	}
 
+	private static boolean addFileToProject(Project project, Path path)
+	{
+		String pathString = path.toString();
+
+		if(pathString.endsWith(Katana.FILE_EXTENSION_KATANA))
+		{
+			project.katanaFiles.add(path);
+			return true;
+		}
+
+		if(pathString.endsWith(Katana.FILE_EXTENSION_C))
+		{
+			project.cFiles.add(path);
+			return true;
+		}
+
+		if(pathString.endsWith(Katana.FILE_EXTENSION_CPP))
+		{
+			project.cppFiles.add(path);
+			return true;
+		}
+
+		if(pathString.endsWith(Katana.FILE_EXTENSION_ASM))
+		{
+			project.asmFiles.add(path);
+			return true;
+		}
+
+		return false;
+	}
+
 	private static void discoverSourceFiles(Project project, List<String> sourcePaths) throws IOException
 	{
 		for(String sourcePath : sourcePaths)
@@ -53,34 +84,14 @@ public class ProjectManager
 					public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException
 					{
 						if(attrs.isRegularFile())
-						{
-							String pathString = path.toString();
-
-							if(pathString.endsWith(Katana.KATANA_SOURCE_FILE_EXTENSION))
-								project.katanaFiles.add(path);
-							else if(pathString.endsWith(Katana.C_SOURCE_FILE_EXTENSION))
-								project.cFiles.add(path);
-							else if(pathString.endsWith(Katana.CPP_SOURCE_FILE_EXTENSION))
-								project.cppFiles.add(path);
-						}
+							addFileToProject(project, path);
 
 						return FileVisitResult.CONTINUE;
 					}
 				});
 
-			else
-			{
-				String pathString = path.toString();
-
-				if(pathString.endsWith(Katana.KATANA_SOURCE_FILE_EXTENSION))
-					project.katanaFiles.add(path);
-				else if(pathString.endsWith(Katana.C_SOURCE_FILE_EXTENSION))
-					project.cFiles.add(path);
-				else if(path.endsWith(Katana.CPP_SOURCE_FILE_EXTENSION))
-					project.cppFiles.add(path);
-				else
-					throw new CompileException(String.format("source file path '%s' refers to unknown file type", pathString));
-			}
+			else if(!addFileToProject(project, path))
+					throw new CompileException(String.format("source file path '%s' refers to unknown file type", path));
 		}
 	}
 

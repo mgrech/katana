@@ -42,7 +42,7 @@ public class BuildRunner
 		command.add("-DKATANA_OS_" + target.os.name());
 	}
 
-	private static void addSymbolCompileFlags(List<String> command, ProjectType type)
+	private static void addPicFlag(List<String> command, ProjectType type)
 	{
 		switch(type)
 		{
@@ -52,7 +52,6 @@ public class BuildRunner
 
 		case LIBRARY:
 			command.add("-fPIC");
-			command.add("-fvisibility=hidden");
 			break;
 
 		default: throw new AssertionError("unreachable");
@@ -70,6 +69,24 @@ public class BuildRunner
 		command.add("-nostdinc");
 		command.add("-ffreestanding");
 		command.add("-fno-strict-aliasing");
+		command.add("-fvisibility=hidden");
+	}
+
+	private static Maybe<Path> compileAsmFile(Path path, ProjectType type) throws IOException
+	{
+		List<String> command = new ArrayList<>();
+		command.add("clang");
+
+		addPicFlag(command, type);
+
+		command.add("-c");
+		command.add(path.toString());
+		command.add("-o");
+
+		String filename = path.getFileName() + ".o";
+		command.add(filename);
+
+		return runCommand(command) ? Maybe.some(Paths.get(filename)) : Maybe.none();
 	}
 
 	private static Maybe<Path> compileCFile(Path path, TargetTriple target, ProjectType type) throws IOException
@@ -80,7 +97,7 @@ public class BuildRunner
 		command.add("-std=c11");
 		addPpCompileFlags(command, target);
 		addCommonLangCompileFlags(command, target);
-		addSymbolCompileFlags(command, type);
+		addPicFlag(command, type);
 
 		command.add("-c");
 		command.add(path.toString());
@@ -100,7 +117,7 @@ public class BuildRunner
 		command.add("-std=c++14");
 		addPpCompileFlags(command, target);
 		addCommonLangCompileFlags(command, target);
-		addSymbolCompileFlags(command, type);
+		addPicFlag(command, type);
 
 		command.add("-c");
 		command.add(path.toString());
@@ -118,7 +135,7 @@ public class BuildRunner
 		command.add("clang");
 
 		command.add("-Wno-override-module");
-		addSymbolCompileFlags(command, project.type);
+		addPicFlag(command, project.type);
 
 		command.add("-c");
 		command.add(path.toString());
@@ -243,6 +260,16 @@ public class BuildRunner
 			return;
 
 		objectFiles.add(katanaOutputObjectFile.unwrap());
+
+		for(Path path : project.asmFiles)
+		{
+			Maybe<Path> objectFile = compileAsmFile(path, project.type);
+
+			if(objectFile.isNone())
+				return;
+
+			objectFiles.add(objectFile.unwrap());
+		}
 
 		for(Path path : project.cFiles)
 		{

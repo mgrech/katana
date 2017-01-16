@@ -55,8 +55,10 @@ public class Katana
 		return VERSION_STRING;
 	}
 
-	public static final String KATANA_SOURCE_FILE_EXTENSION = ".ks";
-	public static final String C_SOURCE_FILE_EXTENSION = ".c";
-	public static final String CPP_SOURCE_FILE_EXTENSION = ".cpp";
+	public static final String FILE_EXTENSION_KATANA  = ".ks";
+	public static final String FILE_EXTENSION_C       = ".c";
+	public static final String FILE_EXTENSION_CPP     = ".cpp";
+	public static final String FILE_EXTENSION_ASM     = ".asm";
+
 	public static final Path HOME = locateHome();
 }
