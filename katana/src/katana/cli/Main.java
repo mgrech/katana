@@ -1,4 +1,4 @@
-// Copyright 2016 Markus Grech
+// Copyright 2016-2017 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,10 @@
 
 package katana.cli;
 
-import katana.cli.cmd.*;
+import katana.cli.cmd.CmdBuild;
+import katana.cli.cmd.CmdHelp;
+import katana.cli.cmd.CmdInit;
+import katana.cli.cmd.CmdVersion;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -27,7 +30,7 @@ public class Main
 
 	private static void registerCommands()
 	{
-		Class<?>[] commands = new Class<?>[]{ CmdBuild.class, CmdCheader.class, CmdHelp.class, CmdInit.class, CmdVersion.class };
+		Class<?>[] commands = new Class<?>[]{ CmdBuild.class, CmdHelp.class, CmdInit.class, CmdVersion.class };
 
 		for(Class<?> clazz : commands)
 		{
