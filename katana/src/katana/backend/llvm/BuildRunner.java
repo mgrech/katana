@@ -15,11 +15,11 @@
 package katana.backend.llvm;
 
 import katana.Katana;
+import katana.diag.CompileException;
 import katana.platform.Os;
 import katana.platform.TargetTriple;
 import katana.project.Project;
 import katana.project.ProjectType;
-import katana.utils.Maybe;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -29,24 +29,34 @@ import java.util.List;
 
 public class BuildRunner
 {
-	private static boolean runCommand(List<String> command) throws IOException
+	private static ProcessBuilder buildCommand(List<String> command, TargetTriple target)
+	{
+		if(target.os == Os.WINDOWS)
+			return VsTools.buildDevCmdCommand(command, target);
+
+		return new ProcessBuilder(command);
+	}
+
+	private static void runCommand(List<String> command, TargetTriple target)
 	{
 		System.out.println(String.join(" ", command));
 
-		ProcessBuilder builder = new ProcessBuilder(command);
+		ProcessBuilder builder = buildCommand(command, target);
 		builder.inheritIO();
-
-		Process process = builder.start();
 
 		try
 		{
-			return process.waitFor() == 0;
+			Process process = builder.start();
+			int exitCode = process.waitFor();
+
+			if(exitCode != 0)
+				throw new CompileException(String.format("process '%s' exited with code %s.", command.get(0), exitCode));
 		}
 
-		catch(InterruptedException ex)
-		{}
-
-		throw new AssertionError("unreachable");
+		catch(IOException | InterruptedException ex)
+		{
+			throw new RuntimeException(ex);
+		}
 	}
 
 	private static void addPpCompileFlags(List<String> command, TargetTriple target)
@@ -71,7 +81,7 @@ public class BuildRunner
 		}
 	}
 
-	private static final Path INCDIR = Katana.HOME.resolve("include").toAbsolutePath().normalize();
+	private static final Path KATANA_INCDIR = Katana.HOME.resolve("include").toAbsolutePath().normalize();
 
 	private static void addCommonLangCompileFlags(List<String> command, TargetTriple target)
 	{
@@ -80,10 +90,13 @@ public class BuildRunner
 		command.add("-fno-strict-aliasing");
 		command.add("-fvisibility=hidden");
 
-		command.add("-I" + INCDIR);
+		command.add("-I" + KATANA_INCDIR);
+
+		if(target.os == Os.WINDOWS)
+			command.add("-fms-compatibility-version=19");
 	}
 
-	private static Maybe<Path> compileAsmFile(Path path, ProjectType type) throws IOException
+	private static Path compileAsmFile(Path path, TargetTriple target, ProjectType type) throws IOException
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang");
@@ -97,10 +110,11 @@ public class BuildRunner
 		String filename = path.getFileName() + ".o";
 		command.add(filename);
 
-		return runCommand(command) ? Maybe.some(Paths.get(filename)) : Maybe.none();
+		runCommand(command, target);
+		return Paths.get(filename);
 	}
 
-	private static Maybe<Path> compileCFile(Path path, TargetTriple target, ProjectType type) throws IOException
+	private static Path compileCFile(Path path, TargetTriple target, ProjectType type) throws IOException
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang");
@@ -117,10 +131,11 @@ public class BuildRunner
 		String filename = path.getFileName() + ".o";
 		command.add(filename);
 
-		return runCommand(command) ? Maybe.some(Paths.get(filename)) : Maybe.none();
+		runCommand(command, target);
+		return Paths.get(filename);
 	}
 
-	private static Maybe<Path> compileCppFile(Path path, TargetTriple target, ProjectType type) throws IOException
+	private static Path compileCppFile(Path path, TargetTriple target, ProjectType type) throws IOException
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang");
@@ -137,10 +152,11 @@ public class BuildRunner
 		String filename = path.getFileName() + ".o";
 		command.add(filename);
 
-		return runCommand(command) ? Maybe.some(Paths.get(filename)) : Maybe.none();
+		runCommand(command, target);
+		return Paths.get(filename);
 	}
 
-	private static Maybe<Path> compileLlvmFile(Project project, Path path) throws IOException
+	private static Path compileLlvmFile(Project project, TargetTriple target, Path path) throws IOException
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang");
@@ -155,7 +171,8 @@ public class BuildRunner
 		String filename = path.getFileName() + ".o";
 		command.add(filename);
 
-		return runCommand(command) ? Maybe.some(Paths.get(filename)) : Maybe.none();
+		runCommand(command, target);
+		return Paths.get(filename);
 	}
 
 	private static String fileExtensionFor(ProjectType type, TargetTriple target)
@@ -187,7 +204,7 @@ public class BuildRunner
 	private static final Path LIBDIR = Katana.HOME.resolve("lib").toAbsolutePath().normalize();
 	private static final String RTLIB = "krt";
 
-	private static boolean link(Project project, List<Path> filePaths, TargetTriple target) throws IOException
+	private static void link(Project project, List<Path> filePaths, TargetTriple target) throws IOException
 	{
 		String binaryName = project.name + fileExtensionFor(project.type, target);
 
@@ -195,7 +212,9 @@ public class BuildRunner
 
 		if(target.os == Os.WINDOWS)
 		{
-			command.add("lld-link");
+			command.add("link");
+
+			command.add("/nologo");
 
 			if(project.type == ProjectType.EXECUTABLE)
 				command.add("/subsystem:console");
@@ -233,8 +252,7 @@ public class BuildRunner
 
 		// append all source files
 		filePaths.stream().map(Path::toString).forEach(command::add);
-
-		return runCommand(command);
+		runCommand(command, target);
 	}
 
 	public static void build(Project project, TargetTriple target) throws IOException
@@ -243,44 +261,18 @@ public class BuildRunner
 
 		Path katanaOutput = Paths.get(project.name + ".ll").toAbsolutePath().normalize();
 
-		Maybe<Path> katanaOutputObjectFile = compileLlvmFile(project, katanaOutput);
-
-		if(katanaOutputObjectFile.isNone())
-			return;
-
-		objectFiles.add(katanaOutputObjectFile.unwrap());
+		objectFiles.add(compileLlvmFile(project, target, katanaOutput));
 
 		for(Path path : project.asmFiles)
-		{
-			Maybe<Path> objectFile = compileAsmFile(path, project.type);
-
-			if(objectFile.isNone())
-				return;
-
-			objectFiles.add(objectFile.unwrap());
-		}
+			objectFiles.add(compileAsmFile(path, target, project.type));
 
 		for(Path path : project.cFiles)
-		{
-			Maybe<Path> objectFile = compileCFile(path, target, project.type);
-
-			if(objectFile.isNone())
-				return;
-
-			objectFiles.add(objectFile.unwrap());
-		}
+			objectFiles.add(compileCFile(path, target, project.type));
 
 		for(Path path : project.cppFiles)
-		{
-			Maybe<Path> objectFile = compileCppFile(path, target, project.type);
+			objectFiles.add(compileCppFile(path, target, project.type));
 
-			if(objectFile.isNone())
-				return;
-
-			objectFiles.add(objectFile.unwrap());
-		}
-
-		if(link(project, objectFiles, target))
-			System.out.println("build successful.");
+		link(project, objectFiles, target);
+		System.out.println("build successful.");
 	}
 }
