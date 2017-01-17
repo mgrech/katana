@@ -223,7 +223,7 @@ public class BuildRunner
 				command.add("/dll");
 
 			command.add("/libpath:" + LIBDIR);
-			command.add(RTLIB + ".dll");
+			command.add(RTLIB + ".lib");
 
 			command.add("/out:" + binaryName);
 		}
