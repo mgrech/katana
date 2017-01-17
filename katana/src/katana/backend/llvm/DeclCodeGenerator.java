@@ -94,20 +94,26 @@ public class DeclCodeGenerator implements IVisitor
 	{
 		boolean isExternal = function instanceof SemaDeclExternFunction;
 
-		builder.append(isExternal ? "declare " : "define ");
-
-		if(function.exported)
-		{
-			switch(project.type)
-			{
-			case LIBRARY: builder.append("dllexport "); break;
-			case EXECUTABLE: break;
-			default: throw new AssertionError("unreachable");
-			}
-		}
+		if(isExternal)
+			builder.append("declare ");
 
 		else
-			builder.append("private ");
+		{
+			builder.append("define ");
+
+			if(function.exported)
+			{
+				switch(project.type)
+				{
+				case LIBRARY: builder.append("dllexport "); break;
+				case EXECUTABLE: break;
+				default: throw new AssertionError("unreachable");
+				}
+			}
+
+			else
+				builder.append("private ");
+		}
 
 		builder.append(TypeCodeGenerator.generate(function.ret, context));
 		builder.append(" @");
