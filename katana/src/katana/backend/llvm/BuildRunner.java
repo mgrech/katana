@@ -225,6 +225,11 @@ public class BuildRunner
 			command.add("/libpath:" + LIBDIR);
 			command.add(RTLIB + ".lib");
 
+			// https://blogs.msdn.microsoft.com/vcblog/2015/03/03/introducing-the-universal-crt/
+			command.add("msvcrt.lib");
+			command.add("vcruntime.lib");
+			command.add("ucrt.lib");
+
 			command.add("/out:" + binaryName);
 		}
 
