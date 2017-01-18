@@ -91,7 +91,7 @@ public class ProjectManager
 				});
 
 			else if(!addFileToProject(project, path))
-					throw new CompileException(String.format("source file path '%s' refers to unknown file type", path));
+				throw new CompileException(String.format("source file path '%s' refers to unknown file type", path));
 		}
 	}
 

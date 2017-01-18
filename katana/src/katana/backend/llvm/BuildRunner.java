@@ -221,7 +221,6 @@ public class BuildRunner
 		if(target.os == Os.WINDOWS)
 		{
 			command.add("link");
-
 			command.add("/nologo");
 
 			if(project.type == ProjectType.EXECUTABLE)
