@@ -83,6 +83,14 @@ public class BuildRunner
 
 	private static final Path KATANA_INCDIR = Katana.HOME.resolve("include").toAbsolutePath().normalize();
 
+	private static String objectFileExtension(TargetTriple target)
+	{
+		if(target.os == Os.WINDOWS)
+			return ".obj";
+
+		return ".o";
+	}
+
 	private static void addCommonLangCompileFlags(List<String> command, TargetTriple target)
 	{
 		command.add("-pedantic");
@@ -107,7 +115,7 @@ public class BuildRunner
 		command.add(path.toString());
 		command.add("-o");
 
-		String filename = path.getFileName() + ".o";
+		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
 		runCommand(command, target);
@@ -128,7 +136,7 @@ public class BuildRunner
 		command.add(path.toString());
 		command.add("-o");
 
-		String filename = path.getFileName() + ".o";
+		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
 		runCommand(command, target);
@@ -149,7 +157,7 @@ public class BuildRunner
 		command.add(path.toString());
 		command.add("-o");
 
-		String filename = path.getFileName() + ".o";
+		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
 		runCommand(command, target);
@@ -168,7 +176,7 @@ public class BuildRunner
 		command.add(path.toString());
 		command.add("-o");
 
-		String filename = path.getFileName() + ".o";
+		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
 		runCommand(command, target);
