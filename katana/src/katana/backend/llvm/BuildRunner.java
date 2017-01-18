@@ -235,18 +235,14 @@ public class BuildRunner
 
 		else
 		{
-			command.add("ld");
+			command.add("clang");
 
 			if(project.type == ProjectType.LIBRARY)
 				command.add("-shared");
 
-			command.add("-rpath");
-			command.add("$ORIGIN");
-
-			command.add("-z");
-			command.add("now");
-			command.add("-z");
-			command.add("relro");
+			command.add("-Wl,-rpath,$ORIGIN");
+			command.add("-Wl,-z,now");
+			command.add("-Wl,-z,relro");
 
 			command.add("-L" + LIBDIR);
 			command.add("-l" + RTLIB);
