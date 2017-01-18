@@ -14,14 +14,16 @@ public class Project
 	public final List<Path> cFiles      = new ArrayList<>();
 	public final List<Path> cppFiles    = new ArrayList<>();
 	public final List<Path> asmFiles    = new ArrayList<>();
+	public final List<String> libs;
 	public final ProjectType type;
 	public final Maybe<String> entryPoint;
 
-	public Project(Path root, String name, ProjectType type, Maybe<String> entryPoint)
+	public Project(Path root, String name, ProjectType type, List<String> libs, Maybe<String> entryPoint)
 	{
 		this.name = name;
 		this.root = root;
 		this.type = type;
+		this.libs = libs;
 		this.entryPoint = entryPoint;
 	}
 }

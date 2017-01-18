@@ -20,6 +20,7 @@ public class ProjectConfig
 {
 	public String name;
 	public List<String> sourcePaths;
+	public List<String> libs;
 	public ProjectType type;
 	public String entryPoint; // can be null
 	public String katanaVersion;

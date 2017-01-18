@@ -116,13 +116,19 @@ public class ProjectManager
 		if(config.name == null)
 			configErrorMissingProperty("name");
 
-		validatePropertyValue("name", config.name, "[-A-Za-z0-9]+");
+		validatePropertyValue("name", config.name, "[-A-Za-z0-9_]+");
 
 		if(config.sourcePaths == null)
 			configErrorMissingProperty("source-paths");
 
 		for(String sourcePath : config.sourcePaths)
 			validatePath(root, sourcePath);
+
+		if(config.libs == null)
+			configErrorMissingProperty("libs");
+
+		for(String lib : config.libs)
+			validatePropertyValue("libs", lib, "[-A-Za-z0-9_]+");
 
 		if(config.type == null)
 			configErrorMissingProperty("type");
@@ -143,7 +149,7 @@ public class ProjectManager
 		ProjectConfig config = JsonUtils.loadObject(configPath, ProjectConfig.class);
 		validateConfig(root, config);
 
-		Project project = new Project(root, config.name, config.type, Maybe.wrap(config.entryPoint));
+		Project project = new Project(root, config.name, config.type, config.libs, Maybe.wrap(config.entryPoint));
 		discoverSourceFiles(project, config.sourcePaths);
 
 		return project;

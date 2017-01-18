@@ -210,7 +210,6 @@ public class BuildRunner
 	}
 
 	private static final Path LIBDIR = Katana.HOME.resolve("lib").toAbsolutePath().normalize();
-	private static final String RTLIB = "krt";
 
 	private static void link(Project project, List<Path> filePaths, TargetTriple target) throws IOException
 	{
@@ -230,7 +229,9 @@ public class BuildRunner
 				command.add("/dll");
 
 			command.add("/libpath:" + LIBDIR);
-			command.add(RTLIB + ".lib");
+
+			for(String lib : project.libs)
+				command.add(lib + ".lib");
 
 			// https://blogs.msdn.microsoft.com/vcblog/2015/03/03/introducing-the-universal-crt/
 			command.add("msvcrt.lib");
@@ -252,7 +253,9 @@ public class BuildRunner
 			command.add("-Wl,-z,relro");
 
 			command.add("-L" + LIBDIR);
-			command.add("-l" + RTLIB);
+
+			for(String lib : project.libs)
+				command.add("-l" + lib);
 
 			command.add("-o");
 			command.add(binaryName);
