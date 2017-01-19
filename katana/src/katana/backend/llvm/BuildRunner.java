@@ -20,6 +20,7 @@ import katana.platform.Os;
 import katana.platform.TargetTriple;
 import katana.project.Project;
 import katana.project.ProjectType;
+import katana.project.conditionals.Conditional;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -274,14 +275,27 @@ public class BuildRunner
 
 		objectFiles.add(compileLlvmFile(project, target, katanaOutput));
 
-		for(Path path : project.asmFiles)
-			objectFiles.add(compileAsmFile(path, target, project.type));
+		for(Conditional<Path> cpath : project.externFiles)
+		{
+			Path path = cpath.get(target);
 
-		for(Path path : project.cFiles)
-			objectFiles.add(compileCFile(path, target, project.type));
+			if(path == null)
+				continue;
 
-		for(Path path : project.cppFiles)
-			objectFiles.add(compileCppFile(path, target, project.type));
+			String pathString = path.toString();
+
+			if(pathString.endsWith(Katana.FILE_EXTENSION_ASM))
+				objectFiles.add(compileAsmFile(path, target, project.type));
+
+			else if(pathString.endsWith(Katana.FILE_EXTENSION_C))
+				objectFiles.add(compileCFile(path, target, project.type));
+
+			else if(pathString.endsWith(Katana.FILE_EXTENSION_CPP))
+				objectFiles.add(compileCppFile(path, target, project.type));
+
+			else
+				throw new AssertionError("unreachable");
+		}
 
 		link(project, objectFiles, target);
 		System.out.println("build successful.");

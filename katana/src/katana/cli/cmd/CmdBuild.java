@@ -1,4 +1,4 @@
-// Copyright 2016 Markus Grech
+// Copyright 2016-2017 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ public class CmdBuild
 		try
 		{
 			Project project = ProjectManager.load(root);
-			AstProgram ast = ProgramParser.parse(project);
+			AstProgram ast = ProgramParser.parse(project, context.target());
 			SemaProgram program = ProgramValidator.validate(ast, context);
 			ProgramCodeGenerator.generate(project, program, context);
 			BuildRunner.build(project, context.target());

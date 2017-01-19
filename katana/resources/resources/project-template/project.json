@@ -4,7 +4,7 @@
 
 	// source paths - can either be files or directories
 	// must point to a location below the project root
-	"source-paths": [
+	"source": [
 		"source"
 	],
 

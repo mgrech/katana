@@ -14,6 +14,7 @@
 
 package katana.project;
 
+import katana.project.conditionals.Conditional;
 import katana.utils.Maybe;
 
 import java.nio.file.Path;
@@ -24,13 +25,12 @@ public class Project
 {
 	public final Path root;
 	public final String name;
-	public final List<Path> katanaFiles = new ArrayList<>();
-	public final List<Path> cFiles      = new ArrayList<>();
-	public final List<Path> cppFiles    = new ArrayList<>();
-	public final List<Path> asmFiles    = new ArrayList<>();
 	public final List<String> libs;
 	public final ProjectType type;
 	public final Maybe<String> entryPoint;
+
+	public final List<Conditional<Path>> katanaFiles = new ArrayList<>();
+	public final List<Conditional<Path>> externFiles = new ArrayList<>();
 
 	public Project(Path root, String name, ProjectType type, List<String> libs, Maybe<String> entryPoint)
 	{

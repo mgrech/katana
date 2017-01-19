@@ -1,4 +1,4 @@
-// Copyright 2016 Markus Grech
+// Copyright 2016-2017 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,9 @@ package katana.parser;
 
 import katana.ast.AstFile;
 import katana.ast.AstProgram;
+import katana.platform.TargetTriple;
 import katana.project.Project;
+import katana.project.conditionals.Conditional;
 import katana.scanner.Scanner;
 
 import java.io.IOException;
@@ -26,12 +28,17 @@ import java.nio.file.Path;
 
 public class ProgramParser
 {
-	public static AstProgram parse(Project project) throws IOException
+	public static AstProgram parse(Project project, TargetTriple target) throws IOException
 	{
 		AstProgram program = new AstProgram();
 
-		for(Path path : project.katanaFiles)
+		for(Conditional<Path> cpath : project.katanaFiles)
 		{
+			Path path = cpath.get(target);
+
+			if(path == null)
+				continue;
+
 			byte[] data = Files.readAllBytes(path);
 			int[] codepoints = new String(data, StandardCharsets.UTF_8).codePoints().toArray();
 

@@ -1,4 +1,4 @@
-// Copyright 2016-2017 Markus Grech
+// Copyright 2017 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,16 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.project;
+package katana.project.conditionals;
 
-import java.util.List;
+import katana.platform.TargetTriple;
 
-public class ProjectConfig
+public class NotCondition implements Condition
 {
-	public String name;
-	public List<String> sources;
-	public List<String> libs;
-	public ProjectType type;
-	public String entryPoint; // can be null
-	public String katanaVersion;
+	private final Condition cond;
+
+	public NotCondition(Condition cond)
+	{
+		this.cond = cond;
+	}
+
+	@Override
+	public boolean test(TargetTriple target)
+	{
+		return !cond.test(target);
+	}
 }
