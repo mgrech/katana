@@ -17,7 +17,6 @@ package katana.cli.cmd;
 import katana.analysis.ProgramValidator;
 import katana.ast.AstProgram;
 import katana.backend.PlatformContext;
-import katana.backend.llvm.BuildRunner;
 import katana.backend.llvm.PlatformContextLlvm;
 import katana.backend.llvm.ProgramCodeGenerator;
 import katana.cli.Command;
@@ -26,6 +25,7 @@ import katana.diag.CompileException;
 import katana.parser.ProgramParser;
 import katana.platform.TargetTriple;
 import katana.project.Project;
+import katana.project.ProjectBuilder;
 import katana.project.ProjectManager;
 import katana.sema.SemaProgram;
 
@@ -50,7 +50,7 @@ public class CmdBuild
 			AstProgram ast = ProgramParser.parse(project, context.target());
 			SemaProgram program = ProgramValidator.validate(ast, context);
 			ProgramCodeGenerator.generate(project, program, context);
-			BuildRunner.build(project, context.target());
+			ProjectBuilder.build(project, context.target());
 		}
 
 		catch(CompileException e)

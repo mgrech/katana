@@ -12,14 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.backend.llvm;
+package katana.project;
 
 import katana.Katana;
 import katana.diag.CompileException;
 import katana.platform.Os;
 import katana.platform.TargetTriple;
-import katana.project.Project;
-import katana.project.ProjectType;
 import katana.project.conditionals.Conditional;
 
 import java.io.IOException;
@@ -28,7 +26,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BuildRunner
+public class ProjectBuilder
 {
 	private static ProcessBuilder buildCommand(List<String> command, TargetTriple target)
 	{
