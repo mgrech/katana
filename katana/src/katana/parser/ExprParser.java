@@ -281,14 +281,12 @@ public class ExprParser
 		case LIT_BOOL: return new AstExprLitBool((boolean)token.data);
 
 		case LIT_INT:   return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT));
-		case LIT_PINT:  return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.PINT));
 		case LIT_INT8:  return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT8));
 		case LIT_INT16: return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT16));
 		case LIT_INT32: return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT32));
 		case LIT_INT64: return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT64));
 
 		case LIT_UINT:   return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT));
-		case LIT_UPINT:  return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UPINT));
 		case LIT_UINT8:  return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT8));
 		case LIT_UINT16: return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT16));
 		case LIT_UINT32: return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT32));

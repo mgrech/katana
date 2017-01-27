@@ -40,8 +40,8 @@ public class CastValidator
 
 	private static boolean isValidWidenCast(SemaType sourceType, SemaType targetType, PlatformContext context)
 	{
-		if(isOneOf(sourceType, BuiltinType.INT, BuiltinType.UINT, BuiltinType.PINT, BuiltinType.UPINT)
-		|| isOneOf(targetType, BuiltinType.INT, BuiltinType.UINT, BuiltinType.PINT, BuiltinType.UPINT))
+		if(isOneOf(sourceType, BuiltinType.INT, BuiltinType.UINT)
+		|| isOneOf(targetType, BuiltinType.INT, BuiltinType.UINT))
 			return false;
 
 		if(TypeHelper.isIntegerType(sourceType) && TypeHelper.isIntegerType(targetType))
@@ -52,8 +52,8 @@ public class CastValidator
 
 	private static boolean isValidNarrowCast(SemaType sourceType, SemaType targetType, PlatformContext context)
 	{
-		if(isOneOf(sourceType, BuiltinType.INT, BuiltinType.UINT, BuiltinType.PINT, BuiltinType.UPINT)
-		|| isOneOf(targetType, BuiltinType.INT, BuiltinType.UINT, BuiltinType.PINT, BuiltinType.UPINT))
+		if(isOneOf(sourceType, BuiltinType.INT, BuiltinType.UINT)
+		|| isOneOf(targetType, BuiltinType.INT, BuiltinType.UINT))
 			return false;
 
 		if(TypeHelper.isIntegerType(sourceType) && TypeHelper.isIntegerType(targetType))
@@ -68,9 +68,9 @@ public class CastValidator
 	public static boolean isValidPointerCast(SemaType sourceType, SemaType targetType, PlatformContext context)
 	{
 		boolean sourceIsPointer = TypeHelper.isPointerType(sourceType);
-		boolean sourceIsPointerInteger = isOneOf(sourceType, BuiltinType.PINT, BuiltinType.UPINT);
+		boolean sourceIsPointerInteger = isOneOf(sourceType, BuiltinType.INT, BuiltinType.UINT);
 		boolean targetIsPointer = TypeHelper.isPointerType(targetType);
-		boolean targetIsPointerInteger = isOneOf(targetType, BuiltinType.PINT, BuiltinType.UPINT);
+		boolean targetIsPointerInteger = isOneOf(targetType, BuiltinType.INT, BuiltinType.UINT);
 
 		if(!sourceIsPointer && !sourceIsPointerInteger || !targetIsPointer && !targetIsPointerInteger)
 			return false;

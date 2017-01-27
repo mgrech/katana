@@ -23,13 +23,11 @@ public enum BuiltinType
 	INT32  (Kind.INT),
 	INT64  (Kind.INT),
 	INT    (Kind.INT),
-	PINT   (Kind.INT),
 	UINT8  (Kind.UINT),
 	UINT16 (Kind.UINT),
 	UINT32 (Kind.UINT),
 	UINT64 (Kind.UINT),
 	UINT   (Kind.UINT),
-	UPINT  (Kind.UINT),
 	FLOAT32(Kind.FLOAT),
 	FLOAT64(Kind.FLOAT),
 	NULL   (Kind.NULL);
@@ -49,5 +47,5 @@ public enum BuiltinType
 		this.kind = kind;
 	}
 
-	public Kind kind;
+	public final Kind kind;
 }

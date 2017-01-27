@@ -25,13 +25,11 @@ public class SemaTypeBuiltin extends SemaType
 	public static final SemaTypeBuiltin INT32   = new SemaTypeBuiltin(BuiltinType.INT32);
 	public static final SemaTypeBuiltin INT64   = new SemaTypeBuiltin(BuiltinType.INT64);
 	public static final SemaTypeBuiltin INT     = new SemaTypeBuiltin(BuiltinType.INT);
-	public static final SemaTypeBuiltin PINT    = new SemaTypeBuiltin(BuiltinType.PINT);
 	public static final SemaTypeBuiltin UINT8   = new SemaTypeBuiltin(BuiltinType.UINT8);
 	public static final SemaTypeBuiltin UINT16  = new SemaTypeBuiltin(BuiltinType.UINT16);
 	public static final SemaTypeBuiltin UINT32  = new SemaTypeBuiltin(BuiltinType.UINT32);
 	public static final SemaTypeBuiltin UINT64  = new SemaTypeBuiltin(BuiltinType.UINT64);
 	public static final SemaTypeBuiltin UINT    = new SemaTypeBuiltin(BuiltinType.UINT);
-	public static final SemaTypeBuiltin UPINT   = new SemaTypeBuiltin(BuiltinType.UPINT);
 	public static final SemaTypeBuiltin FLOAT32 = new SemaTypeBuiltin(BuiltinType.FLOAT32);
 	public static final SemaTypeBuiltin FLOAT64 = new SemaTypeBuiltin(BuiltinType.FLOAT64);
 	public static final SemaTypeBuiltin NULL    = new SemaTypeBuiltin(BuiltinType.NULL);
@@ -47,5 +45,5 @@ public class SemaTypeBuiltin extends SemaType
 		return which == ((SemaTypeBuiltin)other).which;
 	}
 
-	public BuiltinType which;
+	public final BuiltinType which;
 }

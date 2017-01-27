@@ -27,7 +27,7 @@ public class SemaExprSizeof extends SemaExpr
 	@Override
 	public SemaType type()
 	{
-		return SemaTypeBuiltin.PINT;
+		return SemaTypeBuiltin.INT;
 	}
 
 	public SemaType type;

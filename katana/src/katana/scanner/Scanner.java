@@ -294,13 +294,11 @@ public class Scanner
 		case "int32":   return Token.TYPE_INT32;
 		case "int64":   return Token.TYPE_INT64;
 		case "int":     return Token.TYPE_INT;
-		case "pint":    return Token.TYPE_PINT;
 		case "uint8":   return Token.TYPE_UINT8;
 		case "uint16":  return Token.TYPE_UINT16;
 		case "uint32":  return Token.TYPE_UINT32;
 		case "uint64":  return Token.TYPE_UINT64;
 		case "uint":    return Token.TYPE_UINT;
-		case "upint":   return Token.TYPE_UPINT;
 		case "float32": return Token.TYPE_FLOAT32;
 		case "float64": return Token.TYPE_FLOAT64;
 		case "opaque":  return Token.TYPE_OPAQUE;
@@ -421,14 +419,12 @@ public class Scanner
 		switch(suffix.toString())
 		{
 		case "i":   type = Token.Type.LIT_INT;   break;
-		case "pi":  type = Token.Type.LIT_PINT;  break;
 		case "i8":  type = Token.Type.LIT_INT8;  break;
 		case "i16": type = Token.Type.LIT_INT16; break;
 		case "i32": type = Token.Type.LIT_INT32; break;
 		case "i64": type = Token.Type.LIT_INT64; break;
 
 		case "u":   type = Token.Type.LIT_UINT;   break;
-		case "pu":  type = Token.Type.LIT_UPINT;  break;
 		case "u8":  type = Token.Type.LIT_UINT8;  break;
 		case "u16": type = Token.Type.LIT_UINT16; break;
 		case "u32": type = Token.Type.LIT_UINT32; break;

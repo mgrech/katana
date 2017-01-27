@@ -68,10 +68,6 @@ public class TypeSize implements IVisitor
 
 		case INT:
 		case UINT:
-			return context.target().arch.intSize;
-
-		case PINT:
-		case UPINT:
 		case NULL:
 			return context.target().arch.pointerSize;
 

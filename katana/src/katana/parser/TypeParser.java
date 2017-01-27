@@ -163,13 +163,11 @@ public class TypeParser
 		case TYPE_INT32:   return AstTypeBuiltin.INT32;
 		case TYPE_INT64:   return AstTypeBuiltin.INT64;
 		case TYPE_INT:     return AstTypeBuiltin.INT;
-		case TYPE_PINT:    return AstTypeBuiltin.PINT;
 		case TYPE_UINT8:   return AstTypeBuiltin.UINT8;
 		case TYPE_UINT16:  return AstTypeBuiltin.UINT16;
 		case TYPE_UINT32:  return AstTypeBuiltin.UINT32;
 		case TYPE_UINT64:  return AstTypeBuiltin.UINT64;
 		case TYPE_UINT:    return AstTypeBuiltin.UINT;
-		case TYPE_UPINT:   return AstTypeBuiltin.UPINT;
 		case TYPE_FLOAT32: return AstTypeBuiltin.FLOAT32;
 		case TYPE_FLOAT64: return AstTypeBuiltin.FLOAT64;
 

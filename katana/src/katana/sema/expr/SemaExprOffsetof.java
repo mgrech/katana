@@ -28,7 +28,7 @@ public class SemaExprOffsetof extends SemaExpr
 	@Override
 	public SemaType type()
 	{
-		return SemaTypeBuiltin.PINT;
+		return SemaTypeBuiltin.INT;
 	}
 
 	public SemaDeclStruct.Field field;

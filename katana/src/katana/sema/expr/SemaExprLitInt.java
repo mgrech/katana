@@ -33,14 +33,12 @@ public class SemaExprLitInt extends SemaExprLiteral
 		switch(type)
 		{
 		case INT:   semaType = SemaTypeBuiltin.INT;   break;
-		case PINT:  semaType = SemaTypeBuiltin.PINT;  break;
 		case INT8:  semaType = SemaTypeBuiltin.INT8;  break;
 		case INT16: semaType = SemaTypeBuiltin.INT16; break;
 		case INT32: semaType = SemaTypeBuiltin.INT32; break;
 		case INT64: semaType = SemaTypeBuiltin.INT64; break;
 
 		case UINT:   semaType = SemaTypeBuiltin.UINT;   break;
-		case UPINT:  semaType = SemaTypeBuiltin.UPINT;  break;
 		case UINT8:  semaType = SemaTypeBuiltin.UINT8;  break;
 		case UINT16: semaType = SemaTypeBuiltin.UINT16; break;
 		case UINT32: semaType = SemaTypeBuiltin.UINT32; break;

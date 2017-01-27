@@ -51,8 +51,6 @@ public class TypeCodeGenerator implements IVisitor
 		case UINT64:
 		case INT:
 		case UINT:
-		case PINT:
-		case UPINT:
 			return "i" + TypeSize.of(type, context).multiply(BigInteger.valueOf(8));
 
 		case BOOL:    return "i1";

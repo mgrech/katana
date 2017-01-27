@@ -25,16 +25,13 @@ public class AstTypeBuiltin extends AstType
 	public static final AstTypeBuiltin INT32   = new AstTypeBuiltin(BuiltinType.INT32);
 	public static final AstTypeBuiltin INT64   = new AstTypeBuiltin(BuiltinType.INT64);
 	public static final AstTypeBuiltin INT     = new AstTypeBuiltin(BuiltinType.INT);
-	public static final AstTypeBuiltin PINT    = new AstTypeBuiltin(BuiltinType.PINT);
 	public static final AstTypeBuiltin UINT8   = new AstTypeBuiltin(BuiltinType.UINT8);
 	public static final AstTypeBuiltin UINT16  = new AstTypeBuiltin(BuiltinType.UINT16);
 	public static final AstTypeBuiltin UINT32  = new AstTypeBuiltin(BuiltinType.UINT32);
 	public static final AstTypeBuiltin UINT64  = new AstTypeBuiltin(BuiltinType.UINT64);
 	public static final AstTypeBuiltin UINT    = new AstTypeBuiltin(BuiltinType.UINT);
-	public static final AstTypeBuiltin UPINT   = new AstTypeBuiltin(BuiltinType.UPINT);
 	public static final AstTypeBuiltin FLOAT32 = new AstTypeBuiltin(BuiltinType.FLOAT32);
 	public static final AstTypeBuiltin FLOAT64 = new AstTypeBuiltin(BuiltinType.FLOAT64);
-	public static final AstTypeBuiltin NULL    = new AstTypeBuiltin(BuiltinType.NULL);
 
 	private AstTypeBuiltin(BuiltinType which)
 	{

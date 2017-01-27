@@ -67,8 +67,6 @@ public class TypeValidator implements IVisitor
 		case UINT64:  return SemaTypeBuiltin.UINT64;
 		case INT:     return SemaTypeBuiltin.INT;
 		case UINT:    return SemaTypeBuiltin.UINT;
-		case PINT:    return SemaTypeBuiltin.PINT;
-		case UPINT:   return SemaTypeBuiltin.UPINT;
 		case NULL:    return SemaTypeBuiltin.NULL;
 		case BOOL:    return SemaTypeBuiltin.BOOL;
 		case FLOAT32: return SemaTypeBuiltin.FLOAT32;

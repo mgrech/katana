@@ -51,8 +51,6 @@ public class Token
 		LIT_UINT64,
 		LIT_INT,
 		LIT_UINT,
-		LIT_PINT,
-		LIT_UPINT,
 		LIT_FLOAT32,
 		LIT_FLOAT64,
 		LIT_STRING,
@@ -101,13 +99,11 @@ public class Token
 		TYPE_INT32,
 		TYPE_INT64,
 		TYPE_INT,
-		TYPE_PINT,
 		TYPE_UINT8,
 		TYPE_UINT16,
 		TYPE_UINT32,
 		TYPE_UINT64,
 		TYPE_UINT,
-		TYPE_UPINT,
 		TYPE_FLOAT32,
 		TYPE_FLOAT64,
 		TYPE_OPAQUE,
@@ -174,13 +170,11 @@ public class Token
 	public static final Token TYPE_INT32   = new Token(Category.TYPE, Type.TYPE_INT32,   "int32");
 	public static final Token TYPE_INT64   = new Token(Category.TYPE, Type.TYPE_INT64,   "int64");
 	public static final Token TYPE_INT     = new Token(Category.TYPE, Type.TYPE_INT,     "int");
-	public static final Token TYPE_PINT    = new Token(Category.TYPE, Type.TYPE_PINT,    "pint");
 	public static final Token TYPE_UINT8   = new Token(Category.TYPE, Type.TYPE_UINT8,   "uint8");
 	public static final Token TYPE_UINT16  = new Token(Category.TYPE, Type.TYPE_UINT16,  "uint16");
 	public static final Token TYPE_UINT32  = new Token(Category.TYPE, Type.TYPE_UINT32,  "uint32");
 	public static final Token TYPE_UINT64  = new Token(Category.TYPE, Type.TYPE_UINT64,  "uint64");
 	public static final Token TYPE_UINT    = new Token(Category.TYPE, Type.TYPE_UINT,    "uint");
-	public static final Token TYPE_UPINT   = new Token(Category.TYPE, Type.TYPE_UPINT,   "upint");
 	public static final Token TYPE_FLOAT32 = new Token(Category.TYPE, Type.TYPE_FLOAT32, "float32");
 	public static final Token TYPE_FLOAT64 = new Token(Category.TYPE, Type.TYPE_FLOAT64, "float64");
 	public static final Token TYPE_OPAQUE  = new Token(Category.TYPE, Type.TYPE_OPAQUE,  "opaque");
