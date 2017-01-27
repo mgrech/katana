@@ -47,6 +47,8 @@ public class TypeHelper
 
 	public static SemaType removePointer(SemaType type)
 	{
+		type = removeConst(type);
+
 		if(type instanceof SemaTypeNullablePointer)
 			return ((SemaTypeNullablePointer)type).type;
 
