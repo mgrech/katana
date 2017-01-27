@@ -14,6 +14,7 @@
 
 package katana.backend.llvm;
 
+import katana.analysis.TypeHelper;
 import katana.analysis.TypeSize;
 import katana.backend.PlatformContext;
 import katana.sema.type.*;
@@ -106,11 +107,17 @@ public class TypeCodeGenerator implements IVisitor
 
 	private String visit(SemaTypeNullablePointer type)
 	{
+		if(TypeHelper.isVoidType(type.type))
+			return "i8*";
+
 		return String.format("%s*", generate(type.type, context));
 	}
 
 	private String visit(SemaTypePointer type)
 	{
+		if(TypeHelper.isVoidType(type.type))
+			return "i8*";
+
 		return String.format("%s*", generate(type.type, context));
 	}
 }
