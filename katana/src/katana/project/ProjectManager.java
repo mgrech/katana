@@ -225,15 +225,14 @@ public class ProjectManager
 		validateNonNull("type", config.type);
 		validateNonNull("katana-version", config.katanaVersion);
 
-		Map<FileType, Set<Path>> sources = validateSources(root, config.sources, target);
-		List<String> libs = validateLibs(config.libs, target);
-
 		if(config.type == ProjectType.EXECUTABLE)
 			validateNonNull("entry-point", config.entryPoint);
 
 		if(config.type != ProjectType.EXECUTABLE && config.entryPoint != null)
 			configError("property 'entry-point' is only applicable to executables");
 
+		Map<FileType, Set<Path>> sources = validateSources(root, config.sources, target);
+		List<String> libs = validateLibs(config.libs, target);
 		return new Project(root, config.name, sources, libs, config.type, Maybe.wrap(config.entryPoint));
 	}
 
