@@ -16,6 +16,7 @@ package katana.project;
 
 import katana.Katana;
 import katana.diag.CompileException;
+import katana.platform.TargetTriple;
 import katana.project.conditionals.AlwaysTrue;
 import katana.project.conditionals.Condition;
 import katana.project.conditionals.ConditionParser;
@@ -138,7 +139,7 @@ public class ProjectManager
 			configError("property '%s' does not match pattern '%s', got '%s'", name, pattern, value);
 	}
 
-	private static Project validateConfig(Path root, ProjectConfig config)
+	private static Project validateConfig(Path root, ProjectConfig config, TargetTriple target)
 	{
 		if(config.name == null)
 			configErrorMissingProperty("name");
@@ -171,7 +172,7 @@ public class ProjectManager
 		if(config.libs == null)
 			configErrorMissingProperty("libs");
 
-		List<Conditional<String>> libs = new ArrayList<>();
+		List<String> libs = new ArrayList<>();
 
 		for(String lib : config.libs)
 		{
@@ -182,14 +183,17 @@ public class ProjectManager
 			case 1:
 				parts[0] = parts[0].trim();
 				validatePropertyValue("libs", parts[0], "[-A-Za-z0-9_]+");
-				libs.add(new Conditional<>(new AlwaysTrue(), parts[0]));
+				libs.add(parts[0]);
 				break;
 
 			case 2:
 				Condition condition = ConditionParser.parse(parts[0]);
 				parts[1] = parts[1].trim();
 				validatePropertyValue("libs", parts[1], "[-A-Za-z0-9_]+");
-				libs.add(new Conditional<>(condition, parts[1]));
+
+				if(condition.test(target))
+					libs.add(parts[1]);
+
 				break;
 
 			default:
@@ -213,12 +217,12 @@ public class ProjectManager
 		return new Project(root, config.name, config.type, libs, Maybe.wrap(config.entryPoint));
 	}
 
-	public static Project load(Path root) throws IOException
+	public static Project load(Path root, TargetTriple target) throws IOException
 	{
 		Path configPath = root.resolve(PROJECT_CONFIG_NAME);
 		ProjectConfig config = JsonUtils.loadObject(configPath, ProjectConfig.class);
 
-		Project project = validateConfig(root, config);
+		Project project = validateConfig(root, config, target);
 		discoverSourceFiles(project, config.sources);
 
 		return project;

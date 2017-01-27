@@ -33,7 +33,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-@Command(name = "build", desc = "builds project in working directory")
+@Command(name = "build", desc = "builds project at given path in the working directory")
 public class CmdBuild
 {
 	public static void run(String[] args) throws IOException
@@ -46,7 +46,7 @@ public class CmdBuild
 
 		try
 		{
-			Project project = ProjectManager.load(root);
+			Project project = ProjectManager.load(root, context.target());
 			AstProgram ast = ProgramParser.parse(project, context.target());
 			SemaProgram program = ProgramValidator.validate(ast, context);
 			ProgramCodeGenerator.generate(project, program, context);
