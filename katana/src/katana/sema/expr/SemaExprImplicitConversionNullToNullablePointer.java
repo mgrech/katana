@@ -16,9 +16,9 @@ package katana.sema.expr;
 
 import katana.sema.type.SemaType;
 
-public class SemaExprImplicitConversionNullToPointer extends SemaExpr
+public class SemaExprImplicitConversionNullToNullablePointer extends SemaExpr
 {
-	public SemaExprImplicitConversionNullToPointer(SemaType type)
+	public SemaExprImplicitConversionNullToNullablePointer(SemaType type)
 	{
 		this.type = type;
 	}

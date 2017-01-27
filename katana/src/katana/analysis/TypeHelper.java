@@ -127,10 +127,21 @@ public class TypeHelper
 		return type instanceof SemaTypeFunction;
 	}
 
-	public static boolean isPointerType(SemaType type)
+	public static boolean isNullablePointerType(SemaType type)
 	{
 		type = removeConst(type);
-		return type instanceof SemaTypePointer || type instanceof SemaTypeNullablePointer;
+		return type instanceof SemaTypeNullablePointer;
+	}
+
+	public static boolean isNonNullablePointerType(SemaType type)
+	{
+		type = removeConst(type);
+		return type instanceof SemaTypePointer;
+	}
+
+	public static boolean isAnyPointerType(SemaType type)
+	{
+		return isNullablePointerType(type) || isNonNullablePointerType(type);
 	}
 
 	public static boolean equalSizes(SemaType first, SemaType second, PlatformContext context)

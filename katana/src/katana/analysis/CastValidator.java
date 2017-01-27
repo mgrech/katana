@@ -67,9 +67,9 @@ public class CastValidator
 
 	public static boolean isValidPointerCast(SemaType sourceType, SemaType targetType, PlatformContext context)
 	{
-		boolean sourceIsPointer = TypeHelper.isPointerType(sourceType);
+		boolean sourceIsPointer = TypeHelper.isAnyPointerType(sourceType);
 		boolean sourceIsPointerInteger = isOneOf(sourceType, BuiltinType.INT, BuiltinType.UINT);
-		boolean targetIsPointer = TypeHelper.isPointerType(targetType);
+		boolean targetIsPointer = TypeHelper.isAnyPointerType(targetType);
 		boolean targetIsPointerInteger = isOneOf(targetType, BuiltinType.INT, BuiltinType.UINT);
 
 		if(!sourceIsPointer && !sourceIsPointerInteger || !targetIsPointer && !targetIsPointerInteger)

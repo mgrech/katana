@@ -156,7 +156,7 @@ public class ExprCodeGenerator implements IVisitor
 			throw new AssertionError("unreachable");
 
 		case POINTER_CAST:
-			if(TypeHelper.isPointerType(targetType))
+			if(TypeHelper.isAnyPointerType(targetType))
 				return "inttoptr";
 
 			return "ptrtoint";
@@ -313,7 +313,12 @@ public class ExprCodeGenerator implements IVisitor
 		return generateFunctionCall(functionSSA, functionCall.args, functionCall.function.ret, functionCall.inline);
 	}
 
-	private Maybe<String> visit(SemaExprImplicitConversionNullToPointer conversion)
+	private Maybe<String> visit(SemaExprImplicitConversionNonNullablePointerToNullablePointer conversion)
+	{
+		return generate(conversion.expr, builder, context, fcontext);
+	}
+
+	private Maybe<String> visit(SemaExprImplicitConversionNullToNullablePointer conversion)
 	{
 		return Maybe.some("null");
 	}

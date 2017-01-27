@@ -218,7 +218,7 @@ public class ExprValidator implements IVisitor
 	{
 		SemaExpr expr = validate(deref.expr, scope, context, validateDecl, deduce.map(SemaTypePointer::new));
 
-		if(!TypeHelper.isPointerType(expr.type()))
+		if(!TypeHelper.isAnyPointerType(expr.type()))
 		{
 			String fmt = "expected expression of pointer type in dereference operator ('prefix *'), got '%s'";
 			throw new CompileException(String.format(fmt, TypeString.of(expr.type())));
