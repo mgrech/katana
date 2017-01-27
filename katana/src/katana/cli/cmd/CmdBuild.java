@@ -47,7 +47,7 @@ public class CmdBuild
 		try
 		{
 			Project project = ProjectManager.load(root, context.target());
-			AstProgram ast = ProgramParser.parse(project, context.target());
+			AstProgram ast = ProgramParser.parse(project);
 			SemaProgram program = ProgramValidator.validate(ast, context);
 			ProgramCodeGenerator.generate(project, program, context);
 			ProjectBuilder.build(project, context.target());

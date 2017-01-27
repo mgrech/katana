@@ -17,10 +17,8 @@ package katana.project;
 import katana.Katana;
 import katana.diag.CompileException;
 import katana.platform.TargetTriple;
-import katana.project.conditionals.AlwaysTrue;
 import katana.project.conditionals.Condition;
 import katana.project.conditionals.ConditionParser;
-import katana.project.conditionals.Conditional;
 import katana.utils.JsonUtils;
 import katana.utils.Maybe;
 import katana.utils.ResourceExtractor;
@@ -29,99 +27,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class ProjectManager
 {
 	private static final String PROJECT_CONFIG_NAME = "project.json";
-
-	private static void validatePath(Path root, String pathString)
-	{
-		Path path = Paths.get(pathString);
-
-		if(path.isAbsolute())
-			throw new InvalidPathException(pathString, "given source path is absolute");
-
-		if(!root.resolve(path).toAbsolutePath().normalize().startsWith(root))
-			throw new InvalidPathException(path.toString(), "given source path is not a child of the project root");
-	}
-
-	private static boolean addFileToProject(Project project, Path path, Condition condition)
-	{
-		String pathString = path.toString();
-
-		if(pathString.endsWith(Katana.FILE_EXTENSION_KATANA))
-		{
-			project.katanaFiles.add(new Conditional<>(condition, path));
-			return true;
-		}
-
-		if(!pathString.endsWith(Katana.FILE_EXTENSION_ASM)
-		&& !pathString.endsWith(Katana.FILE_EXTENSION_C)
-		&& !pathString.endsWith(Katana.FILE_EXTENSION_CPP))
-			return false;
-
-		project.externFiles.add(new Conditional<>(condition, path));
-		return true;
-	}
-
-	private static void discoverSourceFiles(Project project, Path path, Condition condition) throws IOException
-	{
-		File file = path.toFile();
-
-		if(!file.exists())
-			throw new CompileException(String.format("file or directory '%s' does not exit", path));
-
-		if(path.toFile().isDirectory())
-			Files.walkFileTree(path, new SimpleFileVisitor<Path>()
-			{
-				@Override
-				public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException
-				{
-					if(attrs.isRegularFile())
-						addFileToProject(project, path, condition);
-
-					return FileVisitResult.CONTINUE;
-				}
-			});
-
-		else if(!addFileToProject(project, path, condition))
-			throw new CompileException(String.format("source file path '%s' refers to unknown file type", path));
-	}
-
-	private static void discoverSourceFiles(Project project, List<String> sourcePaths) throws IOException
-	{
-		for(String sourcePath : sourcePaths)
-		{
-			String[] components = sourcePath.split(":");
-			Path path = project.root.resolve(components[components.length == 1 ? 0 : 1].trim());
-
-			switch(components.length)
-			{
-			case 1:
-				discoverSourceFiles(project, path, new AlwaysTrue());
-				break;
-
-			case 2:
-				try
-				{
-					Condition condition = ConditionParser.parse(components[0]);
-					discoverSourceFiles(project, path, condition);
-				}
-
-				catch(CompileException e)
-				{
-					String fmt = "error parsing source specification '%s': %s";
-					throw new CompileException(String.format(fmt, sourcePath, e.getMessage()));
-				}
-
-				break;
-
-			default: throw new AssertionError("unreachable");
-			}
-		}
-	}
 
 	private static void configError(String fmt, Object... values)
 	{
@@ -139,7 +49,171 @@ public class ProjectManager
 			configError("property '%s' does not match pattern '%s', got '%s'", name, pattern, value);
 	}
 
-	private static Project validateConfig(Path root, ProjectConfig config, TargetTriple target)
+	private static void validatePath(Path root, String pathString)
+	{
+		Path path = Paths.get(pathString);
+
+		if(path.isAbsolute())
+			throw new InvalidPathException(pathString, "given source path is absolute");
+
+		if(!root.resolve(path).toAbsolutePath().normalize().startsWith(root))
+			throw new InvalidPathException(path.toString(), "given source path is not a child of the project root");
+	}
+
+	private static FileType fileTypefromPath(Path path)
+	{
+		String pathString = path.toString();
+
+		if(pathString.endsWith(".ks"))
+			return FileType.KATANA;
+
+		if(pathString.endsWith(".asm"))
+			return FileType.ASM;
+
+		if(pathString.endsWith(".c"))
+			return FileType.C;
+
+		if(pathString.endsWith(".cpp"))
+			return FileType.CPP;
+
+		return null;
+	}
+
+	private static void addFile(Map<FileType, Set<Path>> files, FileType type, Path path)
+	{
+		Set<Path> paths = files.get(type);
+
+		if(paths == null)
+		{
+			paths = new TreeSet<>();
+			files.put(type, paths);
+		}
+
+		paths.add(path);
+	}
+
+	private static void discoverSourceFiles(Path path, Map<FileType, Set<Path>> files) throws IOException
+	{
+		File file = path.toFile();
+
+		if(!file.exists())
+			throw new CompileException(String.format("file or directory '%s' does not exit", path));
+
+		if(path.toFile().isDirectory())
+			Files.walkFileTree(path, new SimpleFileVisitor<Path>()
+			{
+				@Override
+				public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException
+				{
+					if(attrs.isRegularFile())
+					{
+						FileType type = fileTypefromPath(path);
+
+						if(type != null)
+							addFile(files, type, path);
+					}
+
+					return FileVisitResult.CONTINUE;
+				}
+			});
+
+		else
+		{
+			FileType type = fileTypefromPath(path);
+
+			if(type == null)
+				throw new CompileException(String.format("source file path '%s' refers to unknown file type", path));
+
+			addFile(files, type, path);
+		}
+	}
+
+	private static Map<FileType, Set<Path>> discoverSourceFiles(Path root, List<String> paths) throws IOException
+	{
+		Map<FileType, Set<Path>> result = new TreeMap<>();
+
+		for(String pathString : paths)
+		{
+			Path path = root.resolve(Paths.get(pathString));
+			discoverSourceFiles(path, result);
+		}
+
+		return result;
+	}
+
+	private static Map<FileType, Set<Path>> validateSources(Path root, List<String> sources, TargetTriple target) throws IOException
+	{
+		List<String> paths = new ArrayList<>();
+
+		for(String sourcePath : sources)
+		{
+			String[] parts = sourcePath.split(":");
+
+			for(int i = 0; i != parts.length; ++i)
+				parts[i] = parts[i].trim();
+
+			switch(parts.length)
+			{
+			case 1:
+				validatePath(root, parts[0]);
+				paths.add(parts[0]);
+				break;
+
+			case 2:
+				Condition condition = ConditionParser.parse(parts[0]);
+				validatePath(root, parts[1]);
+
+				if(condition.test(target))
+					paths.add(parts[1]);
+
+				break;
+
+			default:
+				String fmt = "invalid source specification '%s', expected form '[condition:]path'";
+				throw new CompileException(String.format(fmt, sourcePath));
+			}
+		}
+
+		return discoverSourceFiles(root, paths);
+	}
+
+	private static List<String> validateLibs(List<String> libs, TargetTriple target)
+	{
+		List<String> result = new ArrayList<>();
+
+		for(String lib : libs)
+		{
+			String[] parts = lib.split(":");
+
+			for(int i = 0; i != parts.length; ++i)
+				parts[i] = parts[i].trim();
+
+			switch(parts.length)
+			{
+			case 1:
+				validatePropertyValue("libs", parts[0], "[-A-Za-z0-9_]+");
+				result.add(parts[0]);
+				break;
+
+			case 2:
+				Condition condition = ConditionParser.parse(parts[0]);
+				validatePropertyValue("libs", parts[1], "[-A-Za-z0-9_]+");
+
+				if(condition.test(target))
+					result.add(parts[1]);
+
+				break;
+
+			default:
+				String fmt = "invalid library dependency specification '%s', expected form '[condition:]lib'";
+				throw new CompileException(String.format(fmt, lib));
+			}
+		}
+
+		return result;
+	}
+
+	private static Project validateConfig(Path root, ProjectConfig config, TargetTriple target) throws IOException
 	{
 		if(config.name == null)
 			configErrorMissingProperty("name");
@@ -149,58 +223,12 @@ public class ProjectManager
 		if(config.sources == null)
 			configErrorMissingProperty("source");
 
-		for(String sourcePath : config.sources)
-		{
-			String[] components = sourcePath.split(":");
-
-			switch(components.length)
-			{
-			case 1:
-				validatePath(root, components[0].trim());
-				break;
-
-			case 2:
-				validatePath(root, components[1].trim());
-				break;
-
-			default:
-				String fmt = "invalid source specification '%s', expected form '[condition:]path'";
-				throw new CompileException(String.format(fmt, sourcePath));
-			}
-		}
+		Map<FileType, Set<Path>> sources = validateSources(root, config.sources, target);
 
 		if(config.libs == null)
 			configErrorMissingProperty("libs");
 
-		List<String> libs = new ArrayList<>();
-
-		for(String lib : config.libs)
-		{
-			String[] parts = lib.split(":");
-
-			switch(parts.length)
-			{
-			case 1:
-				parts[0] = parts[0].trim();
-				validatePropertyValue("libs", parts[0], "[-A-Za-z0-9_]+");
-				libs.add(parts[0]);
-				break;
-
-			case 2:
-				Condition condition = ConditionParser.parse(parts[0]);
-				parts[1] = parts[1].trim();
-				validatePropertyValue("libs", parts[1], "[-A-Za-z0-9_]+");
-
-				if(condition.test(target))
-					libs.add(parts[1]);
-
-				break;
-
-			default:
-				String fmt = "invalid library dependency specification '%s', expected form '[condition:]lib'";
-				throw new CompileException(String.format(fmt, lib));
-			}
-		}
+		List<String> libs = validateLibs(config.libs, target);
 
 		if(config.type == null)
 			configErrorMissingProperty("type");
@@ -214,18 +242,14 @@ public class ProjectManager
 		if(config.type != ProjectType.EXECUTABLE && config.entryPoint != null)
 			configError("property 'entry-point' is only applicable to executables");
 
-		return new Project(root, config.name, config.type, libs, Maybe.wrap(config.entryPoint));
+		return new Project(root, config.name, sources, libs, config.type, Maybe.wrap(config.entryPoint));
 	}
 
 	public static Project load(Path root, TargetTriple target) throws IOException
 	{
 		Path configPath = root.resolve(PROJECT_CONFIG_NAME);
 		ProjectConfig config = JsonUtils.loadObject(configPath, ProjectConfig.class);
-
-		Project project = validateConfig(root, config, target);
-		discoverSourceFiles(project, config.sources);
-
-		return project;
+		return validateConfig(root, config, target);
 	}
 
 	public static void createDefaultProject(Path path) throws IOException

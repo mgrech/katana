@@ -18,13 +18,14 @@ import katana.Katana;
 import katana.diag.CompileException;
 import katana.platform.Os;
 import katana.platform.TargetTriple;
-import katana.project.conditionals.Conditional;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class ProjectBuilder
 {
@@ -229,7 +230,7 @@ public class ProjectBuilder
 
 			command.add("/libpath:" + LIBDIR);
 
-			for(String lib : project.libs)
+			for(String lib : project.libraries)
 				command.add(lib + ".lib");
 
 			// https://blogs.msdn.microsoft.com/vcblog/2015/03/03/introducing-the-universal-crt/
@@ -253,7 +254,7 @@ public class ProjectBuilder
 
 			command.add("-L" + LIBDIR);
 
-			for(String lib : project.libs)
+			for(String lib : project.libraries)
 				command.add("-l" + lib);
 
 			command.add("-o");
@@ -265,34 +266,34 @@ public class ProjectBuilder
 		runCommand(command, target);
 	}
 
+	private static Path compileFile(FileType fileType, Path path, TargetTriple target, ProjectType projectType) throws IOException
+	{
+		switch(fileType)
+		{
+		case ASM: return compileAsmFile(path, target, projectType);
+		case C:   return compileCFile(path, target, projectType);
+		case CPP: return compileCppFile(path, target, projectType);
+
+		default:
+			throw new AssertionError("unreachable");
+		}
+	}
+
 	public static void build(Project project, TargetTriple target) throws IOException
 	{
 		List<Path> objectFiles = new ArrayList<>();
 
 		Path katanaOutput = Paths.get(project.name + ".ll").toAbsolutePath().normalize();
-
 		objectFiles.add(compileLlvmFile(project, target, katanaOutput));
 
-		for(Conditional<Path> cpath : project.externFiles)
+		for(Map.Entry<FileType, Set<Path>> entry : project.sourceFiles.entrySet())
 		{
-			Path path = cpath.get(target);
+			FileType type = entry.getKey();
+			Set<Path> paths = entry.getValue();
 
-			if(path == null)
-				continue;
-
-			String pathString = path.toString();
-
-			if(pathString.endsWith(Katana.FILE_EXTENSION_ASM))
-				objectFiles.add(compileAsmFile(path, target, project.type));
-
-			else if(pathString.endsWith(Katana.FILE_EXTENSION_C))
-				objectFiles.add(compileCFile(path, target, project.type));
-
-			else if(pathString.endsWith(Katana.FILE_EXTENSION_CPP))
-				objectFiles.add(compileCppFile(path, target, project.type));
-
-			else
-				throw new AssertionError("unreachable");
+			if(type != FileType.KATANA)
+				for(Path path : paths)
+					objectFiles.add(compileFile(type, path, target, project.type));
 		}
 
 		link(project, objectFiles, target);

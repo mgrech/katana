@@ -14,30 +14,29 @@
 
 package katana.project;
 
-import katana.project.conditionals.Conditional;
 import katana.utils.Maybe;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class Project
 {
 	public final Path root;
 	public final String name;
-	public final List<String> libs;
+	public final Map<FileType, Set<Path>> sourceFiles;
+	public final List<String> libraries;
 	public final ProjectType type;
 	public final Maybe<String> entryPoint;
 
-	public final List<Conditional<Path>> katanaFiles = new ArrayList<>();
-	public final List<Conditional<Path>> externFiles = new ArrayList<>();
-
-	public Project(Path root, String name, ProjectType type, List<String> libs, Maybe<String> entryPoint)
+	public Project(Path root, String name, Map<FileType, Set<Path>> sourceFiles, List<String> libraries, ProjectType type, Maybe<String> entryPoint)
 	{
-		this.name = name;
 		this.root = root;
+		this.name = name;
+		this.sourceFiles = sourceFiles;
+		this.libraries = libraries;
 		this.type = type;
-		this.libs = libs;
 		this.entryPoint = entryPoint;
 	}
 }

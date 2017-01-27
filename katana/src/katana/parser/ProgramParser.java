@@ -16,29 +16,29 @@ package katana.parser;
 
 import katana.ast.AstFile;
 import katana.ast.AstProgram;
-import katana.platform.TargetTriple;
+import katana.project.FileType;
 import katana.project.Project;
-import katana.project.conditionals.Conditional;
 import katana.scanner.Scanner;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 
 public class ProgramParser
 {
-	public static AstProgram parse(Project project, TargetTriple target) throws IOException
+	public static AstProgram parse(Project project) throws IOException
 	{
+		Set<Path> katanaFiles = project.sourceFiles.get(FileType.KATANA);
+
+		if(katanaFiles == null)
+			return null;
+
 		AstProgram program = new AstProgram();
 
-		for(Conditional<Path> cpath : project.katanaFiles)
+		for(Path path : katanaFiles)
 		{
-			Path path = cpath.get(target);
-
-			if(path == null)
-				continue;
-
 			byte[] data = Files.readAllBytes(path);
 			int[] codepoints = new String(data, StandardCharsets.UTF_8).codePoints().toArray();
 

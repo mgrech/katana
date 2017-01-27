@@ -55,10 +55,5 @@ public class Katana
 		return VERSION_STRING;
 	}
 
-	public static final String FILE_EXTENSION_KATANA  = ".ks";
-	public static final String FILE_EXTENSION_C       = ".c";
-	public static final String FILE_EXTENSION_CPP     = ".cpp";
-	public static final String FILE_EXTENSION_ASM     = ".asm";
-
 	public static final Path HOME = locateHome();
 }
