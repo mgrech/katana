@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ProjectManager
@@ -137,7 +138,7 @@ public class ProjectManager
 			configError("property '%s' does not match pattern '%s', got '%s'", name, pattern, value);
 	}
 
-	private static void validateConfig(Path root, ProjectConfig config)
+	private static Project validateConfig(Path root, ProjectConfig config)
 	{
 		if(config.name == null)
 			configErrorMissingProperty("name");
@@ -162,7 +163,7 @@ public class ProjectManager
 				break;
 
 			default:
-				String fmt = "invalid source specification '%s'; expected form '<path>' or '<condition>:<path>'";
+				String fmt = "invalid source specification '%s', expected form '[condition:]path'";
 				throw new CompileException(String.format(fmt, sourcePath));
 			}
 		}
@@ -170,8 +171,32 @@ public class ProjectManager
 		if(config.libs == null)
 			configErrorMissingProperty("libs");
 
+		List<Conditional<String>> libs = new ArrayList<>();
+
 		for(String lib : config.libs)
-			validatePropertyValue("libs", lib, "[-A-Za-z0-9_]+");
+		{
+			String[] parts = lib.split(":");
+
+			switch(parts.length)
+			{
+			case 1:
+				parts[0] = parts[0].trim();
+				validatePropertyValue("libs", parts[0], "[-A-Za-z0-9_]+");
+				libs.add(new Conditional<>(new AlwaysTrue(), parts[0]));
+				break;
+
+			case 2:
+				Condition condition = ConditionParser.parse(parts[0]);
+				parts[1] = parts[1].trim();
+				validatePropertyValue("libs", parts[1], "[-A-Za-z0-9_]+");
+				libs.add(new Conditional<>(condition, parts[1]));
+				break;
+
+			default:
+				String fmt = "invalid library dependency specification '%s', expected form '[condition:]lib'";
+				throw new CompileException(String.format(fmt, lib));
+			}
+		}
 
 		if(config.type == null)
 			configErrorMissingProperty("type");
@@ -184,15 +209,16 @@ public class ProjectManager
 
 		if(config.type != ProjectType.EXECUTABLE && config.entryPoint != null)
 			configError("property 'entry-point' is only applicable to executables");
+
+		return new Project(root, config.name, config.type, libs, Maybe.wrap(config.entryPoint));
 	}
 
 	public static Project load(Path root) throws IOException
 	{
 		Path configPath = root.resolve(PROJECT_CONFIG_NAME);
 		ProjectConfig config = JsonUtils.loadObject(configPath, ProjectConfig.class);
-		validateConfig(root, config);
 
-		Project project = new Project(root, config.name, config.type, config.libs, Maybe.wrap(config.entryPoint));
+		Project project = validateConfig(root, config);
 		discoverSourceFiles(project, config.sources);
 
 		return project;

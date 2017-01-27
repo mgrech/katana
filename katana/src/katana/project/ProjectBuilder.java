@@ -229,8 +229,13 @@ public class ProjectBuilder
 
 			command.add("/libpath:" + LIBDIR);
 
-			for(String lib : project.libs)
-				command.add(lib + ".lib");
+			for(Conditional<String> clib : project.libs)
+			{
+				String lib = clib.get(target);
+
+				if(lib != null)
+					command.add(lib + ".lib");
+			}
 
 			// https://blogs.msdn.microsoft.com/vcblog/2015/03/03/introducing-the-universal-crt/
 			command.add("msvcrt.lib");
@@ -253,8 +258,13 @@ public class ProjectBuilder
 
 			command.add("-L" + LIBDIR);
 
-			for(String lib : project.libs)
-				command.add("-l" + lib);
+			for(Conditional<String> clib : project.libs)
+			{
+				String lib = clib.get(target);
+
+				if(lib != null)
+					command.add("-l" + lib);
+			}
 
 			command.add("-o");
 			command.add(binaryName);

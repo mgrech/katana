@@ -25,14 +25,14 @@ public class Project
 {
 	public final Path root;
 	public final String name;
-	public final List<String> libs;
+	public final List<Conditional<String>> libs;
 	public final ProjectType type;
 	public final Maybe<String> entryPoint;
 
 	public final List<Conditional<Path>> katanaFiles = new ArrayList<>();
 	public final List<Conditional<Path>> externFiles = new ArrayList<>();
 
-	public Project(Path root, String name, ProjectType type, List<String> libs, Maybe<String> entryPoint)
+	public Project(Path root, String name, ProjectType type, List<Conditional<String>> libs, Maybe<String> entryPoint)
 	{
 		this.name = name;
 		this.root = root;
