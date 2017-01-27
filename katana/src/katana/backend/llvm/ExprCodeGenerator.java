@@ -313,6 +313,11 @@ public class ExprCodeGenerator implements IVisitor
 		return generateFunctionCall(functionSSA, functionCall.args, functionCall.function.ret, functionCall.inline);
 	}
 
+	private Maybe<String> visit(SemaExprImplicitConversionNullToPointer conversion)
+	{
+		return Maybe.some("null");
+	}
+
 	private Maybe<String> visit(SemaExprIndirectFunctionCall functionCall)
 	{
 		String functionSSA = generate(functionCall.expr, builder, context, fcontext).unwrap();

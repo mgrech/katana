@@ -53,7 +53,12 @@ public class ExprValidator implements IVisitor
 	public static SemaExpr validate(AstExpr expr, SemaScope scope, PlatformContext context, Consumer<SemaDecl> validateDecl, Maybe<SemaType> deduce)
 	{
 		ExprValidator validator = new ExprValidator(scope, context, validateDecl);
-		return (SemaExpr)expr.accept(validator, deduce);
+		SemaExpr result = (SemaExpr)expr.accept(validator, deduce);
+
+		if(deduce.isNone())
+			return result;
+
+		return ImplicitConversions.perform(result, deduce.unwrap());
 	}
 
 	private SemaExpr visit(AstExprProxy proxy, Maybe<SemaType> deduce)
