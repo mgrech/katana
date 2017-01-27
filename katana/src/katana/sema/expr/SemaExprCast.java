@@ -23,7 +23,7 @@ public class SemaExprCast extends SemaExpr
 		SIGN_CAST,
 		WIDEN_CAST,
 		NARROW_CAST,
-		POINTEGER_CAST,
+		POINTER_CAST,
 	}
 
 	public SemaExprCast(SemaType type, SemaExpr expr, Kind kind)

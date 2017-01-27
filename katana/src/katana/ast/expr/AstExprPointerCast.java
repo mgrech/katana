@@ -16,9 +16,9 @@ package katana.ast.expr;
 
 import katana.ast.type.AstType;
 
-public class AstExprPointegerCast extends AstExpr
+public class AstExprPointerCast extends AstExpr
 {
-	public AstExprPointegerCast(AstType type, AstExpr expr)
+	public AstExprPointerCast(AstType type, AstExpr expr)
 	{
 		this.type = type;
 		this.expr = expr;
