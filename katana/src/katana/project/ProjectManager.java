@@ -14,7 +14,6 @@
 
 package katana.project;
 
-import katana.Katana;
 import katana.diag.CompileException;
 import katana.platform.TargetTriple;
 import katana.project.conditionals.Condition;
@@ -28,24 +27,28 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class ProjectManager
 {
 	private static final String PROJECT_CONFIG_NAME = "project.json";
+	private static final Pattern LIB_NAME_PATTERN = Pattern.compile("[-A-Za-z0-9_]+");
+	private static final Pattern PROJECT_NAME_PATTERN = Pattern.compile("[-A-Za-z0-9_]+");
 
 	private static void configError(String fmt, Object... values)
 	{
 		throw new CompileException(String.format("%s: %s", PROJECT_CONFIG_NAME, String.format(fmt, values)));
 	}
 
-	private static void configErrorMissingProperty(String name)
+	private static void validateNonNull(String name, Object value)
 	{
-		configError("missing property '%s'", name);
+		if(value == null)
+			configError("missing property '%s'", name);
 	}
 
-	private static void validatePropertyValue(String name, String value, String pattern)
+	private static void validatePropertyValue(String name, String value, Pattern pattern)
 	{
-		if(!value.matches(pattern))
+		if(!pattern.matcher(value).matches())
 			configError("property '%s' does not match pattern '%s', got '%s'", name, pattern, value);
 	}
 
@@ -191,13 +194,13 @@ public class ProjectManager
 			switch(parts.length)
 			{
 			case 1:
-				validatePropertyValue("libs", parts[0], "[-A-Za-z0-9_]+");
+				validatePropertyValue("libs", parts[0], LIB_NAME_PATTERN);
 				result.add(parts[0]);
 				break;
 
 			case 2:
 				Condition condition = ConditionParser.parse(parts[0]);
-				validatePropertyValue("libs", parts[1], "[-A-Za-z0-9_]+");
+				validatePropertyValue("libs", parts[1], LIB_NAME_PATTERN);
 
 				if(condition.test(target))
 					result.add(parts[1]);
@@ -215,29 +218,18 @@ public class ProjectManager
 
 	private static Project validateConfig(Path root, ProjectConfig config, TargetTriple target) throws IOException
 	{
-		if(config.name == null)
-			configErrorMissingProperty("name");
-
-		validatePropertyValue("name", config.name, "[-A-Za-z0-9_]+");
-
-		if(config.sources == null)
-			configErrorMissingProperty("source");
+		validateNonNull("name", config.name);
+		validatePropertyValue("name", config.name, PROJECT_NAME_PATTERN);
+		validateNonNull("sources", config.sources);
+		validateNonNull("libs", config.libs);
+		validateNonNull("type", config.type);
+		validateNonNull("katana-version", config.katanaVersion);
 
 		Map<FileType, Set<Path>> sources = validateSources(root, config.sources, target);
-
-		if(config.libs == null)
-			configErrorMissingProperty("libs");
-
 		List<String> libs = validateLibs(config.libs, target);
 
-		if(config.type == null)
-			configErrorMissingProperty("type");
-
-		if(config.katanaVersion == null)
-			configErrorMissingProperty("katana-version");
-
-		if(config.type == ProjectType.EXECUTABLE && config.entryPoint == null)
-			configErrorMissingProperty("entry-point");
+		if(config.type == ProjectType.EXECUTABLE)
+			validateNonNull("entry-point", config.entryPoint);
 
 		if(config.type != ProjectType.EXECUTABLE && config.entryPoint != null)
 			configError("property 'entry-point' is only applicable to executables");
