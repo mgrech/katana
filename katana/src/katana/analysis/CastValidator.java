@@ -85,9 +85,9 @@ public class CastValidator
 	{
 		switch(kind)
 		{
-		case SIGN_CAST:      return isValidSignCast(sourceType, targetType, context);
-		case WIDEN_CAST:     return isValidWidenCast(sourceType, targetType, context);
-		case NARROW_CAST:    return isValidNarrowCast(sourceType, targetType, context);
+		case SIGN_CAST:    return isValidSignCast(sourceType, targetType, context);
+		case WIDEN_CAST:   return isValidWidenCast(sourceType, targetType, context);
+		case NARROW_CAST:  return isValidNarrowCast(sourceType, targetType, context);
 		case POINTER_CAST: return isValidPointerCast(sourceType, targetType, context);
 		default: break;
 		}
