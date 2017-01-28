@@ -103,6 +103,16 @@ public class ExprValidator implements IVisitor
 	{
 		SemaExpr expr = validate(addressof.expr, scope, context, validateDecl, Maybe.none());
 
+		if(expr instanceof SemaExprNamedOverloadSet)
+		{
+			SemaDeclOverloadSet set = ((SemaExprNamedOverloadSet)expr).set;
+
+			if(set.overloads.size() > 1)
+				throw new CompileException(String.format("cannot take address of function '%s': function is overloaded", set.qualifiedName()));
+
+			expr = new SemaExprNamedFunc(set.overloads.get(0));
+		}
+
 		if(!(expr instanceof SemaExprLValueExpr))
 			throw new CompileException("address-of operator ('prefix &') requires lvalue operand");
 
