@@ -21,7 +21,7 @@ import katana.sema.type.SemaTypeConst;
 
 import java.math.BigDecimal;
 
-public class SemaExprLitFloat extends SemaExprLiteral
+public class SemaExprLitFloat implements SemaExprLiteral
 {
 	public SemaExprLitFloat(BigDecimal value, BuiltinType type)
 	{

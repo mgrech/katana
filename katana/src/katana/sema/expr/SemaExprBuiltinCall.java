@@ -19,7 +19,7 @@ import katana.sema.type.SemaType;
 
 import java.util.List;
 
-public class SemaExprBuiltinCall extends SemaExpr
+public class SemaExprBuiltinCall implements SemaExpr
 {
 	public SemaExprBuiltinCall(BuiltinFunc func, List<SemaExpr> args, SemaType ret)
 	{

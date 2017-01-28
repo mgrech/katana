@@ -14,6 +14,6 @@
 
 package katana.sema.expr;
 
-public abstract class SemaExprLiteral extends SemaExpr
+public interface SemaExprLiteral extends SemaExpr
 {
 }

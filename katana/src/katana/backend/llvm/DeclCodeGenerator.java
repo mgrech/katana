@@ -35,12 +35,14 @@ public class DeclCodeGenerator implements IVisitor
 	private StringBuilder builder;
 	private Project project;
 	private PlatformContext context;
+	private StringPool stringPool;
 
-	public DeclCodeGenerator(StringBuilder builder, Project project, PlatformContext context)
+	public DeclCodeGenerator(StringBuilder builder, Project project, PlatformContext context, StringPool stringPool)
 	{
 		this.builder = builder;
 		this.project = project;
 		this.context = context;
+		this.stringPool = stringPool;
 	}
 
 	public void generate(SemaDecl decl)
@@ -170,7 +172,7 @@ public class DeclCodeGenerator implements IVisitor
 		if(!function.locals.isEmpty())
 			builder.append('\n');
 
-		StmtCodeGenerator stmtCodeGen = new StmtCodeGenerator(builder, context, fcontext);
+		StmtCodeGenerator stmtCodeGen = new StmtCodeGenerator(builder, context, fcontext, stringPool);
 
 		for(SemaStmt stmt : function.body)
 			stmtCodeGen.generate(stmt);
@@ -202,7 +204,7 @@ public class DeclCodeGenerator implements IVisitor
 	{
 		String qualifiedName = qualifiedName(global);
 		String typeString = TypeCodeGenerator.generate(global.type, context);
-		String initializerString = global.init.map(i -> ExprCodeGenerator.generate(i, builder, context, null).unwrap()).or("zeroinitializer");
+		String initializerString = global.init.map(i -> ExprCodeGenerator.generate(i, builder, context, null, stringPool).unwrap()).or("zeroinitializer");
 		String kind = Types.isConst(global.type) ? "constant" : "global";
 		builder.append(String.format("@%s = private %s %s %s\n", qualifiedName, kind, typeString, initializerString));
 	}

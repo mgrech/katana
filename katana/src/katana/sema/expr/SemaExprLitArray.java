@@ -21,7 +21,7 @@ import katana.sema.type.SemaTypeArray;
 import java.math.BigInteger;
 import java.util.List;
 
-public class SemaExprLitArray extends SemaExprLiteral
+public class SemaExprLitArray implements SemaExprLiteral
 {
 	public SemaExprLitArray(BigInteger length, SemaType type, List<SemaExpr> values)
 	{

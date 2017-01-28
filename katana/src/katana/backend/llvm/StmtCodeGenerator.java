@@ -30,14 +30,16 @@ public class StmtCodeGenerator implements IVisitor
 	private StringBuilder builder;
 	private PlatformContext context;
 	private FunctionContext fcontext;
+	private StringPool stringPool;
 
 	private boolean preceededByTerminator = false;
 
-	public StmtCodeGenerator(StringBuilder builder, PlatformContext context, FunctionContext fcontext)
+	public StmtCodeGenerator(StringBuilder builder, PlatformContext context, FunctionContext fcontext, StringPool stringPool)
 	{
 		this.builder = builder;
 		this.context = context;
 		this.fcontext = fcontext;
+		this.stringPool = stringPool;
 	}
 
 	public void generate(SemaStmt stmt)
@@ -67,7 +69,7 @@ public class StmtCodeGenerator implements IVisitor
 	private void visit(SemaStmtExprStmt stmt)
 	{
 		preceededByTerminator = false;
-		ExprCodeGenerator.generate(stmt.expr, builder, context, fcontext);
+		ExprCodeGenerator.generate(stmt.expr, builder, context, fcontext, stringPool);
 	}
 
 	private void generateGoto(String label)
@@ -88,7 +90,7 @@ public class StmtCodeGenerator implements IVisitor
 
 	private void visit(SemaStmtIf if_)
 	{
-		String condSSA = ExprCodeGenerator.generate(if_.condition, builder, context, fcontext).unwrap();
+		String condSSA = ExprCodeGenerator.generate(if_.condition, builder, context, fcontext, stringPool).unwrap();
 
 		GeneratedLabel thenLabel = fcontext.allocateLabel("if.then");
 		GeneratedLabel afterLabel = fcontext.allocateLabel("if.after");
@@ -169,7 +171,7 @@ public class StmtCodeGenerator implements IVisitor
 			return;
 		}
 
-		String expr = ExprCodeGenerator.generate(ret.ret.unwrap(), builder, context, fcontext).unwrap();
+		String expr = ExprCodeGenerator.generate(ret.ret.unwrap(), builder, context, fcontext, stringPool).unwrap();
 		SemaType type = ret.ret.unwrap().type();
 		String llvmType = TypeCodeGenerator.generate(type, context);
 		builder.append(String.format("\tret %s %s\n\n", llvmType, expr));

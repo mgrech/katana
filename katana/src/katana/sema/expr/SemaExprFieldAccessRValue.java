@@ -18,7 +18,7 @@ import katana.analysis.Types;
 import katana.sema.decl.SemaDeclStruct;
 import katana.sema.type.SemaType;
 
-public class SemaExprFieldAccessRValue extends SemaExpr
+public class SemaExprFieldAccessRValue implements SemaExpr
 {
 	public SemaExprFieldAccessRValue(SemaExpr expr, SemaDeclStruct.Field field, boolean const_)
 	{

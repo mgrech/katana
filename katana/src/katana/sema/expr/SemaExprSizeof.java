@@ -17,7 +17,7 @@ package katana.sema.expr;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeBuiltin;
 
-public class SemaExprSizeof extends SemaExpr
+public class SemaExprSizeof implements SemaExpr
 {
 	public SemaExprSizeof(SemaType type)
 	{

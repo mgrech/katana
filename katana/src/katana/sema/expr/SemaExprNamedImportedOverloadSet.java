@@ -17,7 +17,7 @@ package katana.sema.expr;
 import katana.sema.decl.SemaDeclImportedOverloadSet;
 import katana.sema.type.SemaType;
 
-public class SemaExprNamedImportedOverloadSet extends SemaExpr
+public class SemaExprNamedImportedOverloadSet implements SemaExpr
 {
 	public SemaExprNamedImportedOverloadSet(SemaDeclImportedOverloadSet set)
 	{

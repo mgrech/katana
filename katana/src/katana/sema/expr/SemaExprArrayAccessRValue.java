@@ -17,7 +17,7 @@ package katana.sema.expr;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeArray;
 
-public class SemaExprArrayAccessRValue extends SemaExpr
+public class SemaExprArrayAccessRValue implements SemaExpr
 {
 	public SemaExprArrayAccessRValue(SemaExpr expr, SemaExpr index)
 	{

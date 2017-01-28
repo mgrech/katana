@@ -17,7 +17,7 @@ package katana.sema.expr;
 import katana.sema.decl.SemaDeclRenamedImport;
 import katana.sema.type.SemaType;
 
-public class SemaExprNamedRenamedImport extends SemaExpr
+public class SemaExprNamedRenamedImport implements SemaExpr
 {
 	public SemaExprNamedRenamedImport(SemaDeclRenamedImport import_)
 	{

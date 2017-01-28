@@ -17,7 +17,7 @@ package katana.sema.expr;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeBuiltin;
 
-public class SemaExprAlignof extends SemaExpr
+public class SemaExprAlignof implements SemaExpr
 {
 	public SemaExprAlignof(SemaType type)
 	{

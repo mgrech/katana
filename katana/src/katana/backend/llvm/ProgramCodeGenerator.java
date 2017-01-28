@@ -110,7 +110,9 @@ public class ProgramCodeGenerator
 		StringBuilder builder = new StringBuilder();
 		builder.append(String.format("target triple = \"%s\"\n\n", context.target()));
 
-		generateDecls(new DeclCodeGenerator(builder, project, context), program.root);
+		StringPool stringPool = new StringPool();
+		generateDecls(new DeclCodeGenerator(builder, project, context, stringPool), program.root);
+		stringPool.generate(builder, context);
 
 		if(project.entryPoint.isSome())
 			generateEntryPointWrapper(builder, findEntryPointFunction(program, project.entryPoint.unwrap()));

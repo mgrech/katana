@@ -17,7 +17,7 @@ package katana.sema.expr;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeNonNullablePointer;
 
-public class SemaExprAddressof extends SemaExpr
+public class SemaExprAddressof implements SemaExpr
 {
 	public SemaExprAddressof(SemaExprLValueExpr expr)
 	{

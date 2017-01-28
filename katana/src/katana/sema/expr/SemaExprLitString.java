@@ -22,7 +22,7 @@ import katana.sema.type.SemaTypeConst;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 
-public class SemaExprLitString extends SemaExprLiteral
+public class SemaExprLitString extends SemaExprSimpleLValueExpr implements SemaExprLiteral
 {
 	private static final SemaType ELEMENT_TYPE = new SemaTypeConst(SemaTypeBuiltin.UINT8);
 

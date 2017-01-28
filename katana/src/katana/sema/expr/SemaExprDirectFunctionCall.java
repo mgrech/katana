@@ -20,7 +20,7 @@ import katana.utils.Maybe;
 
 import java.util.List;
 
-public class SemaExprDirectFunctionCall extends SemaExpr
+public class SemaExprDirectFunctionCall implements SemaExpr
 {
 	public SemaExprDirectFunctionCall(SemaDeclFunction function, List<SemaExpr> args, Maybe<Boolean> inline)
 	{

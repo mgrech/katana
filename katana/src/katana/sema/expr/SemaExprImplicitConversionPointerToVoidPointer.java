@@ -16,7 +16,7 @@ package katana.sema.expr;
 
 import katana.sema.type.SemaType;
 
-public class SemaExprImplicitConversionPointerToVoidPointer extends SemaExpr
+public class SemaExprImplicitConversionPointerToVoidPointer implements SemaExpr
 {
 	public SemaExprImplicitConversionPointerToVoidPointer(SemaExpr expr, SemaType type)
 	{

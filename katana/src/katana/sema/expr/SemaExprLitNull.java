@@ -18,7 +18,7 @@ import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeBuiltin;
 import katana.sema.type.SemaTypeConst;
 
-public class SemaExprLitNull extends SemaExprLiteral
+public class SemaExprLitNull implements SemaExprLiteral
 {
 	private static final SemaType TYPE = new SemaTypeConst(SemaTypeBuiltin.NULL);
 

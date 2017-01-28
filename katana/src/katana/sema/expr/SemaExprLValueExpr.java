@@ -14,7 +14,7 @@
 
 package katana.sema.expr;
 
-public abstract class SemaExprLValueExpr extends SemaExpr
+public abstract class SemaExprLValueExpr implements SemaExpr
 {
 	public abstract boolean isUsedAsLValue();
 	public abstract void useAsLValue(boolean use);
