@@ -119,8 +119,8 @@ public class StringPool
 
 			String getelementptrFmt = "getelementptr inbounds ([%s x i8], [%s x i8]* %s, i32 0, i32 %s)";
 			String getelementptr = String.format(getelementptrFmt, arrayLength, arrayLength, name, lengthSize);
-			String bitcast = String.format("bitcast (i8* %s to [%s x i8]*)", getelementptr, value.length());
-			String ptrfmt = "%s.ptr = private unnamed_addr constant [%s x i8]* %s\n";
+			String bitcast = String.format("bitcast (i8*\n\t\t%s\n\t\tto [%s x i8]*)", getelementptr, value.length());
+			String ptrfmt = "%s.ptr = private unnamed_addr constant [%s x i8]*\n\t%s\n";
 			builder.append(String.format(ptrfmt, name, value.length(), bitcast));
 		}
 	}
