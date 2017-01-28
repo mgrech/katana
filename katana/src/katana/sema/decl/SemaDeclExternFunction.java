@@ -15,14 +15,15 @@
 package katana.sema.decl;
 
 import katana.sema.SemaModule;
+import katana.utils.Maybe;
 
 public class SemaDeclExternFunction extends SemaDeclFunction
 {
-	public SemaDeclExternFunction(SemaModule module, boolean exported, boolean opaque, String externName, String name)
+	public SemaDeclExternFunction(SemaModule module, boolean exported, boolean opaque, Maybe<String> externName, String name)
 	{
 		super(module, exported, opaque, name);
 		this.externName = externName;
 	}
 
-	public String externName;
+	public Maybe<String> externName;
 }

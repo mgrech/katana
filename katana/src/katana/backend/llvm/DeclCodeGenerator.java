@@ -119,7 +119,7 @@ public class DeclCodeGenerator implements IVisitor
 		builder.append(" @");
 
 		if(isExternal)
-			builder.append(((SemaDeclExternFunction)function).externName);
+			builder.append(((SemaDeclExternFunction)function).externName.or(function.name()));
 		else
 			builder.append(FunctionNameMangler.mangle(function));
 

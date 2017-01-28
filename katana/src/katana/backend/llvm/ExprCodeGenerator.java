@@ -303,7 +303,7 @@ public class ExprCodeGenerator implements IVisitor
 		if(functionCall.function instanceof SemaDeclExternFunction)
 		{
 			SemaDeclExternFunction extfn = (SemaDeclExternFunction)functionCall.function;
-			name = extfn.externName;
+			name = extfn.externName.or(extfn.name());
 		}
 
 		else
@@ -482,7 +482,7 @@ public class ExprCodeGenerator implements IVisitor
 	private Maybe<String> visit(SemaExprNamedFunc namedFunc)
 	{
 		if(namedFunc.func instanceof SemaDeclExternFunction)
-			return Maybe.some("@" + ((SemaDeclExternFunction)namedFunc.func).externName);
+			return Maybe.some("@" + ((SemaDeclExternFunction)namedFunc.func).externName.or(namedFunc.func.name()));
 
 		return Maybe.some("@" + FunctionNameMangler.mangle(namedFunc.func));
 	}

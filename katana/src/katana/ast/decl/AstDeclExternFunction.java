@@ -21,11 +21,11 @@ import java.util.List;
 
 public class AstDeclExternFunction extends AstDeclFunction
 {
-	public AstDeclExternFunction(boolean exported, boolean opaque, String externName, String name, List<Param> params, Maybe<AstType> ret)
+	public AstDeclExternFunction(boolean exported, boolean opaque, Maybe<String> externName, String name, List<Param> params, Maybe<AstType> ret)
 	{
 		super(exported, opaque, name, params, ret);
 		this.externName = externName;
 	}
 
-	public String externName;
+	public Maybe<String> externName;
 }

@@ -45,10 +45,17 @@ public class DeclParser
 		if(opaque && !exported)
 			throw new CompileException("'opaque' must go after 'export'");
 
-		Maybe<String> extern = Maybe.none();
+		Maybe<Maybe<String>> extern = Maybe.none();
 
 		if(ParseTools.option(scanner, Token.Type.DECL_EXTERN, true))
-			extern = Maybe.some(ParseTools.consumeExpected(scanner, Token.Type.LIT_STRING).value);
+		{
+			Maybe<String> externName = Maybe.none();
+
+			if(ParseTools.option(scanner, Token.Type.LIT_STRING, false))
+				externName = Maybe.some(ParseTools.consume(scanner).value);
+
+			extern = Maybe.some(externName);
+		}
 
 		if(extern.isSome() && scanner.state().token.type != Token.Type.DECL_FN)
 			throw new CompileException("extern can only be applied to overloads");
@@ -153,7 +160,7 @@ public class DeclParser
 		return new AstDeclOperator(exported, Operator.infix(op, assoc, prec.intValue()));
 	}
 
-	private static AstDecl parseFunction(Scanner scanner, boolean exported, boolean opaque, Maybe<String> extern, DelayedExprParseList delayedExprs)
+	private static AstDecl parseFunction(Scanner scanner, boolean exported, boolean opaque, Maybe<Maybe<String>> extern, DelayedExprParseList delayedExprs)
 	{
 		scanner.advance();
 
