@@ -28,6 +28,27 @@ public class TypeHelper
 		return type instanceof SemaTypeConst;
 	}
 
+	public static SemaType addNullablePointer(SemaType pointeeType)
+	{
+		return new SemaTypeNullablePointer(pointeeType);
+	}
+
+	public static SemaType addNonNullablePointer(SemaType pointeeType)
+	{
+		return new SemaTypePointer(pointeeType);
+	}
+
+	public static SemaType copyPointerKind(SemaType sourceType, SemaType pointeeType)
+	{
+		if(isNullablePointerType(sourceType))
+			return addNullablePointer(pointeeType);
+
+		if(isNonNullablePointerType(sourceType))
+			return addNonNullablePointer(pointeeType);
+
+		throw new AssertionError("unreachable");
+	}
+
 	public static SemaType addConst(SemaType type)
 	{
 		if(type instanceof SemaTypeFunction)

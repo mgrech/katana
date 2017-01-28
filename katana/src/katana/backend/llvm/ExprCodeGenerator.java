@@ -19,7 +19,6 @@ import katana.analysis.TypeAlignment;
 import katana.analysis.TypeHelper;
 import katana.analysis.TypeSize;
 import katana.backend.PlatformContext;
-import katana.diag.TypeString;
 import katana.sema.decl.SemaDeclExternFunction;
 import katana.sema.expr.*;
 import katana.sema.type.SemaType;
@@ -322,6 +321,11 @@ public class ExprCodeGenerator implements IVisitor
 	private Maybe<String> visit(SemaExprImplicitConversionNullToNullablePointer conversion)
 	{
 		return Maybe.some("null");
+	}
+
+	private Maybe<String> visit(SemaExprImplicitConversionPointerToNonConstToPointerToConst conversion)
+	{
+		return generate(conversion.expr, builder, context, fcontext);
 	}
 
 	private Maybe<String> visit(SemaExprImplicitConversionPointerToVoidPointer conversion)

@@ -15,32 +15,52 @@
 package katana.analysis;
 
 import katana.BuiltinType;
-import katana.sema.expr.SemaExpr;
-import katana.sema.expr.SemaExprImplicitConversionPointerToVoidPointer;
-import katana.sema.expr.SemaExprImplicitConversionNonNullablePointerToNullablePointer;
-import katana.sema.expr.SemaExprImplicitConversionNullToNullablePointer;
+import katana.sema.expr.*;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeNullablePointer;
 
 public class ImplicitConversions
 {
+	private static SemaExpr performPointerConversions(SemaExpr expr, SemaType targetType)
+	{
+		SemaType sourceType = expr.type();
+		SemaType sourcePointeeType = TypeHelper.removePointer(sourceType);
+		SemaType targetPointeeType = TypeHelper.removePointer(targetType);
+
+		// !T -> ?T
+		if(TypeHelper.isNonNullablePointerType(sourceType) && TypeHelper.isNullablePointerType(targetType))
+		{
+			sourceType = new SemaTypeNullablePointer(sourcePointeeType);
+			expr = new SemaExprImplicitConversionNonNullablePointerToNullablePointer(expr, sourceType);
+		}
+
+		// !T -> !const T, ?T -> ?const T
+		if(!TypeHelper.isConst(sourcePointeeType) && TypeHelper.isConst(targetPointeeType))
+		{
+			sourcePointeeType = TypeHelper.addConst(sourcePointeeType);
+			sourceType = TypeHelper.copyPointerKind(sourceType, sourcePointeeType);
+			expr = new SemaExprImplicitConversionPointerToNonConstToPointerToConst(expr, sourceType);
+		}
+
+		// !T -> !void, ?T -> ?void
+		if(TypeHelper.isAnyPointerType(sourceType) && TypeHelper.isAnyPointerType(targetType)
+			&& TypeHelper.isVoidType(TypeHelper.removePointer(targetType)))
+			expr = new SemaExprImplicitConversionPointerToVoidPointer(expr, targetType);
+
+		return expr;
+	}
+
 	public static SemaExpr perform(SemaExpr expr, SemaType targetType)
 	{
 		SemaType sourceType = expr.type();
 
+		// null -> ?T
 		if(TypeHelper.isNullablePointerType(targetType) && TypeHelper.isBuiltinType(sourceType, BuiltinType.NULL))
 			return new SemaExprImplicitConversionNullToNullablePointer(targetType);
 
-		if(TypeHelper.isNonNullablePointerType(sourceType) && TypeHelper.isNullablePointerType(targetType))
-		{
-			SemaType type = new SemaTypeNullablePointer(TypeHelper.removePointer(sourceType));
-			expr = new SemaExprImplicitConversionNonNullablePointerToNullablePointer(expr, type);
-			sourceType = expr.type();
-		}
-
-		if(TypeHelper.isAnyPointerType(sourceType) && TypeHelper.isAnyPointerType(targetType)
-		&& TypeHelper.isVoidType(TypeHelper.removePointer(targetType)))
-			expr = new SemaExprImplicitConversionPointerToVoidPointer(expr, targetType);
+		// !T, ?T
+		if(TypeHelper.isAnyPointerType(sourceType) && TypeHelper.isAnyPointerType(targetType))
+			return performPointerConversions(expr, targetType);
 
 		return expr;
 	}
