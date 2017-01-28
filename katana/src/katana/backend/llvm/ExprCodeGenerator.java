@@ -28,7 +28,6 @@ import katana.visitor.IVisitor;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -500,7 +499,7 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some("" + TypeSize.of(sizeof.type, context));
 	}
 
-	private Maybe<String> visit(SsaExpr ssa)
+	private Maybe<String> visit(SsaExpr2 ssa)
 	{
 		return Maybe.some(ssa.name);
 	}
