@@ -53,6 +53,10 @@ public class ImplicitConversions
 	{
 		SemaType sourceType = expr.type();
 
+		// float32 -> float64
+		if(Types.isBuiltin(sourceType, BuiltinType.FLOAT32) && Types.isBuiltin(targetType, BuiltinType.FLOAT64))
+			return new SemaExprImplicitConversionWidenFloat(expr, targetType);
+
 		// null -> ?T
 		if(Types.isNullablePointer(targetType) && Types.isBuiltin(sourceType, BuiltinType.NULL))
 			return new SemaExprImplicitConversionNullToNullablePointer(targetType);
