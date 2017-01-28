@@ -337,7 +337,7 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some(resultSSA);
 	}
 
-	private Maybe<String> visit(SemaExprImplicitConversionWidenFloat conversion)
+	private Maybe<String> visit(SemaExprImplicitConversionWiden conversion)
 	{
 		String valueSSA = generate(conversion.expr, builder, context, fcontext).unwrap();
 		return Maybe.some(generateCast(valueSSA, conversion.expr.type(), conversion.type(), SemaExprCast.Kind.WIDEN_CAST));

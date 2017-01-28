@@ -133,6 +133,11 @@ public class Types
 		return isSigned(type) || isUnsigned(type);
 	}
 
+	public static boolean isFixedSizeInteger(SemaType type)
+	{
+		return isInteger(type) && !isBuiltin(type, BuiltinType.INT) && !isBuiltin(type, BuiltinType.UINT);
+	}
+
 	public static boolean isFloatingPoint(SemaType type)
 	{
 		return isBuiltinKind(type, BuiltinType.Kind.FLOAT);

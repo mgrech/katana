@@ -55,13 +55,19 @@ public class ImplicitConversions
 
 		// float32 -> float64
 		if(Types.isBuiltin(sourceType, BuiltinType.FLOAT32) && Types.isBuiltin(targetType, BuiltinType.FLOAT64))
-			return new SemaExprImplicitConversionWidenFloat(expr, targetType);
+			return new SemaExprImplicitConversionWiden(expr, targetType);
+
+		// (u)intN -> (u)intM (widen)
+		if(Types.isFixedSizeInteger(sourceType) && Types.isFixedSizeInteger(targetType)
+		&& Types.isSigned(sourceType) == Types.isSigned(targetType)
+		&& Types.compareSizes(sourceType, targetType, null) == -1)
+			return new SemaExprImplicitConversionWiden(expr, targetType);
 
 		// null -> ?T
 		if(Types.isNullablePointer(targetType) && Types.isBuiltin(sourceType, BuiltinType.NULL))
 			return new SemaExprImplicitConversionNullToNullablePointer(targetType);
 
-		// !T, ?T
+		// pointer conversions
 		if(Types.isPointer(sourceType) && Types.isPointer(targetType))
 			return performPointerConversions(expr, targetType);
 
