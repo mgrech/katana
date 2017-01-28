@@ -133,7 +133,7 @@ public class TypeValidator implements IVisitor
 		if(type instanceof SemaTypeFunction)
 			throw new CompileException("forming const function type");
 
-		return TypeHelper.addConst(type);
+		return Types.addConst(type);
 	}
 
 	private SemaType visit(AstTypeTypeof typeof)
@@ -150,8 +150,8 @@ public class TypeValidator implements IVisitor
 		return new SemaTypeNullablePointer(validate(pointer.type, scope, context, validateDecl));
 	}
 
-	private SemaType visit(AstTypePointer pointer)
+	private SemaType visit(AstTypeNonNullablePointer pointer)
 	{
-		return new SemaTypePointer(validate(pointer.type, scope, context, validateDecl));
+		return new SemaTypeNonNullablePointer(validate(pointer.type, scope, context, validateDecl));
 	}
 }

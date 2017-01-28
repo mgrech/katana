@@ -14,7 +14,7 @@
 
 package katana.sema.expr;
 
-import katana.analysis.TypeHelper;
+import katana.analysis.Types;
 import katana.sema.decl.SemaDeclStruct;
 import katana.sema.type.SemaType;
 
@@ -42,7 +42,7 @@ public class SemaExprFieldAccessLValue extends SemaExprLValueExpr
 	@Override
 	public SemaType type()
 	{
-		return const_ ? TypeHelper.addConst(field.type) : field.type;
+		return const_ ? Types.addConst(field.type) : field.type;
 	}
 
 	public SemaExprLValueExpr expr;

@@ -16,8 +16,8 @@ package katana.backend.llvm;
 
 import katana.BuiltinType;
 import katana.analysis.TypeAlignment;
-import katana.analysis.TypeHelper;
 import katana.analysis.TypeSize;
+import katana.analysis.Types;
 import katana.backend.PlatformContext;
 import katana.sema.decl.SemaDeclExternFunction;
 import katana.sema.expr.*;
@@ -135,28 +135,28 @@ public class ExprCodeGenerator implements IVisitor
 		switch(kind)
 		{
 		case WIDEN_CAST:
-			if(TypeHelper.isFloatingPointType(targetType))
+			if(Types.isFloatingPoint(targetType))
 				return "fpext";
 
-			if(TypeHelper.isSigned(targetType))
+			if(Types.isSigned(targetType))
 				return "sext";
 
-			if(TypeHelper.isUnsigned(targetType))
+			if(Types.isUnsigned(targetType))
 				return "zext";
 
 			throw new AssertionError("unreachable");
 
 		case NARROW_CAST:
-			if(TypeHelper.isFloatingPointType(targetType))
+			if(Types.isFloatingPoint(targetType))
 				return "fptrunc";
 
-			if(TypeHelper.isIntegerType(targetType))
+			if(Types.isInteger(targetType))
 				return "trunc";
 
 			throw new AssertionError("unreachable");
 
 		case POINTER_CAST:
-			if(TypeHelper.isAnyPointerType(targetType))
+			if(Types.isPointer(targetType))
 				return "inttoptr";
 
 			return "ptrtoint";
@@ -193,7 +193,7 @@ public class ExprCodeGenerator implements IVisitor
 			break;
 
 		case WIDEN_CAST:
-			if(TypeHelper.equalSizes(sourceType, targetType, context))
+			if(Types.equalSizes(sourceType, targetType, context))
 			{
 				resultSSA = valueSSA;
 				break;
@@ -203,7 +203,7 @@ public class ExprCodeGenerator implements IVisitor
 			break;
 
 		case NARROW_CAST:
-			if(TypeHelper.equalSizes(sourceType, targetType, context))
+			if(Types.equalSizes(sourceType, targetType, context))
 			{
 				resultSSA = valueSSA;
 				break;
@@ -213,7 +213,7 @@ public class ExprCodeGenerator implements IVisitor
 			break;
 
 		case POINTER_CAST:
-			if(SemaType.same(TypeHelper.removeConst(sourceType), TypeHelper.removeConst(targetType)))
+			if(SemaType.same(Types.removeConst(sourceType), Types.removeConst(targetType)))
 			{
 				resultSSA = valueSSA;
 				break;
@@ -260,7 +260,7 @@ public class ExprCodeGenerator implements IVisitor
 
 		Maybe<String> retSSA = Maybe.none();
 
-		if(!TypeHelper.isVoidType(ret))
+		if(!Types.isVoid(ret))
 		{
 			retSSA = Maybe.some(fcontext.allocateSSA());
 			builder.append(String.format("%s = ", retSSA.unwrap()));

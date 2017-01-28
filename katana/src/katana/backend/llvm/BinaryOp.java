@@ -16,7 +16,7 @@ package katana.backend.llvm;
 
 import katana.BuiltinFunc;
 import katana.BuiltinType;
-import katana.analysis.TypeHelper;
+import katana.analysis.Types;
 import katana.backend.PlatformContext;
 import katana.diag.CompileException;
 import katana.sema.expr.SemaExprBuiltinCall;
@@ -77,9 +77,9 @@ public class BinaryOp extends BuiltinFunc
 		if(args.size() != 2)
 			throw new CompileException(String.format("builtin %s expects 2 arguments", name));
 
-		SemaType argType = TypeHelper.removeConst(args.get(0));
+		SemaType argType = Types.removeConst(args.get(0));
 
-		if(!SemaType.same(argType, TypeHelper.removeConst(args.get(1))))
+		if(!SemaType.same(argType, Types.removeConst(args.get(1))))
 			throw new CompileException(String.format("arguments to builtin %s must be of same type", name));
 
 		if(!(argType instanceof SemaTypeBuiltin))

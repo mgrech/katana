@@ -14,7 +14,7 @@
 
 package katana.backend.llvm;
 
-import katana.analysis.TypeHelper;
+import katana.analysis.Types;
 import katana.backend.PlatformContext;
 import katana.sema.decl.SemaDeclDefinedFunction;
 import katana.sema.stmt.*;
@@ -49,7 +49,7 @@ public class StmtCodeGenerator implements IVisitor
 	{
 		if(!preceededByTerminator)
 		{
-			if(TypeHelper.isVoidType(func.ret))
+			if(Types.isVoid(func.ret))
 				builder.append("\tret void\n");
 			else
 				builder.append("\tunreachable\n");

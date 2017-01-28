@@ -73,7 +73,7 @@ public class TypeParser
 			{
 				switch(c)
 				{
-				case '!': type = new AstTypePointer(type); break;
+				case '!': type = new AstTypeNonNullablePointer(type); break;
 				case '?': type = new AstTypeNullablePointer(type); break;
 				default:
 					throw new CompileException(String.format("unexpected character '%s' while parsing type", c));

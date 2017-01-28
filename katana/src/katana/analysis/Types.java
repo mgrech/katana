@@ -18,7 +18,7 @@ import katana.BuiltinType;
 import katana.backend.PlatformContext;
 import katana.sema.type.*;
 
-public class TypeHelper
+public class Types
 {
 	public static boolean isConst(SemaType type)
 	{
@@ -35,15 +35,15 @@ public class TypeHelper
 
 	public static SemaType addNonNullablePointer(SemaType pointeeType)
 	{
-		return new SemaTypePointer(pointeeType);
+		return new SemaTypeNonNullablePointer(pointeeType);
 	}
 
 	public static SemaType copyPointerKind(SemaType sourceType, SemaType pointeeType)
 	{
-		if(isNullablePointerType(sourceType))
+		if(isNullablePointer(sourceType))
 			return addNullablePointer(pointeeType);
 
-		if(isNonNullablePointerType(sourceType))
+		if(isNonNullablePointer(sourceType))
 			return addNonNullablePointer(pointeeType);
 
 		throw new AssertionError("unreachable");
@@ -73,8 +73,8 @@ public class TypeHelper
 		if(type instanceof SemaTypeNullablePointer)
 			return ((SemaTypeNullablePointer)type).type;
 
-		if(type instanceof SemaTypePointer)
-			return ((SemaTypePointer)type).type;
+		if(type instanceof SemaTypeNonNullablePointer)
+			return ((SemaTypeNonNullablePointer)type).type;
 
 		return type;
 	}
@@ -93,12 +93,12 @@ public class TypeHelper
 		return type;
 	}
 
-	public static boolean isVoidType(SemaType type)
+	public static boolean isVoid(SemaType type)
 	{
-		return isBuiltinType(type, BuiltinType.VOID);
+		return isBuiltin(type, BuiltinType.VOID);
 	}
 
-	public static boolean isBuiltinType(SemaType type, BuiltinType which)
+	public static boolean isBuiltin(SemaType type, BuiltinType which)
 	{
 		type = removeConst(type);
 
@@ -128,41 +128,41 @@ public class TypeHelper
 		return isBuiltinKind(type, BuiltinType.Kind.UINT);
 	}
 
-	public static boolean isIntegerType(SemaType type)
+	public static boolean isInteger(SemaType type)
 	{
 		return isSigned(type) || isUnsigned(type);
 	}
 
-	public static boolean isFloatingPointType(SemaType type)
+	public static boolean isFloatingPoint(SemaType type)
 	{
 		return isBuiltinKind(type, BuiltinType.Kind.FLOAT);
 	}
 
-	public static boolean isArrayType(SemaType type)
+	public static boolean isArray(SemaType type)
 	{
 		return type instanceof SemaTypeArray;
 	}
 
-	public static boolean isFunctionType(SemaType type)
+	public static boolean isFunction(SemaType type)
 	{
 		return type instanceof SemaTypeFunction;
 	}
 
-	public static boolean isNullablePointerType(SemaType type)
+	public static boolean isNullablePointer(SemaType type)
 	{
 		type = removeConst(type);
 		return type instanceof SemaTypeNullablePointer;
 	}
 
-	public static boolean isNonNullablePointerType(SemaType type)
+	public static boolean isNonNullablePointer(SemaType type)
 	{
 		type = removeConst(type);
-		return type instanceof SemaTypePointer;
+		return type instanceof SemaTypeNonNullablePointer;
 	}
 
-	public static boolean isAnyPointerType(SemaType type)
+	public static boolean isPointer(SemaType type)
 	{
-		return isNullablePointerType(type) || isNonNullablePointerType(type);
+		return isNullablePointer(type) || isNonNullablePointer(type);
 	}
 
 	public static boolean equalSizes(SemaType first, SemaType second, PlatformContext context)

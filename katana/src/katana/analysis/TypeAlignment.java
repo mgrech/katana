@@ -65,7 +65,7 @@ public class TypeAlignment implements IVisitor
 		return opaqueType.alignment;
 	}
 
-	private BigInteger visit(SemaTypePointer pointerType)
+	private BigInteger visit(SemaTypeNonNullablePointer pointerType)
 	{
 		return TypeSize.of(pointerType, context);
 	}

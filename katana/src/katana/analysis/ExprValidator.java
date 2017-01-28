@@ -85,11 +85,11 @@ public class ExprValidator implements IVisitor
 			SemaType paramType = it1.next();
 			SemaType argType = it2.next().type();
 
-			if(TypeHelper.isVoidType(argType))
+			if(Types.isVoid(argType))
 				throw new CompileException(String.format("expression given in argument %s yields 'void'", argCount));
 
-			SemaType paramTypeNoConst = TypeHelper.removeConst(paramType);
-			SemaType argTypeNoConst = TypeHelper.removeConst(argType);
+			SemaType paramTypeNoConst = Types.removeConst(paramType);
+			SemaType argTypeNoConst = Types.removeConst(argType);
 
 			if(!SemaType.same(paramTypeNoConst, argTypeNoConst))
 			{
@@ -132,10 +132,10 @@ public class ExprValidator implements IVisitor
 		SemaExpr index = validate(arrayAccess.index, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.INT));
 		SemaType indexType = index.type();
 
-		if(!TypeHelper.isBuiltinType(indexType, BuiltinType.INT))
+		if(!Types.isBuiltin(indexType, BuiltinType.INT))
 			throw new CompileException(String.format("array access requires index of type 'int', got '%s'", TypeString.of(indexType)));
 
-		if(!TypeHelper.isArrayType(value.type()))
+		if(!Types.isArray(value.type()))
 			throw new CompileException(String.format("array access requires expression yielding array type, got '%s'", TypeString.of(value.type())));
 
 		if(value instanceof SemaExprLValueExpr)
@@ -148,24 +148,24 @@ public class ExprValidator implements IVisitor
 	{
 		SemaExpr left = validate(assign.left, scope, context, validateDecl, Maybe.none());
 
-		if(TypeHelper.isVoidType(left.type()))
+		if(Types.isVoid(left.type()))
 			throw new CompileException("value expected on left side of assignment, got expression yielding 'void'");
 
 		SemaType leftType = left.type();
-		SemaType leftTypeNoConst = TypeHelper.removeConst(leftType);
+		SemaType leftTypeNoConst = Types.removeConst(leftType);
 
 		SemaExpr right = validate(assign.right, scope, context, validateDecl, Maybe.some(leftTypeNoConst));
 
-		if(TypeHelper.isVoidType(right.type()))
+		if(Types.isVoid(right.type()))
 			throw new CompileException("value expected on right side of assignment, got expression yielding 'void'");
 
-		if(TypeHelper.isConst(leftType) || !(left instanceof SemaExprLValueExpr))
+		if(Types.isConst(leftType) || !(left instanceof SemaExprLValueExpr))
 			throw new CompileException("non-const lvalue required on left side of assignment");
 
 		if(leftType instanceof SemaTypeFunction)
 			throw new CompileException("cannot assign to value of function type");
 
-		SemaType rightTypeNoConst = TypeHelper.removeConst(right.type());
+		SemaType rightTypeNoConst = Types.removeConst(right.type());
 
 		if(!SemaType.same(leftTypeNoConst, rightTypeNoConst))
 		{
@@ -193,7 +193,7 @@ public class ExprValidator implements IVisitor
 			SemaExpr semaExpr = validate(builtinCall.args.get(i), scope, context, validateDecl, Maybe.none());
 			SemaType type = semaExpr.type();
 
-			if(TypeHelper.isVoidType(type))
+			if(Types.isVoid(type))
 			{
 				String fmt = "expression passed to builtin '%s' as argument %s yields 'void'";
 				throw new CompileException(String.format(fmt, builtinCall.name, i + 1));
@@ -212,10 +212,10 @@ public class ExprValidator implements IVisitor
 	{
 		SemaExpr expr = validate(const_.expr, scope, context, validateDecl, deduce);
 
-		if(TypeHelper.isVoidType(expr.type()))
+		if(Types.isVoid(expr.type()))
 			throw new CompileException("expression passed to const symbol yields 'void'");
 
-		if(TypeHelper.isFunctionType(expr.type()))
+		if(Types.isFunction(expr.type()))
 			throw new CompileException("const symbol applied to value of function type");
 
 		if(expr instanceof SemaExprLValueExpr)
@@ -226,9 +226,9 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprDeref deref, Maybe<SemaType> deduce)
 	{
-		SemaExpr expr = validate(deref.expr, scope, context, validateDecl, deduce.map(SemaTypePointer::new));
+		SemaExpr expr = validate(deref.expr, scope, context, validateDecl, deduce.map(SemaTypeNonNullablePointer::new));
 
-		if(!TypeHelper.isAnyPointerType(expr.type()))
+		if(!Types.isPointer(expr.type()))
 		{
 			String fmt = "expected expression of pointer type in dereference operator ('prefix *'), got '%s'";
 			throw new CompileException(String.format(fmt, TypeString.of(expr.type())));
@@ -244,14 +244,14 @@ public class ExprValidator implements IVisitor
 		for(int i = 0; i != function.params.size(); ++i)
 		{
 			SemaType paramType = function.params.get(i).type;
-			SemaType paramTypeNoConst = TypeHelper.removeConst(paramType);
+			SemaType paramTypeNoConst = Types.removeConst(paramType);
 
 			try
 			{
 				SemaExpr arg = ExprValidator.validate(args.get(i), scope, context, validateDecl, Maybe.some(paramTypeNoConst));
-				SemaType argTypeNoConst = TypeHelper.removeConst(arg.type());
+				SemaType argTypeNoConst = Types.removeConst(arg.type());
 
-				if(TypeHelper.isVoidType(arg.type()) || !SemaType.same(paramTypeNoConst, argTypeNoConst))
+				if(Types.isVoid(arg.type()) || !SemaType.same(paramTypeNoConst, argTypeNoConst))
 					failed = true;
 
 				result.add(Maybe.some(arg));
@@ -421,7 +421,7 @@ public class ExprValidator implements IVisitor
 			return resolveOverloadedCall(set.overloads, set.name(), call.args, call.inline);
 		}
 
-		if(!TypeHelper.isFunctionType(expr.type()))
+		if(!Types.isFunction(expr.type()))
 			throw new CompileException("left side of function call does not yield a function type");
 
 		SemaTypeFunction ftype = (SemaTypeFunction)expr.type();
@@ -462,14 +462,14 @@ public class ExprValidator implements IVisitor
 			throw new CompileException("element type of array literal could not be deduced");
 
 		SemaType type = maybeType.unwrap();
-		SemaType typeNoConst = TypeHelper.removeConst(type);
+		SemaType typeNoConst = Types.removeConst(type);
 
 		List<SemaExpr> values = new ArrayList<>();
 
 		for(int i = 0; i != lit.values.size(); ++i)
 		{
 			SemaExpr semaExpr = validate(lit.values.get(i), scope, context, validateDecl, maybeType);
-			SemaType elemTypeNoConst = TypeHelper.removeConst(semaExpr.type());
+			SemaType elemTypeNoConst = Types.removeConst(semaExpr.type());
 
 			if(!SemaType.same(elemTypeNoConst, typeNoConst))
 			{
@@ -504,7 +504,7 @@ public class ExprValidator implements IVisitor
 		if(maybeType.isNone())
 			errorLiteralTypeDeduction();
 
-		SemaType type = TypeHelper.removeConst(maybeType.unwrap());
+		SemaType type = Types.removeConst(maybeType.unwrap());
 
 		if(!(type instanceof SemaTypeBuiltin))
 			errorLiteralTypeDeduction();
@@ -606,11 +606,11 @@ public class ExprValidator implements IVisitor
 			return namedDeclExpr(decl, memberAccess.global);
 		}
 
-		if(TypeHelper.isVoidType(expr.type()))
+		if(Types.isVoid(expr.type()))
 			throw new CompileException("left side of member access yields 'void'");
 
 		SemaType type = expr.type();
-		SemaType typeNoConst = TypeHelper.removeConst(type);
+		SemaType typeNoConst = Types.removeConst(type);
 
 		if(!(typeNoConst instanceof SemaTypeUserDefined))
 			errorNoSuchField(type, memberAccess.name);
@@ -622,9 +622,9 @@ public class ExprValidator implements IVisitor
 			errorNoSuchField(type, memberAccess.name);
 
 		if(expr instanceof SemaExprLValueExpr)
-			return new SemaExprFieldAccessLValue((SemaExprLValueExpr)expr, field.unwrap(), TypeHelper.isConst(type));
+			return new SemaExprFieldAccessLValue((SemaExprLValueExpr)expr, field.unwrap(), Types.isConst(type));
 
-		return new SemaExprFieldAccessRValue(expr, field.unwrap(), TypeHelper.isConst(type));
+		return new SemaExprFieldAccessRValue(expr, field.unwrap(), Types.isConst(type));
 	}
 
 	private SemaExpr visit(AstExprNamedGlobal namedGlobal, Maybe<SemaType> deduce)

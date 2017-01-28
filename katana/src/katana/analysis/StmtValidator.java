@@ -109,16 +109,16 @@ public class StmtValidator implements IVisitor
 	{
 		SemaExpr condition = ExprValidator.validate(expr, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.BOOL));
 
-		if(TypeHelper.isVoidType(condition.type()))
+		if(Types.isVoid(condition.type()))
 		{
 			String fmt = "%s requires condition of type 'bool', got expression yielding 'void'";
 			throw new CompileException(String.format(fmt, kind.toString().toLowerCase()));
 		}
 
-		if(!TypeHelper.isBuiltinType(condition.type(), BuiltinType.BOOL))
+		if(!Types.isBuiltin(condition.type(), BuiltinType.BOOL))
 		{
 			String fmt = "%s requires condition of type 'bool', got '%s'";
-			String gotten = TypeString.of(TypeHelper.removeConst(condition.type()));
+			String gotten = TypeString.of(Types.removeConst(condition.type()));
 			throw new CompileException(String.format(fmt, kind.toString().toLowerCase(), gotten));
 		}
 
@@ -152,7 +152,7 @@ public class StmtValidator implements IVisitor
 	{
 		Maybe<SemaExpr> value = return_.value.map(retval -> ExprValidator.validate(retval, scope, context, validateDecl, Maybe.some(function.ret)));
 
-		boolean returnsVoid = TypeHelper.isVoidType(function.ret);
+		boolean returnsVoid = Types.isVoid(function.ret);
 		boolean valueGiven = value.isSome();
 
 		if(returnsVoid && valueGiven)
@@ -171,14 +171,14 @@ public class StmtValidator implements IVisitor
 		{
 			SemaType type = value.unwrap().type();
 
-			if(TypeHelper.isVoidType(type))
+			if(Types.isVoid(type))
 			{
 				String fmt = "function '%s' returns value of type '%s', got expression yielding 'void'";
 				throw new CompileException(String.format(fmt, function.qualifiedName(), TypeString.of(function.ret)));
 			}
 
-			SemaType typeNoConst = TypeHelper.removeConst(type);
-			SemaType retTypeNoConst = TypeHelper.removeConst(function.ret);
+			SemaType typeNoConst = Types.removeConst(type);
+			SemaType retTypeNoConst = Types.removeConst(function.ret);
 
 			if(!SemaType.same(retTypeNoConst, typeNoConst))
 			{
@@ -199,7 +199,7 @@ public class StmtValidator implements IVisitor
 	private SemaStmt visit(AstStmtLocal local)
 	{
 		Maybe<SemaType> maybeDeclaredType = local.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
-		Maybe<SemaType> maybeDeclaredTypeNoConst = maybeDeclaredType.map(TypeHelper::removeConst);
+		Maybe<SemaType> maybeDeclaredTypeNoConst = maybeDeclaredType.map(Types::removeConst);
 
 		if(local.init.isNone())
 		{
@@ -214,12 +214,12 @@ public class StmtValidator implements IVisitor
 
 		SemaExpr init = ExprValidator.validate(local.init.unwrap(), scope, context, validateDecl, maybeDeclaredTypeNoConst);
 
-		if(TypeHelper.isVoidType(init.type()))
+		if(Types.isVoid(init.type()))
 			throw new CompileException(String.format("initializer for local '%s' yields 'void'", local.name));
 
-		SemaType initTypeNoConst = TypeHelper.removeConst(init.type());
+		SemaType initTypeNoConst = Types.removeConst(init.type());
 		SemaType localType = maybeDeclaredType.or(initTypeNoConst);
-		SemaType localTypeNoConst = TypeHelper.removeConst(localType);
+		SemaType localTypeNoConst = Types.removeConst(localType);
 
 		if(!SemaType.same(localTypeNoConst, initTypeNoConst))
 		{

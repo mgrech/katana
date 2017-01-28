@@ -91,8 +91,8 @@ public class DeclIfaceValidator implements IVisitor
 
 		for(int i = 0; i != a.params.size(); ++i)
 		{
-			SemaType paramTypeA = TypeHelper.removeConst(a.params.get(i).type);
-			SemaType paramTypeB = TypeHelper.removeConst(b.params.get(i).type);
+			SemaType paramTypeA = Types.removeConst(a.params.get(i).type);
+			SemaType paramTypeB = Types.removeConst(b.params.get(i).type);
 
 			if(!SemaType.same(paramTypeA, paramTypeB))
 				return false;
@@ -129,7 +129,7 @@ public class DeclIfaceValidator implements IVisitor
 	private void visit(SemaDeclGlobal semaGlobal, AstDeclGlobal global, SemaScopeFile scope)
 	{
 		Maybe<SemaType> maybeDeclaredType = global.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
-		Maybe<SemaType> maybeDeclaredTypeNoConst = maybeDeclaredType.map(TypeHelper::removeConst);
+		Maybe<SemaType> maybeDeclaredTypeNoConst = maybeDeclaredType.map(Types::removeConst);
 
 		if(global.init.isNone())
 		{
@@ -143,12 +143,12 @@ public class DeclIfaceValidator implements IVisitor
 
 		SemaExprLiteral init = (SemaExprLiteral)ExprValidator.validate(global.init.unwrap(), scope, context, validateDecl, maybeDeclaredTypeNoConst);
 
-		if(TypeHelper.isVoidType(init.type()))
+		if(Types.isVoid(init.type()))
 			throw new CompileException(String.format("initializer for global %s yields 'void'", global.name));
 
-		SemaType initTypeNoConst = TypeHelper.removeConst(init.type());
+		SemaType initTypeNoConst = Types.removeConst(init.type());
 		SemaType globalType = maybeDeclaredType.or(initTypeNoConst);
-		SemaType globalTypeNoConst = TypeHelper.removeConst(globalType);
+		SemaType globalTypeNoConst = Types.removeConst(globalType);
 
 		if(!SemaType.same(globalTypeNoConst, initTypeNoConst))
 		{

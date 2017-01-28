@@ -64,7 +64,7 @@ public class TypeMangler implements IVisitor
 		return String.format("npointer-%s", mangle(pointer.type));
 	}
 
-	private String visit(SemaTypePointer pointer)
+	private String visit(SemaTypeNonNullablePointer pointer)
 	{
 		return String.format("pointer-%s", mangle(pointer.type));
 	}

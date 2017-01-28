@@ -15,7 +15,7 @@
 package katana.backend.llvm;
 
 import katana.BuiltinType;
-import katana.analysis.TypeHelper;
+import katana.analysis.Types;
 import katana.ast.AstPath;
 import katana.backend.PlatformContext;
 import katana.diag.CompileException;
@@ -50,7 +50,7 @@ public class ProgramCodeGenerator
 
 		builder.append("define i32 @main()\n{\n");
 
-		if(TypeHelper.isVoidType(ret))
+		if(Types.isVoid(ret))
 		{
 			builder.append(String.format("\tcall void @%s()\n", func.qualifiedName()));
 			builder.append("\tret i32 0\n");
@@ -99,7 +99,7 @@ public class ProgramCodeGenerator
 
 		SemaDeclFunction func = set.overloads.get(0);
 
-		if(TypeHelper.isVoidType(func.ret) || TypeHelper.isBuiltinType(func.ret, BuiltinType.INT32))
+		if(Types.isVoid(func.ret) || Types.isBuiltin(func.ret, BuiltinType.INT32))
 			return func;
 
 		throw new CompileException(String.format("entry point must return 'void' or 'int32', got '%s'", TypeString.of(func.ret)));

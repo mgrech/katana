@@ -14,7 +14,7 @@
 
 package katana.sema.expr;
 
-import katana.analysis.TypeHelper;
+import katana.analysis.Types;
 import katana.sema.type.SemaType;
 
 public class SemaExprDeref extends SemaExprSimpleLValueExpr
@@ -27,7 +27,7 @@ public class SemaExprDeref extends SemaExprSimpleLValueExpr
 	@Override
 	public SemaType type()
 	{
-		return TypeHelper.removePointer(expr.type());
+		return Types.removePointer(expr.type());
 	}
 
 	public SemaExpr expr;

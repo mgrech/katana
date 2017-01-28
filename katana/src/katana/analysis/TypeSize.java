@@ -97,7 +97,7 @@ public class TypeSize implements IVisitor
 		return opaqueType.size;
 	}
 
-	private BigInteger visit(SemaTypePointer pointerType)
+	private BigInteger visit(SemaTypeNonNullablePointer pointerType)
 	{
 		return context.target().arch.pointerSize;
 	}

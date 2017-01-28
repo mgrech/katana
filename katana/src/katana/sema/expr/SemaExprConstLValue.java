@@ -14,7 +14,7 @@
 
 package katana.sema.expr;
 
-import katana.analysis.TypeHelper;
+import katana.analysis.Types;
 import katana.sema.type.SemaType;
 
 public class SemaExprConstLValue extends SemaExprLValueExpr
@@ -27,7 +27,7 @@ public class SemaExprConstLValue extends SemaExprLValueExpr
 	@Override
 	public SemaType type()
 	{
-		return TypeHelper.addConst(expr.type());
+		return Types.addConst(expr.type());
 	}
 
 	@Override

@@ -23,16 +23,16 @@ public class CastValidator
 {
 	private static boolean isValidSignCast(SemaType sourceType, SemaType targetType, PlatformContext context)
 	{
-		if(!TypeHelper.isIntegerType(sourceType) || !TypeHelper.isIntegerType(targetType))
+		if(!Types.isInteger(sourceType) || !Types.isInteger(targetType))
 			return false;
 
-		return TypeHelper.equalSizes(sourceType, targetType, context);
+		return Types.equalSizes(sourceType, targetType, context);
 	}
 
 	private static boolean isOneOf(SemaType type, BuiltinType... builtinTypes)
 	{
 		for(BuiltinType builtinType : builtinTypes)
-			if(TypeHelper.isBuiltinType(type, builtinType))
+			if(Types.isBuiltin(type, builtinType))
 				return true;
 
 		return false;
@@ -44,10 +44,10 @@ public class CastValidator
 		|| isOneOf(targetType, BuiltinType.INT, BuiltinType.UINT))
 			return false;
 
-		if(TypeHelper.isIntegerType(sourceType) && TypeHelper.isIntegerType(targetType))
-			return TypeHelper.compareSizes(sourceType, targetType, context) != 1;
+		if(Types.isInteger(sourceType) && Types.isInteger(targetType))
+			return Types.compareSizes(sourceType, targetType, context) != 1;
 
-		return TypeHelper.isFloatingPointType(sourceType) && TypeHelper.isBuiltinType(targetType, BuiltinType.FLOAT64);
+		return Types.isFloatingPoint(sourceType) && Types.isBuiltin(targetType, BuiltinType.FLOAT64);
 	}
 
 	private static boolean isValidNarrowCast(SemaType sourceType, SemaType targetType, PlatformContext context)
@@ -56,26 +56,26 @@ public class CastValidator
 		|| isOneOf(targetType, BuiltinType.INT, BuiltinType.UINT))
 			return false;
 
-		if(TypeHelper.isIntegerType(sourceType) && TypeHelper.isIntegerType(targetType))
-			return TypeHelper.compareSizes(sourceType, targetType, context) != -1;
+		if(Types.isInteger(sourceType) && Types.isInteger(targetType))
+			return Types.compareSizes(sourceType, targetType, context) != -1;
 
-		if(TypeHelper.isBuiltinType(sourceType, BuiltinType.FLOAT32) && TypeHelper.isBuiltinType(targetType, BuiltinType.FLOAT64))
+		if(Types.isBuiltin(sourceType, BuiltinType.FLOAT32) && Types.isBuiltin(targetType, BuiltinType.FLOAT64))
 			return false;
 
-		return TypeHelper.isFloatingPointType(sourceType) && TypeHelper.isFloatingPointType(targetType);
+		return Types.isFloatingPoint(sourceType) && Types.isFloatingPoint(targetType);
 	}
 
 	public static boolean isValidPointerCast(SemaType sourceType, SemaType targetType, PlatformContext context)
 	{
-		boolean sourceIsPointer = TypeHelper.isAnyPointerType(sourceType);
+		boolean sourceIsPointer = Types.isPointer(sourceType);
 		boolean sourceIsPointerInteger = isOneOf(sourceType, BuiltinType.INT, BuiltinType.UINT);
-		boolean targetIsPointer = TypeHelper.isAnyPointerType(targetType);
+		boolean targetIsPointer = Types.isPointer(targetType);
 		boolean targetIsPointerInteger = isOneOf(targetType, BuiltinType.INT, BuiltinType.UINT);
 
 		if(!sourceIsPointer && !sourceIsPointerInteger || !targetIsPointer && !targetIsPointerInteger)
 			return false;
 
-		if(SemaType.same(TypeHelper.removeConst(sourceType), TypeHelper.removeConst(targetType)))
+		if(SemaType.same(Types.removeConst(sourceType), Types.removeConst(targetType)))
 			return true;
 
 		return sourceIsPointer != targetIsPointer;

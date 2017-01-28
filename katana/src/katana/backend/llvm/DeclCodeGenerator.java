@@ -15,14 +15,14 @@
 package katana.backend.llvm;
 
 import katana.analysis.TypeAlignment;
-import katana.analysis.TypeHelper;
+import katana.analysis.Types;
 import katana.ast.AstPath;
 import katana.backend.PlatformContext;
 import katana.project.Project;
 import katana.sema.decl.*;
 import katana.sema.stmt.SemaStmt;
 import katana.sema.type.SemaType;
-import katana.sema.type.SemaTypePointer;
+import katana.sema.type.SemaTypeNonNullablePointer;
 import katana.visitor.IVisitor;
 
 import java.math.BigInteger;
@@ -80,7 +80,7 @@ public class DeclCodeGenerator implements IVisitor
 	{
 		builder.append(TypeCodeGenerator.generate(param.type, context));
 
-		if(param.type instanceof SemaTypePointer)
+		if(param.type instanceof SemaTypeNonNullablePointer)
 			builder.append(" nonnull");
 
 		if(!isExternal)
@@ -203,7 +203,7 @@ public class DeclCodeGenerator implements IVisitor
 		String qualifiedName = qualifiedName(global);
 		String typeString = TypeCodeGenerator.generate(global.type, context);
 		String initializerString = global.init.map(i -> ExprCodeGenerator.generate(i, builder, context, null).unwrap()).or("zeroinitializer");
-		String kind = TypeHelper.isConst(global.type) ? "constant" : "global";
+		String kind = Types.isConst(global.type) ? "constant" : "global";
 		builder.append(String.format("@%s = private %s %s %s\n", qualifiedName, kind, typeString, initializerString));
 	}
 

@@ -24,27 +24,26 @@ public class ImplicitConversions
 	private static SemaExpr performPointerConversions(SemaExpr expr, SemaType targetType)
 	{
 		SemaType sourceType = expr.type();
-		SemaType sourcePointeeType = TypeHelper.removePointer(sourceType);
-		SemaType targetPointeeType = TypeHelper.removePointer(targetType);
+		SemaType sourcePointeeType = Types.removePointer(sourceType);
+		SemaType targetPointeeType = Types.removePointer(targetType);
 
 		// !T -> ?T
-		if(TypeHelper.isNonNullablePointerType(sourceType) && TypeHelper.isNullablePointerType(targetType))
+		if(Types.isNonNullablePointer(sourceType) && Types.isNullablePointer(targetType))
 		{
 			sourceType = new SemaTypeNullablePointer(sourcePointeeType);
 			expr = new SemaExprImplicitConversionNonNullablePointerToNullablePointer(expr, sourceType);
 		}
 
 		// !T -> !const T, ?T -> ?const T
-		if(!TypeHelper.isConst(sourcePointeeType) && TypeHelper.isConst(targetPointeeType))
+		if(!Types.isConst(sourcePointeeType) && Types.isConst(targetPointeeType))
 		{
-			sourcePointeeType = TypeHelper.addConst(sourcePointeeType);
-			sourceType = TypeHelper.copyPointerKind(sourceType, sourcePointeeType);
+			sourcePointeeType = Types.addConst(sourcePointeeType);
+			sourceType = Types.copyPointerKind(sourceType, sourcePointeeType);
 			expr = new SemaExprImplicitConversionPointerToNonConstToPointerToConst(expr, sourceType);
 		}
 
 		// !T -> !void, ?T -> ?void
-		if(TypeHelper.isAnyPointerType(sourceType) && TypeHelper.isAnyPointerType(targetType)
-			&& TypeHelper.isVoidType(TypeHelper.removePointer(targetType)))
+		if(Types.isPointer(sourceType) && Types.isPointer(targetType) && Types.isVoid(Types.removePointer(targetType)))
 			expr = new SemaExprImplicitConversionPointerToVoidPointer(expr, targetType);
 
 		return expr;
@@ -55,11 +54,11 @@ public class ImplicitConversions
 		SemaType sourceType = expr.type();
 
 		// null -> ?T
-		if(TypeHelper.isNullablePointerType(targetType) && TypeHelper.isBuiltinType(sourceType, BuiltinType.NULL))
+		if(Types.isNullablePointer(targetType) && Types.isBuiltin(sourceType, BuiltinType.NULL))
 			return new SemaExprImplicitConversionNullToNullablePointer(targetType);
 
 		// !T, ?T
-		if(TypeHelper.isAnyPointerType(sourceType) && TypeHelper.isAnyPointerType(targetType))
+		if(Types.isPointer(sourceType) && Types.isPointer(targetType))
 			return performPointerConversions(expr, targetType);
 
 		return expr;

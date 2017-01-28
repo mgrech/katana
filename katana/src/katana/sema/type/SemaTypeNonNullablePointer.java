@@ -14,9 +14,9 @@
 
 package katana.sema.type;
 
-public class SemaTypePointer extends SemaType
+public class SemaTypeNonNullablePointer extends SemaType
 {
-	public SemaTypePointer(SemaType type)
+	public SemaTypeNonNullablePointer(SemaType type)
 	{
 		this.type = type;
 	}
@@ -24,7 +24,7 @@ public class SemaTypePointer extends SemaType
 	@Override
 	protected boolean same(SemaType other)
 	{
-		return SemaType.same(type, ((SemaTypePointer)other).type);
+		return SemaType.same(type, ((SemaTypeNonNullablePointer)other).type);
 	}
 
 	public SemaType type;

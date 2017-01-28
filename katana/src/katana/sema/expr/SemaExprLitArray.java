@@ -14,7 +14,7 @@
 
 package katana.sema.expr;
 
-import katana.analysis.TypeHelper;
+import katana.analysis.Types;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeArray;
 
@@ -33,7 +33,7 @@ public class SemaExprLitArray extends SemaExprLiteral
 	@Override
 	public SemaType type()
 	{
-		return new SemaTypeArray(length, TypeHelper.addConst(type));
+		return new SemaTypeArray(length, Types.addConst(type));
 	}
 
 	public final BigInteger length;
