@@ -16,9 +16,11 @@ package katana.analysis;
 
 import katana.BuiltinType;
 import katana.sema.expr.SemaExpr;
+import katana.sema.expr.SemaExprImplicitConversionPointerToVoidPointer;
 import katana.sema.expr.SemaExprImplicitConversionNonNullablePointerToNullablePointer;
 import katana.sema.expr.SemaExprImplicitConversionNullToNullablePointer;
 import katana.sema.type.SemaType;
+import katana.sema.type.SemaTypeNullablePointer;
 
 public class ImplicitConversions
 {
@@ -30,7 +32,15 @@ public class ImplicitConversions
 			return new SemaExprImplicitConversionNullToNullablePointer(targetType);
 
 		if(TypeHelper.isNonNullablePointerType(sourceType) && TypeHelper.isNullablePointerType(targetType))
-			return new SemaExprImplicitConversionNonNullablePointerToNullablePointer(expr, targetType);
+		{
+			SemaType type = new SemaTypeNullablePointer(TypeHelper.removePointer(sourceType));
+			expr = new SemaExprImplicitConversionNonNullablePointerToNullablePointer(expr, type);
+			sourceType = expr.type();
+		}
+
+		if(TypeHelper.isAnyPointerType(sourceType) && TypeHelper.isAnyPointerType(targetType)
+		&& TypeHelper.isVoidType(TypeHelper.removePointer(targetType)))
+			expr = new SemaExprImplicitConversionPointerToVoidPointer(expr, targetType);
 
 		return expr;
 	}
