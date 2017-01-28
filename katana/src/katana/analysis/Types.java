@@ -52,7 +52,7 @@ public class Types
 	public static SemaType addConst(SemaType type)
 	{
 		if(type instanceof SemaTypeFunction)
-			throw new AssertionError("const added to function type");
+			return type;
 
 		if(isConst(type))
 			return type;
