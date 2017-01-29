@@ -17,7 +17,6 @@ package katana.backend.llvm;
 import katana.BuiltinFunc;
 import katana.BuiltinType;
 import katana.analysis.Types;
-import katana.backend.PlatformContext;
 import katana.diag.CompileException;
 import katana.sema.expr.SemaExprBuiltinCall;
 import katana.sema.type.SemaType;
@@ -104,16 +103,16 @@ public class BinaryOp extends BuiltinFunc
 	}
 
 	@Override
-	public Maybe<String> generateCall(SemaExprBuiltinCall call, StringBuilder builder, PlatformContext context, FunctionContext fcontext, StringPool stringPool)
+	public Maybe<String> generateCall(SemaExprBuiltinCall call, FileCodegenContext context, FunctionCodegenContext fcontext)
 	{
 		SemaTypeBuiltin type = (SemaTypeBuiltin)call.args.get(0).type();
-		String typeString = TypeCodeGenerator.generate(type, context);
-		String leftSSA = ExprCodeGenerator.generate(call.args.get(0), builder, context, fcontext, stringPool).unwrap();
-		String rightSSA = ExprCodeGenerator.generate(call.args.get(1), builder, context, fcontext, stringPool).unwrap();
+		String typeString = TypeCodeGenerator.generate(type, context.platform());
+		String leftSsa = ExprCodeGenerator.generate(call.args.get(0), context, fcontext).unwrap();
+		String rightSsa = ExprCodeGenerator.generate(call.args.get(1), context, fcontext).unwrap();
 		String instr = instrForType(type);
-		String resultSSA = fcontext.allocateSSA();
-		builder.append(String.format("\t%s = %s %s %s, %s\n", resultSSA, instr, typeString, leftSSA, rightSSA));
-		return Maybe.some(resultSSA);
+		String resultSsa = fcontext.allocateSsa();
+		context.writef("\t%s = %s %s %s, %s\n", resultSsa, instr, typeString, leftSsa, rightSsa);
+		return Maybe.some(resultSsa);
 	}
 
 	private Maybe<String> boolInstr;

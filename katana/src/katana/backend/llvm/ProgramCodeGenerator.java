@@ -105,13 +105,14 @@ public class ProgramCodeGenerator
 		throw new CompileException(String.format("entry point must return 'void' or 'int32', got '%s'", TypeString.of(func.ret)));
 	}
 
-	public static void generate(Project project, SemaProgram program, PlatformContext context) throws IOException
+	public static void generate(Project project, SemaProgram program, PlatformContext platform) throws IOException
 	{
 		StringBuilder builder = new StringBuilder();
-		builder.append(String.format("target triple = \"%s\"\n\n", context.target()));
+		builder.append(String.format("target triple = \"%s\"\n\n", platform.target()));
 
 		StringPool stringPool = new StringPool();
-		generateDecls(new DeclCodeGenerator(builder, project, context, stringPool), program.root);
+		FileCodegenContext context = new FileCodegenContext(project, platform, builder, stringPool);
+		generateDecls(new DeclCodeGenerator(context), program.root);
 		stringPool.generate(builder);
 
 		if(project.entryPoint.isSome())

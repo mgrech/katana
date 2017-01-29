@@ -15,7 +15,6 @@
 package katana.backend.llvm;
 
 import katana.analysis.Types;
-import katana.backend.PlatformContext;
 import katana.sema.decl.SemaDeclDefinedFunction;
 import katana.sema.stmt.*;
 import katana.sema.type.SemaType;
@@ -27,19 +26,15 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class StmtCodeGenerator implements IVisitor
 {
-	private StringBuilder builder;
-	private PlatformContext context;
-	private FunctionContext fcontext;
-	private StringPool stringPool;
+	private FileCodegenContext context;
+	private FunctionCodegenContext fcontext;
 
 	private boolean preceededByTerminator = false;
 
-	public StmtCodeGenerator(StringBuilder builder, PlatformContext context, FunctionContext fcontext, StringPool stringPool)
+	public StmtCodeGenerator(FileCodegenContext context, FunctionCodegenContext fcontext)
 	{
-		this.builder = builder;
 		this.context = context;
 		this.fcontext = fcontext;
-		this.stringPool = stringPool;
 	}
 
 	public void generate(SemaStmt stmt)
@@ -52,9 +47,9 @@ public class StmtCodeGenerator implements IVisitor
 		if(!preceededByTerminator)
 		{
 			if(Types.isVoid(func.ret))
-				builder.append("\tret void\n");
+				context.write("\tret void\n");
 			else
-				builder.append("\tunreachable\n");
+				context.write("\tunreachable\n");
 		}
 	}
 
@@ -69,13 +64,13 @@ public class StmtCodeGenerator implements IVisitor
 	private void visit(SemaStmtExprStmt stmt)
 	{
 		preceededByTerminator = false;
-		ExprCodeGenerator.generate(stmt.expr, builder, context, fcontext, stringPool);
+		ExprCodeGenerator.generate(stmt.expr, context, fcontext);
 	}
 
 	private void generateGoto(String label)
 	{
 		preceededByTerminator = true;
-		builder.append(String.format("\tbr label %%%s\n\n", label));
+		context.writef("\tbr label %%%s\n\n", label);
 	}
 
 	private void visit(SemaStmtGoto goto_)
@@ -90,7 +85,7 @@ public class StmtCodeGenerator implements IVisitor
 
 	private void visit(SemaStmtIf if_)
 	{
-		String condSSA = ExprCodeGenerator.generate(if_.condition, builder, context, fcontext, stringPool).unwrap();
+		String condSsa = ExprCodeGenerator.generate(if_.condition, context, fcontext).unwrap();
 
 		GeneratedLabel thenLabel = fcontext.allocateLabel("if.then");
 		GeneratedLabel afterLabel = fcontext.allocateLabel("if.after");
@@ -98,7 +93,7 @@ public class StmtCodeGenerator implements IVisitor
 		GeneratedLabel firstLabel = if_.negated ? afterLabel : thenLabel;
 		GeneratedLabel secondLabel = if_.negated ? thenLabel : afterLabel;
 
-		builder.append(String.format("\tbr i1 %s, label %%%s, label %%%s\n\n", condSSA, firstLabel.name, secondLabel.name));
+		context.writef("\tbr i1 %s, label %%%s, label %%%s\n\n", condSsa, firstLabel.name, secondLabel.name);
 		preceededByTerminator = true;
 
 		visit(thenLabel);
@@ -145,9 +140,9 @@ public class StmtCodeGenerator implements IVisitor
 	private void generateLabel(String name)
 	{
 		if(!preceededByTerminator)
-			builder.append(String.format("\tbr label %%%s\n\n", name));
+			context.writef("\tbr label %%%s\n\n", name);
 
-		builder.append(String.format("%s:\n", name));
+		context.writef("%s:\n", name);
 		preceededByTerminator = false;
 	}
 
@@ -167,14 +162,14 @@ public class StmtCodeGenerator implements IVisitor
 
 		if(ret.ret.isNone())
 		{
-			builder.append("\tret void\n\n");
+			context.write("\tret void\n\n");
 			return;
 		}
 
-		String expr = ExprCodeGenerator.generate(ret.ret.unwrap(), builder, context, fcontext, stringPool).unwrap();
+		String expr = ExprCodeGenerator.generate(ret.ret.unwrap(), context, fcontext).unwrap();
 		SemaType type = ret.ret.unwrap().type();
-		String llvmType = TypeCodeGenerator.generate(type, context);
-		builder.append(String.format("\tret %s %s\n\n", llvmType, expr));
+		String llvmType = TypeCodeGenerator.generate(type, context.platform());
+		context.writef("\tret %s %s\n\n", llvmType, expr);
 	}
 
 	private void visit(SemaStmtNullStmt nullStmt)

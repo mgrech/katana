@@ -18,7 +18,6 @@ import katana.BuiltinType;
 import katana.analysis.TypeAlignment;
 import katana.analysis.TypeSize;
 import katana.analysis.Types;
-import katana.backend.PlatformContext;
 import katana.sema.decl.SemaDeclExternFunction;
 import katana.sema.expr.*;
 import katana.sema.type.SemaType;
@@ -34,101 +33,97 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class ExprCodeGenerator implements IVisitor
 {
-	private StringBuilder builder;
-	private PlatformContext context;
-	private FunctionContext fcontext;
-	private StringPool stringPool;
+	private FileCodegenContext context;
+	private FunctionCodegenContext fcontext;
 
-	private ExprCodeGenerator(StringBuilder builder, PlatformContext context, FunctionContext fcontext, StringPool stringPool)
+	private ExprCodeGenerator(FileCodegenContext context, FunctionCodegenContext fcontext)
 	{
-		this.builder = builder;
 		this.context = context;
 		this.fcontext = fcontext;
-		this.stringPool = stringPool;
 	}
 
-	public static Maybe<String> generate(SemaExpr expr, StringBuilder builder, PlatformContext context, FunctionContext fcontext, StringPool stringPool)
+	public static Maybe<String> generate(SemaExpr expr, FileCodegenContext context, FunctionCodegenContext fcontext)
 	{
-		ExprCodeGenerator visitor = new ExprCodeGenerator(builder, context, fcontext, stringPool);
+		ExprCodeGenerator visitor = new ExprCodeGenerator(context, fcontext);
 		return (Maybe<String>)expr.accept(visitor);
 	}
 
 	private String generateLoad(String where, String type)
 	{
-		String ssa = fcontext.allocateSSA();
-		builder.append(String.format("\t%s = load %s, %s* %s\n", ssa, type, type, where));
+		String ssa = fcontext.allocateSsa();
+		context.writef("\t%s = load %s, %s* %s\n", ssa, type, type, where);
 		return ssa;
 	}
 
 	private void generateStore(String where, String what, String type)
 	{
-		builder.append(String.format("\tstore %s %s, %s* %s\n", type, what, type, where));
+		context.writef("\tstore %s %s, %s* %s\n", type, what, type, where);
 	}
 
 	private Maybe<String> visit(SemaExprAddressof addressof)
 	{
-		return Maybe.some(generate(addressof.expr, builder, context, fcontext, stringPool).unwrap());
+		return Maybe.some(generate(addressof.expr, context, fcontext).unwrap());
 	}
 
 	private Maybe<String> visit(SemaExprAlignof alignof)
 	{
-		return Maybe.some("" + TypeAlignment.of(alignof.type, context));
+		return Maybe.some("" + TypeAlignment.of(alignof.type, context.platform()));
 	}
 
-	private String generateArrayAccess(boolean usedAsLValue, String arraySSA, SemaType arrayType, SemaType fieldType, SemaExpr index)
+	private String generateArrayAccess(boolean usedAsLValue, String arraySsa, SemaType arrayType, SemaType fieldType, SemaExpr index)
 	{
-		String indexTypeString = TypeCodeGenerator.generate(index.type(), context);
-		String indexSSA = generate(index, builder, context, fcontext, stringPool).unwrap();
-		String fieldTypeString = TypeCodeGenerator.generate(fieldType, context);
-		String arrayTypeString = TypeCodeGenerator.generate(arrayType, context);
-		String elemSSA = fcontext.allocateSSA();
-		builder.append(String.format("\t%s = getelementptr %s, %s* %s, i64 0, %s %s\n", elemSSA, arrayTypeString, arrayTypeString, arraySSA, indexTypeString, indexSSA));
+		String indexTypeString = TypeCodeGenerator.generate(index.type(), context.platform());
+		String indexSsa = generate(index, context, fcontext).unwrap();
+		String fieldTypeString = TypeCodeGenerator.generate(fieldType, context.platform());
+		String arrayTypeString = TypeCodeGenerator.generate(arrayType, context.platform());
+		String elemSsa = fcontext.allocateSsa();
+		context.writef("\t%s = getelementptr %s, %s* %s, i64 0, %s %s\n", elemSsa, arrayTypeString, arrayTypeString, arraySsa, indexTypeString, indexSsa);
 
 		if(usedAsLValue)
-			return elemSSA;
+			return elemSsa;
 
-		return generateLoad(elemSSA, fieldTypeString);
+		return generateLoad(elemSsa, fieldTypeString);
 	}
 
 	private Maybe<String> visit(SemaExprArrayAccessLValue arrayAccess)
 	{
 		boolean isUsedAsLValue = arrayAccess.isUsedAsLValue();
 		arrayAccess.useAsLValue(true);
-		String arraySSA = generate(arrayAccess.value, builder, context, fcontext, stringPool).unwrap();
+		String arraySsa = generate(arrayAccess.value, context, fcontext).unwrap();
 		arrayAccess.useAsLValue(isUsedAsLValue);
 		SemaType fieldType = arrayAccess.type();
-		return Maybe.some(generateArrayAccess(isUsedAsLValue, arraySSA, arrayAccess.value.type(), fieldType, arrayAccess.index));
+		return Maybe.some(generateArrayAccess(isUsedAsLValue, arraySsa, arrayAccess.value.type(), fieldType, arrayAccess.index));
 	}
 
 	private Maybe<String> visit(SemaExprArrayAccessRValue arrayAccess)
 	{
-		String arraySSA = generate(arrayAccess.expr, builder, context, fcontext, stringPool).unwrap();
+		String arraySsa = generate(arrayAccess.expr, context, fcontext).unwrap();
 		SemaType arrayType = arrayAccess.expr.type();
-		String arrayTypeString = TypeCodeGenerator.generate(arrayType, context);
-		BigInteger arrayAlignment = TypeAlignment.of(arrayType, context);
+		String arrayTypeString = TypeCodeGenerator.generate(arrayType, context.platform());
+		BigInteger arrayAlignment = TypeAlignment.of(arrayType, context.platform());
 
-		String tmpSSA = fcontext.allocateSSA();
-		builder.append(String.format("\t%s = alloca %s, align %s\n", tmpSSA, arrayTypeString, arrayAlignment));
-		generateStore(tmpSSA, arraySSA, arrayTypeString);
+		String tmpSsa = fcontext.allocateSsa();
+		context.writef("\t%s = alloca %s, align %s\n", tmpSsa, arrayTypeString, arrayAlignment);
+		generateStore(tmpSsa, arraySsa, arrayTypeString);
 
 		SemaType fieldType = arrayAccess.type();
 		SemaType indexType = arrayAccess.index.type();
-		return Maybe.some(generateArrayAccess(false, tmpSSA, arrayAccess.expr.type(), fieldType, arrayAccess.index));
+		return Maybe.some(generateArrayAccess(false, tmpSsa, arrayAccess.expr.type(), fieldType, arrayAccess.index));
 	}
 
 	private Maybe<String> visit(SemaExprAssign assign)
 	{
 		SemaType type = assign.right.type();
-		String typeString = TypeCodeGenerator.generate(assign.right.type(), context);
-		String right = generate(assign.right, builder, context, fcontext, stringPool).unwrap();
-		String left = generate(assign.left, builder, context, fcontext, stringPool).unwrap();
+		String typeString = TypeCodeGenerator.generate(assign.right.type(), context.platform());
+		String right = generate(assign.right, context, fcontext).unwrap();
+		String left = generate(assign.left, context, fcontext).unwrap();
 		generateStore(left, right, typeString);
 		return Maybe.some(left);
 	}
 
 	private Maybe<String> visit(SemaExprBuiltinCall builtinCall)
 	{
-		return builtinCall.func.generateCall(builtinCall, builder, context, fcontext, stringPool);
+		return builtinCall.func.generateCall(builtinCall, context, fcontext);
 	}
 
 	private String instrForCast(SemaType targetType, SemaExprCast.Kind kind)
@@ -168,21 +163,21 @@ public class ExprCodeGenerator implements IVisitor
 		throw new AssertionError("unreachable");
 	}
 
-	private String generateCast(String valueSSA, SemaType sourceType, SemaType targetType, SemaExprCast.Kind kind)
+	private String generateCast(String valueSsa, SemaType sourceType, SemaType targetType, SemaExprCast.Kind kind)
 	{
-		String resultSSA = fcontext.allocateSSA();
-		String sourceTypeString = TypeCodeGenerator.generate(sourceType, context);
-		String targetTypeString = TypeCodeGenerator.generate(targetType, context);
+		String resultSsa = fcontext.allocateSsa();
+		String sourceTypeString = TypeCodeGenerator.generate(sourceType, context.platform());
+		String targetTypeString = TypeCodeGenerator.generate(targetType, context.platform());
 
 		String instr = instrForCast(targetType, kind);
-		builder.append(String.format("\t%s = %s %s %s to %s\n", resultSSA, instr, sourceTypeString, valueSSA, targetTypeString));
-		return resultSSA;
+		context.writef("\t%s = %s %s %s to %s\n", resultSsa, instr, sourceTypeString, valueSsa, targetTypeString);
+		return resultSsa;
 	}
 
 	private Maybe<String> visit(SemaExprCast cast)
 	{
-		String valueSSA = generate(cast.expr, builder, context, fcontext, stringPool).unwrap();
-		String resultSSA;
+		String valueSsa = generate(cast.expr, context, fcontext).unwrap();
+		String resultSsa;
 
 		SemaType sourceType = cast.expr.type();
 		SemaType targetType = cast.type;
@@ -190,111 +185,111 @@ public class ExprCodeGenerator implements IVisitor
 		switch(cast.kind)
 		{
 		case SIGN_CAST:
-			resultSSA = valueSSA;
+			resultSsa = valueSsa;
 			break;
 
 		case WIDEN_CAST:
-			if(Types.equalSizes(sourceType, targetType, context))
+			if(Types.equalSizes(sourceType, targetType, context.platform()))
 			{
-				resultSSA = valueSSA;
+				resultSsa = valueSsa;
 				break;
 			}
 
-			resultSSA = generateCast(valueSSA, sourceType, targetType, SemaExprCast.Kind.WIDEN_CAST);
+			resultSsa = generateCast(valueSsa, sourceType, targetType, SemaExprCast.Kind.WIDEN_CAST);
 			break;
 
 		case NARROW_CAST:
-			if(Types.equalSizes(sourceType, targetType, context))
+			if(Types.equalSizes(sourceType, targetType, context.platform()))
 			{
-				resultSSA = valueSSA;
+				resultSsa = valueSsa;
 				break;
 			}
 
-			resultSSA = generateCast(valueSSA, sourceType, targetType, SemaExprCast.Kind.NARROW_CAST);
+			resultSsa = generateCast(valueSsa, sourceType, targetType, SemaExprCast.Kind.NARROW_CAST);
 			break;
 
 		case POINTER_CAST:
 			if(SemaType.same(Types.removeConst(sourceType), Types.removeConst(targetType)))
 			{
-				resultSSA = valueSSA;
+				resultSsa = valueSsa;
 				break;
 			}
 
-			resultSSA = generateCast(valueSSA, sourceType, targetType, SemaExprCast.Kind.POINTER_CAST);
+			resultSsa = generateCast(valueSsa, sourceType, targetType, SemaExprCast.Kind.POINTER_CAST);
 			break;
 
 		default: throw new AssertionError("unreachable");
 		}
 
-		return Maybe.some(resultSSA);
+		return Maybe.some(resultSsa);
 	}
 
 	private Maybe<String> visit(SemaExprConstLValue const_)
 	{
-		return generate(const_.expr, builder, context, fcontext, stringPool);
+		return generate(const_.expr, context, fcontext);
 	}
 
 	private Maybe<String> visit(SemaExprConstRValue const_)
 	{
-		return generate(const_.expr, builder, context, fcontext, stringPool);
+		return generate(const_.expr, context, fcontext);
 	}
 
 	private Maybe<String> visit(SemaExprDeref deref)
 	{
-		String ptrSSA = generate(deref.expr, builder, context, fcontext, stringPool).unwrap();
+		String ptrSsa = generate(deref.expr, context, fcontext).unwrap();
 
 		if(deref.isUsedAsLValue() || deref.type() instanceof SemaTypeFunction)
-			return Maybe.some(ptrSSA);
+			return Maybe.some(ptrSsa);
 
-		String typeString = TypeCodeGenerator.generate(deref.type(), context);
-		return Maybe.some(generateLoad(ptrSSA, typeString));
+		String typeString = TypeCodeGenerator.generate(deref.type(), context.platform());
+		return Maybe.some(generateLoad(ptrSsa, typeString));
 	}
 
-	private Maybe<String> generateFunctionCall(String functionSSA, List<SemaExpr> args, SemaType ret, Maybe<Boolean> inline)
+	private Maybe<String> generateFunctionCall(String functionSsa, List<SemaExpr> args, SemaType ret, Maybe<Boolean> inline)
 	{
-		List<String> argSSAs = new ArrayList<>();
+		List<String> argsSsa = new ArrayList<>();
 
 		for(SemaExpr arg : args)
-			argSSAs.add(generate(arg, builder, context, fcontext, stringPool).unwrap());
+			argsSsa.add(generate(arg, context, fcontext).unwrap());
 
-		builder.append('\t');
+		context.write('\t');
 
-		Maybe<String> retSSA = Maybe.none();
+		Maybe<String> retSsa = Maybe.none();
 
 		if(!Types.isVoid(ret))
 		{
-			retSSA = Maybe.some(fcontext.allocateSSA());
-			builder.append(String.format("%s = ", retSSA.unwrap()));
+			retSsa = Maybe.some(fcontext.allocateSsa());
+			context.writef("%s = ", retSsa.unwrap());
 		}
 
-		String retTypeString = TypeCodeGenerator.generate(ret, context);
+		String retTypeString = TypeCodeGenerator.generate(ret, context.platform());
 
-		builder.append(String.format("call %s %s(", retTypeString, functionSSA));
+		context.writef("call %s %s(", retTypeString, functionSsa);
 
 		if(!args.isEmpty())
 		{
-			builder.append(TypeCodeGenerator.generate(args.get(0).type(), context));
-			builder.append(' ');
-			builder.append(argSSAs.get(0));
+			context.write(TypeCodeGenerator.generate(args.get(0).type(), context.platform()));
+			context.write(' ');
+			context.write(argsSsa.get(0));
 
-			for(int i = 1; i != argSSAs.size(); ++i)
+			for(int i = 1; i != argsSsa.size(); ++i)
 			{
-				String argTypeString = TypeCodeGenerator.generate(args.get(i).type(), context);
-				builder.append(String.format(", %s %s", argTypeString, argSSAs.get(i)));
+				String argTypeString = TypeCodeGenerator.generate(args.get(i).type(), context.platform());
+				context.writef(", %s %s", argTypeString, argsSsa.get(i));
 			}
 		}
 
-		builder.append(')');
+		context.write(')');
 
 		if(inline.isSome())
 			if(inline.unwrap())
-				builder.append(" alwaysinline");
+				context.write(" alwaysinline");
 			else
-				builder.append(" noinline");
+				context.write(" noinline");
 
-		builder.append('\n');
+		context.write('\n');
 
-		return retSSA;
+		return retSsa;
 	}
 
 	private Maybe<String> visit(SemaExprDirectFunctionCall functionCall)
@@ -310,13 +305,13 @@ public class ExprCodeGenerator implements IVisitor
 		else
 			name = FunctionNameMangler.mangle(functionCall.function);
 
-		String functionSSA = '@' + name;
-		return generateFunctionCall(functionSSA, functionCall.args, functionCall.function.ret, functionCall.inline);
+		String functionSsa = '@' + name;
+		return generateFunctionCall(functionSsa, functionCall.args, functionCall.function.ret, functionCall.inline);
 	}
 
 	private Maybe<String> visit(SemaExprImplicitConversionNonNullablePointerToNullablePointer conversion)
 	{
-		return generate(conversion.expr, builder, context, fcontext, stringPool);
+		return generate(conversion.expr, context, fcontext);
 	}
 
 	private Maybe<String> visit(SemaExprImplicitConversionNullToNullablePointer conversion)
@@ -326,82 +321,87 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprImplicitConversionPointerToNonConstToPointerToConst conversion)
 	{
-		return generate(conversion.expr, builder, context, fcontext, stringPool);
+		return generate(conversion.expr, context, fcontext);
 	}
 
 	private Maybe<String> visit(SemaExprImplicitConversionPointerToBytePointer conversion)
 	{
-		String exprTypeString = TypeCodeGenerator.generate(conversion.expr.type(), context);
-		String exprSSA = generate(conversion.expr, builder, context, fcontext, stringPool).unwrap();
-		String resultSSA = fcontext.allocateSSA();
-		builder.append(String.format("\t%s = bitcast %s %s to i8*\n", resultSSA, exprTypeString, exprSSA));
-		return Maybe.some(resultSSA);
+		String exprTypeString = TypeCodeGenerator.generate(conversion.expr.type(), context.platform());
+		String exprSsa = generate(conversion.expr, context, fcontext).unwrap();
+		String resultSsa = fcontext.allocateSsa();
+		context.writef("\t%s = bitcast %s %s to i8*\n", resultSsa, exprTypeString, exprSsa);
+		return Maybe.some(resultSsa);
 	}
 
 	private Maybe<String> visit(SemaExprImplicitConversionWiden conversion)
 	{
-		String valueSSA = generate(conversion.expr, builder, context, fcontext, stringPool).unwrap();
-		return Maybe.some(generateCast(valueSSA, conversion.expr.type(), conversion.type(), SemaExprCast.Kind.WIDEN_CAST));
+		String valueSsa = generate(conversion.expr, context, fcontext).unwrap();
+		return Maybe.some(generateCast(valueSsa, conversion.expr.type(), conversion.type(), SemaExprCast.Kind.WIDEN_CAST));
 	}
 
 	private Maybe<String> visit(SemaExprIndirectFunctionCall functionCall)
 	{
-		String functionSSA = generate(functionCall.expr, builder, context, fcontext, stringPool).unwrap();
-		return generateFunctionCall(functionSSA, functionCall.args, functionCall.type(), Maybe.none());
+		String functionSsa = generate(functionCall.expr, context, fcontext).unwrap();
+		return generateFunctionCall(functionSsa, functionCall.args, functionCall.type(), Maybe.none());
 	}
 
 	private Maybe<String> visit(SemaExprFieldAccessLValue fieldAccess)
 	{
 		boolean usedAsLValue = fieldAccess.isUsedAsLValue();
 		fieldAccess.useAsLValue(true);
-		String objectSSA = generate(fieldAccess.expr, builder, context, fcontext, stringPool).unwrap();
+		String objectSsa = generate(fieldAccess.expr, context, fcontext).unwrap();
 		fieldAccess.useAsLValue(usedAsLValue);
-		String fieldPtrSSA = fcontext.allocateSSA();
+		String fieldPtrSsa = fcontext.allocateSsa();
 		SemaType fieldType = fieldAccess.type();
-		String fieldTypeString = TypeCodeGenerator.generate(fieldType, context);
+		String fieldTypeString = TypeCodeGenerator.generate(fieldType, context.platform());
 		int fieldIndex = fieldAccess.field.index;
-		String objectTypeString = TypeCodeGenerator.generate(fieldAccess.expr.type(), context);
-		builder.append(String.format("\t%s = getelementptr %s, %s* %s, i32 0, i32 %s\n", fieldPtrSSA, objectTypeString, objectTypeString, objectSSA, fieldIndex));
+		String objectTypeString = TypeCodeGenerator.generate(fieldAccess.expr.type(), context.platform());
+		context.writef("\t%s = getelementptr %s, %s* %s, i32 0, i32 %s\n", fieldPtrSsa, objectTypeString, objectTypeString, objectSsa, fieldIndex);
 
 		if(fieldAccess.isUsedAsLValue())
-			return Maybe.some(fieldPtrSSA);
+			return Maybe.some(fieldPtrSsa);
 
-		return Maybe.some(generateLoad(fieldPtrSSA, fieldTypeString));
+		return Maybe.some(generateLoad(fieldPtrSsa, fieldTypeString));
 	}
 
 	private Maybe<String> visit(SemaExprFieldAccessRValue fieldAccess)
 	{
-		String objectSSA = generate(fieldAccess.expr, builder, context, fcontext, stringPool).unwrap();
-		String fieldSSA = fcontext.allocateSSA();
+		String objectSsa = generate(fieldAccess.expr, context, fcontext).unwrap();
+		String fieldSsa = fcontext.allocateSsa();
 		SemaType objectType = fieldAccess.expr.type();
-		String objectTypeString = TypeCodeGenerator.generate(objectType, context);
+		String objectTypeString = TypeCodeGenerator.generate(objectType, context.platform());
 		int fieldIndex = fieldAccess.field.index;
-		builder.append(String.format("\t%s = extractvalue %s %s, %s\n", fieldSSA, objectTypeString, objectSSA, fieldIndex));
-		return Maybe.some(fieldSSA);
+		context.writef("\t%s = extractvalue %s %s, %s\n", fieldSsa, objectTypeString, objectSsa, fieldIndex);
+		return Maybe.some(fieldSsa);
 	}
 
 	private Maybe<String> visit(SemaExprLitArray lit)
 	{
+		// array literals should not generate any temporary variables as they are required to be literals
+		// hence we do not pass a builder to this context (null)
+		FileCodegenContext tmpContext = new FileCodegenContext(context.project(), context.platform(), null, context.stringPool());
 		StringBuilder builder = new StringBuilder();
+
 		builder.append('[');
 
 		if(!lit.values.isEmpty())
 		{
-			builder.append(TypeCodeGenerator.generate(lit.values.get(0).type(), context));
+			builder.append(TypeCodeGenerator.generate(lit.values.get(0).type(), tmpContext.platform()));
 			builder.append(' ');
-			builder.append(generate(lit.values.get(0), builder, context, fcontext, stringPool).unwrap());
+			builder.append(generate(lit.values.get(0), tmpContext, null).unwrap());
 
 			for(int i = 1; i != lit.values.size(); ++i)
 			{
 				SemaExpr expr = lit.values.get(i);
 				builder.append(", ");
-				builder.append(TypeCodeGenerator.generate(expr.type(), context));
+				builder.append(TypeCodeGenerator.generate(expr.type(), tmpContext.platform()));
 				builder.append(' ');
-				builder.append(generate(expr, builder, context, fcontext, stringPool).unwrap());
+				builder.append(generate(expr, tmpContext, null).unwrap());
 			}
 		}
 
 		builder.append(']');
+
 		return Maybe.some(builder.toString());
 	}
 
@@ -447,13 +447,13 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprLitString lit)
 	{
-		String stringSSA = stringPool.get(lit.value);
+		String stringSsa = context.stringPool().get(lit.value);
 
 		if(lit.isUsedAsLValue())
-			return Maybe.some(stringSSA);
+			return Maybe.some(stringSsa);
 
-		String typeString = TypeCodeGenerator.generate(lit.type(), context);
-		return Maybe.some(generateLoad(stringSSA, typeString));
+		String typeString = TypeCodeGenerator.generate(lit.type(), context.platform());
+		return Maybe.some(generateLoad(stringSsa, typeString));
 	}
 
 	private Maybe<String> visit(SemaExprNamedFunc namedFunc)
@@ -469,7 +469,7 @@ public class ExprCodeGenerator implements IVisitor
 		if(usedAsLValue)
 			return prefix + name;
 
-		String typeString = TypeCodeGenerator.generate(type, context);
+		String typeString = TypeCodeGenerator.generate(type, context.platform());
 		return generateLoad(prefix + name, typeString);
 	}
 
@@ -495,7 +495,7 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprSizeof sizeof)
 	{
-		return Maybe.some("" + TypeSize.of(sizeof.type, context));
+		return Maybe.some("" + TypeSize.of(sizeof.type, context.platform()));
 	}
 
 	private Maybe<String> visit(SsaExpr ssa)

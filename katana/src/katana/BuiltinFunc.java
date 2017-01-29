@@ -14,9 +14,8 @@
 
 package katana;
 
-import katana.backend.PlatformContext;
-import katana.backend.llvm.FunctionContext;
-import katana.backend.llvm.StringPool;
+import katana.backend.llvm.FileCodegenContext;
+import katana.backend.llvm.FunctionCodegenContext;
 import katana.sema.expr.SemaExprBuiltinCall;
 import katana.sema.type.SemaType;
 import katana.utils.Maybe;
@@ -25,13 +24,12 @@ import java.util.List;
 
 public abstract class BuiltinFunc
 {
+	public String name;
+
 	public BuiltinFunc(String name)
 	{
 		this.name = name;
 	}
-
 	public abstract SemaType validateCall(List<SemaType> args);
-	public abstract Maybe<String> generateCall(SemaExprBuiltinCall call, StringBuilder builder, PlatformContext context, FunctionContext fcontext, StringPool stringPool);
-
-	public String name;
+	public abstract Maybe<String> generateCall(SemaExprBuiltinCall call, FileCodegenContext context, FunctionCodegenContext fcontext);
 }

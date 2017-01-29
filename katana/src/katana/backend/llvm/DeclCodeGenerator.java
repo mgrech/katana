@@ -17,8 +17,6 @@ package katana.backend.llvm;
 import katana.analysis.TypeAlignment;
 import katana.analysis.Types;
 import katana.ast.AstPath;
-import katana.backend.PlatformContext;
-import katana.project.Project;
 import katana.sema.decl.*;
 import katana.sema.stmt.SemaStmt;
 import katana.sema.type.SemaType;
@@ -32,17 +30,11 @@ import java.util.Map;
 @SuppressWarnings("unused")
 public class DeclCodeGenerator implements IVisitor
 {
-	private StringBuilder builder;
-	private Project project;
-	private PlatformContext context;
-	private StringPool stringPool;
+	private FileCodegenContext context;
 
-	public DeclCodeGenerator(StringBuilder builder, Project project, PlatformContext context, StringPool stringPool)
+	public DeclCodeGenerator(FileCodegenContext context)
 	{
-		this.builder = builder;
-		this.project = project;
 		this.context = context;
-		this.stringPool = stringPool;
 	}
 
 	public void generate(SemaDecl decl)
@@ -58,37 +50,37 @@ public class DeclCodeGenerator implements IVisitor
 
 	private void visit(SemaDeclStruct struct)
 	{
-		builder.append('%');
-		builder.append(qualifiedName(struct));
-		builder.append(" = type { ");
+		context.write('%');
+		context.write(qualifiedName(struct));
+		context.write(" = type { ");
 
 		List<SemaDeclStruct.Field> fields = struct.fieldsByIndex();
 
 		if(!fields.isEmpty())
 		{
-			builder.append(TypeCodeGenerator.generate(fields.get(0).type, context));
+			context.write(TypeCodeGenerator.generate(fields.get(0).type, context.platform()));
 
 			for(int i = 1; i != fields.size(); ++i)
 			{
-				builder.append(", ");
-				builder.append(TypeCodeGenerator.generate(fields.get(i).type, context));
+				context.write(", ");
+				context.write(TypeCodeGenerator.generate(fields.get(i).type, context.platform()));
 			}
 		}
 
-		builder.append(" }\n");
+		context.write(" }\n");
 	}
 
 	private void generateParam(SemaDeclFunction.Param param, boolean isExternal)
 	{
-		builder.append(TypeCodeGenerator.generate(param.type, context));
+		context.write(TypeCodeGenerator.generate(param.type, context.platform()));
 
 		if(param.type instanceof SemaTypeNonNullablePointer)
-			builder.append(" nonnull");
+			context.write(" nonnull");
 
 		if(!isExternal)
 		{
-			builder.append(" %p$");
-			builder.append(param.name);
+			context.write(" %p$");
+			context.write(param.name);
 		}
 	}
 
@@ -97,35 +89,35 @@ public class DeclCodeGenerator implements IVisitor
 		boolean isExternal = function instanceof SemaDeclExternFunction;
 
 		if(isExternal)
-			builder.append("declare ");
+			context.write("declare ");
 
 		else
 		{
-			builder.append("define ");
+			context.write("define ");
 
 			if(function.exported)
 			{
-				switch(project.type)
+				switch(context.project().type)
 				{
-				case LIBRARY: builder.append("dllexport "); break;
+				case LIBRARY: context.write("dllexport "); break;
 				case EXECUTABLE: break;
 				default: throw new AssertionError("unreachable");
 				}
 			}
 
 			else
-				builder.append("private ");
+				context.write("private ");
 		}
 
-		builder.append(TypeCodeGenerator.generate(function.ret, context));
-		builder.append(" @");
+		context.write(TypeCodeGenerator.generate(function.ret, context.platform()));
+		context.write(" @");
 
 		if(isExternal)
-			builder.append(((SemaDeclExternFunction)function).externName.or(function.name()));
+			context.write(((SemaDeclExternFunction)function).externName.or(function.name()));
 		else
-			builder.append(FunctionNameMangler.mangle(function));
+			context.write(FunctionNameMangler.mangle(function));
 
-		builder.append('(');
+		context.write('(');
 
 		if(!function.params.isEmpty())
 		{
@@ -134,52 +126,52 @@ public class DeclCodeGenerator implements IVisitor
 
 			for(int i = 1; i != function.params.size(); ++i)
 			{
-				builder.append(", ");
+				context.write(", ");
 
 				SemaDeclFunction.Param param = function.params.get(i);
 				generateParam(param, isExternal);
 			}
 		}
 
-		builder.append(")\n");
+		context.write(")\n");
 	}
 
 	private void generateFunctionBody(SemaDeclDefinedFunction function)
 	{
-		builder.append("{\n");
+		context.write("{\n");
 
 		for(SemaDeclFunction.Param param : function.params)
 		{
-			String typeString = TypeCodeGenerator.generate(param.type, context);
-			BigInteger alignment = TypeAlignment.of(param.type, context);
-			builder.append(String.format("\t%%%s = alloca %s, align %s\n", param.name, typeString, alignment));
-			builder.append(String.format("\tstore %s %%p$%s, %s* %%%s\n", typeString, param.name, typeString, param.name));
+			String typeString = TypeCodeGenerator.generate(param.type, context.platform());
+			BigInteger alignment = TypeAlignment.of(param.type, context.platform());
+			context.writef("\t%%%s = alloca %s, align %s\n", param.name, typeString, alignment);
+			context.writef("\tstore %s %%p$%s, %s* %%%s\n", typeString, param.name, typeString, param.name);
 		}
 
 		if(!function.params.isEmpty())
-			builder.append('\n');
+			context.write('\n');
 
-		FunctionContext fcontext = new FunctionContext();
 
 		for(Map.Entry<String, SemaDeclDefinedFunction.Local> entry : function.localsByName.entrySet())
 		{
 			SemaType type = entry.getValue().type;
-			String llvmType = TypeCodeGenerator.generate(type, context);
-			BigInteger align = TypeAlignment.of(type, context);
-			builder.append(String.format("\t%%%s = alloca %s, align %s\n", entry.getKey(), llvmType, align));
+			String llvmType = TypeCodeGenerator.generate(type, context.platform());
+			BigInteger align = TypeAlignment.of(type, context.platform());
+			context.writef("\t%%%s = alloca %s, align %s\n", entry.getKey(), llvmType, align);
 		}
 
 		if(!function.locals.isEmpty())
-			builder.append('\n');
+			context.write('\n');
 
-		StmtCodeGenerator stmtCodeGen = new StmtCodeGenerator(builder, context, fcontext, stringPool);
+		FunctionCodegenContext fcontext = new FunctionCodegenContext();
+		StmtCodeGenerator stmtCodeGen = new StmtCodeGenerator(context, fcontext);
 
 		for(SemaStmt stmt : function.body)
 			stmtCodeGen.generate(stmt);
 
 		stmtCodeGen.finish(function);
 
-		builder.append("}\n");
+		context.write("}\n");
 	}
 
 	private void visit(SemaDeclOverloadSet set)
@@ -203,10 +195,10 @@ public class DeclCodeGenerator implements IVisitor
 	private void visit(SemaDeclGlobal global)
 	{
 		String qualifiedName = qualifiedName(global);
-		String typeString = TypeCodeGenerator.generate(global.type, context);
-		String initializerString = global.init.map(i -> ExprCodeGenerator.generate(i, builder, context, null, stringPool).unwrap()).or("zeroinitializer");
+		String typeString = TypeCodeGenerator.generate(global.type, context.platform());
+		String initializerString = global.init.map(i -> ExprCodeGenerator.generate(i, context, null).unwrap()).or("zeroinitializer");
 		String kind = Types.isConst(global.type) ? "constant" : "global";
-		builder.append(String.format("@%s = private %s %s %s\n", qualifiedName, kind, typeString, initializerString));
+		context.writef("@%s = private %s %s %s\n", qualifiedName, kind, typeString, initializerString);
 	}
 
 	private void visit(SemaDeclTypeAlias alias)
