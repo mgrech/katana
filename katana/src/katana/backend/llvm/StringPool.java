@@ -14,13 +14,6 @@
 
 package katana.backend.llvm;
 
-import katana.BuiltinType;
-import katana.Limits;
-import katana.backend.PlatformContext;
-import katana.diag.CompileException;
-import katana.platform.Arch;
-
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.TreeMap;
@@ -33,6 +26,18 @@ public class StringPool
 	private String generateName()
 	{
 		return String.format("@.strpool.%s", counter++);
+	}
+
+	public String get(String value)
+	{
+		String name = namesByValue.get(value);
+
+		if(name != null)
+			return name;
+
+		name = generateName();
+		namesByValue.put(value, name);
+		return name;
 	}
 
 	private byte[] utf8Encode(int cp)
@@ -65,63 +70,14 @@ public class StringPool
 		return result.toString();
 	}
 
-	public String get(String value)
+	public void generate(StringBuilder builder)
 	{
-		value = escape(value);
-		String name = namesByValue.get(value);
-
-		if(name != null)
-			return name + ".ptr";
-
-		name = generateName();
-		namesByValue.put(value, name);
-		return name + ".ptr";
-	}
-
-	private String encodeStringLength(BigInteger length, PlatformContext context)
-	{
-		BigInteger max = Limits.intMaxValue(BuiltinType.INT, context);
-
-		if(length.compareTo(max) == 1)
-			throw new CompileException("string too long for this platform");
-
-		StringBuilder builder = new StringBuilder();
-
-		Arch arch = context.target().arch;
-
-		for(int i = 0; i != arch.pointerSize.intValue(); ++i)
-		{
-			builder.append('\\');
-			builder.append(String.format("%02X", length.mod(BigInteger.valueOf(256)).intValue()));
-			length = length.divide(BigInteger.valueOf(256));
-		}
-
-		return builder.toString();
-	}
-
-	public void generate(StringBuilder builder, PlatformContext context)
-	{
-		BigInteger lengthSize = context.target().arch.pointerSize;
-
-		// length prefix + zero terminator
-		BigInteger additionalLength = lengthSize.add(BigInteger.ONE);
-
 		for(Map.Entry<String, String> entry : namesByValue.entrySet())
 		{
 			String name = entry.getValue();
 			String value = entry.getKey();
-			BigInteger valueLength = BigInteger.valueOf(value.length());
-			BigInteger arrayLength = valueLength.add(additionalLength);
-			String encodedLength = encodeStringLength(valueLength, context);
-
-			String strfmt = "%s = private unnamed_addr constant [%s x i8] c\"%s%s\\00\", align %s\n";
-			builder.append(String.format(strfmt, name, arrayLength, encodedLength, value, lengthSize));
-
-			String getelementptrFmt = "getelementptr inbounds ([%s x i8], [%s x i8]* %s, i32 0, i32 %s)";
-			String getelementptr = String.format(getelementptrFmt, arrayLength, arrayLength, name, lengthSize);
-			String bitcast = String.format("bitcast (i8*\n\t\t%s\n\t\tto [%s x i8]*)", getelementptr, value.length());
-			String ptrfmt = "%s.ptr = private unnamed_addr constant [%s x i8]*\n\t%s\n";
-			builder.append(String.format(ptrfmt, name, value.length(), bitcast));
+			String strfmt = "%s = private unnamed_addr constant [%s x i8] c\"%s\"\n";
+			builder.append(String.format(strfmt, name, value.length(), escape(value)));
 		}
 	}
 }

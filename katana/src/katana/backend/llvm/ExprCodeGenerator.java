@@ -447,13 +447,12 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprLitString lit)
 	{
-		String ptrSSA = stringPool.get(lit.value);
-		String typeString = TypeCodeGenerator.generate(lit.type(), context);
-		String stringSSA = generateLoad(ptrSSA, typeString + "*");
+		String stringSSA = stringPool.get(lit.value);
 
 		if(lit.isUsedAsLValue())
 			return Maybe.some(stringSSA);
 
+		String typeString = TypeCodeGenerator.generate(lit.type(), context);
 		return Maybe.some(generateLoad(stringSSA, typeString));
 	}
 

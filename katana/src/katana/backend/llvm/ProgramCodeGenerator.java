@@ -112,7 +112,7 @@ public class ProgramCodeGenerator
 
 		StringPool stringPool = new StringPool();
 		generateDecls(new DeclCodeGenerator(builder, project, context, stringPool), program.root);
-		stringPool.generate(builder, context);
+		stringPool.generate(builder);
 
 		if(project.entryPoint.isSome())
 			generateEntryPointWrapper(builder, findEntryPointFunction(program, project.entryPoint.unwrap()));
