@@ -44,6 +44,7 @@ public class TypeAlignment implements IVisitor
 		switch(builtinType.which)
 		{
 		case VOID: return BigInteger.ONE;
+		case BYTE: return BigInteger.ONE;
 		case BOOL: return BigInteger.ONE;
 		case INT8:  case UINT8:  return BigInteger.ONE;
 		case INT16: case UINT16: return arch.int16Align;
