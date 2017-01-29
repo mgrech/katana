@@ -22,7 +22,18 @@ import java.util.Properties;
 
 public class Katana
 {
-	private static final String VERSION_STRING = loadVersion();
+	public static final Path HOME = locateHome();
+	public static final String VERSION_STRING = loadVersion();
+
+	private static Path locateHome()
+	{
+		String homePath = System.getenv("KATANA_HOME");
+
+		if(homePath == null)
+			throw new RuntimeException("KATANA_HOME not found");
+
+		return Paths.get(homePath);
+	}
 
 	private static String loadVersion()
 	{
@@ -39,21 +50,4 @@ public class Katana
 			throw new RuntimeException(ex);
 		}
 	}
-
-	private static Path locateHome()
-	{
-		String homePath = System.getenv("KATANA_HOME");
-
-		if(homePath == null)
-			throw new RuntimeException("KATANA_HOME not found");
-
-		return Paths.get(homePath);
-	}
-
-	public static String version()
-	{
-		return VERSION_STRING;
-	}
-
-	public static final Path HOME = locateHome();
 }

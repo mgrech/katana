@@ -24,6 +24,7 @@ import java.nio.file.Paths;
 @Command(name = "init", desc = "initializes new project in working directory")
 public class CmdInit
 {
+	@SuppressWarnings("unused")
 	public static void run(String[] args) throws IOException
 	{
 		if(args.length != 0)

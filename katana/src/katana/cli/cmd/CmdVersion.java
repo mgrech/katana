@@ -20,8 +20,9 @@ import katana.cli.Command;
 @Command(name = "version", desc = "prints out version information")
 public class CmdVersion
 {
+	@SuppressWarnings("unused")
 	public static void run(String[] args)
 	{
-		System.out.println(Katana.version());
+		System.out.println(Katana.VERSION_STRING);
 	}
 }

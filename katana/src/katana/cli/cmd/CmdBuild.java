@@ -36,6 +36,7 @@ import java.nio.file.Paths;
 @Command(name = "build", desc = "builds project at given path in the working directory")
 public class CmdBuild
 {
+	@SuppressWarnings("unused")
 	public static void run(String[] args) throws IOException
 	{
 		if(args.length != 1)
