@@ -16,9 +16,9 @@ package katana.sema.expr;
 
 import katana.sema.type.SemaType;
 
-public class SemaExprImplicitConversionPointerToVoidPointer implements SemaExpr
+public class SemaExprImplicitConversionPointerToBytePointer implements SemaExpr
 {
-	public SemaExprImplicitConversionPointerToVoidPointer(SemaExpr expr, SemaType type)
+	public SemaExprImplicitConversionPointerToBytePointer(SemaExpr expr, SemaType type)
 	{
 		this.expr = expr;
 		this.type = type;

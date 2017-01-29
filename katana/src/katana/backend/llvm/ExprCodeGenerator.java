@@ -329,7 +329,7 @@ public class ExprCodeGenerator implements IVisitor
 		return generate(conversion.expr, builder, context, fcontext, stringPool);
 	}
 
-	private Maybe<String> visit(SemaExprImplicitConversionPointerToVoidPointer conversion)
+	private Maybe<String> visit(SemaExprImplicitConversionPointerToBytePointer conversion)
 	{
 		String exprTypeString = TypeCodeGenerator.generate(conversion.expr.type(), context);
 		String exprSSA = generate(conversion.expr, builder, context, fcontext, stringPool).unwrap();

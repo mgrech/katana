@@ -42,9 +42,9 @@ public class ImplicitConversions
 			expr = new SemaExprImplicitConversionPointerToNonConstToPointerToConst(expr, sourceType);
 		}
 
-		// !T -> !void, ?T -> ?void
-		if(Types.isPointer(sourceType) && Types.isPointer(targetType) && Types.isVoid(Types.removePointer(targetType)))
-			expr = new SemaExprImplicitConversionPointerToVoidPointer(expr, targetType);
+		// !T -> !byte, ?T -> ?byte
+		if(Types.isPointer(sourceType) && Types.isPointer(targetType) && Types.isByte(Types.removePointer(targetType)))
+			expr = new SemaExprImplicitConversionPointerToBytePointer(expr, targetType);
 
 		return expr;
 	}

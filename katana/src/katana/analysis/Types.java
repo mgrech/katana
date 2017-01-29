@@ -98,6 +98,11 @@ public class Types
 		return isBuiltin(type, BuiltinType.VOID);
 	}
 
+	public static boolean isByte(SemaType type)
+	{
+		return isBuiltin(type, BuiltinType.BYTE);
+	}
+
 	public static boolean isBuiltin(SemaType type, BuiltinType which)
 	{
 		type = removeConst(type);

@@ -14,7 +14,6 @@
 
 package katana.analysis;
 
-import katana.BuiltinType;
 import katana.backend.PlatformContext;
 import katana.diag.CompileException;
 import katana.platform.Arch;
