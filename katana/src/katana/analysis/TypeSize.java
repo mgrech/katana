@@ -48,6 +48,7 @@ public class TypeSize implements IVisitor
 		case NULL:
 			return BigInteger.ZERO;
 
+		case BYTE:
 		case BOOL:
 		case INT8:
 		case UINT8:
