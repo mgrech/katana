@@ -17,6 +17,7 @@ package katana.analysis;
 import katana.BuiltinType;
 import katana.backend.PlatformContext;
 import katana.diag.CompileException;
+import katana.platform.Arch;
 import katana.sema.type.*;
 import katana.visitor.IVisitor;
 
@@ -39,10 +40,21 @@ public class TypeAlignment implements IVisitor
 
 	private BigInteger visit(SemaTypeBuiltin builtinType)
 	{
-		if(builtinType.which == BuiltinType.VOID)
-			throw new CompileException("'alignof' applied to void type");
+		Arch arch = context.target().arch;
 
-		return TypeSize.of(builtinType, context);
+		switch(builtinType.which)
+		{
+		case VOID: return BigInteger.ONE;
+		case BOOL: return BigInteger.ONE;
+		case INT8:  case UINT8:  return BigInteger.ONE;
+		case INT16: case UINT16: return arch.int16Align;
+		case INT32: case UINT32: return arch.int32Align;
+		case INT64: case UINT64: return arch.int64Align;
+		case INT:   case UINT:   return arch.pointerAlign;
+		case FLOAT32: return arch.float32Align;
+		case FLOAT64: return arch.float64Align;
+		default: throw new AssertionError("unreachable");
+		}
 	}
 
 	private BigInteger visit(SemaTypeConst constType)

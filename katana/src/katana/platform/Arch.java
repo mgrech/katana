@@ -18,17 +18,29 @@ import java.math.BigInteger;
 
 public enum Arch
 {
-	UNKNOWN("unknown", -1),
-	AMD64("x86_64", 8),
-	X86("x86", 4);
+	UNKNOWN("unknown", -1, -1, -1, -1, -1, -1, -1),
+	AMD64  ("x86_64",   8,  8,  8,  4,  2,  4,  8),
+	X86    ("x86",      4,  4,  8,  4,  2,  4,  8);
 
 	private final String value;
 	public final BigInteger pointerSize;
+	public final BigInteger pointerAlign;
+	public final BigInteger int64Align;
+	public final BigInteger int32Align;
+	public final BigInteger int16Align;
+	public final BigInteger float32Align;
+	public final BigInteger float64Align;
 
-	Arch(String value, int pointerSize)
+	Arch(String value, int pointerSize, int pointerAlign, int int64Align, int int32Align, int int16Align, int float32Align, int float64Align)
 	{
 		this.value = value;
 		this.pointerSize = BigInteger.valueOf(pointerSize);
+		this.pointerAlign = BigInteger.valueOf(pointerAlign);
+		this.int64Align = BigInteger.valueOf(int64Align);
+		this.int32Align = BigInteger.valueOf(int32Align);
+		this.int16Align = BigInteger.valueOf(int16Align);
+		this.float32Align = BigInteger.valueOf(float32Align);
+		this.float64Align = BigInteger.valueOf(float64Align);
 	}
 
 	@Override
