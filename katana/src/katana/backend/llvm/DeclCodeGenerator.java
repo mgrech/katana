@@ -14,7 +14,6 @@
 
 package katana.backend.llvm;
 
-import katana.analysis.TypeAlignment;
 import katana.analysis.Types;
 import katana.ast.AstPath;
 import katana.sema.decl.*;
@@ -156,7 +155,7 @@ public class DeclCodeGenerator implements IVisitor
 				continue;
 
 			String typeString = TypeCodeGenerator.generate(param.type, context.platform());
-			BigInteger alignment = TypeAlignment.of(param.type, context.platform());
+			BigInteger alignment = Types.alignof(param.type, context.platform());
 			context.writef("\t%%%s = alloca %s, align %s\n", param.name, typeString, alignment);
 			context.writef("\tstore %s %%p$%s, %s* %%%s\n", typeString, param.name, typeString, param.name);
 		}
@@ -172,7 +171,7 @@ public class DeclCodeGenerator implements IVisitor
 				continue;
 
 			String llvmType = TypeCodeGenerator.generate(type, context.platform());
-			BigInteger align = TypeAlignment.of(type, context.platform());
+			BigInteger align = Types.alignof(type, context.platform());
 			context.writef("\t%%%s = alloca %s, align %s\n", entry.getKey(), llvmType, align);
 		}
 

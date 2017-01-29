@@ -14,7 +14,7 @@
 
 package katana;
 
-import katana.analysis.TypeSize;
+import katana.analysis.Types;
 import katana.backend.PlatformContext;
 import katana.sema.type.SemaTypeBuiltin;
 
@@ -65,7 +65,7 @@ public class Limits
 
 		boolean isSigned = type.kind == BuiltinType.Kind.INT;
 
-		switch(TypeSize.of(new SemaTypeBuiltin(type), context).intValue())
+		switch(Types.sizeof(new SemaTypeBuiltin(type), context).intValue())
 		{
 		case 1: return isSigned ? BuiltinType.INT8  : BuiltinType.UINT8;
 		case 2: return isSigned ? BuiltinType.INT16 : BuiltinType.UINT16;

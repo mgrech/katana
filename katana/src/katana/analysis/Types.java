@@ -180,12 +180,12 @@ public class Types
 
 	public static boolean equalSizes(SemaType first, SemaType second, PlatformContext context)
 	{
-		return TypeSize.of(first, context).equals(TypeSize.of(second, context));
+		return sizeof(first, context).equals(sizeof(second, context));
 	}
 
 	public static int compareSizes(SemaType first, SemaType second, PlatformContext context)
 	{
-		return TypeSize.of(first, context).compareTo(TypeSize.of(second, context));
+		return sizeof(first, context).compareTo(sizeof(second, context));
 	}
 
 	public static boolean isZeroSized(SemaDeclStruct struct)
@@ -216,5 +216,15 @@ public class Types
 			return ((SemaTypeUserDefined)type).decl.layout.sizeof().equals(BigInteger.ZERO);
 
 		return false;
+	}
+
+	public static BigInteger sizeof(SemaType type, PlatformContext context)
+	{
+		return TypeSizeofVisitor.apply(type, context);
+	}
+
+	public static BigInteger alignof(SemaType type, PlatformContext context)
+	{
+		return TypeAlignofVisitor.apply(type, context);
 	}
 }

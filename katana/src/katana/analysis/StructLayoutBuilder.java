@@ -35,8 +35,8 @@ public class StructLayoutBuilder
 
 	public StructLayoutBuilder appendField(SemaType type)
 	{
-		BigInteger fieldSize = TypeSize.of(type, context);
-		BigInteger fieldAlignment = TypeAlignment.of(type, context);
+		BigInteger fieldSize = Types.sizeof(type, context);
+		BigInteger fieldAlignment = Types.alignof(type, context);
 
 		size = align(size, fieldAlignment);
 		fieldOffsets.add(size);

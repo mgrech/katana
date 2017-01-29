@@ -14,7 +14,6 @@
 
 package katana.backend.llvm;
 
-import katana.analysis.TypeSize;
 import katana.analysis.Types;
 import katana.backend.PlatformContext;
 import katana.sema.type.*;
@@ -52,7 +51,7 @@ public class TypeCodeGenerator implements IVisitor
 		case UINT32:
 		case UINT64:
 		case UINT:
-			return "i" + TypeSize.of(type, context).multiply(BigInteger.valueOf(8));
+			return "i" + Types.sizeof(type, context).multiply(BigInteger.valueOf(8));
 
 		case BYTE:
 			return "i8";
@@ -70,7 +69,7 @@ public class TypeCodeGenerator implements IVisitor
 
 	private String visit(SemaTypeOpaque type)
 	{
-		return String.format("[%s x i8]", TypeSize.of(type, context));
+		return String.format("[%s x i8]", Types.sizeof(type, context));
 	}
 
 	private String visit(SemaTypeFunction type)

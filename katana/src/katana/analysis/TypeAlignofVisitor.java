@@ -23,18 +23,18 @@ import katana.visitor.IVisitor;
 import java.math.BigInteger;
 
 @SuppressWarnings("unused")
-public class TypeAlignment implements IVisitor
+public class TypeAlignofVisitor implements IVisitor
 {
 	private final PlatformContext context;
 
-	private TypeAlignment(PlatformContext context)
+	private TypeAlignofVisitor(PlatformContext context)
 	{
 		this.context = context;
 	}
 
 	private BigInteger visit(SemaTypeArray arrayType)
 	{
-		return TypeAlignment.of(arrayType.type, context);
+		return apply(arrayType.type, context);
 	}
 
 	private BigInteger visit(SemaTypeBuiltin builtinType)
@@ -59,7 +59,7 @@ public class TypeAlignment implements IVisitor
 
 	private BigInteger visit(SemaTypeConst constType)
 	{
-		return of(constType.type, context);
+		return apply(constType.type, context);
 	}
 
 	private BigInteger visit(SemaTypeFunction functionType)
@@ -69,7 +69,7 @@ public class TypeAlignment implements IVisitor
 
 	private BigInteger visit(SemaTypeNullablePointer pointerType)
 	{
-		return TypeSize.of(pointerType, context);
+		return context.target().arch.pointerAlign;
 	}
 
 	private BigInteger visit(SemaTypeOpaque opaqueType)
@@ -79,7 +79,7 @@ public class TypeAlignment implements IVisitor
 
 	private BigInteger visit(SemaTypeNonNullablePointer pointerType)
 	{
-		return TypeSize.of(pointerType, context);
+		return context.target().arch.pointerAlign;
 	}
 
 	private BigInteger visit(SemaTypeUserDefined userDefinedType)
@@ -87,8 +87,8 @@ public class TypeAlignment implements IVisitor
 		return userDefinedType.decl.layout.alignof();
 	}
 
-	public static BigInteger of(SemaType type, PlatformContext context)
+	public static BigInteger apply(SemaType type, PlatformContext context)
 	{
-		return (BigInteger)type.accept(new TypeAlignment(context));
+		return (BigInteger)type.accept(new TypeAlignofVisitor(context));
 	}
 }

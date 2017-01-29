@@ -15,8 +15,6 @@
 package katana.backend.llvm;
 
 import katana.BuiltinType;
-import katana.analysis.TypeAlignment;
-import katana.analysis.TypeSize;
 import katana.analysis.Types;
 import katana.sema.decl.SemaDeclExternFunction;
 import katana.sema.expr.*;
@@ -72,7 +70,7 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprAlignof alignof)
 	{
-		return Maybe.some("" + TypeAlignment.of(alignof.type, context.platform()));
+		return Maybe.some("" + Types.alignof(alignof.type, context.platform()));
 	}
 
 	private String generateArrayAccess(boolean usedAsLValue, String arraySsa, SemaType arrayType, SemaType fieldType, SemaExpr index)
@@ -111,7 +109,7 @@ public class ExprCodeGenerator implements IVisitor
 		String arraySsa = generate(arrayAccess.expr, context, fcontext).unwrap();
 		SemaType arrayType = arrayAccess.expr.type();
 		String arrayTypeString = TypeCodeGenerator.generate(arrayType, context.platform());
-		BigInteger arrayAlignment = TypeAlignment.of(arrayType, context.platform());
+		BigInteger arrayAlignment = Types.alignof(arrayType, context.platform());
 
 		String tmpSsa = fcontext.allocateSsa();
 		context.writef("\t%s = alloca %s, align %s\n", tmpSsa, arrayTypeString, arrayAlignment);
@@ -523,7 +521,7 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprSizeof sizeof)
 	{
-		return Maybe.some("" + TypeSize.of(sizeof.type, context.platform()));
+		return Maybe.some("" + Types.sizeof(sizeof.type, context.platform()));
 	}
 
 	private Maybe<String> visit(SsaExpr ssa)

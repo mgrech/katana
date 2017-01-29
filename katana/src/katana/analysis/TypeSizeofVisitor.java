@@ -22,7 +22,7 @@ import katana.visitor.IVisitor;
 import java.math.BigInteger;
 
 @SuppressWarnings("unused")
-public class TypeSize implements IVisitor
+public class TypeSizeofVisitor implements IVisitor
 {
 	private static final BigInteger TWO = BigInteger.valueOf(2);
 	private static final BigInteger FOUR = BigInteger.valueOf(4);
@@ -30,14 +30,14 @@ public class TypeSize implements IVisitor
 
 	private final PlatformContext context;
 
-	private TypeSize(PlatformContext context)
+	private TypeSizeofVisitor(PlatformContext context)
 	{
 		this.context = context;
 	}
 
 	private BigInteger visit(SemaTypeArray arrayType)
 	{
-		return arrayType.length.multiply(of(arrayType.type, context));
+		return arrayType.length.multiply(apply(arrayType.type, context));
 	}
 
 	private BigInteger visit(SemaTypeBuiltin builtinType)
@@ -80,7 +80,7 @@ public class TypeSize implements IVisitor
 
 	private BigInteger visit(SemaTypeConst constType)
 	{
-		return of(constType.type, context);
+		return apply(constType.type, context);
 	}
 
 	private BigInteger visit(SemaTypeFunction functionType)
@@ -108,8 +108,8 @@ public class TypeSize implements IVisitor
 		return userDefinedType.decl.layout.sizeof();
 	}
 
-	public static BigInteger of(SemaType type, PlatformContext context)
+	public static BigInteger apply(SemaType type, PlatformContext context)
 	{
-		return (BigInteger)type.accept(new TypeSize(context));
+		return (BigInteger)type.accept(new TypeSizeofVisitor(context));
 	}
 }
