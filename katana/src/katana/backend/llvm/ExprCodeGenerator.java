@@ -33,6 +33,8 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class ExprCodeGenerator implements IVisitor
 {
+	private static final String ZEROSIZE_VALUE_ADDRESS = "inttoptr (i8 1 to i8*)";
+
 	private FileCodegenContext context;
 	private FunctionCodegenContext fcontext;
 
@@ -62,6 +64,9 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprAddressof addressof)
 	{
+		if(Types.isZeroSized(addressof.expr.type()))
+			return Maybe.some(ZEROSIZE_VALUE_ADDRESS);
+
 		return Maybe.some(generate(addressof.expr, context, fcontext).unwrap());
 	}
 
@@ -87,6 +92,9 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprArrayAccessLValue arrayAccess)
 	{
+		if(Types.isZeroSized(arrayAccess.type()))
+			return Maybe.some(ZEROSIZE_VALUE_ADDRESS);
+
 		boolean isUsedAsLValue = arrayAccess.isUsedAsLValue();
 		arrayAccess.useAsLValue(true);
 		String arraySsa = generate(arrayAccess.value, context, fcontext).unwrap();
@@ -97,6 +105,9 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprArrayAccessRValue arrayAccess)
 	{
+		if(Types.isZeroSized(arrayAccess.type()))
+			return Maybe.none();
+
 		String arraySsa = generate(arrayAccess.expr, context, fcontext).unwrap();
 		SemaType arrayType = arrayAccess.expr.type();
 		String arrayTypeString = TypeCodeGenerator.generate(arrayType, context.platform());
@@ -113,6 +124,9 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprAssign assign)
 	{
+		if(Types.isZeroSized(assign.type()))
+			return Maybe.none();
+
 		SemaType type = assign.right.type();
 		String typeString = TypeCodeGenerator.generate(assign.right.type(), context.platform());
 		String right = generate(assign.right, context, fcontext).unwrap();
@@ -236,6 +250,9 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprDeref deref)
 	{
+		if(Types.isZeroSized(deref.type()))
+			return Maybe.none();
+
 		String ptrSsa = generate(deref.expr, context, fcontext).unwrap();
 
 		if(deref.isUsedAsLValue() || deref.type() instanceof SemaTypeFunction)
@@ -256,7 +273,7 @@ public class ExprCodeGenerator implements IVisitor
 
 		Maybe<String> retSsa = Maybe.none();
 
-		if(!Types.isVoid(ret))
+		if(!Types.isZeroSized(ret))
 		{
 			retSsa = Maybe.some(fcontext.allocateSsa());
 			context.writef("%s = ", retSsa.unwrap());
@@ -268,14 +285,20 @@ public class ExprCodeGenerator implements IVisitor
 
 		if(!args.isEmpty())
 		{
-			context.write(TypeCodeGenerator.generate(args.get(0).type(), context.platform()));
-			context.write(' ');
-			context.write(argsSsa.get(0));
+			if(!Types.isZeroSized(args.get(0).type()))
+			{
+				context.write(TypeCodeGenerator.generate(args.get(0).type(), context.platform()));
+				context.write(' ');
+				context.write(argsSsa.get(0));
+			}
 
 			for(int i = 1; i != argsSsa.size(); ++i)
 			{
-				String argTypeString = TypeCodeGenerator.generate(args.get(i).type(), context.platform());
-				context.writef(", %s %s", argTypeString, argsSsa.get(i));
+				if(!Types.isZeroSized(args.get(i).type()))
+				{
+					String argTypeString = TypeCodeGenerator.generate(args.get(i).type(), context.platform());
+					context.writef(", %s %s", argTypeString, argsSsa.get(i));
+				}
 			}
 		}
 
@@ -337,6 +360,11 @@ public class ExprCodeGenerator implements IVisitor
 	{
 		String valueSsa = generate(conversion.expr, context, fcontext).unwrap();
 		return Maybe.some(generateCast(valueSsa, conversion.expr.type(), conversion.type(), SemaExprCast.Kind.WIDEN_CAST));
+	}
+
+	private Maybe<String> visit(SemaExprImplicitVoidInReturn implicitVoid)
+	{
+		return Maybe.none();
 	}
 
 	private Maybe<String> visit(SemaExprIndirectFunctionCall functionCall)

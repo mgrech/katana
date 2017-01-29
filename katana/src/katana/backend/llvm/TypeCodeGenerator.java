@@ -110,7 +110,7 @@ public class TypeCodeGenerator implements IVisitor
 
 	private String visit(SemaTypeNullablePointer type)
 	{
-		if(Types.isVoid(type.type))
+		if(Types.isZeroSized(type.type))
 			return "i8*";
 
 		return String.format("%s*", generate(type.type, context));
@@ -118,7 +118,7 @@ public class TypeCodeGenerator implements IVisitor
 
 	private String visit(SemaTypeNonNullablePointer type)
 	{
-		if(Types.isVoid(type.type))
+		if(Types.isZeroSized(type.type))
 			return "i8*";
 
 		return String.format("%s*", generate(type.type, context));

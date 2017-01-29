@@ -83,12 +83,8 @@ public class ExprValidator implements IVisitor
 		for(int argCount = 1; it1.hasNext(); ++argCount)
 		{
 			SemaType paramType = it1.next();
-			SemaType argType = it2.next().type();
-
-			if(Types.isVoid(argType))
-				throw new CompileException(String.format("expression given in argument %s yields 'void'", argCount));
-
 			SemaType paramTypeNoConst = Types.removeConst(paramType);
+			SemaType argType = it2.next().type();
 			SemaType argTypeNoConst = Types.removeConst(argType);
 
 			if(!SemaType.same(paramTypeNoConst, argTypeNoConst))
@@ -148,16 +144,10 @@ public class ExprValidator implements IVisitor
 	{
 		SemaExpr left = validate(assign.left, scope, context, validateDecl, Maybe.none());
 
-		if(Types.isVoid(left.type()))
-			throw new CompileException("value expected on left side of assignment, got expression yielding 'void'");
-
 		SemaType leftType = left.type();
 		SemaType leftTypeNoConst = Types.removeConst(leftType);
 
 		SemaExpr right = validate(assign.right, scope, context, validateDecl, Maybe.some(leftTypeNoConst));
-
-		if(Types.isVoid(right.type()))
-			throw new CompileException("value expected on right side of assignment, got expression yielding 'void'");
 
 		if(Types.isConst(leftType) || !(left instanceof SemaExprLValueExpr))
 			throw new CompileException("non-const lvalue required on left side of assignment");
@@ -212,9 +202,6 @@ public class ExprValidator implements IVisitor
 	{
 		SemaExpr expr = validate(const_.expr, scope, context, validateDecl, deduce);
 
-		if(Types.isVoid(expr.type()))
-			throw new CompileException("expression passed to const symbol yields 'void'");
-
 		if(Types.isFunction(expr.type()))
 			throw new CompileException("const symbol applied to value of function type");
 
@@ -251,7 +238,7 @@ public class ExprValidator implements IVisitor
 				SemaExpr arg = ExprValidator.validate(args.get(i), scope, context, validateDecl, Maybe.some(paramTypeNoConst));
 				SemaType argTypeNoConst = Types.removeConst(arg.type());
 
-				if(Types.isVoid(arg.type()) || !SemaType.same(paramTypeNoConst, argTypeNoConst))
+				if(!SemaType.same(paramTypeNoConst, argTypeNoConst))
 					failed = true;
 
 				result.add(Maybe.some(arg));
@@ -605,9 +592,6 @@ public class ExprValidator implements IVisitor
 
 			return namedDeclExpr(decl, memberAccess.global);
 		}
-
-		if(Types.isVoid(expr.type()))
-			throw new CompileException("left side of member access yields 'void'");
 
 		SemaType type = expr.type();
 		SemaType typeNoConst = Types.removeConst(type);

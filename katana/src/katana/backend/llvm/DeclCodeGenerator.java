@@ -50,6 +50,9 @@ public class DeclCodeGenerator implements IVisitor
 
 	private void visit(SemaDeclStruct struct)
 	{
+		if(Types.isZeroSized(struct))
+			return;
+
 		context.write('%');
 		context.write(qualifiedName(struct));
 		context.write(" = type { ");
@@ -58,12 +61,16 @@ public class DeclCodeGenerator implements IVisitor
 
 		if(!fields.isEmpty())
 		{
-			context.write(TypeCodeGenerator.generate(fields.get(0).type, context.platform()));
+			if(!Types.isZeroSized(fields.get(0).type))
+				context.write(TypeCodeGenerator.generate(fields.get(0).type, context.platform()));
 
 			for(int i = 1; i != fields.size(); ++i)
 			{
-				context.write(", ");
-				context.write(TypeCodeGenerator.generate(fields.get(i).type, context.platform()));
+				if(!Types.isZeroSized(fields.get(i).type))
+				{
+					context.write(", ");
+					context.write(TypeCodeGenerator.generate(fields.get(i).type, context.platform()));
+				}
 			}
 		}
 
@@ -72,6 +79,9 @@ public class DeclCodeGenerator implements IVisitor
 
 	private void generateParam(SemaDeclFunction.Param param, boolean isExternal)
 	{
+		if(Types.isZeroSized(param.type))
+			return;
+
 		context.write(TypeCodeGenerator.generate(param.type, context.platform()));
 
 		if(param.type instanceof SemaTypeNonNullablePointer)
@@ -142,6 +152,9 @@ public class DeclCodeGenerator implements IVisitor
 
 		for(SemaDeclFunction.Param param : function.params)
 		{
+			if(Types.isZeroSized(param.type))
+				continue;
+
 			String typeString = TypeCodeGenerator.generate(param.type, context.platform());
 			BigInteger alignment = TypeAlignment.of(param.type, context.platform());
 			context.writef("\t%%%s = alloca %s, align %s\n", param.name, typeString, alignment);
@@ -151,10 +164,13 @@ public class DeclCodeGenerator implements IVisitor
 		if(!function.params.isEmpty())
 			context.write('\n');
 
-
 		for(Map.Entry<String, SemaDeclDefinedFunction.Local> entry : function.localsByName.entrySet())
 		{
 			SemaType type = entry.getValue().type;
+
+			if(Types.isZeroSized(type))
+				continue;
+
 			String llvmType = TypeCodeGenerator.generate(type, context.platform());
 			BigInteger align = TypeAlignment.of(type, context.platform());
 			context.writef("\t%%%s = alloca %s, align %s\n", entry.getKey(), llvmType, align);
@@ -194,6 +210,9 @@ public class DeclCodeGenerator implements IVisitor
 
 	private void visit(SemaDeclGlobal global)
 	{
+		if(Types.isZeroSized(global.type))
+			return;
+
 		String qualifiedName = qualifiedName(global);
 		String typeString = TypeCodeGenerator.generate(global.type, context.platform());
 		String initializerString = global.init.map(i -> ExprCodeGenerator.generate(i, context, null).unwrap()).or("zeroinitializer");

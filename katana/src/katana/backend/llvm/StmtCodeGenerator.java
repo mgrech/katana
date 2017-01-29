@@ -18,6 +18,7 @@ import katana.analysis.Types;
 import katana.sema.decl.SemaDeclDefinedFunction;
 import katana.sema.stmt.*;
 import katana.sema.type.SemaType;
+import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public class StmtCodeGenerator implements IVisitor
 	{
 		if(!preceededByTerminator)
 		{
-			if(Types.isVoid(func.ret))
+			if(Types.isZeroSized(func.ret))
 				context.write("\tret void\n");
 			else
 				context.write("\tunreachable\n");
@@ -160,16 +161,17 @@ public class StmtCodeGenerator implements IVisitor
 	{
 		preceededByTerminator = true;
 
-		if(ret.ret.isNone())
+		Maybe<String> returnSsa = ExprCodeGenerator.generate(ret.ret, context, fcontext);
+
+		if(returnSsa.isNone())
 		{
 			context.write("\tret void\n\n");
 			return;
 		}
 
-		String expr = ExprCodeGenerator.generate(ret.ret.unwrap(), context, fcontext).unwrap();
-		SemaType type = ret.ret.unwrap().type();
+		SemaType type = ret.ret.type();
 		String llvmType = TypeCodeGenerator.generate(type, context.platform());
-		context.writef("\tret %s %s\n\n", llvmType, expr);
+		context.writef("\tret %s %s\n\n", llvmType, returnSsa.unwrap());
 	}
 
 	private void visit(SemaStmtNullStmt nullStmt)

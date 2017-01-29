@@ -1,4 +1,4 @@
-// Copyright 2016-2017 Markus Grech
+// Copyright 2017 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.sema.stmt;
+package katana.sema.expr;
 
-import katana.sema.expr.SemaExpr;
+import katana.sema.type.SemaType;
+import katana.sema.type.SemaTypeBuiltin;
 
-public class SemaStmtReturn extends SemaStmt
+public class SemaExprImplicitVoidInReturn implements SemaExpr
 {
-	public SemaStmtReturn(SemaExpr ret)
+	@Override
+	public SemaType type()
 	{
-		this.ret = ret;
+		return SemaTypeBuiltin.VOID;
 	}
-
-	public SemaExpr ret;
 }

@@ -45,7 +45,8 @@ public class TypeSize implements IVisitor
 		switch(builtinType.which)
 		{
 		case VOID:
-			throw new CompileException("'sizeof' applied to void type");
+		case NULL:
+			return BigInteger.ZERO;
 
 		case BOOL:
 		case INT8:
@@ -68,7 +69,6 @@ public class TypeSize implements IVisitor
 
 		case INT:
 		case UINT:
-		case NULL:
 			return context.target().arch.pointerSize;
 
 		default: break;

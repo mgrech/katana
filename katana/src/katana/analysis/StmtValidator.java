@@ -24,6 +24,7 @@ import katana.sema.decl.SemaDecl;
 import katana.sema.decl.SemaDeclDefinedFunction;
 import katana.sema.expr.SemaExpr;
 import katana.sema.expr.SemaExprAssign;
+import katana.sema.expr.SemaExprImplicitVoidInReturn;
 import katana.sema.expr.SemaExprNamedLocal;
 import katana.sema.scope.SemaScopeFunction;
 import katana.sema.stmt.*;
@@ -109,12 +110,6 @@ public class StmtValidator implements IVisitor
 	{
 		SemaExpr condition = ExprValidator.validate(expr, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.BOOL));
 
-		if(Types.isVoid(condition.type()))
-		{
-			String fmt = "%s requires condition of type 'bool', got expression yielding 'void'";
-			throw new CompileException(String.format(fmt, kind.toString().toLowerCase()));
-		}
-
 		if(!Types.isBuiltin(condition.type(), BuiltinType.BOOL))
 		{
 			String fmt = "%s requires condition of type 'bool', got '%s'";
@@ -151,43 +146,27 @@ public class StmtValidator implements IVisitor
 	private SemaStmt visit(AstStmtReturn return_)
 	{
 		Maybe<SemaExpr> value = return_.value.map(retval -> ExprValidator.validate(retval, scope, context, validateDecl, Maybe.some(function.ret)));
+		SemaType retTypeNoConst = Types.removeConst(function.ret);
 
-		boolean returnsVoid = Types.isVoid(function.ret);
-		boolean valueGiven = value.isSome();
-
-		if(returnsVoid && valueGiven)
+		if(value.isNone())
 		{
-			String fmt = "function '%s' returns 'void', value given";
-			throw new CompileException(String.format(fmt, function.qualifiedName()));
-		}
+			if(Types.isVoid(retTypeNoConst))
+				return new SemaStmtReturn(new SemaExprImplicitVoidInReturn());
 
-		if(!returnsVoid && !valueGiven)
-		{
 			String fmt = "function '%s' returns value of type '%s', no value given";
-			throw new CompileException(String.format(fmt, function.qualifiedName(), TypeString.of(function.ret)));
+			throw new CompileException(String.format(fmt, function.qualifiedName(), TypeString.of(retTypeNoConst)));
 		}
 
-		if(!returnsVoid && valueGiven)
+		SemaType type = value.unwrap().type();
+		SemaType typeNoConst = Types.removeConst(type);
+
+		if(!SemaType.same(retTypeNoConst, typeNoConst))
 		{
-			SemaType type = value.unwrap().type();
-
-			if(Types.isVoid(type))
-			{
-				String fmt = "function '%s' returns value of type '%s', got expression yielding 'void'";
-				throw new CompileException(String.format(fmt, function.qualifiedName(), TypeString.of(function.ret)));
-			}
-
-			SemaType typeNoConst = Types.removeConst(type);
-			SemaType retTypeNoConst = Types.removeConst(function.ret);
-
-			if(!SemaType.same(retTypeNoConst, typeNoConst))
-			{
-				String fmt = "function '%s' returns value of type '%s', '%s' given";
-				throw new CompileException(String.format(fmt, function.qualifiedName(), TypeString.of(retTypeNoConst), TypeString.of(typeNoConst)));
-			}
+			String fmt = "function '%s' returns value of type '%s', '%s' given";
+			throw new CompileException(String.format(fmt, function.qualifiedName(), TypeString.of(retTypeNoConst), TypeString.of(typeNoConst)));
 		}
 
-		return new SemaStmtReturn(value);
+		return new SemaStmtReturn(value.unwrap());
 	}
 
 	private SemaStmt visit(AstStmtExprStmt exprStmt)
@@ -213,10 +192,6 @@ public class StmtValidator implements IVisitor
 		}
 
 		SemaExpr init = ExprValidator.validate(local.init.unwrap(), scope, context, validateDecl, maybeDeclaredTypeNoConst);
-
-		if(Types.isVoid(init.type()))
-			throw new CompileException(String.format("initializer for local '%s' yields 'void'", local.name));
-
 		SemaType initTypeNoConst = Types.removeConst(init.type());
 		SemaType localType = maybeDeclaredType.or(initTypeNoConst);
 		SemaType localTypeNoConst = Types.removeConst(localType);

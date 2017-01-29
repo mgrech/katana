@@ -16,7 +16,10 @@ package katana.analysis;
 
 import katana.BuiltinType;
 import katana.backend.PlatformContext;
+import katana.sema.decl.SemaDeclStruct;
 import katana.sema.type.*;
+
+import java.math.BigInteger;
 
 public class Types
 {
@@ -183,5 +186,35 @@ public class Types
 	public static int compareSizes(SemaType first, SemaType second, PlatformContext context)
 	{
 		return TypeSize.of(first, context).compareTo(TypeSize.of(second, context));
+	}
+
+	public static boolean isZeroSized(SemaDeclStruct struct)
+	{
+		return struct.layout.sizeof().equals(BigInteger.ZERO);
+	}
+
+	public static boolean isZeroSized(SemaType type)
+	{
+		type = removeConst(type);
+
+		if(type instanceof SemaTypeBuiltin)
+		{
+			BuiltinType which = ((SemaTypeBuiltin)type).which;
+			return which == BuiltinType.VOID || which == BuiltinType.NULL;
+		}
+
+		if(type instanceof SemaTypeArray)
+		{
+			SemaTypeArray array = (SemaTypeArray)type;
+			return array.length.equals(BigInteger.ZERO) || isZeroSized(array.type);
+		}
+
+		if(type instanceof SemaTypeOpaque)
+			return ((SemaTypeOpaque)type).size.equals(BigInteger.ZERO);
+
+		if(type instanceof SemaTypeUserDefined)
+			return ((SemaTypeUserDefined)type).decl.layout.sizeof().equals(BigInteger.ZERO);
+
+		return false;
 	}
 }
