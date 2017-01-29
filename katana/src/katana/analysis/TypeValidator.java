@@ -87,7 +87,7 @@ public class TypeValidator implements IVisitor
 	private SemaType visit(AstTypeArray array)
 	{
 		if(array.length.compareTo(BigInteger.ZERO) == -1)
-			throw new CompileException(String.format("negative array length", array.length));
+			throw new CompileException(String.format("negative array length: %s", array.length));
 
 		return new SemaTypeArray(array.length, validate(array.type, scope, context, validateDecl));
 	}
@@ -124,7 +124,7 @@ public class TypeValidator implements IVisitor
 		if(symbol instanceof SemaDeclStruct)
 			return new SemaTypeUserDefined((SemaDeclStruct)symbol);
 
-		throw new CompileException(String.format("symbol '%s' does not refer to a type"));
+		throw new CompileException(String.format("symbol '%s' does not refer to a type", symbol.name()));
 	}
 
 	private SemaType visit(AstTypeConst const_)
