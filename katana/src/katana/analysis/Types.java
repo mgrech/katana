@@ -195,27 +195,7 @@ public class Types
 
 	public static boolean isZeroSized(SemaType type)
 	{
-		type = removeConst(type);
-
-		if(type instanceof SemaTypeBuiltin)
-		{
-			BuiltinType which = ((SemaTypeBuiltin)type).which;
-			return which == BuiltinType.VOID || which == BuiltinType.NULL;
-		}
-
-		if(type instanceof SemaTypeArray)
-		{
-			SemaTypeArray array = (SemaTypeArray)type;
-			return array.length.equals(BigInteger.ZERO) || isZeroSized(array.type);
-		}
-
-		if(type instanceof SemaTypeOpaque)
-			return ((SemaTypeOpaque)type).size.equals(BigInteger.ZERO);
-
-		if(type instanceof SemaTypeUserDefined)
-			return ((SemaTypeUserDefined)type).decl.layout.sizeof().equals(BigInteger.ZERO);
-
-		return false;
+		return CheckZeroSizeVisitor.apply(type);
 	}
 
 	public static BigInteger sizeof(SemaType type, PlatformContext context)
