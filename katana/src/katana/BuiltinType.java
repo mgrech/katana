@@ -17,6 +17,7 @@ package katana;
 public enum BuiltinType
 {
 	VOID   (Kind.VOID),
+	BYTE   (Kind.BYTE),
 	BOOL   (Kind.BOOL),
 	INT8   (Kind.INT),
 	INT16  (Kind.INT),
@@ -35,6 +36,7 @@ public enum BuiltinType
 	public enum Kind
 	{
 		VOID,
+		BYTE,
 		BOOL,
 		INT,
 		UINT,

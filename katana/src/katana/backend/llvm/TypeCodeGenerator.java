@@ -43,16 +43,19 @@ public class TypeCodeGenerator implements IVisitor
 		switch(type.which)
 		{
 		case INT8:
-		case UINT8:
 		case INT16:
-		case UINT16:
 		case INT32:
-		case UINT32:
 		case INT64:
-		case UINT64:
 		case INT:
+		case UINT8:
+		case UINT16:
+		case UINT32:
+		case UINT64:
 		case UINT:
 			return "i" + TypeSize.of(type, context).multiply(BigInteger.valueOf(8));
+
+		case BYTE:
+			return "i8";
 
 		case BOOL:    return "i1";
 		case FLOAT32: return "float";

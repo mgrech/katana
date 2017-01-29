@@ -93,6 +93,7 @@ public class Token
 		PUNCT_DOLOLOLLAR,
 
 		TYPE_VOID,
+		TYPE_BYTE,
 		TYPE_BOOL,
 		TYPE_INT8,
 		TYPE_INT16,
@@ -164,6 +165,7 @@ public class Token
 	public static final Token PUNCT_DOLOLOLLAR = new Token(Category.PUNCT, Type.PUNCT_DOLOLOLLAR, "$");
 
 	public static final Token TYPE_VOID    = new Token(Category.TYPE, Type.TYPE_VOID,    "void");
+	public static final Token TYPE_BYTE    = new Token(Category.TYPE, Type.TYPE_BYTE,    "byte");
 	public static final Token TYPE_BOOL    = new Token(Category.TYPE, Type.TYPE_BOOL,    "bool");
 	public static final Token TYPE_INT8    = new Token(Category.TYPE, Type.TYPE_INT8,    "int8");
 	public static final Token TYPE_INT16   = new Token(Category.TYPE, Type.TYPE_INT16,   "int16");

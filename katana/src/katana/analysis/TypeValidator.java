@@ -57,20 +57,21 @@ public class TypeValidator implements IVisitor
 		switch(builtin.which)
 		{
 		case VOID:    return SemaTypeBuiltin.VOID;
-		case INT8:    return SemaTypeBuiltin.INT8;
-		case UINT8:   return SemaTypeBuiltin.UINT8;
-		case INT16:   return SemaTypeBuiltin.INT16;
-		case UINT16:  return SemaTypeBuiltin.UINT16;
-		case INT32:   return SemaTypeBuiltin.INT32;
-		case UINT32:  return SemaTypeBuiltin.UINT32;
-		case INT64:   return SemaTypeBuiltin.INT64;
-		case UINT64:  return SemaTypeBuiltin.UINT64;
-		case INT:     return SemaTypeBuiltin.INT;
-		case UINT:    return SemaTypeBuiltin.UINT;
-		case NULL:    return SemaTypeBuiltin.NULL;
+		case BYTE:    return SemaTypeBuiltin.BYTE;
 		case BOOL:    return SemaTypeBuiltin.BOOL;
+		case INT8:    return SemaTypeBuiltin.INT8;
+		case INT16:   return SemaTypeBuiltin.INT16;
+		case INT32:   return SemaTypeBuiltin.INT32;
+		case INT64:   return SemaTypeBuiltin.INT64;
+		case INT:     return SemaTypeBuiltin.INT;
+		case UINT8:   return SemaTypeBuiltin.UINT8;
+		case UINT16:  return SemaTypeBuiltin.UINT16;
+		case UINT32:  return SemaTypeBuiltin.UINT32;
+		case UINT64:  return SemaTypeBuiltin.UINT64;
+		case UINT:    return SemaTypeBuiltin.UINT;
 		case FLOAT32: return SemaTypeBuiltin.FLOAT32;
 		case FLOAT64: return SemaTypeBuiltin.FLOAT64;
+		case NULL:    return SemaTypeBuiltin.NULL;
 
 		default: break;
 		}

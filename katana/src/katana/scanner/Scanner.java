@@ -288,6 +288,7 @@ public class Scanner
 		case "until":  return Token.STMT_UNTIL;
 
 		case "void":    return Token.TYPE_VOID;
+		case "byte":    return Token.TYPE_BYTE;
 		case "bool":    return Token.TYPE_BOOL;
 		case "int8":    return Token.TYPE_INT8;
 		case "int16":   return Token.TYPE_INT16;
