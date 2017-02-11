@@ -29,6 +29,11 @@ public class TypeMangler implements IVisitor
 		return (String)type.accept(INSTANCE);
 	}
 
+	private String visit(SemaTypeArray array)
+	{
+		return String.format("array-%s-%s", array.length, mangle(array.type));
+	}
+
 	private String visit(SemaTypeBuiltin builtin)
 	{
 		return builtin.which.toString().toLowerCase();
@@ -39,9 +44,19 @@ public class TypeMangler implements IVisitor
 		return String.format("const-%s", mangle(const_.type));
 	}
 
-	private String visit(SemaTypeArray array)
+	private String visit(SemaTypeFunction function)
 	{
-		return String.format("array-%s-%s", array.length, mangle(array.type));
+		throw new AssertionError("unreachable");
+	}
+
+	private String visit(SemaTypeNonNullablePointer pointer)
+	{
+		return String.format("pointer-%s", mangle(pointer.type));
+	}
+
+	private String visit(SemaTypeNullablePointer pointer)
+	{
+		return String.format("npointer-%s", mangle(pointer.type));
 	}
 
 	private String visit(SemaTypeOpaque opaque)
@@ -54,18 +69,19 @@ public class TypeMangler implements IVisitor
 		return user.decl.qualifiedName().toString();
 	}
 
-	private String visit(SemaTypeFunction function)
+	private String visit(SemaTypeTuple tuple)
 	{
-		throw new AssertionError("unreachable");
-	}
+		StringBuilder builder = new StringBuilder();
+		builder.append("tuple-");
 
-	private String visit(SemaTypeNullablePointer pointer)
-	{
-		return String.format("npointer-%s", mangle(pointer.type));
-	}
+		builder.append(tuple.types.size());
 
-	private String visit(SemaTypeNonNullablePointer pointer)
-	{
-		return String.format("pointer-%s", mangle(pointer.type));
+		for(SemaType type : tuple.types)
+		{
+			builder.append('-');
+			builder.append(mangle(type));
+		}
+
+		return builder.toString();
 	}
 }
