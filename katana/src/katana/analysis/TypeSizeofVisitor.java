@@ -103,6 +103,11 @@ public class TypeSizeofVisitor implements IVisitor
 		return context.target().arch.pointerSize;
 	}
 
+	private BigInteger visit(SemaTypeTuple tuple)
+	{
+		return tuple.layout.sizeof();
+	}
+
 	private BigInteger visit(SemaTypeUserDefined userDefinedType)
 	{
 		return userDefinedType.decl.layout.sizeof();

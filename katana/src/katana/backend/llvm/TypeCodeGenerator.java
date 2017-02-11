@@ -122,4 +122,25 @@ public class TypeCodeGenerator implements IVisitor
 
 		return String.format("%s*", generate(type.type, context));
 	}
+
+	private String visit(SemaTypeTuple tuple)
+	{
+		StringBuilder builder = new StringBuilder();
+		builder.append('{');
+
+		if(!tuple.types.isEmpty())
+		{
+			builder.append(generate(tuple.types.get(0), context));
+
+			for(int i = 1; i != tuple.types.size(); ++i)
+			{
+				builder.append(", ");
+				builder.append(generate(tuple.types.get(i), context));
+			}
+		}
+
+		builder.append('}');
+
+		return builder.toString();
+	}
 }

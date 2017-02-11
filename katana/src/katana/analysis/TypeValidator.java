@@ -84,6 +84,21 @@ public class TypeValidator implements IVisitor
 		return new SemaTypeOpaque(opaque.size, opaque.alignment);
 	}
 
+	private SemaType visit(AstTypeTuple tuple)
+	{
+		StructLayoutBuilder builder = new StructLayoutBuilder(context);
+		List<SemaType> types = new ArrayList<>();
+
+		for(AstType type : tuple.types)
+		{
+			SemaType semaType = validate(type, scope, context, validateDecl);
+			types.add(semaType);
+			builder.appendField(semaType);
+		}
+
+		return new SemaTypeTuple(types, builder.build());
+	}
+
 	private SemaType visit(AstTypeArray array)
 	{
 		if(array.length.compareTo(BigInteger.ZERO) == -1)

@@ -42,6 +42,14 @@ public class TypeParser
 			return parseFunction(scanner, delayedExprs);
 		}
 
+		if(ParseTools.option(scanner, Token.Type.PUNCT_LBRACE, true))
+		{
+			if(const_)
+				throw new CompileException("forming type 'const tuple'");
+
+			return parseTuple(scanner, delayedExprs);
+		}
+
 		if(ParseTools.option(scanner, Token.Type.PUNCT_LBRACKET, true))
 		{
 			if(const_)
@@ -125,11 +133,26 @@ public class TypeParser
 		});
 	}
 
+	private static AstTypeTuple parseTuple(Scanner scanner, DelayedExprParseList delayedExprs)
+	{
+		if(ParseTools.option(scanner, Token.Type.PUNCT_RBRACE, true))
+			return new AstTypeTuple(new ArrayList<>());
+
+		List<AstType> types = new ArrayList<>();
+		types.add(parse(scanner, delayedExprs));
+
+		while(ParseTools.option(scanner, Token.Type.PUNCT_COMMA, true))
+			types.add(parse(scanner, delayedExprs));
+
+		ParseTools.expect(scanner, Token.Type.PUNCT_RBRACE, true);
+		return new AstTypeTuple(types);
+	}
+
 	private static AstTypeArray parseArray(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
 		String size = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT_DEDUCE).value;
 		ParseTools.expect(scanner, Token.Type.PUNCT_RBRACKET, true);
-		return new AstTypeArray(BigInteger.valueOf(Integer.parseInt(size)), TypeParser.parse(scanner, delayedExprs));
+		return new AstTypeArray(BigInteger.valueOf(Integer.parseInt(size)), parse(scanner, delayedExprs));
 	}
 
 	private static AstTypeOpaque parseOpaque(Scanner scanner)

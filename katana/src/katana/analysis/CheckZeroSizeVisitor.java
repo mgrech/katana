@@ -68,6 +68,15 @@ public class CheckZeroSizeVisitor implements IVisitor
 		return opaque.size.equals(BigInteger.ZERO);
 	}
 
+	private boolean visit(SemaTypeTuple tuple)
+	{
+		for(SemaType type : tuple.types)
+			if(!apply(type))
+				return false;
+
+		return true;
+	}
+
 	private boolean visit(SemaTypeUserDefined userDefined)
 	{
 		return Types.isZeroSized(userDefined.decl);

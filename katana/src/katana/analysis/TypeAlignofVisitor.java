@@ -82,6 +82,11 @@ public class TypeAlignofVisitor implements IVisitor
 		return context.target().arch.pointerAlign;
 	}
 
+	private BigInteger visit(SemaTypeTuple tuple)
+	{
+		return tuple.layout.alignof();
+	}
+
 	private BigInteger visit(SemaTypeUserDefined userDefinedType)
 	{
 		return userDefinedType.decl.layout.alignof();
