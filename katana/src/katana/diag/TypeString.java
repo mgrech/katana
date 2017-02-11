@@ -31,7 +31,7 @@ public class TypeString implements IVisitor
 		return (String)type.accept(INSTANCE);
 	}
 
-	private String visit(SemaTypeUserDefined type)
+	private String visit(SemaTypeStruct type)
 	{
 		return type.decl.qualifiedName().toString();
 	}

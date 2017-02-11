@@ -94,7 +94,7 @@ public class DeclIfaceValidator implements IVisitor
 			SemaType paramTypeA = Types.removeConst(a.params.get(i).type);
 			SemaType paramTypeB = Types.removeConst(b.params.get(i).type);
 
-			if(!SemaType.same(paramTypeA, paramTypeB))
+			if(!Types.equal(paramTypeA, paramTypeB))
 				return false;
 		}
 
@@ -150,7 +150,7 @@ public class DeclIfaceValidator implements IVisitor
 		SemaType globalType = maybeDeclaredType.or(initTypeNoConst);
 		SemaType globalTypeNoConst = Types.removeConst(globalType);
 
-		if(!SemaType.same(globalTypeNoConst, initTypeNoConst))
+		if(!Types.equal(globalTypeNoConst, initTypeNoConst))
 		{
 			String fmt = "initializer for global '%s' has wrong type: expected '%s', got '%s'";
 			throw new CompileException(String.format(fmt, semaGlobal.name(), TypeString.of(globalTypeNoConst), TypeString.of(initTypeNoConst)));

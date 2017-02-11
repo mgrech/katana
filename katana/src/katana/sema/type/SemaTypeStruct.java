@@ -16,17 +16,11 @@ package katana.sema.type;
 
 import katana.sema.decl.SemaDeclStruct;
 
-public class SemaTypeUserDefined extends SemaType
+public class SemaTypeStruct extends SemaType
 {
-	public SemaTypeUserDefined(SemaDeclStruct decl)
+	public SemaTypeStruct(SemaDeclStruct decl)
 	{
 		this.decl = decl;
-	}
-
-	@Override
-	protected boolean same(SemaType other)
-	{
-		return decl == ((SemaTypeUserDefined)other).decl;
 	}
 
 	public SemaDeclStruct decl;

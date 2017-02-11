@@ -75,7 +75,7 @@ public class CastValidator
 		if(!sourceIsPointer && !sourceIsPointerInteger || !targetIsPointer && !targetIsPointerInteger)
 			return false;
 
-		if(SemaType.same(Types.removeConst(sourceType), Types.removeConst(targetType)))
+		if(Types.equal(Types.removeConst(sourceType), Types.removeConst(targetType)))
 			return true;
 
 		return sourceIsPointer != targetIsPointer;

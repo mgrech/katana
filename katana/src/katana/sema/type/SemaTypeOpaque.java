@@ -24,13 +24,6 @@ public class SemaTypeOpaque extends SemaType
 		this.alignment = alignment;
 	}
 
-	@Override
-	protected boolean same(SemaType other)
-	{
-		SemaTypeOpaque o = (SemaTypeOpaque)other;
-		return size.equals(o.size) && alignment.equals(o.alignment);
-	}
-
 	public BigInteger size;
 	public BigInteger alignment;
 }

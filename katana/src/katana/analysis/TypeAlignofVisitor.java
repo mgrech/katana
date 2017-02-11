@@ -87,7 +87,7 @@ public class TypeAlignofVisitor implements IVisitor
 		return tuple.layout.alignof();
 	}
 
-	private BigInteger visit(SemaTypeUserDefined userDefinedType)
+	private BigInteger visit(SemaTypeStruct userDefinedType)
 	{
 		return userDefinedType.decl.layout.alignof();
 	}

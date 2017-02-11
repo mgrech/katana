@@ -23,6 +23,11 @@ import java.math.BigInteger;
 
 public class Types
 {
+	public static boolean equal(SemaType left, SemaType right)
+	{
+		return TypesEqualVisitor.apply(left, right);
+	}
+
 	public static boolean isConst(SemaType type)
 	{
 		if(type instanceof SemaTypeArray)

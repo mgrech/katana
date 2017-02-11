@@ -77,7 +77,7 @@ public class CheckZeroSizeVisitor implements IVisitor
 		return true;
 	}
 
-	private boolean visit(SemaTypeUserDefined userDefined)
+	private boolean visit(SemaTypeStruct userDefined)
 	{
 		return Types.isZeroSized(userDefined.decl);
 	}

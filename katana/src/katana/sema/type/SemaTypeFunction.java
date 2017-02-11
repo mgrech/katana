@@ -14,7 +14,6 @@
 
 package katana.sema.type;
 
-import java.util.Iterator;
 import java.util.List;
 
 public class SemaTypeFunction extends SemaType
@@ -23,29 +22,6 @@ public class SemaTypeFunction extends SemaType
 	{
 		this.ret = ret;
 		this.params = params;
-	}
-
-	@Override
-	protected boolean same(SemaType other)
-	{
-		SemaTypeFunction o = (SemaTypeFunction)other;
-
-		if(!SemaType.same(ret, o.ret))
-			return false;
-
-		if(params.size() != o.params.size())
-			return false;
-
-		for(Iterator<SemaType> it1 = params.iterator(), it2 = o.params.iterator(); it1.hasNext();)
-		{
-			SemaType t1 = it1.next();
-			SemaType t2 = it2.next();
-
-			if(!SemaType.same(t1, t2))
-				return false;
-		}
-
-		return true;
 	}
 
 	public SemaType ret;

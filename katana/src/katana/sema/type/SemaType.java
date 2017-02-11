@@ -18,13 +18,4 @@ import katana.visitor.IVisitable;
 
 public abstract class SemaType implements IVisitable
 {
-	protected abstract boolean same(SemaType other);
-
-	public static boolean same(SemaType first, SemaType second)
-	{
-		if(first.getClass() != second.getClass())
-			return false;
-
-		return first.same(second);
-	}
 }

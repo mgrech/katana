@@ -49,7 +49,7 @@ public class TypeMangler implements IVisitor
 		return String.format("opaque-%s-%s", opaque.size, opaque.alignment);
 	}
 
-	private String visit(SemaTypeUserDefined user)
+	private String visit(SemaTypeStruct user)
 	{
 		return user.decl.qualifiedName().toString();
 	}

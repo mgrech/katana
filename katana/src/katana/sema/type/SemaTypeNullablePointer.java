@@ -21,11 +21,5 @@ public class SemaTypeNullablePointer extends SemaType
 		this.type = type;
 	}
 
-	@Override
-	protected boolean same(SemaType other)
-	{
-		return SemaType.same(type, ((SemaTypeNullablePointer)other).type);
-	}
-
 	public SemaType type;
 }

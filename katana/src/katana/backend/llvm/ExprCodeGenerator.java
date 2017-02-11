@@ -221,7 +221,7 @@ public class ExprCodeGenerator implements IVisitor
 			break;
 
 		case POINTER_CAST:
-			if(SemaType.same(Types.removeConst(sourceType), Types.removeConst(targetType)))
+			if(Types.equal(Types.removeConst(sourceType), Types.removeConst(targetType)))
 			{
 				resultSsa = valueSsa;
 				break;

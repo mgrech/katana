@@ -24,13 +24,6 @@ public class SemaTypeArray extends SemaType
 		this.type = type;
 	}
 
-	@Override
-	protected boolean same(SemaType other)
-	{
-		SemaTypeArray o = (SemaTypeArray)other;
-		return length.equals(o.length) && SemaType.same(type, o.type);
-	}
-
 	public BigInteger length;
 	public SemaType type;
 }

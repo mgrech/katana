@@ -87,7 +87,7 @@ public class ExprValidator implements IVisitor
 			SemaType argType = it2.next().type();
 			SemaType argTypeNoConst = Types.removeConst(argType);
 
-			if(!SemaType.same(paramTypeNoConst, argTypeNoConst))
+			if(!Types.equal(paramTypeNoConst, argTypeNoConst))
 			{
 				String fmt = "type mismatch in argument %s: expected '%s', got '%s'";
 				throw new CompileException(String.format(fmt, argCount, TypeString.of(paramTypeNoConst), TypeString.of(argTypeNoConst)));
@@ -157,7 +157,7 @@ public class ExprValidator implements IVisitor
 
 		SemaType rightTypeNoConst = Types.removeConst(right.type());
 
-		if(!SemaType.same(leftTypeNoConst, rightTypeNoConst))
+		if(!Types.equal(leftTypeNoConst, rightTypeNoConst))
 		{
 			String fmt = "compatible types expected in assignment, got '%s' and '%s'";
 			throw new CompileException(String.format(fmt, TypeString.of(leftTypeNoConst), TypeString.of(rightTypeNoConst)));
@@ -238,7 +238,7 @@ public class ExprValidator implements IVisitor
 				SemaExpr arg = ExprValidator.validate(args.get(i), scope, context, validateDecl, Maybe.some(paramTypeNoConst));
 				SemaType argTypeNoConst = Types.removeConst(arg.type());
 
-				if(!SemaType.same(paramTypeNoConst, argTypeNoConst))
+				if(!Types.equal(paramTypeNoConst, argTypeNoConst))
 					failed = true;
 
 				result.add(Maybe.some(arg));
@@ -458,7 +458,7 @@ public class ExprValidator implements IVisitor
 			SemaExpr semaExpr = validate(lit.values.get(i), scope, context, validateDecl, maybeType);
 			SemaType elemTypeNoConst = Types.removeConst(semaExpr.type());
 
-			if(!SemaType.same(elemTypeNoConst, typeNoConst))
+			if(!Types.equal(elemTypeNoConst, typeNoConst))
 			{
 				String fmt = "element in array literal at index %s has type '%s', expected '%s'";
 				throw new CompileException(String.format(fmt, i, TypeString.of(elemTypeNoConst), TypeString.of(typeNoConst)));
@@ -596,10 +596,10 @@ public class ExprValidator implements IVisitor
 		SemaType type = expr.type();
 		SemaType typeNoConst = Types.removeConst(type);
 
-		if(!(typeNoConst instanceof SemaTypeUserDefined))
+		if(!(typeNoConst instanceof SemaTypeStruct))
 			errorNoSuchField(type, memberAccess.name);
 
-		SemaDeclStruct struct = ((SemaTypeUserDefined)typeNoConst).decl;
+		SemaDeclStruct struct = ((SemaTypeStruct)typeNoConst).decl;
 		Maybe<SemaDeclStruct.Field> field = struct.findField(memberAccess.name);
 
 		if(field.isNone())
@@ -694,7 +694,7 @@ public class ExprValidator implements IVisitor
 		Maybe<SemaDeclStruct.Field> field = ((SemaDeclStruct)symbol).findField(offsetof.field);
 
 		if(field.isNone())
-			errorNoSuchField(new SemaTypeUserDefined((SemaDeclStruct)symbol), offsetof.field);
+			errorNoSuchField(new SemaTypeStruct((SemaDeclStruct)symbol), offsetof.field);
 
 		return new SemaExprOffsetof(field.unwrap());
 	}

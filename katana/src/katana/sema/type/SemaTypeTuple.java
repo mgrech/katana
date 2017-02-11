@@ -28,22 +28,4 @@ public class SemaTypeTuple extends SemaType
 		this.types = types;
 		this.layout = layout;
 	}
-
-	@Override
-	protected boolean same(SemaType other)
-	{
-		if(!(other instanceof SemaTypeTuple))
-			return false;
-
-		SemaTypeTuple o = (SemaTypeTuple)other;
-
-		if(types.size() != o.types.size())
-			return false;
-
-		for(int i = 0; i != types.size(); ++i)
-			if(!types.get(i).same(o.types.get(i)))
-				return false;
-
-		return true;
-	}
 }

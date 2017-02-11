@@ -137,7 +137,7 @@ public class TypeValidator implements IVisitor
 			return ((SemaDeclTypeAlias)symbol).type;
 
 		if(symbol instanceof SemaDeclStruct)
-			return new SemaTypeUserDefined((SemaDeclStruct)symbol);
+			return new SemaTypeStruct((SemaDeclStruct)symbol);
 
 		throw new CompileException(String.format("symbol '%s' does not refer to a type", symbol.name()));
 	}

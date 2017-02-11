@@ -21,11 +21,5 @@ public class SemaTypeConst extends SemaType
 		this.type = type;
 	}
 
-	@Override
-	protected boolean same(SemaType other)
-	{
-		return SemaType.same(type, ((SemaTypeConst)other).type);
-	}
-
 	public SemaType type;
 }

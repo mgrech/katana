@@ -160,7 +160,7 @@ public class StmtValidator implements IVisitor
 		SemaType type = value.unwrap().type();
 		SemaType typeNoConst = Types.removeConst(type);
 
-		if(!SemaType.same(retTypeNoConst, typeNoConst))
+		if(!Types.equal(retTypeNoConst, typeNoConst))
 		{
 			String fmt = "function '%s' returns value of type '%s', '%s' given";
 			throw new CompileException(String.format(fmt, function.qualifiedName(), TypeString.of(retTypeNoConst), TypeString.of(typeNoConst)));
@@ -196,7 +196,7 @@ public class StmtValidator implements IVisitor
 		SemaType localType = maybeDeclaredType.or(initTypeNoConst);
 		SemaType localTypeNoConst = Types.removeConst(localType);
 
-		if(!SemaType.same(localTypeNoConst, initTypeNoConst))
+		if(!Types.equal(localTypeNoConst, initTypeNoConst))
 		{
 			String fmt = "initializer for local '%s' has wrong type: expected '%s', got '%s'";
 			throw new CompileException(String.format(fmt, local.name, TypeString.of(localTypeNoConst), TypeString.of(initTypeNoConst)));

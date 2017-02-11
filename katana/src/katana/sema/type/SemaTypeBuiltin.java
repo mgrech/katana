@@ -40,11 +40,5 @@ public class SemaTypeBuiltin extends SemaType
 		this.which = which;
 	}
 
-	@Override
-	protected boolean same(SemaType other)
-	{
-		return which == ((SemaTypeBuiltin)other).which;
-	}
-
 	public final BuiltinType which;
 }

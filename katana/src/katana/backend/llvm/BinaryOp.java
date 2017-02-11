@@ -78,7 +78,7 @@ public class BinaryOp extends BuiltinFunc
 
 		SemaType argType = Types.removeConst(args.get(0));
 
-		if(!SemaType.same(argType, Types.removeConst(args.get(1))))
+		if(!Types.equal(argType, Types.removeConst(args.get(1))))
 			throw new CompileException(String.format("arguments to builtin %s must be of same type", name));
 
 		if(!(argType instanceof SemaTypeBuiltin))
