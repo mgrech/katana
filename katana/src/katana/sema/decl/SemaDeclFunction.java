@@ -46,6 +46,12 @@ public abstract class SemaDeclFunction extends SemaDecl
 		public int index;
 	}
 
+	private String name;
+	public List<Param> params = new ArrayList<>();
+	public Map<String, Param> paramsByName = new TreeMap<>();
+	public SemaType ret;
+	public SemaScopeFunction scope;
+
 	protected SemaDeclFunction(SemaModule module, boolean exported, boolean opaque, String name)
 	{
 		super(module, exported, opaque);
@@ -68,10 +74,4 @@ public abstract class SemaDeclFunction extends SemaDecl
 		paramsByName.put(name, param);
 		return true;
 	}
-
-	private String name;
-	public List<Param> params = new ArrayList<>();
-	public Map<String, Param> paramsByName = new TreeMap<>();
-	public SemaType ret;
-	public SemaScopeFunction scope;
 }

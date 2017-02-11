@@ -18,11 +18,11 @@ import katana.ast.AstPath;
 
 public class AstDeclModule extends AstDecl
 {
+	public AstPath path;
+
 	public AstDeclModule(AstPath path)
 	{
 		super(false, false);
 		this.path = path;
 	}
-
-	public AstPath path;
 }

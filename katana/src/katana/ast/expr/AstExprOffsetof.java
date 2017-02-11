@@ -16,12 +16,12 @@ package katana.ast.expr;
 
 public class AstExprOffsetof extends AstExpr
 {
+	public String type;
+	public String field;
+
 	public AstExprOffsetof(String type, String field)
 	{
 		this.type = type;
 		this.field = field;
 	}
-
-	public String type;
-	public String field;
 }

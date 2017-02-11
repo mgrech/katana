@@ -44,10 +44,10 @@ public enum BuiltinType
 		NULL,
 	}
 
+	public final Kind kind;
+
 	BuiltinType(Kind kind)
 	{
 		this.kind = kind;
 	}
-
-	public final Kind kind;
 }

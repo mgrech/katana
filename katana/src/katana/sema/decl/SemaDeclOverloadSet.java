@@ -21,6 +21,9 @@ import java.util.List;
 
 public class SemaDeclOverloadSet extends SemaDecl
 {
+	public String name;
+	public List<SemaDeclFunction> overloads = new ArrayList<>();
+
 	public SemaDeclOverloadSet(SemaModule module, String name)
 	{
 		super(module, false, false);
@@ -32,7 +35,4 @@ public class SemaDeclOverloadSet extends SemaDecl
 	{
 		return name;
 	}
-
-	public String name;
-	public List<SemaDeclFunction> overloads = new ArrayList<>();
 }

@@ -19,6 +19,8 @@ import katana.sema.type.SemaType;
 
 public class SemaExprNamedLocal extends SemaExprSimpleLValueExpr
 {
+	public SemaDeclDefinedFunction.Local local;
+
 	public SemaExprNamedLocal(SemaDeclDefinedFunction.Local local)
 	{
 		this.local = local;
@@ -29,6 +31,4 @@ public class SemaExprNamedLocal extends SemaExprSimpleLValueExpr
 	{
 		return local.type;
 	}
-
-	public SemaDeclDefinedFunction.Local local;
 }

@@ -21,12 +21,12 @@ import java.math.BigInteger;
 
 public class AstExprLitInt extends AstExprLiteral
 {
+	public BigInteger value;
+	public Maybe<BuiltinType> type;
+
 	public AstExprLitInt(BigInteger value, Maybe<BuiltinType> type)
 	{
 		this.value = value;
 		this.type = type;
 	}
-
-	public BigInteger value;
-	public Maybe<BuiltinType> type;
 }

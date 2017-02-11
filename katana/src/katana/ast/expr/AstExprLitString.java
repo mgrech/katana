@@ -16,10 +16,10 @@ package katana.ast.expr;
 
 public class AstExprLitString extends AstExprLiteral
 {
+	public String value;
+
 	public AstExprLitString(String value)
 	{
 		this.value = value;
 	}
-
-	public String value;
 }

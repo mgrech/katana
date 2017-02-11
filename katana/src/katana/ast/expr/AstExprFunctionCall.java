@@ -20,14 +20,14 @@ import java.util.List;
 
 public class AstExprFunctionCall extends AstExpr
 {
+	public AstExpr expr;
+	public List<AstExpr> args;
+	public Maybe<Boolean> inline;
+
 	public AstExprFunctionCall(AstExpr expr, List<AstExpr> args, Maybe<Boolean> inline)
 	{
 		this.expr = expr;
 		this.args = args;
 		this.inline = inline;
 	}
-
-	public AstExpr expr;
-	public List<AstExpr> args;
-	public Maybe<Boolean> inline;
 }

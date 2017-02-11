@@ -22,7 +22,7 @@ public class ScannerState implements Cloneable
 	public int currentColumn = 1;
 	public int tokenColumn = 1;
 
-	public Token token = Token.BEGIN;
+	public Token token = Tokens.BEGIN;
 
 	public ScannerState() {}
 

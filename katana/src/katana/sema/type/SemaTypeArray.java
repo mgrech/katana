@@ -18,12 +18,12 @@ import java.math.BigInteger;
 
 public class SemaTypeArray extends SemaType
 {
+	public BigInteger length;
+	public SemaType type;
+
 	public SemaTypeArray(BigInteger length, SemaType type)
 	{
 		this.length = length;
 		this.type = type;
 	}
-
-	public BigInteger length;
-	public SemaType type;
 }

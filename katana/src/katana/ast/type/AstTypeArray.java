@@ -18,12 +18,12 @@ import java.math.BigInteger;
 
 public class AstTypeArray extends AstType
 {
+	public BigInteger length;
+	public AstType type;
+
 	public AstTypeArray(BigInteger length, AstType type)
 	{
 		this.length = length;
 		this.type = type;
 	}
-
-	public BigInteger length;
-	public AstType type;
 }

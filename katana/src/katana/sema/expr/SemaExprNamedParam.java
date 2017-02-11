@@ -19,6 +19,8 @@ import katana.sema.type.SemaType;
 
 public class SemaExprNamedParam extends SemaExprSimpleLValueExpr
 {
+	public SemaDeclFunction.Param param;
+
 	public SemaExprNamedParam(SemaDeclFunction.Param param)
 	{
 		this.param = param;
@@ -29,6 +31,4 @@ public class SemaExprNamedParam extends SemaExprSimpleLValueExpr
 	{
 		return param.type;
 	}
-
-	public SemaDeclFunction.Param param;
 }

@@ -21,12 +21,12 @@ import java.math.BigDecimal;
 
 public class AstExprLitFloat extends AstExprLiteral
 {
+	public BigDecimal value;
+	public Maybe<BuiltinType> type;
+
 	public AstExprLitFloat(BigDecimal value, Maybe<BuiltinType> type)
 	{
 		this.value = value;
 		this.type = type;
 	}
-
-	public BigDecimal value;
-	public Maybe<BuiltinType> type;
 }

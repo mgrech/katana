@@ -22,6 +22,10 @@ import java.util.List;
 
 public class SemaExprDirectFunctionCall implements SemaExpr
 {
+	public SemaDeclFunction function;
+	public List<SemaExpr> args;
+	public Maybe<Boolean> inline;
+
 	public SemaExprDirectFunctionCall(SemaDeclFunction function, List<SemaExpr> args, Maybe<Boolean> inline)
 	{
 		this.function = function;
@@ -34,8 +38,4 @@ public class SemaExprDirectFunctionCall implements SemaExpr
 	{
 		return function.ret;
 	}
-
-	public SemaDeclFunction function;
-	public List<SemaExpr> args;
-	public Maybe<Boolean> inline;
 }

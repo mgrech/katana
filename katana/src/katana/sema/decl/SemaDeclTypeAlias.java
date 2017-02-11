@@ -20,6 +20,9 @@ import katana.sema.type.SemaType;
 
 public class SemaDeclTypeAlias extends SemaDecl implements SemaSymbol
 {
+	public String name;
+	public SemaType type;
+
 	public SemaDeclTypeAlias(SemaModule module, boolean exported, String name)
 	{
 		super(module, exported, false);
@@ -31,7 +34,4 @@ public class SemaDeclTypeAlias extends SemaDecl implements SemaSymbol
 	{
 		return name;
 	}
-
-	public String name;
-	public SemaType type;
 }

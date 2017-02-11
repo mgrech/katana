@@ -18,10 +18,10 @@ import katana.ast.expr.AstExpr;
 
 public class AstStmtExprStmt extends AstStmt
 {
+	public AstExpr expr;
+
 	public AstStmtExprStmt(AstExpr expr)
 	{
 		this.expr = expr;
 	}
-
-	public AstExpr expr;
 }

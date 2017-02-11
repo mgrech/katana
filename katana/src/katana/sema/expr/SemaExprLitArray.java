@@ -23,6 +23,10 @@ import java.util.List;
 
 public class SemaExprLitArray implements SemaExprLiteral
 {
+	public final BigInteger length;
+	public final SemaType type;
+	public final List<SemaExpr> values;
+
 	public SemaExprLitArray(BigInteger length, SemaType type, List<SemaExpr> values)
 	{
 		this.length = length;
@@ -35,8 +39,4 @@ public class SemaExprLitArray implements SemaExprLiteral
 	{
 		return new SemaTypeArray(length, Types.addConst(type));
 	}
-
-	public final BigInteger length;
-	public final SemaType type;
-	public final List<SemaExpr> values;
 }

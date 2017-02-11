@@ -21,6 +21,10 @@ import java.util.Map;
 
 public class SemaDeclRenamedImport extends SemaDecl
 {
+	public SemaModule module;
+	public String rename;
+	public Map<String, SemaDecl> decls = new HashMap<>();
+
 	public SemaDeclRenamedImport(SemaModule module, String rename)
 	{
 		super(null, false, false);
@@ -33,8 +37,4 @@ public class SemaDeclRenamedImport extends SemaDecl
 	{
 		return rename;
 	}
-
-	public SemaModule module;
-	public String rename;
-	public Map<String, SemaDecl> decls = new HashMap<>();
 }

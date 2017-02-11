@@ -19,6 +19,8 @@ import katana.sema.type.SemaType;
 
 public class SsaExpr implements SemaExpr
 {
+	public final String name;
+
 	public SsaExpr(String name)
 	{
 		this.name = name;
@@ -29,6 +31,4 @@ public class SsaExpr implements SemaExpr
 	{
 		throw new AssertionError("unreachable");
 	}
-
-	public String name;
 }

@@ -21,6 +21,10 @@ import katana.utils.Maybe;
 
 public class SemaDeclGlobal extends SemaDecl
 {
+	public String name;
+	public SemaType type;
+	public Maybe<SemaExprLiteral> init;
+
 	public SemaDeclGlobal(SemaModule module, boolean exported, boolean opaque, String name)
 	{
 		super(module, exported, opaque);
@@ -32,8 +36,4 @@ public class SemaDeclGlobal extends SemaDecl
 	{
 		return name;
 	}
-
-	public String name;
-	public SemaType type;
-	public Maybe<SemaExprLiteral> init;
 }

@@ -16,12 +16,12 @@ package katana.ast.expr;
 
 public class AstExprArrayAccess extends AstExpr
 {
+	public AstExpr value;
+	public AstExpr index;
+
 	public AstExprArrayAccess(AstExpr value, AstExpr index)
 	{
 		this.value = value;
 		this.index = index;
 	}
-
-	public AstExpr value;
-	public AstExpr index;
 }

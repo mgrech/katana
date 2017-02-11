@@ -16,10 +16,10 @@ package katana.sema.stmt;
 
 public class SemaStmtLabel extends SemaStmt
 {
+	public String name;
+
 	public SemaStmtLabel(String name)
 	{
 		this.name = name;
 	}
-
-	public String name;
 }

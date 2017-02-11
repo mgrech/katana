@@ -18,6 +18,9 @@ import katana.sema.type.SemaType;
 
 public class SemaExprImplicitConversionPointerToBytePointer implements SemaExpr
 {
+	public SemaExpr expr;
+	public SemaType type;
+
 	public SemaExprImplicitConversionPointerToBytePointer(SemaExpr expr, SemaType type)
 	{
 		this.expr = expr;
@@ -29,7 +32,4 @@ public class SemaExprImplicitConversionPointerToBytePointer implements SemaExpr
 	{
 		return type;
 	}
-
-	public SemaExpr expr;
-	public SemaType type;
 }

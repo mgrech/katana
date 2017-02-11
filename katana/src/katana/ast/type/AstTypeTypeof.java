@@ -18,10 +18,10 @@ import katana.ast.expr.AstExpr;
 
 public class AstTypeTypeof extends AstType
 {
+	public AstExpr expr;
+
 	public AstTypeTypeof(AstExpr expr)
 	{
 		this.expr = expr;
 	}
-
-	public AstExpr expr;
 }

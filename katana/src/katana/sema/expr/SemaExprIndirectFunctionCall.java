@@ -21,6 +21,9 @@ import java.util.List;
 
 public class SemaExprIndirectFunctionCall implements SemaExpr
 {
+	public SemaExpr expr;
+	public List<SemaExpr> args;
+
 	public SemaExprIndirectFunctionCall(SemaExpr expr, List<SemaExpr> args)
 	{
 		this.expr = expr;
@@ -32,7 +35,4 @@ public class SemaExprIndirectFunctionCall implements SemaExpr
 	{
 		return ((SemaTypeFunction)expr.type()).ret;
 	}
-
-	public SemaExpr expr;
-	public List<SemaExpr> args;
 }

@@ -18,12 +18,12 @@ import java.util.List;
 
 public class AstExprBuiltinCall extends AstExpr
 {
+	public String name;
+	public List<AstExpr> args;
+
 	public AstExprBuiltinCall(String name, List<AstExpr> args)
 	{
 		this.name = name;
 		this.args = args;
 	}
-
-	public String name;
-	public List<AstExpr> args;
 }

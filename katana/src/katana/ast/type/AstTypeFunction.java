@@ -20,12 +20,12 @@ import java.util.List;
 
 public class AstTypeFunction extends AstType
 {
+	public Maybe<AstType> ret;
+	public List<AstType> params;
+
 	public AstTypeFunction(Maybe<AstType> ret, List<AstType> params)
 	{
 		this.ret = ret;
 		this.params = params;
 	}
-
-	public Maybe<AstType> ret;
-	public List<AstType> params;
 }

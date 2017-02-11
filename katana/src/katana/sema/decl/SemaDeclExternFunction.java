@@ -19,11 +19,11 @@ import katana.utils.Maybe;
 
 public class SemaDeclExternFunction extends SemaDeclFunction
 {
+	public Maybe<String> externName;
+
 	public SemaDeclExternFunction(SemaModule module, boolean exported, boolean opaque, Maybe<String> externName, String name)
 	{
 		super(module, exported, opaque, name);
 		this.externName = externName;
 	}
-
-	public Maybe<String> externName;
 }

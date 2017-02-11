@@ -16,10 +16,10 @@ package katana.ast.type;
 
 public class AstTypeUserDefined extends AstType
 {
+	public String name;
+
 	public AstTypeUserDefined(String name)
 	{
 		this.name = name;
 	}
-
-	public String name;
 }

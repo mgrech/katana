@@ -19,10 +19,10 @@ import katana.utils.Maybe;
 
 public class AstStmtReturn extends AstStmt
 {
+	public Maybe<AstExpr> value;
+
 	public AstStmtReturn(Maybe<AstExpr> value)
 	{
 		this.value = value;
 	}
-
-	public Maybe<AstExpr> value;
 }

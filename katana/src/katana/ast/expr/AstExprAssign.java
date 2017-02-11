@@ -16,12 +16,12 @@ package katana.ast.expr;
 
 public class AstExprAssign extends AstExpr
 {
+	public AstExpr left;
+	public AstExpr right;
+
 	public AstExprAssign(AstExpr left, AstExpr right)
 	{
 		this.left = left;
 		this.right = right;
 	}
-
-	public AstExpr left;
-	public AstExpr right;
 }

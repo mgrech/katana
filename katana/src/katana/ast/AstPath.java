@@ -20,6 +20,8 @@ import java.util.List;
 
 public class AstPath
 {
+	public List<String> components;
+
 	public AstPath()
 	{
 		this.components = new ArrayList<>();
@@ -34,8 +36,6 @@ public class AstPath
 	{
 		this.components = components;
 	}
-
-	public List<String> components;
 
 	public static AstPath fromString(String s)
 	{

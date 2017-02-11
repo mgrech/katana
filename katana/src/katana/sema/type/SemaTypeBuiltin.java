@@ -35,10 +35,10 @@ public class SemaTypeBuiltin extends SemaType
 	public static final SemaTypeBuiltin FLOAT64 = new SemaTypeBuiltin(BuiltinType.FLOAT64);
 	public static final SemaTypeBuiltin NULL    = new SemaTypeBuiltin(BuiltinType.NULL);
 
+	public final BuiltinType which;
+
 	public SemaTypeBuiltin(BuiltinType which)
 	{
 		this.which = which;
 	}
-
-	public final BuiltinType which;
 }

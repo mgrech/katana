@@ -16,10 +16,10 @@ package katana.sema.type;
 
 public class SemaTypeConst extends SemaType
 {
+	public SemaType type;
+
 	public SemaTypeConst(SemaType type)
 	{
 		this.type = type;
 	}
-
-	public SemaType type;
 }

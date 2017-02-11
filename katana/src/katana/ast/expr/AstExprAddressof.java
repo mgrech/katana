@@ -16,10 +16,10 @@ package katana.ast.expr;
 
 public class AstExprAddressof extends AstExpr
 {
+	public AstExpr expr;
+
 	public AstExprAddressof(AstExpr expr)
 	{
 		this.expr = expr;
 	}
-
-	public AstExpr expr;
 }

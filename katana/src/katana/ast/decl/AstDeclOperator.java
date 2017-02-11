@@ -18,11 +18,11 @@ import katana.op.Operator;
 
 public class AstDeclOperator extends AstDecl
 {
+	public Operator operator;
+
 	public AstDeclOperator(boolean exported, Operator operator)
 	{
 		super(exported, false);
 		this.operator = operator;
 	}
-
-	public Operator operator;
 }

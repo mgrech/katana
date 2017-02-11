@@ -17,8 +17,8 @@ package katana.platform;
 public enum Environment
 {
 	UNKNOWN("unknown"),
-	GNU("gnu"),
-	MSVC("msvc");
+	GNU    ("gnu"),
+	MSVC   ("msvc");
 
 	private final String value;
 

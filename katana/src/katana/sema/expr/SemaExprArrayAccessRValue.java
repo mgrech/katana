@@ -19,6 +19,9 @@ import katana.sema.type.SemaTypeArray;
 
 public class SemaExprArrayAccessRValue implements SemaExpr
 {
+	public SemaExpr expr;
+	public SemaExpr index;
+
 	public SemaExprArrayAccessRValue(SemaExpr expr, SemaExpr index)
 	{
 		this.expr = expr;
@@ -30,7 +33,4 @@ public class SemaExprArrayAccessRValue implements SemaExpr
 	{
 		return ((SemaTypeArray)(expr.type())).type;
 	}
-
-	public SemaExpr expr;
-	public SemaExpr index;
 }

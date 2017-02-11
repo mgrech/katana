@@ -21,6 +21,10 @@ import java.util.List;
 
 public class SemaExprBuiltinCall implements SemaExpr
 {
+	public BuiltinFunc func;
+	public List<SemaExpr> args;
+	public SemaType ret;
+
 	public SemaExprBuiltinCall(BuiltinFunc func, List<SemaExpr> args, SemaType ret)
 	{
 		this.func = func;
@@ -33,8 +37,4 @@ public class SemaExprBuiltinCall implements SemaExpr
 	{
 		return ret;
 	}
-
-	public BuiltinFunc func;
-	public List<SemaExpr> args;
-	public SemaType ret;
 }

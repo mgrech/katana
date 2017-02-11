@@ -23,6 +23,12 @@ import java.util.TreeMap;
 
 public class SemaModule implements SemaSymbol
 {
+	private String name;
+	private AstPath path;
+	private SemaModule parent;
+	private Map<String, SemaModule> children = new TreeMap<>();
+	private Map<String, SemaDecl> decls = new TreeMap<>();
+
 	public SemaModule(String name, AstPath path, SemaModule parent)
 	{
 		this.name = name;
@@ -95,10 +101,4 @@ public class SemaModule implements SemaSymbol
 	{
 		return name;
 	}
-
-	private String name;
-	private AstPath path;
-	private SemaModule parent;
-	private Map<String, SemaModule> children = new TreeMap<>();
-	private Map<String, SemaDecl> decls = new TreeMap<>();
 }

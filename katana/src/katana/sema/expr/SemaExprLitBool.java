@@ -22,6 +22,8 @@ public class SemaExprLitBool implements SemaExprLiteral
 {
 	private static final SemaType TYPE = new SemaTypeConst(SemaTypeBuiltin.BOOL);
 
+	public boolean value;
+
 	public SemaExprLitBool(boolean value)
 	{
 		this.value = value;
@@ -32,6 +34,4 @@ public class SemaExprLitBool implements SemaExprLiteral
 	{
 		return TYPE;
 	}
-
-	public boolean value;
 }

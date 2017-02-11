@@ -18,12 +18,12 @@ import java.math.BigInteger;
 
 public class AstTypeOpaque extends AstType
 {
+	public BigInteger size;
+	public BigInteger alignment;
+
 	public AstTypeOpaque(BigInteger size, BigInteger alignment)
 	{
 		this.size = size;
 		this.alignment = alignment;
 	}
-
-	public BigInteger size;
-	public BigInteger alignment;
 }

@@ -16,10 +16,10 @@ package katana.sema.stmt;
 
 public class SemaStmtGoto extends SemaStmt
 {
+	public SemaStmtLabel target;
+
 	public SemaStmtGoto(SemaStmtLabel target)
 	{
 		this.target = target;
 	}
-
-	public SemaStmtLabel target;
 }

@@ -27,6 +27,12 @@ import java.util.List;
 
 public class BinaryOp extends BuiltinFunc
 {
+	private Maybe<String> boolInstr;
+	private Maybe<String> sintInstr;
+	private Maybe<String> uintInstr;
+	private Maybe<String> floatInstr;
+	private Maybe<SemaType> ret;
+
 	public BinaryOp(String name, Maybe<String> boolInstr, Maybe<String> sintInstr, Maybe<String> uintInstr, Maybe<String> floatInstr, Maybe<SemaType> ret)
 	{
 		super(name);
@@ -114,10 +120,4 @@ public class BinaryOp extends BuiltinFunc
 		context.writef("\t%s = %s %s %s, %s\n", resultSsa, instr, typeString, leftSsa, rightSsa);
 		return Maybe.some(resultSsa);
 	}
-
-	private Maybe<String> boolInstr;
-	private Maybe<String> sintInstr;
-	private Maybe<String> uintInstr;
-	private Maybe<String> floatInstr;
-	private Maybe<SemaType> ret;
 }

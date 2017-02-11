@@ -19,6 +19,8 @@ import katana.sema.type.SemaType;
 
 public class SemaExprNamedOverloadSet implements SemaExpr
 {
+	public SemaDeclOverloadSet set;
+
 	public SemaExprNamedOverloadSet(SemaDeclOverloadSet set)
 	{
 		this.set = set;
@@ -29,6 +31,4 @@ public class SemaExprNamedOverloadSet implements SemaExpr
 	{
 		throw new AssertionError("typeof on NamedOverloadSet");
 	}
-
-	public SemaDeclOverloadSet set;
 }

@@ -18,11 +18,11 @@ import katana.ast.AstPath;
 
 public class AstDeclRenamedImport extends AstDeclImport
 {
+	public String rename;
+
 	public AstDeclRenamedImport(AstPath path, String rename)
 	{
 		super(path);
 		this.rename = rename;
 	}
-
-	public String rename;
 }

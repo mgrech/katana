@@ -18,10 +18,10 @@ import katana.sema.expr.SemaExpr;
 
 public class SemaStmtExprStmt extends SemaStmt
 {
+	public SemaExpr expr;
+
 	public SemaStmtExprStmt(SemaExpr expr)
 	{
 		this.expr = expr;
 	}
-
-	public SemaExpr expr;
 }

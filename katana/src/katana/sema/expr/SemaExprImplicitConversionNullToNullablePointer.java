@@ -18,6 +18,8 @@ import katana.sema.type.SemaType;
 
 public class SemaExprImplicitConversionNullToNullablePointer implements SemaExpr
 {
+	public final SemaType type;
+
 	public SemaExprImplicitConversionNullToNullablePointer(SemaType type)
 	{
 		this.type = type;
@@ -28,6 +30,4 @@ public class SemaExprImplicitConversionNullToNullablePointer implements SemaExpr
 	{
 		return type;
 	}
-
-	public final SemaType type;
 }

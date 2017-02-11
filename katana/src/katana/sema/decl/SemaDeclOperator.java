@@ -19,6 +19,8 @@ import katana.sema.SemaModule;
 
 public class SemaDeclOperator extends SemaDecl
 {
+	public Operator operator;
+
 	public SemaDeclOperator(SemaModule module, boolean exported, Operator operator)
 	{
 		super(module, exported, false);
@@ -30,6 +32,4 @@ public class SemaDeclOperator extends SemaDecl
 	{
 		return Operator.declName(operator.symbol, operator.kind);
 	}
-
-	public Operator operator;
 }

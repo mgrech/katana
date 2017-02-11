@@ -23,6 +23,8 @@ import java.util.List;
 
 public class SemaExprNamedFunc extends SemaExprSimpleLValueExpr
 {
+	public SemaDeclFunction func;
+
 	public SemaExprNamedFunc(SemaDeclFunction func)
 	{
 		this.func = func;
@@ -38,6 +40,4 @@ public class SemaExprNamedFunc extends SemaExprSimpleLValueExpr
 
 		return new SemaTypeFunction(func.ret, params);
 	}
-
-	public SemaDeclFunction func;
 }

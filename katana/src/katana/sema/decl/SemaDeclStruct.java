@@ -24,19 +24,6 @@ import java.util.*;
 
 public class SemaDeclStruct extends SemaDecl
 {
-	private String name;
-	public boolean abiCompat;
-	private final List<Field> fields = new ArrayList<>();
-	private final Map<String, Field> fieldsByName = new TreeMap<>();
-	public StructLayout layout;
-
-	public SemaDeclStruct(SemaModule module, boolean exported, boolean opaque, String name, boolean abiCompat)
-	{
-		super(module, exported, opaque);
-		this.name = name;
-		this.abiCompat = abiCompat;
-	}
-
 	public class Field
 	{
 		public Field(String name, SemaType type, int index)
@@ -59,6 +46,19 @@ public class SemaDeclStruct extends SemaDecl
 		public String name;
 		public SemaType type;
 		public int index;
+	}
+
+	private String name;
+	public boolean abiCompat;
+	private final List<Field> fields = new ArrayList<>();
+	private final Map<String, Field> fieldsByName = new TreeMap<>();
+	public StructLayout layout;
+
+	public SemaDeclStruct(SemaModule module, boolean exported, boolean opaque, String name, boolean abiCompat)
+	{
+		super(module, exported, opaque);
+		this.name = name;
+		this.abiCompat = abiCompat;
 	}
 
 	public boolean defineField(String name, SemaType type)

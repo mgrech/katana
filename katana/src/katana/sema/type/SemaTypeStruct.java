@@ -18,10 +18,10 @@ import katana.sema.decl.SemaDeclStruct;
 
 public class SemaTypeStruct extends SemaType
 {
+	public SemaDeclStruct decl;
+
 	public SemaTypeStruct(SemaDeclStruct decl)
 	{
 		this.decl = decl;
 	}
-
-	public SemaDeclStruct decl;
 }

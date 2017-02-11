@@ -19,6 +19,8 @@ import katana.sema.type.SemaType;
 
 public class SemaExprNamedRenamedImport implements SemaExpr
 {
+	public SemaDeclRenamedImport import_;
+
 	public SemaExprNamedRenamedImport(SemaDeclRenamedImport import_)
 	{
 		this.import_ = import_;
@@ -29,6 +31,4 @@ public class SemaExprNamedRenamedImport implements SemaExpr
 	{
 		throw new AssertionError("unreachable");
 	}
-
-	public SemaDeclRenamedImport import_;
 }

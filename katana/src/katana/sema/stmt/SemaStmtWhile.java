@@ -18,14 +18,14 @@ import katana.sema.expr.SemaExpr;
 
 public class SemaStmtWhile extends SemaStmt
 {
+	public boolean negated;
+	public SemaExpr condition;
+	public SemaStmt body;
+
 	public SemaStmtWhile(boolean negated, SemaExpr condition, SemaStmt body)
 	{
 		this.negated = negated;
 		this.condition = condition;
 		this.body = body;
 	}
-
-	public boolean negated;
-	public SemaExpr condition;
-	public SemaStmt body;
 }

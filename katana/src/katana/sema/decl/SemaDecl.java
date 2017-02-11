@@ -21,6 +21,10 @@ import katana.visitor.IVisitable;
 
 public abstract class SemaDecl implements SemaSymbol, IVisitable
 {
+	private SemaModule module;
+	public boolean exported;
+	public boolean opaque;
+
 	protected SemaDecl(SemaModule module, boolean exported, boolean opaque)
 	{
 		this.module = module;
@@ -40,8 +44,4 @@ public abstract class SemaDecl implements SemaSymbol, IVisitable
 	{
 		return module;
 	}
-
-	private SemaModule module;
-	public boolean exported;
-	public boolean opaque;
 }

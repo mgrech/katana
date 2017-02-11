@@ -23,6 +23,10 @@ import java.math.BigInteger;
 
 public class SemaExprLitInt implements SemaExprLiteral
 {
+	public final BigInteger value;
+	public final BuiltinType type;
+	private final transient SemaType cachedType;
+
 	public SemaExprLitInt(BigInteger value, BuiltinType type)
 	{
 		this.value = value;
@@ -55,8 +59,4 @@ public class SemaExprLitInt implements SemaExprLiteral
 	{
 		return cachedType;
 	}
-
-	public final BigInteger value;
-	public final BuiltinType type;
-	private final transient SemaType cachedType;
 }

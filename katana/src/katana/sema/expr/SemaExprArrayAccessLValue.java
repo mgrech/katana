@@ -19,6 +19,9 @@ import katana.sema.type.SemaTypeArray;
 
 public class SemaExprArrayAccessLValue extends SemaExprLValueExpr
 {
+	public SemaExprLValueExpr value;
+	public SemaExpr index;
+
 	public SemaExprArrayAccessLValue(SemaExprLValueExpr value, SemaExpr index)
 	{
 		this.value = value;
@@ -42,7 +45,4 @@ public class SemaExprArrayAccessLValue extends SemaExprLValueExpr
 	{
 		return ((SemaTypeArray)value.type()).type;
 	}
-
-	public SemaExprLValueExpr value;
-	public SemaExpr index;
 }

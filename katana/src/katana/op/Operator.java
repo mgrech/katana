@@ -16,6 +16,11 @@ package katana.op;
 
 public class Operator
 {
+	public String symbol;
+	public Kind kind;
+	public Associativity associativity;
+	public int precedence;
+
 	private Operator(String symbol, Kind kind, Associativity associativity, int precedence)
 	{
 		this.symbol = symbol;
@@ -48,9 +53,4 @@ public class Operator
 	{
 		return String.format("%s %s", kind.toString().toLowerCase(), op);
 	}
-
-	public String symbol;
-	public Kind kind;
-	public Associativity associativity;
-	public int precedence;
 }

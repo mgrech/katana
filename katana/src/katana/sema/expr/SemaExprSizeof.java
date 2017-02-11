@@ -19,6 +19,8 @@ import katana.sema.type.SemaTypeBuiltin;
 
 public class SemaExprSizeof implements SemaExpr
 {
+	public SemaType type;
+
 	public SemaExprSizeof(SemaType type)
 	{
 		this.type = type;
@@ -29,6 +31,4 @@ public class SemaExprSizeof implements SemaExpr
 	{
 		return SemaTypeBuiltin.INT;
 	}
-
-	public SemaType type;
 }

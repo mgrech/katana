@@ -19,6 +19,8 @@ import katana.sema.type.SemaType;
 
 public class SemaExprConstRValue implements SemaExpr
 {
+	public SemaExpr expr;
+
 	public SemaExprConstRValue(SemaExpr expr)
 	{
 		this.expr = expr;
@@ -29,6 +31,4 @@ public class SemaExprConstRValue implements SemaExpr
 	{
 		return Types.addConst(expr.type());
 	}
-
-	public SemaExpr expr;
 }

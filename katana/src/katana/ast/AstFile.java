@@ -23,14 +23,14 @@ import java.util.Map;
 
 public class AstFile
 {
-	public AstFile(Path path)
-	{
-		this.path = path;
-	}
-
 	public Path path;
 	public Map<AstPath, AstDeclImport> imports = new HashMap<>();
 	public Map<String, AstDeclRenamedImport> renamedImports = new HashMap<>();
 	public Map<AstPath, AstModule> modules = new HashMap<>();
 	public DelayedExprParseList delayedExprs = new DelayedExprParseList();
+
+	public AstFile(Path path)
+	{
+		this.path = path;
+	}
 }

@@ -21,7 +21,7 @@ import katana.ast.decl.*;
 import katana.diag.CompileException;
 import katana.op.Operator;
 import katana.scanner.Scanner;
-import katana.scanner.Token;
+import katana.scanner.TokenType;
 import katana.visitor.IVisitor;
 
 @SuppressWarnings("unused")
@@ -40,7 +40,7 @@ public class FileParser implements IVisitor
 		AstFile file = new AstFile(scanner.path());
 		FileParser parser = new FileParser(file);
 
-		while(scanner.state().token.type != Token.Type.END)
+		while(scanner.state().token.type != TokenType.END)
 		{
 			AstDecl decl = DeclParser.parse(scanner, file.delayedExprs);
 			decl.accept(parser);

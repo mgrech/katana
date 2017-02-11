@@ -18,12 +18,12 @@ import java.util.List;
 
 public class SemaTypeFunction extends SemaType
 {
+	public SemaType ret;
+	public List<SemaType> params;
+
 	public SemaTypeFunction(SemaType ret, List<SemaType> params)
 	{
 		this.ret = ret;
 		this.params = params;
 	}
-
-	public SemaType ret;
-	public List<SemaType> params;
 }

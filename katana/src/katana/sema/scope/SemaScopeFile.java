@@ -20,6 +20,8 @@ import java.util.*;
 
 public class SemaScopeFile implements SemaScope
 {
+	private Map<String, List<SemaSymbol>> symbols = new HashMap<>();
+
 	public void defineSymbol(SemaSymbol symbol)
 	{
 		String name = symbol.name();
@@ -36,6 +38,4 @@ public class SemaScopeFile implements SemaScope
 		List<SemaSymbol> symbolList = symbols.get(name);
 		return symbolList == null ? Collections.emptyList() : symbolList;
 	}
-
-	private Map<String, List<SemaSymbol>> symbols = new HashMap<>();
 }

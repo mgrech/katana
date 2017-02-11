@@ -16,10 +16,10 @@ package katana.ast.stmt;
 
 public class AstStmtLabel extends AstStmt
 {
+	public String name;
+
 	public AstStmtLabel(String name)
 	{
 		this.name = name;
 	}
-
-	public String name;
 }

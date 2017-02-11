@@ -16,6 +16,8 @@ package katana.sema.decl;
 
 public class SemaDeclImportedOverloadSet extends SemaDecl
 {
+	public SemaDeclOverloadSet set;
+
 	public SemaDeclImportedOverloadSet(SemaDeclOverloadSet set)
 	{
 		super(null, false, false);
@@ -27,6 +29,4 @@ public class SemaDeclImportedOverloadSet extends SemaDecl
 	{
 		return set.name();
 	}
-
-	public SemaDeclOverloadSet set;
 }

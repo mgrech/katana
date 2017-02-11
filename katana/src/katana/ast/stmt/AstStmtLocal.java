@@ -20,14 +20,14 @@ import katana.utils.Maybe;
 
 public class AstStmtLocal extends AstStmt
 {
+	public Maybe<AstType> type;
+	public String name;
+	public Maybe<AstExpr> init;
+
 	public AstStmtLocal(Maybe<AstType> type, String name, Maybe<AstExpr> init)
 	{
 		this.type = type;
 		this.name = name;
 		this.init = init;
 	}
-
-	public Maybe<AstType> type;
-	public String name;
-	public Maybe<AstExpr> init;
 }

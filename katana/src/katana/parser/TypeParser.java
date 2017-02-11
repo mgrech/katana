@@ -18,7 +18,8 @@ import katana.ast.DelayedExprParseList;
 import katana.ast.type.*;
 import katana.diag.CompileException;
 import katana.scanner.Scanner;
-import katana.scanner.Token;
+import katana.scanner.TokenCategory;
+import katana.scanner.TokenType;
 import katana.utils.Maybe;
 
 import java.math.BigInteger;
@@ -34,7 +35,7 @@ public class TypeParser
 
 	private static AstType doParse(Scanner scanner, boolean const_, DelayedExprParseList delayedExprs)
 	{
-		if(ParseTools.option(scanner, Token.Type.DECL_FN, true))
+		if(ParseTools.option(scanner, TokenType.DECL_FN, true))
 		{
 			if(const_)
 				throw new CompileException("forming type 'const function'");
@@ -42,7 +43,7 @@ public class TypeParser
 			return parseFunction(scanner, delayedExprs);
 		}
 
-		if(ParseTools.option(scanner, Token.Type.PUNCT_LBRACE, true))
+		if(ParseTools.option(scanner, TokenType.PUNCT_LBRACE, true))
 		{
 			if(const_)
 				throw new CompileException("forming type 'const tuple'");
@@ -50,7 +51,7 @@ public class TypeParser
 			return parseTuple(scanner, delayedExprs);
 		}
 
-		if(ParseTools.option(scanner, Token.Type.PUNCT_LBRACKET, true))
+		if(ParseTools.option(scanner, TokenType.PUNCT_LBRACKET, true))
 		{
 			if(const_)
 				throw new CompileException("forming type 'const array'");
@@ -58,10 +59,10 @@ public class TypeParser
 			return parseArray(scanner, delayedExprs);
 		}
 
-		if(ParseTools.option(scanner, Token.Type.TYPE_OPAQUE, true))
+		if(ParseTools.option(scanner, TokenType.TYPE_OPAQUE, true))
 			return parseOpaque(scanner);
 
-		if(ParseTools.option(scanner, Token.Type.TYPE_CONST, true))
+		if(ParseTools.option(scanner, TokenType.TYPE_CONST, true))
 		{
 			if(const_)
 				throw new CompileException("duplicate const");
@@ -69,10 +70,10 @@ public class TypeParser
 			return new AstTypeConst(doParse(scanner, true, delayedExprs));
 		}
 
-		if(ParseTools.option(scanner, Token.Type.TYPE_TYPEOF, true))
+		if(ParseTools.option(scanner, TokenType.TYPE_TYPEOF, true))
 			return parseTypeof(scanner, delayedExprs);
 
-		if(ParseTools.option(scanner, Token.Category.OP, false))
+		if(ParseTools.option(scanner, TokenCategory.OP, false))
 		{
 			String ptrs = ParseTools.consume(scanner).value;
 			AstType type = parse(scanner, delayedExprs);
@@ -91,16 +92,16 @@ public class TypeParser
 			return type;
 		}
 
-		if(ParseTools.option(scanner, Token.Category.TYPE, false))
+		if(ParseTools.option(scanner, TokenCategory.TYPE, false))
 			return parseBuiltin(scanner);
 
-		if(ParseTools.option(scanner, Token.Type.IDENT, false))
+		if(ParseTools.option(scanner, TokenType.IDENT, false))
 		{
 			String name = ParseTools.consume(scanner).value;
 			return new AstTypeUserDefined(name);
 		}
 
-		ParseTools.unexpectedToken(scanner, Token.Category.TYPE);
+		ParseTools.unexpectedToken(scanner, TokenCategory.TYPE);
 		throw new AssertionError("unreachable");
 	}
 
@@ -121,11 +122,11 @@ public class TypeParser
 		{
 			List<AstType> params = new ArrayList<>();
 
-			if(!ParseTools.option(scanner, Token.Type.PUNCT_RPAREN, false))
+			if(!ParseTools.option(scanner, TokenType.PUNCT_RPAREN, false))
 			{
 				params.add(parse(scanner, delayedExprs));
 
-				while(!ParseTools.option(scanner, Token.Type.PUNCT_RPAREN, false))
+				while(!ParseTools.option(scanner, TokenType.PUNCT_RPAREN, false))
 					params.add(parse(scanner, delayedExprs));
 			}
 
@@ -135,23 +136,23 @@ public class TypeParser
 
 	private static AstTypeTuple parseTuple(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
-		if(ParseTools.option(scanner, Token.Type.PUNCT_RBRACE, true))
+		if(ParseTools.option(scanner, TokenType.PUNCT_RBRACE, true))
 			return new AstTypeTuple(new ArrayList<>());
 
 		List<AstType> types = new ArrayList<>();
 		types.add(parse(scanner, delayedExprs));
 
-		while(ParseTools.option(scanner, Token.Type.PUNCT_COMMA, true))
+		while(ParseTools.option(scanner, TokenType.PUNCT_COMMA, true))
 			types.add(parse(scanner, delayedExprs));
 
-		ParseTools.expect(scanner, Token.Type.PUNCT_RBRACE, true);
+		ParseTools.expect(scanner, TokenType.PUNCT_RBRACE, true);
 		return new AstTypeTuple(types);
 	}
 
 	private static AstTypeArray parseArray(Scanner scanner, DelayedExprParseList delayedExprs)
 	{
-		String size = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT_DEDUCE).value;
-		ParseTools.expect(scanner, Token.Type.PUNCT_RBRACKET, true);
+		String size = ParseTools.consumeExpected(scanner, TokenType.LIT_INT_DEDUCE).value;
+		ParseTools.expect(scanner, TokenType.PUNCT_RBRACKET, true);
 		return new AstTypeArray(BigInteger.valueOf(Integer.parseInt(size)), parse(scanner, delayedExprs));
 	}
 
@@ -159,9 +160,9 @@ public class TypeParser
 	{
 		return ParseTools.parenthesized(scanner, () ->
 		{
-			String sizeString = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT_DEDUCE).value;
-			ParseTools.expect(scanner, Token.Type.PUNCT_COMMA, true);
-			String alignmentString = ParseTools.consumeExpected(scanner, Token.Type.LIT_INT_DEDUCE).value;
+			String sizeString = ParseTools.consumeExpected(scanner, TokenType.LIT_INT_DEDUCE).value;
+			ParseTools.expect(scanner, TokenType.PUNCT_COMMA, true);
+			String alignmentString = ParseTools.consumeExpected(scanner, TokenType.LIT_INT_DEDUCE).value;
 			BigInteger size = BigInteger.valueOf(Integer.parseInt(sizeString));
 			BigInteger alignment = BigInteger.valueOf(Integer.parseInt(alignmentString));
 			return new AstTypeOpaque(size, alignment);
@@ -175,7 +176,7 @@ public class TypeParser
 
 	private static AstTypeBuiltin parseBuiltin(Scanner scanner)
 	{
-		Token.Type type = ParseTools.consumeExpected(scanner, Token.Category.TYPE).type;
+		TokenType type = ParseTools.consumeExpected(scanner, TokenCategory.TYPE).type;
 
 		switch(type)
 		{

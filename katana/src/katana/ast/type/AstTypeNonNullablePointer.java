@@ -16,10 +16,10 @@ package katana.ast.type;
 
 public class AstTypeNonNullablePointer extends AstType
 {
+	public AstType type;
+
 	public AstTypeNonNullablePointer(AstType type)
 	{
 		this.type = type;
 	}
-
-	public AstType type;
 }

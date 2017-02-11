@@ -18,10 +18,10 @@ import katana.sema.stmt.SemaStmt;
 
 public class GeneratedLabel extends SemaStmt
 {
+	public final String name;
+
 	public GeneratedLabel(String name)
 	{
 		this.name = name;
 	}
-
-	public String name;
 }

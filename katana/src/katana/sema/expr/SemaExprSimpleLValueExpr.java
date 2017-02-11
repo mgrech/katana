@@ -16,6 +16,8 @@ package katana.sema.expr;
 
 public abstract class SemaExprSimpleLValueExpr extends SemaExprLValueExpr
 {
+	private boolean usedAsLValue = false;
+
 	@Override
 	public boolean isUsedAsLValue()
 	{
@@ -27,6 +29,4 @@ public abstract class SemaExprSimpleLValueExpr extends SemaExprLValueExpr
 	{
 		usedAsLValue = use;
 	}
-
-	private boolean usedAsLValue = false;
 }

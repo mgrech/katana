@@ -18,14 +18,14 @@ import katana.ast.expr.AstExpr;
 
 public class AstStmtWhile extends AstStmt
 {
+	public boolean negated;
+	public AstExpr condition;
+	public AstStmt body;
+
 	public AstStmtWhile(boolean negated, AstExpr condition, AstStmt body)
 	{
 		this.negated = negated;
 		this.condition = condition;
 		this.body = body;
 	}
-
-	public boolean negated;
-	public AstExpr condition;
-	public AstStmt body;
 }

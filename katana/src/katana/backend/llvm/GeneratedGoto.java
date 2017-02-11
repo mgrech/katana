@@ -18,10 +18,10 @@ import katana.sema.stmt.SemaStmt;
 
 public class GeneratedGoto extends SemaStmt
 {
+	public final GeneratedLabel label;
+
 	public GeneratedGoto(GeneratedLabel label)
 	{
 		this.label = label;
 	}
-
-	public GeneratedLabel label;
 }

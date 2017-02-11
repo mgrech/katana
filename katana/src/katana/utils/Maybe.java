@@ -21,6 +21,8 @@ public class Maybe<T>
 {
 	private static final Maybe NONE = new Maybe<>(null);
 
+	private T value;
+
 	private Maybe(T value)
 	{
 		this.value = value;
@@ -87,6 +89,4 @@ public class Maybe<T>
 	{
 		return value != null ? value : func.get();
 	}
-
-	private T value;
 }

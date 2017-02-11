@@ -18,12 +18,12 @@ import katana.ast.type.AstType;
 
 public class AstExprPointerCast extends AstExpr
 {
+	public AstType type;
+	public AstExpr expr;
+
 	public AstExprPointerCast(AstType type, AstExpr expr)
 	{
 		this.type = type;
 		this.expr = expr;
 	}
-
-	public AstType type;
-	public AstExpr expr;
 }

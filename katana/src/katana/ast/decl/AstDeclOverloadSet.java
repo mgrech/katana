@@ -19,12 +19,12 @@ import java.util.List;
 
 public class AstDeclOverloadSet extends AstDecl
 {
+	public String name;
+	public List<AstDeclFunction> overloads = new ArrayList<>();
+
 	public AstDeclOverloadSet(String name)
 	{
 		super(false, false);
 		this.name = name;
 	}
-
-	public String name;
-	public List<AstDeclFunction> overloads = new ArrayList<>();
 }

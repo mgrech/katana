@@ -20,6 +20,8 @@ import katana.sema.type.SemaTypeBuiltin;
 
 public class SemaExprOffsetof implements SemaExpr
 {
+	public SemaDeclStruct.Field field;
+
 	public SemaExprOffsetof(SemaDeclStruct.Field field)
 	{
 		this.field = field;
@@ -30,6 +32,4 @@ public class SemaExprOffsetof implements SemaExpr
 	{
 		return SemaTypeBuiltin.INT;
 	}
-
-	public SemaDeclStruct.Field field;
 }

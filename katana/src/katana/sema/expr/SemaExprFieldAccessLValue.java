@@ -20,6 +20,10 @@ import katana.sema.type.SemaType;
 
 public class SemaExprFieldAccessLValue extends SemaExprLValueExpr
 {
+	public SemaExprLValueExpr expr;
+	public SemaDeclStruct.Field field;
+	public boolean const_;
+
 	public SemaExprFieldAccessLValue(SemaExprLValueExpr expr, SemaDeclStruct.Field field, boolean const_)
 	{
 		this.expr = expr;
@@ -44,8 +48,4 @@ public class SemaExprFieldAccessLValue extends SemaExprLValueExpr
 	{
 		return const_ ? Types.addConst(field.type) : field.type;
 	}
-
-	public SemaExprLValueExpr expr;
-	public SemaDeclStruct.Field field;
-	public boolean const_;
 }

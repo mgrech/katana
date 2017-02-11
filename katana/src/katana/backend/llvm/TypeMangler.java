@@ -20,13 +20,13 @@ import katana.visitor.IVisitor;
 @SuppressWarnings("unused")
 public class TypeMangler implements IVisitor
 {
-	private static final TypeMangler MANGLER = new TypeMangler();
+	private static final TypeMangler INSTANCE = new TypeMangler();
 
 	private TypeMangler() {}
 
 	public static String mangle(SemaType type)
 	{
-		return (String)type.accept(MANGLER);
+		return (String)type.accept(INSTANCE);
 	}
 
 	private String visit(SemaTypeBuiltin builtin)

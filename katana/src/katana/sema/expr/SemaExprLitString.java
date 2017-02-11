@@ -26,6 +26,9 @@ public class SemaExprLitString extends SemaExprSimpleLValueExpr implements SemaE
 {
 	private static final SemaType ELEMENT_TYPE = new SemaTypeConst(SemaTypeBuiltin.UINT8);
 
+	public final String value;
+	private final transient SemaType cachedType;
+
 	public SemaExprLitString(String value)
 	{
 		this.value = value;
@@ -39,7 +42,4 @@ public class SemaExprLitString extends SemaExprSimpleLValueExpr implements SemaE
 	{
 		return cachedType;
 	}
-
-	public final String value;
-	private final transient SemaType cachedType;
 }

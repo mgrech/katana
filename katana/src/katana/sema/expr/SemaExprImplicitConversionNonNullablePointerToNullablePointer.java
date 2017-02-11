@@ -18,6 +18,9 @@ import katana.sema.type.SemaType;
 
 public class SemaExprImplicitConversionNonNullablePointerToNullablePointer implements SemaExpr
 {
+	public final SemaExpr expr;
+	public final SemaType type;
+
 	public SemaExprImplicitConversionNonNullablePointerToNullablePointer(SemaExpr expr, SemaType type)
 	{
 		this.expr = expr;
@@ -28,7 +31,4 @@ public class SemaExprImplicitConversionNonNullablePointerToNullablePointer imple
 	{
 		return type;
 	}
-
-	public final SemaExpr expr;
-	public final SemaType type;
 }

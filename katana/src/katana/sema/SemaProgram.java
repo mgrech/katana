@@ -19,6 +19,8 @@ import katana.utils.Maybe;
 
 public class SemaProgram
 {
+	public SemaModule root = new SemaModule("", new AstPath(), null);
+
 	public SemaModule findOrCreateModule(AstPath path)
 	{
 		SemaModule parent = root;
@@ -45,6 +47,4 @@ public class SemaProgram
 
 		return Maybe.some(current);
 	}
-
-	public SemaModule root = new SemaModule("", new AstPath(), null);
 }

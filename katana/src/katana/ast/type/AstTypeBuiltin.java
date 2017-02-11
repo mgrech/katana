@@ -34,10 +34,10 @@ public class AstTypeBuiltin extends AstType
 	public static final AstTypeBuiltin FLOAT32 = new AstTypeBuiltin(BuiltinType.FLOAT32);
 	public static final AstTypeBuiltin FLOAT64 = new AstTypeBuiltin(BuiltinType.FLOAT64);
 
+	public final BuiltinType which;
+
 	private AstTypeBuiltin(BuiltinType which)
 	{
 		this.which = which;
 	}
-
-	public final BuiltinType which;
 }

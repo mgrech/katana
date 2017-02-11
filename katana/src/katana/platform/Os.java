@@ -17,8 +17,8 @@ package katana.platform;
 public enum Os
 {
 	UNKNOWN("unknown"),
-	LINUX("linux"),
-	MACOS("darwin"),
+	LINUX  ("linux"),
+	MACOS  ("darwin"),
 	WINDOWS("windows");
 
 	private final String value;

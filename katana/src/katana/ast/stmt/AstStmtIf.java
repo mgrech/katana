@@ -18,14 +18,14 @@ import katana.ast.expr.AstExpr;
 
 public class AstStmtIf extends AstStmt
 {
+	public boolean negated;
+	public AstExpr condition;
+	public AstStmt then;
+
 	public AstStmtIf(boolean negated, AstExpr condition, AstStmt then)
 	{
 		this.negated = negated;
 		this.condition = condition;
 		this.then = then;
 	}
-
-	public boolean negated;
-	public AstExpr condition;
-	public AstStmt then;
 }

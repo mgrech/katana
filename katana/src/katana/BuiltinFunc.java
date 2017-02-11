@@ -24,12 +24,13 @@ import java.util.List;
 
 public abstract class BuiltinFunc
 {
-	public String name;
+	public final String name;
 
-	public BuiltinFunc(String name)
+	protected BuiltinFunc(String name)
 	{
 		this.name = name;
 	}
+
 	public abstract SemaType validateCall(List<SemaType> args);
 	public abstract Maybe<String> generateCall(SemaExprBuiltinCall call, FileCodegenContext context, FunctionCodegenContext fcontext);
 }

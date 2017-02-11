@@ -18,12 +18,12 @@ import java.math.BigInteger;
 
 public class SemaTypeOpaque extends SemaType
 {
+	public BigInteger size;
+	public BigInteger alignment;
+
 	public SemaTypeOpaque(BigInteger size, BigInteger alignment)
 	{
 		this.size = size;
 		this.alignment = alignment;
 	}
-
-	public BigInteger size;
-	public BigInteger alignment;
 }

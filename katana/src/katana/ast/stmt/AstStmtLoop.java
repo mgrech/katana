@@ -16,10 +16,10 @@ package katana.ast.stmt;
 
 public class AstStmtLoop extends AstStmt
 {
+	public AstStmt body;
+
 	public AstStmtLoop(AstStmt body)
 	{
 		this.body = body;
 	}
-
-	public AstStmt body;
 }

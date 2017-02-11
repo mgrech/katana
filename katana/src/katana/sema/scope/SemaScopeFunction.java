@@ -22,6 +22,9 @@ import java.util.List;
 
 public class SemaScopeFunction implements SemaScope
 {
+	private SemaScopeFile parent;
+	private SemaDeclFunction function;
+
 	public SemaScopeFunction(SemaScopeFile parent, SemaDeclFunction function)
 	{
 		this.parent = parent;
@@ -38,7 +41,4 @@ public class SemaScopeFunction implements SemaScope
 
 		return parent.find(name);
 	}
-
-	private SemaScopeFile parent;
-	private SemaDeclFunction function;
 }

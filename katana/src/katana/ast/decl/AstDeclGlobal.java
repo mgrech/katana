@@ -20,6 +20,10 @@ import katana.utils.Maybe;
 
 public class AstDeclGlobal extends AstDecl
 {
+	public Maybe<AstType> type;
+	public String name;
+	public Maybe<AstExprLiteral> init;
+
 	public AstDeclGlobal(boolean exported, boolean opaque, Maybe<AstType> type, String name, Maybe<AstExprLiteral> init)
 	{
 		super(exported, opaque);
@@ -27,8 +31,4 @@ public class AstDeclGlobal extends AstDecl
 		this.name = name;
 		this.init = init;
 	}
-
-	public Maybe<AstType> type;
-	public String name;
-	public Maybe<AstExprLiteral> init;
 }

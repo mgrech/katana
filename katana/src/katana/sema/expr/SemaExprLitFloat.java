@@ -23,6 +23,10 @@ import java.math.BigDecimal;
 
 public class SemaExprLitFloat implements SemaExprLiteral
 {
+	public final BigDecimal value;
+	public final BuiltinType type;
+	private final transient SemaType cachedType;
+
 	public SemaExprLitFloat(BigDecimal value, BuiltinType type)
 	{
 		this.value = value;
@@ -46,8 +50,4 @@ public class SemaExprLitFloat implements SemaExprLiteral
 	{
 		return cachedType;
 	}
-
-	public final BigDecimal value;
-	public final BuiltinType type;
-	private final transient SemaType cachedType;
 }

@@ -26,6 +26,10 @@ public class SemaExprCast implements SemaExpr
 		POINTER_CAST,
 	}
 
+	public SemaType type;
+	public SemaExpr expr;
+	public Kind kind;
+
 	public SemaExprCast(SemaType type, SemaExpr expr, Kind kind)
 	{
 		this.type = type;
@@ -38,8 +42,4 @@ public class SemaExprCast implements SemaExpr
 	{
 		return type;
 	}
-
-	public SemaType type;
-	public SemaExpr expr;
-	public Kind kind;
 }

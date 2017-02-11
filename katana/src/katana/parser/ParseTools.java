@@ -18,6 +18,8 @@ import katana.ast.AstPath;
 import katana.diag.CompileException;
 import katana.scanner.Scanner;
 import katana.scanner.Token;
+import katana.scanner.TokenCategory;
+import katana.scanner.TokenType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +30,7 @@ public class ParseTools
 {
 	public static AstPath path(Scanner scanner)
 	{
-		Supplier<String> parseComponent = () -> consumeExpected(scanner, Token.Type.IDENT).value;
+		Supplier<String> parseComponent = () -> consumeExpected(scanner, TokenType.IDENT).value;
 		List<String> components = separated(scanner, ".", parseComponent);
 		return new AstPath(components);
 	}
@@ -43,7 +45,7 @@ public class ParseTools
 		return result;
 	}
 
-	public static <T> List<T> separated(Scanner scanner, Token.Type separator, Supplier<T> parser)
+	public static <T> List<T> separated(Scanner scanner, TokenType separator, Supplier<T> parser)
 	{
 		List<T> result = new ArrayList<>();
 
@@ -55,9 +57,9 @@ public class ParseTools
 
 	public static <T> T parenthesized(Scanner scanner, Supplier<T> func)
 	{
-		ParseTools.expect(scanner, Token.Type.PUNCT_LPAREN, true);
+		ParseTools.expect(scanner, TokenType.PUNCT_LPAREN, true);
 		T result = func.get();
-		ParseTools.expect(scanner, Token.Type.PUNCT_RPAREN, true);
+		ParseTools.expect(scanner, TokenType.PUNCT_RPAREN, true);
 		return result;
 	}
 
@@ -77,12 +79,12 @@ public class ParseTools
 		return option(scanner, t -> t.value.equals(value), eat);
 	}
 
-	public static boolean option(Scanner scanner, Token.Category category, boolean eat)
+	public static boolean option(Scanner scanner, TokenCategory category, boolean eat)
 	{
 		return option(scanner, t -> t.category == category, eat);
 	}
 
-	public static boolean option(Scanner scanner, Token.Type type, boolean eat)
+	public static boolean option(Scanner scanner, TokenType type, boolean eat)
 	{
 		return option(scanner, t -> t.type == type, eat);
 	}
@@ -93,13 +95,13 @@ public class ParseTools
 			unexpectedToken(scanner, value);
 	}
 
-	public static void expect(Scanner scanner, Token.Category category, boolean eat)
+	public static void expect(Scanner scanner, TokenCategory category, boolean eat)
 	{
 		if(!option(scanner, category, eat))
 			unexpectedToken(scanner, category);
 	}
 
-	public static void expect(Scanner scanner, Token.Type type, boolean eat)
+	public static void expect(Scanner scanner, TokenType type, boolean eat)
 	{
 		if(!option(scanner, type, eat))
 			unexpectedToken(scanner, type);
@@ -112,13 +114,13 @@ public class ParseTools
 		return token;
 	}
 
-	public static Token consumeExpected(Scanner scanner, Token.Category category)
+	public static Token consumeExpected(Scanner scanner, TokenCategory category)
 	{
 		expect(scanner, category, false);
 		return consume(scanner);
 	}
 
-	public static Token consumeExpected(Scanner scanner, Token.Type type)
+	public static Token consumeExpected(Scanner scanner, TokenType type)
 	{
 		expect(scanner, type, false);
 		return consume(scanner);

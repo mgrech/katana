@@ -16,10 +16,10 @@ package katana.ast.expr;
 
 public class AstExprLitBool extends AstExprLiteral
 {
+	public boolean value;
+
 	public AstExprLitBool(boolean value)
 	{
 		this.value = value;
 	}
-
-	public boolean value;
 }

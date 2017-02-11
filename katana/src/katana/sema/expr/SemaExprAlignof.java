@@ -19,6 +19,8 @@ import katana.sema.type.SemaTypeBuiltin;
 
 public class SemaExprAlignof implements SemaExpr
 {
+	public SemaType type;
+
 	public SemaExprAlignof(SemaType type)
 	{
 		this.type = type;
@@ -29,6 +31,4 @@ public class SemaExprAlignof implements SemaExpr
 	{
 		return SemaTypeBuiltin.INT;
 	}
-
-	public SemaType type;
 }

@@ -19,6 +19,8 @@ import katana.sema.type.SemaType;
 
 public class SemaExprNamedGlobal extends SemaExprSimpleLValueExpr
 {
+	public SemaDeclGlobal global;
+
 	public SemaExprNamedGlobal(SemaDeclGlobal global)
 	{
 		this.global = global;
@@ -29,6 +31,4 @@ public class SemaExprNamedGlobal extends SemaExprSimpleLValueExpr
 	{
 		return global.type;
 	}
-
-	public SemaDeclGlobal global;
 }

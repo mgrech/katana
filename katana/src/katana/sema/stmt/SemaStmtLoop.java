@@ -16,10 +16,10 @@ package katana.sema.stmt;
 
 public class SemaStmtLoop extends SemaStmt
 {
+	public SemaStmt body;
+
 	public SemaStmtLoop(SemaStmt body)
 	{
 		this.body = body;
 	}
-
-	public SemaStmt body;
 }

@@ -16,10 +16,10 @@ package katana.sema.type;
 
 public class SemaTypeNonNullablePointer extends SemaType
 {
+	public SemaType type;
+
 	public SemaTypeNonNullablePointer(SemaType type)
 	{
 		this.type = type;
 	}
-
-	public SemaType type;
 }

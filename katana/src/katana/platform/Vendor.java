@@ -17,8 +17,8 @@ package katana.platform;
 public enum Vendor
 {
 	UNKNOWN("unknown"),
-	APPLE("apple"),
-	PC("pc");
+	APPLE  ("apple"),
+	PC     ("pc");
 
 	private final String value;
 

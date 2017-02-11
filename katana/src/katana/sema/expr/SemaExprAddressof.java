@@ -19,6 +19,8 @@ import katana.sema.type.SemaTypeNonNullablePointer;
 
 public class SemaExprAddressof implements SemaExpr
 {
+	public SemaExprLValueExpr expr;
+
 	public SemaExprAddressof(SemaExprLValueExpr expr)
 	{
 		this.expr = expr;
@@ -29,6 +31,4 @@ public class SemaExprAddressof implements SemaExpr
 	{
 		return new SemaTypeNonNullablePointer(expr.type());
 	}
-
-	public SemaExprLValueExpr expr;
 }

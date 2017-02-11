@@ -16,10 +16,10 @@ package katana.ast.type;
 
 public class AstTypeConst extends AstType
 {
+	public AstType type;
+
 	public AstTypeConst(AstType type)
 	{
 		this.type = type;
 	}
-
-	public AstType type;
 }

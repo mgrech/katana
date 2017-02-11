@@ -21,11 +21,11 @@ import java.util.Map;
 
 public class AstModule
 {
+	public AstPath path;
+	public Map<String, AstDecl> decls = new HashMap<>();
+
 	public AstModule(AstPath path)
 	{
 		this.path = path;
 	}
-
-	public AstPath path;
-	public Map<String, AstDecl> decls = new HashMap<>();
 }

@@ -20,6 +20,10 @@ import java.nio.file.Path;
 
 public class Scanner
 {
+	private int[] source;
+	private Path path;
+	private ScannerState state = new ScannerState();
+
 	public Scanner(Path path, int[] source)
 	{
 		this.path = path;
@@ -53,7 +57,7 @@ public class Scanner
 		skipWhitespaceAndComments();
 
 		if(atEnd())
-			return Token.END;
+			return Tokens.END;
 
 		state.tokenOffset = state.currentOffset;
 		state.tokenColumn = state.currentColumn;
@@ -62,15 +66,15 @@ public class Scanner
 
 		switch(cp)
 		{
-		case '(': advanceColumn(); return Token.PUNCT_LPAREN;
-		case ')': advanceColumn(); return Token.PUNCT_RPAREN;
-		case '[': advanceColumn(); return Token.PUNCT_LBRACKET;
-		case ']': advanceColumn(); return Token.PUNCT_RBRACKET;
-		case '{': advanceColumn(); return Token.PUNCT_LBRACE;
-		case '}': advanceColumn(); return Token.PUNCT_RBRACE;
-		case ',': advanceColumn(); return Token.PUNCT_COMMA;
-		case ';': advanceColumn(); return Token.PUNCT_SCOLON;
-		case '$': advanceColumn(); return Token.PUNCT_DOLOLOLLAR;
+		case ',': advanceColumn(); return Tokens.PUNCT_COMMA;
+		case '$': advanceColumn(); return Tokens.PUNCT_DOLLAR;
+		case '{': advanceColumn(); return Tokens.PUNCT_LBRACE;
+		case '[': advanceColumn(); return Tokens.PUNCT_LBRACKET;
+		case '(': advanceColumn(); return Tokens.PUNCT_LPAREN;
+		case '}': advanceColumn(); return Tokens.PUNCT_RBRACE;
+		case ']': advanceColumn(); return Tokens.PUNCT_RBRACKET;
+		case ')': advanceColumn(); return Tokens.PUNCT_RPAREN;
+		case ';': advanceColumn(); return Tokens.PUNCT_SCOLON;
 		case '@': advanceColumn(); return label();
 		case '"': advanceColumn(); return stringLiteral();
 
@@ -109,16 +113,16 @@ public class Scanner
 		boolean leftws = " \t\r\n([{;,".indexOf(before) != -1;
 		boolean rightws = " \t\r\n)]};,#".indexOf(after) != -1;
 
-		Token.Type type;
+		TokenType type;
 
 		if(leftws && !rightws)
-			type = Token.Type.OPSEQ_PREFIX;
+			type = TokenType.OP_PREFIX_SEQ;
 		else if(!leftws && rightws)
-			type = Token.Type.OPSEQ_POSTFIX;
+			type = TokenType.OP_POSTFIX_SEQ;
 		else
-			type = Token.Type.OP_INFIX;
+			type = TokenType.OP_INFIX;
 
-		return Token.op(builder.toString(), type);
+		return Tokens.op(builder.toString(), type);
 	}
 
 	private Token label()
@@ -131,7 +135,7 @@ public class Scanner
 			advanceColumn();
 		}
 
-		return Token.label(builder.toString());
+		return Tokens.label(builder.toString());
 	}
 
 	private String formatCodepoint(int cp)
@@ -154,7 +158,7 @@ public class Scanner
 
 		advanceColumn();
 
-		return Token.stringLiteral(builder.toString());
+		return Tokens.stringLiteral(builder.toString());
 	}
 
 	private int stringCodepoint()
@@ -259,65 +263,65 @@ public class Scanner
 	{
 		switch(value)
 		{
-		case "null":  return Token.LIT_NULL;
-		case "true":  return Token.LIT_BOOL_T;
-		case "false": return Token.LIT_BOOL_F;
+		case "abi":      return Tokens.DECL_ABI;
+		case "data":     return Tokens.DECL_DATA;
+		case "extern":   return Tokens.DECL_EXTERN;
+		case "export":   return Tokens.DECL_EXPORT;
+		case "fn":       return Tokens.DECL_FN;
+		case "global":   return Tokens.DECL_GLOBAL;
+		case "import":   return Tokens.DECL_IMPORT;
+		case "infix":    return Tokens.DECL_INFIX;
+		case "module":   return Tokens.DECL_MODULE;
+		case "operator": return Tokens.DECL_OP;
+		case "postfix":  return Tokens.DECL_POSTFIX;
+		case "prefix":   return Tokens.DECL_PREFIX;
+		case "type":     return Tokens.DECL_TYPE;
 
-		case "export":   return Token.DECL_EXPORT;
-		case "import":   return Token.DECL_IMPORT;
-		case "module":   return Token.DECL_MODULE;
-		case "global":   return Token.DECL_GLOBAL;
-		case "extern":   return Token.DECL_EXTERN;
-		case "fn":       return Token.DECL_FN;
-		case "data":     return Token.DECL_DATA;
-		case "type":     return Token.DECL_TYPE;
-		case "operator": return Token.DECL_OP;
-		case "prefix":   return Token.DECL_PREFIX;
-		case "infix":    return Token.DECL_INFIX;
-		case "postfix":  return Token.DECL_POSTFIX;
-		case "abi":      return Token.DECL_ABI;
+		case "false": return Tokens.LIT_BOOL_F;
+		case "true":  return Tokens.LIT_BOOL_T;
+		case "null":  return Tokens.LIT_NULL;
 
-		case "local":  return Token.STMT_LOCAL;
-		case "if":     return Token.STMT_IF;
-		case "unless": return Token.STMT_UNLESS;
-		case "else":   return Token.STMT_ELSE;
-		case "goto":   return Token.STMT_GOTO;
-		case "return": return Token.STMT_RETURN;
-		case "loop":   return Token.STMT_LOOP;
-		case "while":  return Token.STMT_WHILE;
-		case "until":  return Token.STMT_UNTIL;
+		case "alignof":      return Tokens.MISC_ALIGNOF;
+		case "builtin":      return Tokens.MISC_BUILTIN;
+		case "inline":       return Tokens.MISC_INLINE;
+		case "narrow_cast":  return Tokens.MISC_NARROW_CAST;
+		case "offsetof":     return Tokens.MISC_OFFSETOF;
+		case "pointer_cast": return Tokens.MISC_POINTER_CAST;
+		case "sign_cast":    return Tokens.MISC_SIGN_CAST;
+		case "sizeof":       return Tokens.MISC_SIZEOF;
+		case "undef":        return Tokens.MISC_UNDEF;
+		case "widen_cast":   return Tokens.MISC_WIDEN_CAST;
 
-		case "void":    return Token.TYPE_VOID;
-		case "byte":    return Token.TYPE_BYTE;
-		case "bool":    return Token.TYPE_BOOL;
-		case "int8":    return Token.TYPE_INT8;
-		case "int16":   return Token.TYPE_INT16;
-		case "int32":   return Token.TYPE_INT32;
-		case "int64":   return Token.TYPE_INT64;
-		case "int":     return Token.TYPE_INT;
-		case "uint8":   return Token.TYPE_UINT8;
-		case "uint16":  return Token.TYPE_UINT16;
-		case "uint32":  return Token.TYPE_UINT32;
-		case "uint64":  return Token.TYPE_UINT64;
-		case "uint":    return Token.TYPE_UINT;
-		case "float32": return Token.TYPE_FLOAT32;
-		case "float64": return Token.TYPE_FLOAT64;
-		case "opaque":  return Token.TYPE_OPAQUE;
-		case "const":   return Token.TYPE_CONST;
-		case "typeof":  return Token.TYPE_TYPEOF;
+		case "else":   return Tokens.STMT_ELSE;
+		case "goto":   return Tokens.STMT_GOTO;
+		case "if":     return Tokens.STMT_IF;
+		case "local":  return Tokens.STMT_LOCAL;
+		case "loop":   return Tokens.STMT_LOOP;
+		case "return": return Tokens.STMT_RETURN;
+		case "unless": return Tokens.STMT_UNLESS;
+		case "until":  return Tokens.STMT_UNTIL;
+		case "while":  return Tokens.STMT_WHILE;
 
-		case "sizeof":       return Token.MISC_SIZEOF;
-		case "alignof":      return Token.MISC_ALIGNOF;
-		case "offsetof":     return Token.MISC_OFFSETOF;
-		case "inline":       return Token.MISC_INLINE;
-		case "builtin":      return Token.MISC_BUILTIN;
-		case "undef":        return Token.MISC_UNDEF;
-		case "narrow_cast":  return Token.MISC_NARROW_CAST;
-		case "widen_cast":   return Token.MISC_WIDEN_CAST;
-		case "sign_cast":    return Token.MISC_SIGN_CAST;
-		case "pointer_cast": return Token.MISC_POINTER_CAST;
+		case "bool":    return Tokens.TYPE_BOOL;
+		case "byte":    return Tokens.TYPE_BYTE;
+		case "const":   return Tokens.TYPE_CONST;
+		case "float32": return Tokens.TYPE_FLOAT32;
+		case "float64": return Tokens.TYPE_FLOAT64;
+		case "int":     return Tokens.TYPE_INT;
+		case "int8":    return Tokens.TYPE_INT8;
+		case "int16":   return Tokens.TYPE_INT16;
+		case "int32":   return Tokens.TYPE_INT32;
+		case "int64":   return Tokens.TYPE_INT64;
+		case "uint":    return Tokens.TYPE_UINT;
+		case "uint8":   return Tokens.TYPE_UINT8;
+		case "uint16":  return Tokens.TYPE_UINT16;
+		case "uint32":  return Tokens.TYPE_UINT32;
+		case "uint64":  return Tokens.TYPE_UINT64;
+		case "opaque":  return Tokens.TYPE_OPAQUE;
+		case "typeof":  return Tokens.TYPE_TYPEOF;
+		case "void":    return Tokens.TYPE_VOID;
 
-		default: return Token.identifier(value);
+		default: return Tokens.identifier(value);
 		}
 	}
 
@@ -413,31 +417,31 @@ public class Scanner
 			advanceColumn();
 		}
 
-		Token.Type type = null;
+		TokenType type = null;
 
 		boolean isFloatingPointSuffix = false;
 
 		switch(suffix.toString())
 		{
-		case "i":   type = Token.Type.LIT_INT;   break;
-		case "i8":  type = Token.Type.LIT_INT8;  break;
-		case "i16": type = Token.Type.LIT_INT16; break;
-		case "i32": type = Token.Type.LIT_INT32; break;
-		case "i64": type = Token.Type.LIT_INT64; break;
+		case "f32": type = TokenType.LIT_FLOAT32; isFloatingPointSuffix = true; break;
+		case "f64": type = TokenType.LIT_FLOAT64; isFloatingPointSuffix = true; break;
 
-		case "u":   type = Token.Type.LIT_UINT;   break;
-		case "u8":  type = Token.Type.LIT_UINT8;  break;
-		case "u16": type = Token.Type.LIT_UINT16; break;
-		case "u32": type = Token.Type.LIT_UINT32; break;
-		case "u64": type = Token.Type.LIT_UINT64; break;
+		case "i":   type = TokenType.LIT_INT;   break;
+		case "i8":  type = TokenType.LIT_INT8;  break;
+		case "i16": type = TokenType.LIT_INT16; break;
+		case "i32": type = TokenType.LIT_INT32; break;
+		case "i64": type = TokenType.LIT_INT64; break;
 
-		case "f32": type = Token.Type.LIT_FLOAT32; isFloatingPointSuffix = true; break;
-		case "f64": type = Token.Type.LIT_FLOAT64; isFloatingPointSuffix = true; break;
+		case "u":   type = TokenType.LIT_UINT;   break;
+		case "u8":  type = TokenType.LIT_UINT8;  break;
+		case "u16": type = TokenType.LIT_UINT16; break;
+		case "u32": type = TokenType.LIT_UINT32; break;
+		case "u64": type = TokenType.LIT_UINT64; break;
 
 		case "":
 			type = isFloatingPointLiteral
-				? Token.Type.LIT_FLOAT_DEDUCE
-				: Token.Type.LIT_INT_DEDUCE;
+				? TokenType.LIT_FLOAT_DEDUCE
+				: TokenType.LIT_INT_DEDUCE;
 
 			isFloatingPointSuffix = isFloatingPointLiteral;
 			break;
@@ -448,7 +452,7 @@ public class Scanner
 		if(isFloatingPointLiteral && !isFloatingPointSuffix)
 			error("integer suffix used on floating point literal");
 
-		return Token.numericLiteral(type, literal.toString(), base);
+		return Tokens.numericLiteral(type, literal.toString(), base);
 	}
 
 	private void skipWhitespaceAndComments()
@@ -516,8 +520,4 @@ public class Scanner
 	{
 		throw new CompileException(String.format("%s on line %s", message, state.line));
 	}
-
-	private int[] source;
-	private Path path;
-	private ScannerState state = new ScannerState();
 }

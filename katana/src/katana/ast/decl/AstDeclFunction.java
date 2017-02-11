@@ -33,6 +33,10 @@ public class AstDeclFunction extends AstDecl
 		public String name;
 	}
 
+	public String name;
+	public List<Param> params;
+	public Maybe<AstType> ret;
+
 	protected AstDeclFunction(boolean exported, boolean opaque, String name, List<Param> params, Maybe<AstType> ret)
 	{
 		super(exported, opaque);
@@ -40,8 +44,4 @@ public class AstDeclFunction extends AstDecl
 		this.params = params;
 		this.ret = ret;
 	}
-
-	public String name;
-	public List<Param> params;
-	public Maybe<AstType> ret;
 }

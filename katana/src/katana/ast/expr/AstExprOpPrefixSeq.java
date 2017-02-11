@@ -16,12 +16,12 @@ package katana.ast.expr;
 
 public class AstExprOpPrefixSeq extends AstExpr
 {
+	public String seq;
+	public AstExpr expr;
+
 	public AstExprOpPrefixSeq(String seq, AstExpr expr)
 	{
 		this.seq = seq;
 		this.expr = expr;
 	}
-
-	public String seq;
-	public AstExpr expr;
 }
