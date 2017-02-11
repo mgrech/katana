@@ -70,11 +70,7 @@ public class CheckZeroSizeVisitor implements IVisitor
 
 	private boolean visit(SemaTypeTuple tuple)
 	{
-		for(SemaType type : tuple.types)
-			if(!apply(type))
-				return false;
-
-		return true;
+		return tuple.layout.sizeof().equals(BigInteger.ZERO);
 	}
 
 	private boolean visit(SemaTypeStruct userDefined)
