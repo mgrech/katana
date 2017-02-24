@@ -19,7 +19,7 @@ import katana.sema.type.SemaTypeFunction;
 
 import java.util.List;
 
-public class SemaExprIndirectFunctionCall implements SemaExpr
+public class SemaExprIndirectFunctionCall extends SimpleRValueExpr
 {
 	public SemaExpr expr;
 	public List<SemaExpr> args;

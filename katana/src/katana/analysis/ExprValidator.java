@@ -109,12 +109,10 @@ public class ExprValidator implements IVisitor
 			expr = new SemaExprNamedFunc(set.overloads.get(0));
 		}
 
-		if(!(expr instanceof SemaExprLValueExpr))
+		if(expr.kind() != ExprKind.LVALUE)
 			throw new CompileException("address-of operator ('prefix &') requires lvalue operand");
 
-		SemaExprLValueExpr lvalue = (SemaExprLValueExpr)expr;
-		lvalue.useAsLValue(true);
-		return new SemaExprAddressof(lvalue);
+		return new SemaExprAddressof(expr);
 	}
 
 	private SemaExpr visit(AstExprAlignof alignof, Maybe<SemaType> deduce)
@@ -134,10 +132,10 @@ public class ExprValidator implements IVisitor
 		if(!Types.isArray(value.type()))
 			throw new CompileException(String.format("array access requires expression yielding array type, got '%s'", TypeString.of(value.type())));
 
-		if(value instanceof SemaExprLValueExpr)
-			return new SemaExprArrayAccessLValue((SemaExprLValueExpr)value, index);
+		if(index.kind() == ExprKind.LVALUE)
+			index = new SemaExprImplicitConversionLValueToRValue(index);
 
-		return new SemaExprArrayAccessRValue(value, index);
+		return new SemaExprArrayAccess(value, index);
 	}
 
 	private SemaExpr visit(AstExprAssign assign, Maybe<SemaType> deduce)
@@ -149,7 +147,7 @@ public class ExprValidator implements IVisitor
 
 		SemaExpr right = validate(assign.right, scope, context, validateDecl, Maybe.some(leftTypeNoConst));
 
-		if(Types.isConst(leftType) || !(left instanceof SemaExprLValueExpr))
+		if(Types.isConst(leftType) || left.kind() != ExprKind.LVALUE)
 			throw new CompileException("non-const lvalue required on left side of assignment");
 
 		if(leftType instanceof SemaTypeFunction)
@@ -163,9 +161,10 @@ public class ExprValidator implements IVisitor
 			throw new CompileException(String.format(fmt, TypeString.of(leftTypeNoConst), TypeString.of(rightTypeNoConst)));
 		}
 
-		SemaExprLValueExpr leftAsLvalue = (SemaExprLValueExpr)left;
-		leftAsLvalue.useAsLValue(true);
-		return new SemaExprAssign(leftAsLvalue, right);
+		if(right.kind() == ExprKind.LVALUE)
+			right = new SemaExprImplicitConversionLValueToRValue(right);
+
+		return new SemaExprAssign(left, right);
 	}
 
 	private SemaExpr visit(AstExprBuiltinCall builtinCall, Maybe<SemaType> deduce)
@@ -189,6 +188,9 @@ public class ExprValidator implements IVisitor
 				throw new CompileException(String.format(fmt, builtinCall.name, i + 1));
 			}
 
+			if(semaExpr.kind() == ExprKind.LVALUE)
+				semaExpr = new SemaExprImplicitConversionLValueToRValue(semaExpr);
+
 			args.add(semaExpr);
 			types.add(type);
 		}
@@ -205,10 +207,7 @@ public class ExprValidator implements IVisitor
 		if(Types.isFunction(expr.type()))
 			throw new CompileException("const symbol applied to value of function type");
 
-		if(expr instanceof SemaExprLValueExpr)
-			return new SemaExprConstLValue((SemaExprLValueExpr)expr);
-
-		return new SemaExprConstRValue(expr);
+		return new SemaExprConst(expr);
 	}
 
 	private SemaExpr visit(AstExprDeref deref, Maybe<SemaType> deduce)
@@ -220,6 +219,9 @@ public class ExprValidator implements IVisitor
 			String fmt = "expected expression of pointer type in dereference operator ('prefix *'), got '%s'";
 			throw new CompileException(String.format(fmt, TypeString.of(expr.type())));
 		}
+
+		if(expr.kind() == ExprKind.LVALUE)
+			expr = new SemaExprImplicitConversionLValueToRValue(expr);
 
 		return new SemaExprDeref(expr);
 	}
@@ -379,8 +381,15 @@ public class ExprValidator implements IVisitor
 
 		List<SemaExpr> semaArgs = new ArrayList<>();
 
-		for(Maybe<SemaExpr> arg : first.getValue())
-			semaArgs.add(arg.unwrap());
+		for(Maybe<SemaExpr> maybeArg : first.getValue())
+		{
+			SemaExpr arg = maybeArg.unwrap();
+
+			if(arg.kind() == ExprKind.LVALUE)
+				arg = new SemaExprImplicitConversionLValueToRValue(arg);
+
+			semaArgs.add(arg);
+		}
 
 		return new SemaExprDirectFunctionCall(first.getKey(), semaArgs, inline);
 	}
@@ -418,7 +427,13 @@ public class ExprValidator implements IVisitor
 		{
 			AstExpr arg = call.args.get(i);
 			SemaType type = ftype.params.get(i);
-			args.add(validate(call.args.get(i), scope, context, validateDecl, Maybe.some(type)));
+
+			SemaExpr semaArg = validate(call.args.get(i), scope, context, validateDecl, Maybe.some(type));
+
+			if(semaArg.kind() == ExprKind.LVALUE)
+				semaArg = new SemaExprImplicitConversionLValueToRValue(semaArg);
+
+			args.add(semaArg);
 		}
 
 		checkArguments(ftype.params, args);
@@ -605,10 +620,7 @@ public class ExprValidator implements IVisitor
 		if(field.isNone())
 			errorNoSuchField(type, memberAccess.name);
 
-		if(expr instanceof SemaExprLValueExpr)
-			return new SemaExprFieldAccessLValue((SemaExprLValueExpr)expr, field.unwrap(), Types.isConst(type));
-
-		return new SemaExprFieldAccessRValue(expr, field.unwrap(), Types.isConst(type));
+		return new SemaExprFieldAccess(expr, field.unwrap(), Types.isConst(type));
 	}
 
 	private SemaExpr visit(AstExprNamedGlobal namedGlobal, Maybe<SemaType> deduce)
@@ -667,6 +679,9 @@ public class ExprValidator implements IVisitor
 			String fmt = "%s from expression of type '%s' to type '%s' is not valid";
 			throw new CompileException(String.format(fmt, kind.toString().toLowerCase(), TypeString.of(sourceType), TypeString.of(targetType)));
 		}
+
+		if(semaExpr.kind() == ExprKind.LVALUE)
+			semaExpr = new SemaExprImplicitConversionLValueToRValue(semaExpr);
 
 		return new SemaExprCast(targetType, semaExpr, kind);
 	}

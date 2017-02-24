@@ -1,4 +1,4 @@
-// Copyright 2016-2017 Markus Grech
+// Copyright 2017 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,26 +14,11 @@
 
 package katana.sema.expr;
 
-import katana.analysis.Types;
-import katana.sema.decl.SemaDeclStruct;
-import katana.sema.type.SemaType;
-
-public class SemaExprFieldAccessRValue implements SemaExpr
+public abstract class SimpleLValueExpr extends SemaExpr
 {
-	public SemaExpr expr;
-	public SemaDeclStruct.Field field;
-	public boolean const_;
-
-	public SemaExprFieldAccessRValue(SemaExpr expr, SemaDeclStruct.Field field, boolean const_)
-	{
-		this.expr = expr;
-		this.field = field;
-		this.const_ = const_;
-	}
-
 	@Override
-	public SemaType type()
+	public ExprKind kind()
 	{
-		return const_ ? Types.addConst(field.type) : field.type;
+		return ExprKind.LVALUE;
 	}
 }

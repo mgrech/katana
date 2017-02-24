@@ -1,4 +1,4 @@
-// Copyright 2016-2017 Markus Grech
+// Copyright 2017 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,19 +14,20 @@
 
 package katana.sema.expr;
 
-public abstract class SemaExprSimpleLValueExpr extends SemaExprLValueExpr
-{
-	private boolean usedAsLValue = false;
+import katana.sema.type.SemaType;
 
-	@Override
-	public boolean isUsedAsLValue()
+public class SemaExprImplicitConversionLValueToRValue extends SimpleRValueExpr
+{
+	public SemaExpr expr;
+
+	public SemaExprImplicitConversionLValueToRValue(SemaExpr expr)
 	{
-		return usedAsLValue;
+		this.expr = expr;
 	}
 
 	@Override
-	public void useAsLValue(boolean use)
+	public SemaType type()
 	{
-		usedAsLValue = use;
+		return expr.type();
 	}
 }

@@ -17,7 +17,7 @@ package katana.sema.expr;
 import katana.sema.decl.SemaDeclImportedOverloadSet;
 import katana.sema.type.SemaType;
 
-public class SemaExprNamedImportedOverloadSet implements SemaExpr
+public class SemaExprNamedImportedOverloadSet extends SemaExpr
 {
 	public SemaDeclImportedOverloadSet set;
 
@@ -28,6 +28,12 @@ public class SemaExprNamedImportedOverloadSet implements SemaExpr
 
 	@Override
 	public SemaType type()
+	{
+		throw new AssertionError("unreachable");
+	}
+
+	@Override
+	public ExprKind kind()
 	{
 		throw new AssertionError("unreachable");
 	}

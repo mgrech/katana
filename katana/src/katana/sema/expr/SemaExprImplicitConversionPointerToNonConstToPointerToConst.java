@@ -16,7 +16,7 @@ package katana.sema.expr;
 
 import katana.sema.type.SemaType;
 
-public class SemaExprImplicitConversionPointerToNonConstToPointerToConst implements SemaExpr
+public class SemaExprImplicitConversionPointerToNonConstToPointerToConst extends SimpleRValueExpr
 {
 	public SemaExpr expr;
 	public SemaType type;

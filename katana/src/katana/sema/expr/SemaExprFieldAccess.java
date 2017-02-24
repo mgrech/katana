@@ -18,13 +18,13 @@ import katana.analysis.Types;
 import katana.sema.decl.SemaDeclStruct;
 import katana.sema.type.SemaType;
 
-public class SemaExprFieldAccessLValue extends SemaExprLValueExpr
+public class SemaExprFieldAccess extends SemaExpr
 {
-	public SemaExprLValueExpr expr;
+	public SemaExpr expr;
 	public SemaDeclStruct.Field field;
 	public boolean const_;
 
-	public SemaExprFieldAccessLValue(SemaExprLValueExpr expr, SemaDeclStruct.Field field, boolean const_)
+	public SemaExprFieldAccess(SemaExpr expr, SemaDeclStruct.Field field, boolean const_)
 	{
 		this.expr = expr;
 		this.field = field;
@@ -32,20 +32,14 @@ public class SemaExprFieldAccessLValue extends SemaExprLValueExpr
 	}
 
 	@Override
-	public void useAsLValue(boolean use)
-	{
-		expr.useAsLValue(use);
-	}
-
-	@Override
-	public boolean isUsedAsLValue()
-	{
-		return expr.isUsedAsLValue();
-	}
-
-	@Override
 	public SemaType type()
 	{
 		return const_ ? Types.addConst(field.type) : field.type;
+	}
+
+	@Override
+	public ExprKind kind()
+	{
+		return expr.kind();
 	}
 }

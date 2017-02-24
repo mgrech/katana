@@ -17,12 +17,12 @@ package katana.sema.expr;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeArray;
 
-public class SemaExprArrayAccessRValue implements SemaExpr
+public class SemaExprArrayAccess extends SemaExpr
 {
 	public SemaExpr expr;
 	public SemaExpr index;
 
-	public SemaExprArrayAccessRValue(SemaExpr expr, SemaExpr index)
+	public SemaExprArrayAccess(SemaExpr expr, SemaExpr index)
 	{
 		this.expr = expr;
 		this.index = index;
@@ -32,5 +32,11 @@ public class SemaExprArrayAccessRValue implements SemaExpr
 	public SemaType type()
 	{
 		return ((SemaTypeArray)(expr.type())).type;
+	}
+
+	@Override
+	public ExprKind kind()
+	{
+		return expr.kind();
 	}
 }

@@ -20,7 +20,7 @@ import katana.backend.PlatformContext;
 import katana.diag.CompileException;
 import katana.diag.TypeString;
 import katana.sema.decl.*;
-import katana.sema.expr.SemaExprLiteral;
+import katana.sema.expr.SemaExpr;
 import katana.sema.scope.SemaScopeDefinedFunction;
 import katana.sema.scope.SemaScopeFile;
 import katana.sema.scope.SemaScopeFunction;
@@ -141,10 +141,10 @@ public class DeclIfaceValidator implements IVisitor
 			return;
 		}
 
-		SemaExprLiteral init = (SemaExprLiteral)ExprValidator.validate(global.init.unwrap(), scope, context, validateDecl, maybeDeclaredTypeNoConst);
+		SemaExpr init = ExprValidator.validate(global.init.unwrap(), scope, context, validateDecl, maybeDeclaredTypeNoConst);
 
 		if(Types.isVoid(init.type()))
-			throw new CompileException(String.format("initializer for global %s yields 'void'", global.name));
+			throw new CompileException(String.format("initializer for global '%s' yields 'void'", global.name));
 
 		SemaType initTypeNoConst = Types.removeConst(init.type());
 		SemaType globalType = maybeDeclaredType.or(initTypeNoConst);

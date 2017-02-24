@@ -14,10 +14,11 @@
 
 package katana.backend.llvm;
 
+import katana.sema.expr.ExprKind;
 import katana.sema.expr.SemaExpr;
 import katana.sema.type.SemaType;
 
-public class SsaExpr implements SemaExpr
+public class SsaExpr extends SemaExpr
 {
 	public final String name;
 
@@ -28,6 +29,12 @@ public class SsaExpr implements SemaExpr
 
 	@Override
 	public SemaType type()
+	{
+		throw new AssertionError("unreachable");
+	}
+
+	@Override
+	public ExprKind kind()
 	{
 		throw new AssertionError("unreachable");
 	}

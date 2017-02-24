@@ -16,12 +16,12 @@ package katana.sema.expr;
 
 import katana.sema.type.SemaType;
 
-public class SemaExprAssign extends SemaExprSimpleLValueExpr
+public class SemaExprAssign extends SimpleLValueExpr
 {
-	public SemaExprLValueExpr left;
+	public SemaExpr left;
 	public SemaExpr right;
 
-	public SemaExprAssign(SemaExprLValueExpr left, SemaExpr right)
+	public SemaExprAssign(SemaExpr left, SemaExpr right)
 	{
 		this.left = left;
 		this.right = right;

@@ -17,11 +17,11 @@ package katana.sema.expr;
 import katana.analysis.Types;
 import katana.sema.type.SemaType;
 
-public class SemaExprConstLValue extends SemaExprLValueExpr
+public class SemaExprConst extends SemaExpr
 {
-	public SemaExprLValueExpr expr;
+	public SemaExpr expr;
 
-	public SemaExprConstLValue(SemaExprLValueExpr expr)
+	public SemaExprConst(SemaExpr expr)
 	{
 		this.expr = expr;
 	}
@@ -33,14 +33,8 @@ public class SemaExprConstLValue extends SemaExprLValueExpr
 	}
 
 	@Override
-	public boolean isUsedAsLValue()
+	public ExprKind kind()
 	{
-		return expr.isUsedAsLValue();
-	}
-
-	@Override
-	public void useAsLValue(boolean use)
-	{
-		expr.useAsLValue(use);
+		return expr.kind();
 	}
 }

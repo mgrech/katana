@@ -18,7 +18,7 @@ import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeBuiltin;
 import katana.sema.type.SemaTypeConst;
 
-public class SemaExprLitNull implements SemaExprLiteral
+public class SemaExprLitNull extends SimpleRValueExpr
 {
 	private static final SemaType TYPE = new SemaTypeConst(SemaTypeBuiltin.NULL);
 
@@ -26,5 +26,11 @@ public class SemaExprLitNull implements SemaExprLiteral
 	public SemaType type()
 	{
 		return TYPE;
+	}
+
+	@Override
+	public boolean isLiteral()
+	{
+		return true;
 	}
 }

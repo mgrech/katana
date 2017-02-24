@@ -17,7 +17,7 @@ package katana.sema.expr;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeBuiltin;
 
-public class SemaExprImplicitVoidInReturn implements SemaExpr
+public class SemaExprImplicitVoidInReturn extends SimpleRValueExpr
 {
 	@Override
 	public SemaType type()

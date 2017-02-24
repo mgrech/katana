@@ -17,7 +17,7 @@ package katana.sema.expr;
 import katana.sema.decl.SemaDeclGlobal;
 import katana.sema.type.SemaType;
 
-public class SemaExprNamedGlobal extends SemaExprSimpleLValueExpr
+public class SemaExprNamedGlobal extends SimpleLValueExpr
 {
 	public SemaDeclGlobal global;
 

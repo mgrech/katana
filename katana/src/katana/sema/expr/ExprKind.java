@@ -1,4 +1,4 @@
-// Copyright 2016-2017 Markus Grech
+// Copyright 2017 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,21 +14,8 @@
 
 package katana.sema.expr;
 
-import katana.analysis.Types;
-import katana.sema.type.SemaType;
-
-public class SemaExprConstRValue implements SemaExpr
+public enum ExprKind
 {
-	public SemaExpr expr;
-
-	public SemaExprConstRValue(SemaExpr expr)
-	{
-		this.expr = expr;
-	}
-
-	@Override
-	public SemaType type()
-	{
-		return Types.addConst(expr.type());
-	}
+	LVALUE,
+	RVALUE,
 }

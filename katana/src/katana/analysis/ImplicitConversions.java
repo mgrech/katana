@@ -49,19 +49,32 @@ public class ImplicitConversions
 		return expr;
 	}
 
+	private static SemaExpr ensureRValue(SemaExpr expr)
+	{
+		switch(expr.kind())
+		{
+		case RVALUE: return expr;
+		case LVALUE: return new SemaExprImplicitConversionLValueToRValue(expr);
+		default: break;
+		}
+
+		throw new AssertionError("unreachable");
+	}
+
 	public static SemaExpr perform(SemaExpr expr, SemaType targetType)
 	{
 		SemaType sourceType = expr.type();
+		SemaExpr rvalueExpr = ensureRValue(expr);
 
 		// float32 -> float64
 		if(Types.isBuiltin(sourceType, BuiltinType.FLOAT32) && Types.isBuiltin(targetType, BuiltinType.FLOAT64))
-			return new SemaExprImplicitConversionWiden(expr, targetType);
+			return new SemaExprImplicitConversionWiden(rvalueExpr, targetType);
 
 		// (u)intN -> (u)intM (widen)
 		if(Types.isFixedSizeInteger(sourceType) && Types.isFixedSizeInteger(targetType)
 		&& Types.isSigned(sourceType) == Types.isSigned(targetType)
 		&& Types.compareSizes(sourceType, targetType, null) == -1)
-			return new SemaExprImplicitConversionWiden(expr, targetType);
+			return new SemaExprImplicitConversionWiden(rvalueExpr, targetType);
 
 		// null -> ?T
 		if(Types.isNullablePointer(targetType) && Types.isBuiltin(sourceType, BuiltinType.NULL))
@@ -69,7 +82,7 @@ public class ImplicitConversions
 
 		// pointer conversions
 		if(Types.isPointer(sourceType) && Types.isPointer(targetType))
-			return performPointerConversions(expr, targetType);
+			return performPointerConversions(rvalueExpr, targetType);
 
 		return expr;
 	}

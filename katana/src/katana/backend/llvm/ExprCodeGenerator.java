@@ -19,12 +19,10 @@ import katana.analysis.Types;
 import katana.sema.decl.SemaDeclExternFunction;
 import katana.sema.expr.*;
 import katana.sema.type.SemaType;
-import katana.sema.type.SemaTypeFunction;
 import katana.utils.Maybe;
 import katana.visitor.IVisitor;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,12 +58,21 @@ public class ExprCodeGenerator implements IVisitor
 		context.writef("\tstore %s %s, %s* %s\n", type, what, type, where);
 	}
 
+	private Maybe<String> visit(RValueToLValueConversion conversion)
+	{
+		String exprSsa = generate(conversion.expr, context, fcontext).unwrap();
+		String exprType = TypeCodeGenerator.generate(conversion.expr.type(), context.platform());
+		String resultSsa = fcontext.allocateSsa();
+		generateStore(resultSsa, exprSsa, exprType);
+		return Maybe.some(resultSsa);
+	}
+
 	private Maybe<String> visit(SemaExprAddressof addressof)
 	{
 		if(Types.isZeroSized(addressof.expr.type()))
 			return Maybe.some(ZEROSIZE_VALUE_ADDRESS);
 
-		return Maybe.some(generate(addressof.expr, context, fcontext).unwrap());
+		return generate(addressof.expr, context, fcontext);
 	}
 
 	private Maybe<String> visit(SemaExprAlignof alignof)
@@ -73,51 +80,33 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some("" + Types.alignof(alignof.type, context.platform()));
 	}
 
-	private String generateArrayAccess(boolean usedAsLValue, String arraySsa, SemaType arrayType, SemaType fieldType, SemaExpr index)
-	{
-		String indexTypeString = TypeCodeGenerator.generate(index.type(), context.platform());
-		String indexSsa = generate(index, context, fcontext).unwrap();
-		String fieldTypeString = TypeCodeGenerator.generate(fieldType, context.platform());
-		String arrayTypeString = TypeCodeGenerator.generate(arrayType, context.platform());
-		String elemSsa = fcontext.allocateSsa();
-		context.writef("\t%s = getelementptr %s, %s* %s, i64 0, %s %s\n", elemSsa, arrayTypeString, arrayTypeString, arraySsa, indexTypeString, indexSsa);
-
-		if(usedAsLValue)
-			return elemSsa;
-
-		return generateLoad(elemSsa, fieldTypeString);
-	}
-
-	private Maybe<String> visit(SemaExprArrayAccessLValue arrayAccess)
-	{
-		if(Types.isZeroSized(arrayAccess.type()))
-			return Maybe.some(ZEROSIZE_VALUE_ADDRESS);
-
-		boolean isUsedAsLValue = arrayAccess.isUsedAsLValue();
-		arrayAccess.useAsLValue(true);
-		String arraySsa = generate(arrayAccess.value, context, fcontext).unwrap();
-		arrayAccess.useAsLValue(isUsedAsLValue);
-		SemaType fieldType = arrayAccess.type();
-		return Maybe.some(generateArrayAccess(isUsedAsLValue, arraySsa, arrayAccess.value.type(), fieldType, arrayAccess.index));
-	}
-
-	private Maybe<String> visit(SemaExprArrayAccessRValue arrayAccess)
+	private Maybe<String> visit(SemaExprArrayAccess arrayAccess)
 	{
 		if(Types.isZeroSized(arrayAccess.type()))
 			return Maybe.none();
 
+		boolean isRValue = arrayAccess.expr.kind() == ExprKind.RVALUE;
+
+		if(isRValue)
+			arrayAccess.expr = new RValueToLValueConversion(arrayAccess.expr);
+
 		String arraySsa = generate(arrayAccess.expr, context, fcontext).unwrap();
 		SemaType arrayType = arrayAccess.expr.type();
 		String arrayTypeString = TypeCodeGenerator.generate(arrayType, context.platform());
-		BigInteger arrayAlignment = Types.alignof(arrayType, context.platform());
-
-		String tmpSsa = fcontext.allocateSsa();
-		context.writef("\t%s = alloca %s, align %s\n", tmpSsa, arrayTypeString, arrayAlignment);
-		generateStore(tmpSsa, arraySsa, arrayTypeString);
 
 		SemaType fieldType = arrayAccess.type();
+		String fieldTypeString = TypeCodeGenerator.generate(fieldType, context.platform());
 		SemaType indexType = arrayAccess.index.type();
-		return Maybe.some(generateArrayAccess(false, tmpSsa, arrayAccess.expr.type(), fieldType, arrayAccess.index));
+		String indexTypeString = TypeCodeGenerator.generate(indexType, context.platform());
+
+		String indexSsa = generate(arrayAccess.index, context, fcontext).unwrap();
+		String fieldPtrSsa = fcontext.allocateSsa();
+		context.writef("\t%s = getelementptr %s, %s* %s, i64 0, %s %s\n", fieldPtrSsa, arrayTypeString, arrayTypeString, arraySsa, indexTypeString, indexSsa);
+
+		if(isRValue)
+			return Maybe.some(generateLoad(fieldPtrSsa, fieldTypeString));
+
+		return Maybe.some(fieldPtrSsa);
 	}
 
 	private Maybe<String> visit(SemaExprAssign assign)
@@ -236,12 +225,7 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some(resultSsa);
 	}
 
-	private Maybe<String> visit(SemaExprConstLValue const_)
-	{
-		return generate(const_.expr, context, fcontext);
-	}
-
-	private Maybe<String> visit(SemaExprConstRValue const_)
+	private Maybe<String> visit(SemaExprConst const_)
 	{
 		return generate(const_.expr, context, fcontext);
 	}
@@ -251,13 +235,7 @@ public class ExprCodeGenerator implements IVisitor
 		if(Types.isZeroSized(deref.type()))
 			return Maybe.none();
 
-		String ptrSsa = generate(deref.expr, context, fcontext).unwrap();
-
-		if(deref.isUsedAsLValue() || deref.type() instanceof SemaTypeFunction)
-			return Maybe.some(ptrSsa);
-
-		String typeString = TypeCodeGenerator.generate(deref.type(), context.platform());
-		return Maybe.some(generateLoad(ptrSsa, typeString));
+		return generate(deref.expr, context, fcontext);
 	}
 
 	private Maybe<String> generateFunctionCall(String functionSsa, List<SemaExpr> args, SemaType ret, Maybe<Boolean> inline)
@@ -330,6 +308,16 @@ public class ExprCodeGenerator implements IVisitor
 		return generateFunctionCall(functionSsa, functionCall.args, functionCall.function.ret, functionCall.inline);
 	}
 
+	private Maybe<String> visit(SemaExprImplicitConversionLValueToRValue conversion)
+	{
+		if(Types.isZeroSized(conversion.type()))
+			return Maybe.none();
+
+		String lvalueSsa = generate(conversion.expr, context, fcontext).unwrap();
+		String lvalueTypeString = TypeCodeGenerator.generate(conversion.type(), context.platform());
+		return Maybe.some(generateLoad(lvalueSsa, lvalueTypeString));
+	}
+
 	private Maybe<String> visit(SemaExprImplicitConversionNonNullablePointerToNullablePointer conversion)
 	{
 		return generate(conversion.expr, context, fcontext);
@@ -371,34 +359,27 @@ public class ExprCodeGenerator implements IVisitor
 		return generateFunctionCall(functionSsa, functionCall.args, functionCall.type(), Maybe.none());
 	}
 
-	private Maybe<String> visit(SemaExprFieldAccessLValue fieldAccess)
-	{
-		boolean usedAsLValue = fieldAccess.isUsedAsLValue();
-		fieldAccess.useAsLValue(true);
-		String objectSsa = generate(fieldAccess.expr, context, fcontext).unwrap();
-		fieldAccess.useAsLValue(usedAsLValue);
-		String fieldPtrSsa = fcontext.allocateSsa();
-		SemaType fieldType = fieldAccess.type();
-		String fieldTypeString = TypeCodeGenerator.generate(fieldType, context.platform());
-		int fieldIndex = fieldAccess.field.index;
-		String objectTypeString = TypeCodeGenerator.generate(fieldAccess.expr.type(), context.platform());
-		context.writef("\t%s = getelementptr %s, %s* %s, i32 0, i32 %s\n", fieldPtrSsa, objectTypeString, objectTypeString, objectSsa, fieldIndex);
-
-		if(fieldAccess.isUsedAsLValue())
-			return Maybe.some(fieldPtrSsa);
-
-		return Maybe.some(generateLoad(fieldPtrSsa, fieldTypeString));
-	}
-
-	private Maybe<String> visit(SemaExprFieldAccessRValue fieldAccess)
+	private Maybe<String> visit(SemaExprFieldAccess fieldAccess)
 	{
 		String objectSsa = generate(fieldAccess.expr, context, fcontext).unwrap();
-		String fieldSsa = fcontext.allocateSsa();
+
+		boolean isRValue = fieldAccess.expr.kind() == ExprKind.RVALUE;
+
+		if(isRValue)
+			fieldAccess.expr = new RValueToLValueConversion(fieldAccess.expr);
+
 		SemaType objectType = fieldAccess.expr.type();
 		String objectTypeString = TypeCodeGenerator.generate(objectType, context.platform());
 		int fieldIndex = fieldAccess.field.index;
-		context.writef("\t%s = extractvalue %s %s, %s\n", fieldSsa, objectTypeString, objectSsa, fieldIndex);
-		return Maybe.some(fieldSsa);
+		SemaType fieldType = fieldAccess.type();
+		String fieldTypeString = TypeCodeGenerator.generate(fieldType, context.platform());
+		String fieldPtrSsa = fcontext.allocateSsa();
+		context.writef("\t%s = getelementptr %s, %s* %s, i32 0, i32 %s\n", fieldPtrSsa, objectTypeString, objectTypeString, objectSsa, fieldIndex);
+
+		if(isRValue)
+			return Maybe.some(generateLoad(fieldPtrSsa, fieldTypeString));
+
+		return Maybe.some(fieldPtrSsa);
 	}
 
 	private Maybe<String> visit(SemaExprLitArray lit)
@@ -473,13 +454,7 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprLitString lit)
 	{
-		String stringSsa = context.stringPool().get(lit.value);
-
-		if(lit.isUsedAsLValue())
-			return Maybe.some(stringSsa);
-
-		String typeString = TypeCodeGenerator.generate(lit.type(), context.platform());
-		return Maybe.some(generateLoad(stringSsa, typeString));
+		return Maybe.some(context.stringPool().get(lit.value));
 	}
 
 	private Maybe<String> visit(SemaExprNamedFunc namedFunc)
@@ -490,28 +465,19 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some("@" + FunctionNameMangler.mangle(namedFunc.func));
 	}
 
-	private String visitNamedValue(char prefix, boolean usedAsLValue, SemaType type, String name)
-	{
-		if(usedAsLValue)
-			return prefix + name;
-
-		String typeString = TypeCodeGenerator.generate(type, context.platform());
-		return generateLoad(prefix + name, typeString);
-	}
-
 	private Maybe<String> visit(SemaExprNamedGlobal namedGlobal)
 	{
-		return Maybe.some(visitNamedValue('@', namedGlobal.isUsedAsLValue(), namedGlobal.global.type, namedGlobal.global.qualifiedName().toString()));
+		return Maybe.some('@' + namedGlobal.global.qualifiedName().toString());
 	}
 
 	private Maybe<String> visit(SemaExprNamedLocal namedLocal)
 	{
-		return Maybe.some(visitNamedValue('%', namedLocal.isUsedAsLValue(), namedLocal.local.type, namedLocal.local.name));
+		return Maybe.some('%' + namedLocal.local.name);
 	}
 
 	private Maybe<String> visit(SemaExprNamedParam namedParam)
 	{
-		return Maybe.some(visitNamedValue('%', namedParam.isUsedAsLValue(), namedParam.param.type, namedParam.param.name));
+		return Maybe.some('%' + namedParam.param.name);
 	}
 
 	private Maybe<String> visit(SemaExprOffsetof offsetof)

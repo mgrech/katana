@@ -22,10 +22,7 @@ import katana.diag.CompileException;
 import katana.diag.TypeString;
 import katana.sema.decl.SemaDecl;
 import katana.sema.decl.SemaDeclDefinedFunction;
-import katana.sema.expr.SemaExpr;
-import katana.sema.expr.SemaExprAssign;
-import katana.sema.expr.SemaExprImplicitVoidInReturn;
-import katana.sema.expr.SemaExprNamedLocal;
+import katana.sema.expr.*;
 import katana.sema.scope.SemaScopeFunction;
 import katana.sema.stmt.*;
 import katana.sema.type.SemaType;
@@ -205,9 +202,11 @@ public class StmtValidator implements IVisitor
 		if(!function.defineLocal(local.name, localType))
 			throw new CompileException(String.format("redefinition of local '%s'", local.name));
 
+		if(init.kind() == ExprKind.LVALUE)
+			init = new SemaExprImplicitConversionLValueToRValue(init);
+
 		SemaDeclDefinedFunction.Local semaLocal = function.localsByName.get(local.name);
 		SemaExprNamedLocal localref = new SemaExprNamedLocal(semaLocal);
-		localref.useAsLValue(true);
 		return new SemaStmtExprStmt(new SemaExprAssign(localref, init));
 	}
 }

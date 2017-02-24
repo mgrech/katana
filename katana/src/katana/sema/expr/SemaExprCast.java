@@ -16,7 +16,7 @@ package katana.sema.expr;
 
 import katana.sema.type.SemaType;
 
-public class SemaExprCast implements SemaExpr
+public class SemaExprCast extends SimpleRValueExpr
 {
 	public enum Kind
 	{

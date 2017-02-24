@@ -1,4 +1,4 @@
-// Copyright 2016-2017 Markus Grech
+// Copyright 2017 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,11 @@
 
 package katana.sema.expr;
 
-public interface SemaExprLiteral extends SemaExpr
+public abstract class SimpleRValueExpr extends SemaExpr
 {
+	@Override
+	public ExprKind kind()
+	{
+		return ExprKind.RVALUE;
+	}
 }

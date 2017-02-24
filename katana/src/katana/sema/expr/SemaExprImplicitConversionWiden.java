@@ -16,7 +16,7 @@ package katana.sema.expr;
 
 import katana.sema.type.SemaType;
 
-public class SemaExprImplicitConversionWiden implements SemaExpr
+public class SemaExprImplicitConversionWiden extends SimpleRValueExpr
 {
 	public SemaExpr expr;
 	public SemaType type;

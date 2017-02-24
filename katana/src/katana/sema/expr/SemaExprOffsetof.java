@@ -18,7 +18,7 @@ import katana.sema.decl.SemaDeclStruct;
 import katana.sema.type.SemaType;
 import katana.sema.type.SemaTypeBuiltin;
 
-public class SemaExprOffsetof implements SemaExpr
+public class SemaExprOffsetof extends SimpleRValueExpr
 {
 	public SemaDeclStruct.Field field;
 

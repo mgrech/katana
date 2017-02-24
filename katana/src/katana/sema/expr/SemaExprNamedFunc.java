@@ -21,7 +21,7 @@ import katana.sema.type.SemaTypeFunction;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SemaExprNamedFunc extends SemaExprSimpleLValueExpr
+public class SemaExprNamedFunc extends SimpleLValueExpr
 {
 	public SemaDeclFunction func;
 

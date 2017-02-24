@@ -21,7 +21,7 @@ import katana.sema.type.SemaTypeConst;
 
 import java.math.BigInteger;
 
-public class SemaExprLitInt implements SemaExprLiteral
+public class SemaExprLitInt extends SimpleRValueExpr
 {
 	public final BigInteger value;
 	public final BuiltinType type;
@@ -58,5 +58,11 @@ public class SemaExprLitInt implements SemaExprLiteral
 	public SemaType type()
 	{
 		return cachedType;
+	}
+
+	@Override
+	public boolean isLiteral()
+	{
+		return true;
 	}
 }

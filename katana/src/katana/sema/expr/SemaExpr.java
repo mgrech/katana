@@ -17,7 +17,13 @@ package katana.sema.expr;
 import katana.sema.type.SemaType;
 import katana.visitor.IVisitable;
 
-public interface SemaExpr extends IVisitable
+public abstract class SemaExpr implements IVisitable
 {
-	SemaType type();
+	public abstract SemaType type();
+	public abstract ExprKind kind();
+
+	public boolean isLiteral()
+	{
+		return false;
+	}
 }

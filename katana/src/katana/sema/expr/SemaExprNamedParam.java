@@ -17,7 +17,7 @@ package katana.sema.expr;
 import katana.sema.decl.SemaDeclFunction;
 import katana.sema.type.SemaType;
 
-public class SemaExprNamedParam extends SemaExprSimpleLValueExpr
+public class SemaExprNamedParam extends SimpleLValueExpr
 {
 	public SemaDeclFunction.Param param;
 
