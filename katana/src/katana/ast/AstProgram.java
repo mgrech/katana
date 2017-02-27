@@ -14,11 +14,12 @@
 
 package katana.ast;
 
-import java.nio.file.Path;
-import java.util.HashMap;
+import katana.scanner.SourceFile;
+
+import java.util.IdentityHashMap;
 import java.util.Map;
 
 public class AstProgram
 {
-	public Map<Path, AstFile> files = new HashMap<>();
+	public Map<SourceFile, AstFile> files = new IdentityHashMap<>();
 }

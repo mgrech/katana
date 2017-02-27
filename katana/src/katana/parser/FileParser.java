@@ -37,7 +37,7 @@ public class FileParser implements IVisitor
 
 	public static AstFile parse(Scanner scanner)
 	{
-		AstFile file = new AstFile(scanner.path());
+		AstFile file = new AstFile(scanner.file());
 		FileParser parser = new FileParser(file);
 
 		while(scanner.state().token.type != TokenType.END)

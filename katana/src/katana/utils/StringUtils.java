@@ -1,4 +1,4 @@
-// Copyright 2016-2017 Markus Grech
+// Copyright 2017 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,27 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.scanner;
+package katana.utils;
 
-public class ScannerState implements Cloneable
+public class StringUtils
 {
-	public final OffsetRange range;
-	public Token token = Tokens.BEGIN;
-
-	public ScannerState()
+	public static String ltrim(String s)
 	{
-		this.range = new OffsetRange(0, 0);
+		while(!s.isEmpty() && Character.isWhitespace(s.charAt(0)))
+			s = s.substring(1);
+
+		return s;
 	}
 
-	private ScannerState(OffsetRange range, Token token)
+	public static String rtrim(String s)
 	{
-		this.range = range;
-		this.token = token;
+		while(!s.isEmpty() && Character.isWhitespace(s.charAt(s.length() - 1)))
+			s = s.substring(0, s.length() - 1);
+
+		return s;
 	}
 
-	@Override
-	public ScannerState clone()
+	public static String times(int count, char c)
 	{
-		return new ScannerState(range.clone(), token);
+		StringBuilder builder = new StringBuilder();
+
+		for(int i = 0; i != count; ++i)
+			builder.append(c);
+
+		return builder.toString();
 	}
 }

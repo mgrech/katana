@@ -16,23 +16,19 @@ package katana.scanner;
 
 import katana.diag.CompileException;
 
-import java.nio.file.Path;
-
 public class Scanner
 {
-	private int[] source;
-	private Path path;
+	private final SourceFile file;
 	private ScannerState state = new ScannerState();
 
-	public Scanner(Path path, int[] source)
+	public Scanner(SourceFile file)
 	{
-		this.path = path;
-		this.source = source;
+		this.file = file;
 	}
 
-	public Path path()
+	public SourceFile file()
 	{
-		return path;
+		return file;
 	}
 
 	public ScannerState state()
@@ -59,8 +55,7 @@ public class Scanner
 		if(atEnd())
 			return Tokens.END;
 
-		state.tokenOffset = state.currentOffset;
-		state.tokenColumn = state.currentColumn;
+		state.range.begin = state.range.end;
 
 		int cp = here();
 
@@ -96,7 +91,7 @@ public class Scanner
 
 	private Token operatorSeq()
 	{
-		int before = state.currentOffset == 0 ? ' ' : source[state.currentOffset - 1];
+		int before = state.range.end == 0 ? ' ' : file.codepoints()[state.range.end - 1];
 
 		StringBuilder builder = new StringBuilder();
 
@@ -467,7 +462,7 @@ public class Scanner
 			if(!atLineBreak())
 				break;
 
-			skipLineBreak();
+			advanceColumn();
 		}
 	}
 
@@ -495,29 +490,22 @@ public class Scanner
 
 	private boolean atEnd()
 	{
-		return state.currentOffset == source.length;
+		return state.range.end == file.codepoints().length;
 	}
 
 	private int here()
 	{
-		return source[state.currentOffset];
-	}
-
-	private void skipLineBreak()
-	{
-		++state.currentOffset;
-		++state.line;
-		state.currentColumn = 1;
+		return file.codepoints()[state.range.end];
 	}
 
 	private void advanceColumn()
 	{
-		++state.currentOffset;
-		++state.currentColumn;
+		++state.range.end;
 	}
 
 	private void error(String message)
 	{
-		throw new CompileException(String.format("%s on line %s", message, state.line));
+		SourceLocation location = file.resolve(state.range.end);
+		throw new CompileException(String.format("%s: error: %s", message, location));
 	}
 }

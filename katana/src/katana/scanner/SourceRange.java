@@ -1,4 +1,4 @@
-// Copyright 2016-2017 Markus Grech
+// Copyright 2017 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,25 +14,20 @@
 
 package katana.scanner;
 
-public class ScannerState implements Cloneable
+public class SourceRange
 {
-	public final OffsetRange range;
-	public Token token = Tokens.BEGIN;
+	public final SourceLocation begin;
+	public final SourceLocation end;
 
-	public ScannerState()
+	public SourceRange(SourceLocation begin, SourceLocation end)
 	{
-		this.range = new OffsetRange(0, 0);
-	}
-
-	private ScannerState(OffsetRange range, Token token)
-	{
-		this.range = range;
-		this.token = token;
+		this.begin = begin;
+		this.end = end;
 	}
 
 	@Override
-	public ScannerState clone()
+	public String toString()
 	{
-		return new ScannerState(range.clone(), token);
+		return String.format("%s:%s:%s-%s", begin.file.path(), begin.line + 1, begin.column + 1, end.column + 1);
 	}
 }

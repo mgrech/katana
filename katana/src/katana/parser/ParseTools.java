@@ -16,10 +16,8 @@ package katana.parser;
 
 import katana.ast.AstPath;
 import katana.diag.CompileException;
-import katana.scanner.Scanner;
-import katana.scanner.Token;
-import katana.scanner.TokenCategory;
-import katana.scanner.TokenType;
+import katana.scanner.*;
+import katana.utils.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -124,17 +122,37 @@ public class ParseTools
 	{
 		expect(scanner, type, false);
 		return consume(scanner);
-}
+	}
 
 	public static <T> void unexpectedToken(Scanner scanner, T expected)
 	{
-		String fmt = "unexpected token '%s', expected '%s' on line %s, column %s";
-		throw new CompileException(String.format(fmt, scanner.state().token.value, expected, scanner.state().line, scanner.state().tokenColumn));
+		error(scanner, "unexpected token '%s', expected '%s'", scanner.state().token.value, expected);
 	}
 
 	public static void unexpectedToken(Scanner scanner)
 	{
-		String fmt = "unexpected token '%s' on line %s, column %s";
-		throw new CompileException(String.format(fmt, scanner.state().token.value, scanner.state().line, scanner.state().tokenColumn));
+		error(scanner, "unexpected token '%s'", scanner.state().token.value);
+	}
+
+	private static void error(Scanner scanner, String fmt, Object... args)
+	{
+		SourceRange range = scanner.file().resolve(scanner.state().range);
+		String message = String.format(fmt, args);
+		String line = scanner.file().line(range.begin.line);
+		String errorIndicator = makeErrorIndicator(scanner.file(), range);
+		throw new CompileException(String.format("%s: error: %s\n\t%s\n\t%s", range, message, line.trim(), errorIndicator));
+	}
+
+	private static String makeErrorIndicator(SourceFile file, SourceRange range)
+	{
+		String line = StringUtils.rtrim(file.line(range.begin.line));
+		int lengthPreLTrim = line.length();
+		line = StringUtils.ltrim(line);
+		int ltrimmedColumns = lengthPreLTrim - line.length();
+
+		int spaces = range.begin.column - ltrimmedColumns;
+		int length = range.end.column - range.begin.column;
+
+		return StringUtils.times(spaces, ' ') + StringUtils.times(length, '^');
 	}
 }

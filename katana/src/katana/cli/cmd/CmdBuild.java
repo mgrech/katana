@@ -24,14 +24,17 @@ import katana.cli.CommandException;
 import katana.diag.CompileException;
 import katana.parser.ProgramParser;
 import katana.platform.TargetTriple;
+import katana.project.FileType;
 import katana.project.Project;
 import katana.project.ProjectBuilder;
 import katana.project.ProjectManager;
+import katana.scanner.SourceManager;
 import katana.sema.SemaProgram;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
 
 @Command(name = "build", desc = "builds project at given path in the working directory")
 public class CmdBuild
@@ -48,9 +51,16 @@ public class CmdBuild
 		try
 		{
 			Project project = ProjectManager.load(root, context.target());
-			AstProgram ast = ProgramParser.parse(project);
-			SemaProgram program = ProgramValidator.validate(ast, context);
-			ProgramCodeGenerator.generate(project, program, context);
+			Set<Path> katanaFiles = project.sourceFiles.get(FileType.KATANA);
+
+			if(katanaFiles != null)
+			{
+				SourceManager sourceManager = SourceManager.loadFiles(project.root, project.sourceFiles.get(FileType.KATANA));
+				AstProgram ast = ProgramParser.parse(sourceManager);
+				SemaProgram program = ProgramValidator.validate(ast, context);
+				ProgramCodeGenerator.generate(project, program, context);
+			}
+
 			ProjectBuilder.build(project, context.target());
 		}
 

@@ -16,37 +16,25 @@ package katana.parser;
 
 import katana.ast.AstFile;
 import katana.ast.AstProgram;
-import katana.project.FileType;
-import katana.project.Project;
 import katana.scanner.Scanner;
+import katana.scanner.SourceFile;
+import katana.scanner.SourceManager;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Set;
 
 public class ProgramParser
 {
-	public static AstProgram parse(Project project) throws IOException
+	public static AstProgram parse(SourceManager sourceManager) throws IOException
 	{
-		Set<Path> katanaFiles = project.sourceFiles.get(FileType.KATANA);
-
-		if(katanaFiles == null)
-			return null;
-
 		AstProgram program = new AstProgram();
 
-		for(Path path : katanaFiles)
+		for(SourceFile file : sourceManager.files())
 		{
-			byte[] data = Files.readAllBytes(path);
-			int[] codepoints = new String(data, StandardCharsets.UTF_8).codePoints().toArray();
-
-			Scanner scanner = new Scanner(path, codepoints);
+			Scanner scanner = new Scanner(file);
 			scanner.advance();
 
-			AstFile file = FileParser.parse(scanner);
-			program.files.put(path, file);
+			AstFile ast = FileParser.parse(scanner);
+			program.files.put(file, ast);
 		}
 
 		return program;

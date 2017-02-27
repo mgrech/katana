@@ -1,4 +1,4 @@
-// Copyright 2016-2017 Markus Grech
+// Copyright 2017 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,25 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.ast;
+package katana.scanner;
 
-import katana.ast.decl.AstDeclImport;
-import katana.ast.decl.AstDeclRenamedImport;
-import katana.scanner.SourceFile;
-
-import java.util.HashMap;
-import java.util.Map;
-
-public class AstFile
+public class SourceLocation
 {
 	public final SourceFile file;
-	public final Map<AstPath, AstDeclImport> imports = new HashMap<>();
-	public final Map<String, AstDeclRenamedImport> renamedImports = new HashMap<>();
-	public final Map<AstPath, AstModule> modules = new HashMap<>();
-	public final DelayedExprParseList delayedExprs = new DelayedExprParseList();
+	public final int line;
+	public final int column;
+	public final int offset;
 
-	public AstFile(SourceFile file)
+	public SourceLocation(SourceFile file, int line, int column, int offset)
 	{
 		this.file = file;
+		this.line = line;
+		this.column = column;
+		this.offset = offset;
+	}
+
+	@Override
+	public String toString()
+	{
+		return String.format("%s:%s:%s", file.path(), line + 1, column + 1);
 	}
 }
