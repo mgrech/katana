@@ -436,10 +436,7 @@ public class Scanner
 			}
 
 			else if(CharClassifier.isDigit(here()))
-			{
 				error("numeric literals must start with digit 1-9 or base prefix");
-				return null;
-			}
 
 			else
 				literal.append('0');
@@ -455,16 +452,16 @@ public class Scanner
 
 		boolean isFloatingPointLiteral = !atEnd() && here() == '.';
 
-		if(isFloatingPointLiteral && base != 10)
-		{
-			error("base prefixes are not supported with floating point literals");
-			base = 10;
-		}
-
 		if(isFloatingPointLiteral)
 		{
 			literal.append('.');
 			advance();
+
+			if(base != 10)
+			{
+				error("base prefixes are not supported with floating point literals");
+				base = 10;
+			}
 
 			while(!atEnd() && (isDigit(here(), base) || here() == '\''))
 			{
