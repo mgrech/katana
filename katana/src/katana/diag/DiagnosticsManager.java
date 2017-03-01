@@ -68,12 +68,12 @@ public class DiagnosticsManager
 	public void print()
 	{
 		for(Diagnostic diagnostic : diagnostics)
-			System.out.println(diagnostic);
+			System.err.println(diagnostic);
 	}
 
 	public void rewind(int amount)
 	{
-		diagnostics.subList(0, diagnostics.size() - amount).clear();
+		diagnostics.subList(diagnostics.size() - amount, diagnostics.size()).clear();
 	}
 
 	public int amount()
