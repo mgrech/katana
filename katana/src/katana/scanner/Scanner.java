@@ -439,14 +439,6 @@ public class Scanner
 			literal.append('.');
 			advance();
 
-			if(base != 10)
-			{
-				offset -= literal.length();
-				error("base prefixes are not supported with floating point literals");
-				offset += literal.length();
-				base = 10;
-			}
-
 			while(!atEnd() && (isDigit(here(), base) || here() == '\''))
 			{
 				if(here() != '\'')
@@ -504,6 +496,14 @@ public class Scanner
 
 			type = isFloatingPointLiteral ? TokenType.LIT_FLOAT_DEDUCE : TokenType.LIT_INT_DEDUCE;
 			break;
+		}
+
+		if(isFloatingPointLiteral && base != 10)
+		{
+			offset -= literal.length();
+			error("base prefixes are not supported with floating point literals");
+			offset += literal.length();
+			literal = new StringBuilder("0");
 		}
 
 		if(isFloatingPointLiteral && !isFloatingPointSuffix)
