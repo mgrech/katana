@@ -36,12 +36,12 @@ public class StackTrace
 
 		for(StackTraceElement element : trace)
 		{
-			builder.append(String.format("at %s.%s", element.getClassName(), element.getMethodName()));
+			builder.append(String.format("\tat %s.%s", element.getClassName(), element.getMethodName()));
 
 			if(element.isNativeMethod())
-				builder.append(" (native)");
+				builder.append("(native)");
 			else
-				builder.append(String.format(" (%s:%s)", element.getFileName(), element.getLineNumber()));
+				builder.append(String.format("(%s:%s)", element.getFileName(), element.getLineNumber()));
 
 			builder.append('\n');
 		}
