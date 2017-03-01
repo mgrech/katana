@@ -126,11 +126,11 @@ public class ParseTools
 
 	public static <T> void unexpectedToken(ParseContext ctx, T expected)
 	{
-		ctx.error("unexpected token '%s', expected '%s'", ctx.token().value, expected);
+		ctx.error(null, "unexpected token '%s', expected '%s'", ctx.token().value, expected);
 	}
 
 	public static void unexpectedToken(ParseContext ctx)
 	{
-		ctx.error("unexpected token '%s'", ctx.token().value);
+		ctx.error(null, "unexpected token '%s'", ctx.token().value);
 	}
 }

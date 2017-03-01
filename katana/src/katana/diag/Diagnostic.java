@@ -20,13 +20,15 @@ import katana.utils.StringUtils;
 
 public class Diagnostic
 {
+	private final DiagnosticId id;
 	private final DiagnosticType type;
 	private final SourceLocation location;
 	private final String message;
 	private final Maybe<StackTrace> trace;
 
-	public Diagnostic(DiagnosticType type, SourceLocation location, String message, Maybe<StackTrace> trace)
+	public Diagnostic(DiagnosticId id, DiagnosticType type, SourceLocation location, String message, Maybe<StackTrace> trace)
 	{
+		this.id = id;
 		this.type = type;
 		this.location = location;
 		this.message = message;
@@ -50,6 +52,6 @@ public class Diagnostic
 		String sourceLine = location.file.line(location.line).trim();
 		String indicator = makeLocationIndicator(location);
 		String traceString = trace.map(StackTrace::toString).or("");
-		return String.format("%s: %s: %s\n\t%s\n\t%s\n%s", location, typeString, message, sourceLine, indicator, traceString);
+		return String.format("%s: %s %s: %s\n\t%s\n\t%s\n%s", location, typeString, id, message, sourceLine, indicator, traceString);
 	}
 }

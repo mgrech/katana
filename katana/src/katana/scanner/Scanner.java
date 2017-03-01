@@ -14,6 +14,7 @@
 
 package katana.scanner;
 
+import katana.diag.DiagnosticId;
 import katana.diag.DiagnosticsManager;
 import katana.utils.StringUtils;
 
@@ -105,7 +106,7 @@ public class Scanner
 				return identifierOrKeyword();
 
 			advance();
-			error("invalid codepoint encountered: %s", StringUtils.formatCodepoint(cp));
+			error(ScannerDiagnostics.INVALID_CODEPOINT, "invalid codepoint encountered: %s", StringUtils.formatCodepoint(cp));
 		}
 	}
 
@@ -166,7 +167,7 @@ public class Scanner
 		}
 
 		if(atEnd() || here() == '\r' || here() == '\n')
-			error("unterminated string literal");
+			error(ScannerDiagnostics.UNTERMINATED_STRING, "unterminated string literal");
 		else
 			advance();
 
@@ -219,7 +220,7 @@ public class Scanner
 
 			default:
 				int cp = file.codepoints()[offset - 1];
-				error("invalid escape sequence %s", StringUtils.formatCodepoint(cp));
+				error(ScannerDiagnostics.INVALID_ESCAPE_SEQUENCE, "invalid escape sequence %s", StringUtils.formatCodepoint(cp));
 				break;
 			}
 
@@ -246,13 +247,13 @@ public class Scanner
 
 		if(sum < 0)
 		{
-			error("expected hex digits in unicode escape sequence");
+			error(ScannerDiagnostics.INVALID_CHARACTER_IN_UNICODE_ESCAPE, "expected hex digits in unicode escape sequence");
 			return -1;
 		}
 
 		if(sum > 0x10FFFF)
 		{
-			error("invalid codepoint in unicode escape sequence");
+			error(ScannerDiagnostics.INVALID_CODEPOINT_IN_UNICODE_ESCAPE, "invalid codepoint in unicode escape sequence");
 			return -1;
 		}
 
@@ -266,7 +267,7 @@ public class Scanner
 
 		if(d1 == -1 || d2 == -1)
 		{
-			error("expected hex digits in hex escape sequence");
+			error(ScannerDiagnostics.INVALID_CHARACTER_IN_HEX_ESCAPE, "expected hex digits in hex escape sequence");
 			return -1;
 		}
 
@@ -421,7 +422,7 @@ public class Scanner
 			}
 
 			else if(CharClassifier.isDigit(here()))
-				error("numeric literal must start with digit 1-9 or base prefix");
+				error(ScannerDiagnostics.INVALID_START_IN_NUMERIC_LITERAL, "numeric literal must start with digit 1-9 or base prefix");
 
 			else
 				literal.append('0');
@@ -461,7 +462,7 @@ public class Scanner
 
 		if(literal.length() == 0)
 		{
-			error("numeric literal requires at least one digit");
+			error(ScannerDiagnostics.EMPTY_NUMERIC_LITERAL, "numeric literal requires at least one digit");
 			literal.append('0');
 		}
 
@@ -494,7 +495,7 @@ public class Scanner
 		default:
 			int tmp = prevOffset;
 			prevOffset = offset - suffix.length();
-			error("unknown literal suffix '%s'", suffix);
+			error(ScannerDiagnostics.UNKNOWN_SUFFIX_IN_NUMERIC_LITERAL, "unknown literal suffix '%s'", suffix);
 			prevOffset = tmp;
 
 			type = isFloatingPointLiteral ? TokenType.LIT_FLOAT_DEDUCE : TokenType.LIT_INT_DEDUCE;
@@ -504,7 +505,7 @@ public class Scanner
 		if(isFloatingPointLiteral && base != 10)
 		{
 			offset -= literal.length();
-			error("base prefixes are not supported with floating point literals");
+			error(ScannerDiagnostics.BASE_PREFIX_ON_FLOAT_LITERAL, "base prefixes are not supported with floating point literals");
 			offset += literal.length();
 			literal = new StringBuilder("0");
 		}
@@ -513,7 +514,7 @@ public class Scanner
 		{
 			int tmp = prevOffset;
 			prevOffset = offset - suffix.length();
-			error("integer suffix used on floating point literal");
+			error(ScannerDiagnostics.INT_SUFFIX_ON_FLOAT_LITERAL, "integer suffix used on floating point literal");
 			prevOffset = tmp;
 
 			type = TokenType.LIT_FLOAT_DEDUCE;
@@ -575,8 +576,8 @@ public class Scanner
 		++offset;
 	}
 
-	private void error(String fmt, Object... args)
+	private void error(DiagnosticId id, String fmt, Object... args)
 	{
-		diag.error(location(), fmt, args);
+		diag.error(id, location(), fmt, args);
 	}
 }

@@ -15,6 +15,7 @@
 package katana.parser;
 
 import katana.ast.LateParseExprs;
+import katana.diag.DiagnosticId;
 import katana.diag.DiagnosticsManager;
 import katana.scanner.SourceFile;
 import katana.scanner.SourceLocation;
@@ -81,18 +82,18 @@ public class ParseContext implements Cloneable
 		++current;
 	}
 
-	public void error(String fmt, Object... args)
+	public void error(DiagnosticId id, String fmt, Object... args)
 	{
-		diag.error(location(), fmt, args);
+		diag.error(id, location(), fmt, args);
 	}
 
-	public void warning(String fmt, Object... args)
+	public void warning(DiagnosticId id, String fmt, Object... args)
 	{
-		diag.warning(location(), fmt, args);
+		diag.warning(id, location(), fmt, args);
 	}
 
-	public void note(String fmt, Object... args)
+	public void note(DiagnosticId id, String fmt, Object... args)
 	{
-		diag.note(location(), fmt, args);
+		diag.note(id, location(), fmt, args);
 	}
 }

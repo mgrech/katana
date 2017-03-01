@@ -46,25 +46,25 @@ public class DiagnosticsManager
 		return Maybe.some(trace);
 	}
 
-	private void diagnose(DiagnosticType type, SourceLocation location, String fmt, Object... args)
+	private void diagnose(DiagnosticId id, DiagnosticType type, SourceLocation location, String fmt, Object... args)
 	{
-		diagnostics.add(new Diagnostic(type, location, String.format(fmt, args), buildStackTrace()));
+		diagnostics.add(new Diagnostic(id, type, location, String.format(fmt, args), buildStackTrace()));
 	}
 
-	public void error(SourceLocation location, String fmt, Object... args)
+	public void error(DiagnosticId id, SourceLocation location, String fmt, Object... args)
 	{
 		successful = false;
-		diagnose(DiagnosticType.ERROR, location, fmt, args);
+		diagnose(id, DiagnosticType.ERROR, location, fmt, args);
 	}
 
-	public void warning(SourceLocation location, String fmt, Object... args)
+	public void warning(DiagnosticId id, SourceLocation location, String fmt, Object... args)
 	{
-		diagnose(DiagnosticType.WARNING, location, fmt, args);
+		diagnose(id, DiagnosticType.WARNING, location, fmt, args);
 	}
 
-	public void note(SourceLocation location, String fmt, Object... args)
+	public void note(DiagnosticId id, SourceLocation location, String fmt, Object... args)
 	{
-		diagnose(DiagnosticType.NOTE, location, fmt, args);
+		diagnose(id, DiagnosticType.NOTE, location, fmt, args);
 	}
 
 	public boolean successful()
