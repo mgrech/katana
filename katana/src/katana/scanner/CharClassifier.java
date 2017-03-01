@@ -36,17 +36,19 @@ public class CharClassifier
 		return isDigit(cp) || (cp >= 'a' && cp <= 'f') || (cp >= 'A' && cp <= 'F');
 	}
 
-	public static boolean isIdentifierStart(int cp)
+	private static boolean isAsciiLetter(int cp)
 	{
-		return cp == '_' || Character.isLetter(cp);
+		return cp >= 'a' && cp <= 'z' || cp >= 'A' && cp <= 'Z';
 	}
 
-	public static boolean isIdentifierChar(int cp)
+	public static boolean isIdentifierHead(int cp)
 	{
-		return isIdentifierStart(cp)
-		    || Character.isDigit(cp)
-		    || Character.getType(cp) == Character.NON_SPACING_MARK
-		    || Character.getType(cp) == Character.COMBINING_SPACING_MARK;
+		return isAsciiLetter(cp);
+	}
+
+	public static boolean isIdentifierTail(int cp)
+	{
+		return isIdentifierHead(cp) || isDigit(cp) || cp == '_';
 	}
 
 	public static boolean isOpChar(int cp)

@@ -101,7 +101,7 @@ public class Scanner
 				return lit;
 			}
 
-			if(CharClassifier.isIdentifierStart(cp))
+			if(CharClassifier.isIdentifierHead(cp))
 				return identifierOrKeyword();
 
 			error("invalid codepoint encountered: %s", StringUtils.formatCodepoint(cp));
@@ -144,7 +144,7 @@ public class Scanner
 	{
 		StringBuilder builder = new StringBuilder();
 
-		while(!atEnd() && CharClassifier.isIdentifierChar(here()))
+		while(!atEnd() && CharClassifier.isIdentifierTail(here()))
 		{
 			builder.appendCodePoint(here());
 			advance();
@@ -287,7 +287,7 @@ public class Scanner
 			builder.appendCodePoint(here());
 			advance();
 		}
-		while(!atEnd() && CharClassifier.isIdentifierChar(here()));
+		while(!atEnd() && CharClassifier.isIdentifierTail(here()));
 
 		return checkForKeywords(builder.toString());
 	}
@@ -425,7 +425,7 @@ public class Scanner
 			else
 				literal.append('0');
 		}
-		
+
 		while(!atEnd() && (isDigit(here(), base) || here() == '\''))
 		{
 			if(here() != '\'')
@@ -458,7 +458,7 @@ public class Scanner
 
 		StringBuilder suffix = new StringBuilder();
 
-		while(!atEnd() && (CharClassifier.isIdentifierChar(here()) || CharClassifier.isDigit(here())))
+		while(!atEnd() && (CharClassifier.isIdentifierTail(here()) || CharClassifier.isDigit(here())))
 		{
 			suffix.appendCodePoint(here());
 			advance();
