@@ -31,17 +31,24 @@ public class DiagnosticsManager
 		this.stackTraces = stackTraces;
 	}
 
-	private Maybe<StackTrace> makeStackTrace()
+	private Maybe<StackTrace> buildStackTrace()
 	{
 		if(!stackTraces)
 			return Maybe.none();
 
-		return Maybe.some(StackTrace.get());
+		StackTrace trace = StackTrace.get();
+
+		// trim stack frames from this class:
+		// error/warning/note -> diagnose -> buildStackTrace
+		for(int i = 0; i != 3; ++i)
+			trace.trimInnermostFrame();
+
+		return Maybe.some(trace);
 	}
 
 	private void diagnose(DiagnosticType type, SourceLocation location, String fmt, Object... args)
 	{
-		diagnostics.add(new Diagnostic(type, location, String.format(fmt, args), makeStackTrace()));
+		diagnostics.add(new Diagnostic(type, location, String.format(fmt, args), buildStackTrace()));
 	}
 
 	public void error(SourceLocation location, String fmt, Object... args)

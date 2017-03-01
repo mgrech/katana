@@ -14,19 +14,33 @@
 
 package katana.diag;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class StackTrace
 {
-	private final StackTraceElement[] trace;
+	private final List<StackTraceElement> trace;
 
 	private StackTrace(StackTraceElement[] trace)
 	{
-		this.trace = trace;
+		this.trace = new ArrayList<>(Arrays.asList(trace));
 	}
 
 	public static StackTrace get()
 	{
 		// http://bugs.java.com/bugdatabase/view_bug.do?bug_id=6375302
-		return new StackTrace(new Exception().getStackTrace());
+		StackTrace trace = new StackTrace(new Exception().getStackTrace());
+
+		// trim this stack frame
+		trace.trimInnermostFrame();
+
+		return trace;
+	}
+
+	public void trimInnermostFrame()
+	{
+		trace.remove(0);
 	}
 
 	@Override
