@@ -157,7 +157,7 @@ public class Scanner
 	{
 		StringBuilder builder = new StringBuilder();
 
-		while(!atEnd() && here() != '"' && here() != '\n')
+		while(!atEnd() && here() != '"' && here() != '\r' && here() != '\n')
 		{
 			int cp = stringCodepoint();
 
@@ -165,7 +165,7 @@ public class Scanner
 				builder.appendCodePoint(cp);
 		}
 
-		if(atEnd() || here() == '\n')
+		if(atEnd() || here() == '\r' || here() == '\n')
 		{
 			error("unterminated string literal");
 			return null;
