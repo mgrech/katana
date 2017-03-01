@@ -104,8 +104,8 @@ public class Scanner
 			if(CharClassifier.isIdentifierHead(cp))
 				return identifierOrKeyword();
 
-			error("invalid codepoint encountered: %s", StringUtils.formatCodepoint(cp));
 			advance();
+			error("invalid codepoint encountered: %s", StringUtils.formatCodepoint(cp));
 		}
 	}
 
