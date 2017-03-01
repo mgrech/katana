@@ -23,8 +23,10 @@ import katana.diag.DiagnosticsManager;
 import katana.op.Operator;
 import katana.scanner.Scanner;
 import katana.scanner.SourceFile;
-import katana.scanner.TokenType;
+import katana.scanner.Token;
 import katana.visitor.IVisitor;
+
+import java.util.List;
 
 @SuppressWarnings("unused")
 public class FileParser implements IVisitor
@@ -39,14 +41,13 @@ public class FileParser implements IVisitor
 
 	public static AstFile parse(SourceFile file, DiagnosticsManager diag)
 	{
-		Scanner scanner = new Scanner(file);
-		scanner.advance();
-		ParseContext ctx = new ParseContext(scanner, diag);
+		List<Token> tokens = Scanner.tokenize(file);
+		ParseContext ctx = new ParseContext(file, tokens, diag);
 
 		AstFile ast = new AstFile();
 		FileParser parser = new FileParser(ast);
 
-		while(ctx.token().type != TokenType.END)
+		while(ctx.token() != null)
 		{
 			AstDecl decl = DeclParser.parse(ctx);
 			decl.accept(parser);

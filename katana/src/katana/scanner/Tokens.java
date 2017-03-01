@@ -16,9 +16,6 @@ package katana.scanner;
 
 public class Tokens
 {
-	public static final Token BEGIN = new Token(TokenCategory.BEGIN, TokenType.BEGIN, null);
-	public static final Token END   = new Token(TokenCategory.END,   TokenType.END,   null);
-
 	public static final Token DECL_ABI     = new Token(TokenCategory.DECL, TokenType.DECL_ABI,     "abi");
 	public static final Token DECL_DATA    = new Token(TokenCategory.DECL, TokenType.DECL_DATA,    "data");
 	public static final Token DECL_EXPORT  = new Token(TokenCategory.DECL, TokenType.DECL_EXPORT,  "export");
@@ -33,8 +30,8 @@ public class Tokens
 	public static final Token DECL_PREFIX  = new Token(TokenCategory.DECL, TokenType.DECL_PREFIX,  "prefix");
 	public static final Token DECL_TYPE    = new Token(TokenCategory.DECL, TokenType.DECL_TYPE,    "type");
 
-	public static final Token LIT_BOOL_F = new Token(TokenCategory.LIT, TokenType.LIT_BOOL, "false", false);
-	public static final Token LIT_BOOL_T = new Token(TokenCategory.LIT, TokenType.LIT_BOOL, "true",  true);
+	public static final Token LIT_BOOL_F = new Token(TokenCategory.LIT, TokenType.LIT_BOOL, -1, "false", false);
+	public static final Token LIT_BOOL_T = new Token(TokenCategory.LIT, TokenType.LIT_BOOL, -1, "true",  true);
 	public static final Token LIT_NULL   = new Token(TokenCategory.LIT, TokenType.LIT_NULL, "null");
 
 	public static final Token MISC_ALIGNOF      = new Token(TokenCategory.MISC, TokenType.MISC_ALIGNOF,      "alignof");
@@ -99,7 +96,7 @@ public class Tokens
 
 	public static Token numericLiteral(TokenType type, String value, int base)
 	{
-		return new Token(TokenCategory.LIT, type, value, base);
+		return new Token(TokenCategory.LIT, type, -1, value, base);
 	}
 
 	public static Token op(String value, TokenType type)

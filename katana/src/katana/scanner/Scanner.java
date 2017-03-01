@@ -16,51 +16,44 @@ package katana.scanner;
 
 import katana.diag.CompileException;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Scanner
 {
 	private final SourceFile file;
-	private ScannerState state = new ScannerState();
+	private int begin = 0;
+	private int end = 0;
 
-	public Scanner(SourceFile file)
+	public static List<Token> tokenize(SourceFile file)
+	{
+		List<Token> result = new ArrayList<>();
+		Scanner scanner = new Scanner(file);
+
+		for(Token token; (token = scanner.next()) != null;)
+			result.add(token.withOffset(scanner.begin));
+
+		return result;
+	}
+
+	private Scanner(SourceFile file)
 	{
 		this.file = file;
 	}
 
-	public SourceFile file()
+	private SourceLocation location()
 	{
-		return file;
+		return file.resolve(begin, end - begin);
 	}
 
-	public SourceLocation location()
-	{
-		return file.resolve(state.begin, state.end - state.begin);
-	}
-
-	public ScannerState state()
-	{
-		return state;
-	}
-
-	public ScannerState capture()
-	{
-		return state.clone();
-	}
-
-	public void backtrack(ScannerState state)
-	{
-		this.state = state;
-	}
-
-	public void advance() { state.token = doAdvance(); }
-
-	private Token doAdvance()
+	private Token next()
 	{
 		skipWhitespaceAndComments();
 
 		if(atEnd())
-			return Tokens.END;
+			return null;
 
-		state.begin = state.end;
+		begin = end;
 
 		int cp = here();
 
@@ -96,7 +89,7 @@ public class Scanner
 
 	private Token operatorSeq()
 	{
-		int before = state.end == 0 ? ' ' : file.codepoints()[state.end - 1];
+		int before = end == 0 ? ' ' : file.codepoints()[end - 1];
 
 		StringBuilder builder = new StringBuilder();
 
@@ -495,17 +488,17 @@ public class Scanner
 
 	private boolean atEnd()
 	{
-		return state.end == file.codepoints().length;
+		return end == file.codepoints().length;
 	}
 
 	private int here()
 	{
-		return file.codepoints()[state.end];
+		return file.codepoints()[end];
 	}
 
 	private void advanceColumn()
 	{
-		++state.end;
+		++end;
 	}
 
 	private void error(String message)

@@ -18,25 +18,32 @@ public class Token
 {
 	public final TokenCategory category;
 	public final TokenType type;
+	public final int offset;
 	public final String value;
 	public final Object data;
 
 	public Token(TokenCategory category, TokenType type, String value)
 	{
-		this(category, type, value, null);
+		this(category, type, -1, value, null);
 	}
 
-	public Token(TokenCategory category, TokenType type, String value, Object data)
+	public Token(TokenCategory category, TokenType type, int offset, String value, Object data)
 	{
 		this.category = category;
 		this.type = type;
 		this.value = value;
+		this.offset = offset;
 		this.data = data;
+	}
+
+	public Token withOffset(int offset)
+	{
+		return new Token(category, type, offset, value, data);
 	}
 
 	@Override
 	public String toString()
 	{
-		return String.format("Token(%s, %s, %s)", category, type, value);
+		return String.format("Token(%s, %s, %s, %s, %s)", category, type, value, offset, data);
 	}
 }

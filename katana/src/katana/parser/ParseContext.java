@@ -16,41 +16,49 @@ package katana.parser;
 
 import katana.ast.LateParseExprs;
 import katana.diag.DiagnosticsManager;
-import katana.scanner.Scanner;
-import katana.scanner.ScannerState;
 import katana.scanner.SourceFile;
+import katana.scanner.SourceLocation;
 import katana.scanner.Token;
+
+import java.util.List;
 
 public class ParseContext implements Cloneable
 {
-	private final Scanner scanner;
+	private final SourceFile file;
+	private final List<Token> tokens;
 	private final DiagnosticsManager diag;
-	private LateParseExprs lateParseExprs;
 
-	public ParseContext(Scanner scanner, DiagnosticsManager diag)
+	private LateParseExprs lateParseExprs;
+	private int current;
+
+	public ParseContext(SourceFile file, List<Token> tokens, DiagnosticsManager diag)
 	{
-		this.scanner = scanner;
-		this.diag = diag;
-		this.lateParseExprs = new LateParseExprs();
+		this(file, tokens, diag, new LateParseExprs(), 0);
 	}
 
-	private ParseContext(SourceFile file, ScannerState state, DiagnosticsManager diag, LateParseExprs lateParseExprs)
+	private ParseContext(SourceFile file, List<Token> tokens, DiagnosticsManager diag, LateParseExprs lateParseExprs, int current)
 	{
-		this.scanner = new Scanner(file);
-		this.scanner.backtrack(state);
+		this.file = file;
+		this.tokens = tokens;
 		this.diag = diag;
 		this.lateParseExprs = lateParseExprs;
+		this.current = current;
+	}
+
+	private SourceLocation location()
+	{
+		return file.resolve(token().offset, token().value.length());
 	}
 
 	@Override
 	public ParseContext clone()
 	{
-		return new ParseContext(scanner.file(), scanner.capture(), diag, lateParseExprs.clone());
+		return new ParseContext(file, tokens, diag, lateParseExprs.clone(), current);
 	}
 
 	public void backtrack(ParseContext ctx)
 	{
-		scanner.backtrack(ctx.scanner.state());
+		current = ctx.current;
 		diag.rewind(diag.amount() - ctx.diag.amount());
 		lateParseExprs = ctx.lateParseExprs;
 	}
@@ -62,26 +70,29 @@ public class ParseContext implements Cloneable
 
 	public Token token()
 	{
-		return scanner.state().token;
+		if(current == tokens.size())
+			return null;
+
+		return tokens.get(current);
 	}
 
 	public void advance()
 	{
-		scanner.advance();
+		++current;
 	}
 
 	public void error(String fmt, Object... args)
 	{
-		diag.error(scanner.location(), fmt, args);
+		diag.error(location(), fmt, args);
 	}
 
 	public void warning(String fmt, Object... args)
 	{
-		diag.warning(scanner.location(), fmt, args);
+		diag.warning(location(), fmt, args);
 	}
 
 	public void note(String fmt, Object... args)
 	{
-		diag.note(scanner.location(), fmt, args);
+		diag.note(location(), fmt, args);
 	}
 }

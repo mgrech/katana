@@ -16,9 +16,6 @@ package katana.scanner;
 
 public enum TokenType
 {
-	BEGIN,
-	END,
-
 	DECL_ABI,
 	DECL_DATA,
 	DECL_EXPORT,

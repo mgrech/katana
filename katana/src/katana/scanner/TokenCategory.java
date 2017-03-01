@@ -16,9 +16,6 @@ package katana.scanner;
 
 public enum TokenCategory
 {
-	BEGIN,
-	END,
-
 	DECL,
 	IDENT,
 	LIT,
