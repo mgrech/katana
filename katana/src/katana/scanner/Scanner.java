@@ -14,7 +14,8 @@
 
 package katana.scanner;
 
-import katana.diag.CompileException;
+import katana.diag.DiagnosticsManager;
+import katana.utils.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,13 +23,14 @@ import java.util.List;
 public class Scanner
 {
 	private final SourceFile file;
+	private final DiagnosticsManager diag;
 	private int prevOffset = 0;
 	private int offset = 0;
 
-	public static List<Token> tokenize(SourceFile file)
+	public static List<Token> tokenize(SourceFile file, DiagnosticsManager diag)
 	{
 		List<Token> result = new ArrayList<>();
-		Scanner scanner = new Scanner(file);
+		Scanner scanner = new Scanner(file, diag);
 
 		for(Token token; (token = scanner.next()) != null;)
 			result.add(token.withOffset(scanner.prevOffset));
@@ -36,9 +38,10 @@ public class Scanner
 		return result;
 	}
 
-	private Scanner(SourceFile file)
+	private Scanner(SourceFile file, DiagnosticsManager diag)
 	{
 		this.file = file;
+		this.diag = diag;
 	}
 
 	private SourceLocation location()
@@ -48,43 +51,62 @@ public class Scanner
 
 	private Token next()
 	{
-		skipWhitespaceAndComments();
-
-		if(atEnd())
-			return null;
-
-		prevOffset = offset;
-
-		int cp = here();
-
-		switch(cp)
+		for(;;)
 		{
-		case ',': advance(); return Tokens.PUNCT_COMMA;
-		case '$': advance(); return Tokens.PUNCT_DOLLAR;
-		case '{': advance(); return Tokens.PUNCT_LBRACE;
-		case '[': advance(); return Tokens.PUNCT_LBRACKET;
-		case '(': advance(); return Tokens.PUNCT_LPAREN;
-		case '}': advance(); return Tokens.PUNCT_RBRACE;
-		case ']': advance(); return Tokens.PUNCT_RBRACKET;
-		case ')': advance(); return Tokens.PUNCT_RPAREN;
-		case ';': advance(); return Tokens.PUNCT_SCOLON;
-		case '@': advance(); return label();
-		case '"': advance(); return stringLiteral();
+			skipWhitespaceAndComments();
 
-		default: break;
+			if(atEnd())
+				return null;
+
+			prevOffset = offset;
+
+			int cp = here();
+
+			switch(cp)
+			{
+			case ',': advance(); return Tokens.PUNCT_COMMA;
+			case '$': advance(); return Tokens.PUNCT_DOLLAR;
+			case '{': advance(); return Tokens.PUNCT_LBRACE;
+			case '[': advance(); return Tokens.PUNCT_LBRACKET;
+			case '(': advance(); return Tokens.PUNCT_LPAREN;
+			case '}': advance(); return Tokens.PUNCT_RBRACE;
+			case ']': advance(); return Tokens.PUNCT_RBRACKET;
+			case ')': advance(); return Tokens.PUNCT_RPAREN;
+			case ';': advance(); return Tokens.PUNCT_SCOLON;
+			case '@': advance(); return label();
+			default: break;
+			}
+
+			if(cp == '"')
+			{
+				advance();
+				Token lit = stringLiteral();
+
+				if(lit == null)
+					continue;
+
+				return lit;
+			}
+
+			if(CharClassifier.isOpChar(cp))
+				return operatorSeq();
+
+			if(CharClassifier.isDigit(cp))
+			{
+				Token lit = numericLiteral();
+
+				if(lit == null)
+					continue;
+
+				return lit;
+			}
+
+			if(CharClassifier.isIdentifierStart(cp))
+				return identifierOrKeyword();
+
+			error("invalid codepoint encountered: %s", StringUtils.formatCodepoint(cp));
+			advance();
 		}
-
-		if(CharClassifier.isOpChar(cp))
-			return operatorSeq();
-
-		if(CharClassifier.isDigit(cp))
-			return numericLiteral();
-
-		if(CharClassifier.isIdentifierStart(cp))
-			return identifierOrKeyword();
-
-		error(String.format("invalid character encountered: %s", formatCodepoint(cp)));
-		throw new AssertionError("unreachable");
 	}
 
 	private Token operatorSeq()
@@ -131,23 +153,23 @@ public class Scanner
 		return Tokens.label(builder.toString());
 	}
 
-	private String formatCodepoint(int cp)
-	{
-		if(cp <= 0xFFFF)
-			return String.format("U+%04X", cp);
-
-		return String.format("U+%X", cp);
-	}
-
 	private Token stringLiteral()
 	{
 		StringBuilder builder = new StringBuilder();
 
-		while(!atEnd() && here() != '"')
-			builder.appendCodePoint(stringCodepoint());
+		while(!atEnd() && here() != '"' && here() != '\n')
+		{
+			int cp = stringCodepoint();
 
-		if(atEnd())
+			if(cp != -1)
+				builder.appendCodePoint(cp);
+		}
+
+		if(atEnd() || here() == '\n')
+		{
 			error("unterminated string literal");
+			return null;
+		}
 
 		advance();
 
@@ -182,8 +204,11 @@ public class Scanner
 			case '"': return '"';
 			case '\\': return '\\';
 
-			default: error(String.format("invalid escape sequence \\%s", formatCodepoint(here())));
+			default: break;
 			}
+
+			error("invalid escape sequence \\%s", StringUtils.formatCodepoint(here()));
+			return -1;
 		}
 
 		int cp = here();
@@ -202,7 +227,10 @@ public class Scanner
 		int sum =  d1 | d2 | d3 | d4 | d5 | d6;
 
 		if(sum > 0x10FFFF)
+		{
 			error("invalid codepoint in unicode escape sequence");
+			return -1;
+		}
 
 		return sum;
 	}
@@ -211,13 +239,20 @@ public class Scanner
 	{
 		int d1 = hexDigit();
 		int d2 = hexDigit();
+
+		if(d1 == -1 || d2 == -1)
+			return -1;
+
 		return 16 * d1 + d2;
 	}
 
 	private int hexDigit()
 	{
 		if(atEnd() || !CharClassifier.isHexDigit(here()))
+		{
 			error("expected hex digit in escape sequence");
+			return -1;
+		}
 
 		int digit = fromHexDigit(here());
 		advance();
@@ -346,7 +381,10 @@ public class Scanner
 				advance();
 
 				if(!isDigit(here(), base))
+				{
 					error("numeric literal with base prefix requires at least one digit");
+					return null;
+				}
 			}
 
 			else if(here() == 'o')
@@ -355,7 +393,10 @@ public class Scanner
 				advance();
 
 				if(!isDigit(here(), base))
+				{
 					error("numeric literal with base prefix requires at least one digit");
+					return null;
+				}
 			}
 
 			else if(here() == 'x')
@@ -364,11 +405,17 @@ public class Scanner
 				advance();
 
 				if(!isDigit(here(), base))
+				{
 					error("numeric literal with base prefix requires at least one digit");
+					return null;
+				}
 			}
 
 			else if(CharClassifier.isDigit(here()))
+			{
 				error("numeric literals must start with digit 1-9 or base prefix");
+				return null;
+			}
 
 			else
 				literal.append('0');
@@ -386,7 +433,10 @@ public class Scanner
 		boolean isFloatingPointLiteral = !atEnd() && here() == '.';
 
 		if(isFloatingPointLiteral && base != 10)
+		{
 			error("base prefixes are not supported with floating point literals");
+			base = 10;
+		}
 
 		if(isFloatingPointLiteral)
 		{
@@ -410,7 +460,7 @@ public class Scanner
 			advance();
 		}
 
-		TokenType type = null;
+		TokenType type;
 
 		boolean isFloatingPointSuffix = false;
 
@@ -432,18 +482,21 @@ public class Scanner
 		case "u64": type = TokenType.LIT_UINT64; break;
 
 		case "":
-			type = isFloatingPointLiteral
-				? TokenType.LIT_FLOAT_DEDUCE
-				: TokenType.LIT_INT_DEDUCE;
-
+			type = isFloatingPointLiteral ? TokenType.LIT_FLOAT_DEDUCE  : TokenType.LIT_INT_DEDUCE;
 			isFloatingPointSuffix = isFloatingPointLiteral;
 			break;
 
-		default: error(String.format("unknown literal suffix '%s'", suffix));
+		default:
+			error("unknown literal suffix '%s'", suffix);
+			type = isFloatingPointLiteral ? TokenType.LIT_FLOAT_DEDUCE : TokenType.LIT_INT_DEDUCE;
+			break;
 		}
 
 		if(isFloatingPointLiteral && !isFloatingPointSuffix)
+		{
 			error("integer suffix used on floating point literal");
+			type = TokenType.LIT_FLOAT_DEDUCE;
+		}
 
 		return Tokens.numericLiteral(type, literal.toString(), base);
 	}
@@ -501,8 +554,8 @@ public class Scanner
 		++offset;
 	}
 
-	private void error(String message)
+	private void error(String fmt, Object... args)
 	{
-		throw new CompileException(String.format("%s: error: %s", message, location()));
+		diag.error(location(), fmt, args);
 	}
 }

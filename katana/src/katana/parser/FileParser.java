@@ -41,7 +41,7 @@ public class FileParser implements IVisitor
 
 	public static AstFile parse(SourceFile file, DiagnosticsManager diag)
 	{
-		List<Token> tokens = Scanner.tokenize(file);
+		List<Token> tokens = Scanner.tokenize(file, diag);
 		ParseContext ctx = new ParseContext(file, tokens, diag);
 
 		AstFile ast = new AstFile();

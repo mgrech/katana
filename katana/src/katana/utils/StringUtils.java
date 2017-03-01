@@ -41,4 +41,12 @@ public class StringUtils
 
 		return builder.toString();
 	}
+
+	public static String formatCodepoint(int cp)
+	{
+		if(cp <= 0xFFFF)
+			return String.format("U+%04X", cp);
+
+		return String.format("U+%X", cp);
+	}
 }
