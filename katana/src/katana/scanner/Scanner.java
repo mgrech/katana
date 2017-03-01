@@ -166,12 +166,9 @@ public class Scanner
 		}
 
 		if(atEnd() || here() == '\r' || here() == '\n')
-		{
 			error("unterminated string literal");
-			return null;
-		}
-
-		advance();
+		else
+			advance();
 
 		StringBuilder tokenBuilder = new StringBuilder();
 
