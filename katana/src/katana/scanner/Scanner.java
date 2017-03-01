@@ -202,20 +202,34 @@ public class Scanner
 			case 't': return '\t'; // horizontal tabulation
 			case 'v': return 0x0B; // vertical tabulation
 
-			case 'U': return unicodeEscape(true);
-			case 'u': return unicodeEscape(false);
-			case 'x': return hexEscape();
-
-			case '"': return '"';
+			case '"':  return '"';
 			case '\\': return '\\';
 
 			default: break;
 			}
 
-			--offset;
-			error("invalid escape sequence \\%s", StringUtils.formatCodepoint(here()));
-			++offset;
-			return -1;
+			// for error handling, temporarily pretend the token starts at the \ character
+			int tmp = prevOffset;
+			prevOffset = offset - 2;
+
+			int result = -1;
+
+			switch(escape)
+			{
+			case 'U': result = unicodeEscape(true);  break;
+			case 'u': result = unicodeEscape(false); break;
+			case 'x': result = hexEscape();          break;
+
+			default:
+				int cp = file.codepoints()[offset - 1];
+				error("invalid escape sequence %s", StringUtils.formatCodepoint(cp));
+				break;
+			}
+
+			// restore original token offset
+			prevOffset = tmp;
+
+			return result;
 		}
 
 		int cp = here();
