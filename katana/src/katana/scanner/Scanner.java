@@ -262,7 +262,10 @@ public class Scanner
 		int d2 = hexDigit();
 
 		if(d1 == -1 || d2 == -1)
+		{
+			error("expected hex digits in hex escape sequence");
 			return -1;
+		}
 
 		return 16 * d1 + d2;
 	}
@@ -271,7 +274,7 @@ public class Scanner
 	{
 		if(atEnd() || !CharClassifier.isHexDigit(here()))
 		{
-			error("expected hex digit in escape sequence");
+			advance();
 			return -1;
 		}
 
