@@ -403,36 +403,18 @@ public class Scanner
 			{
 				base = 2;
 				advance();
-
-				if(!isDigit(here(), base))
-				{
-					error("numeric literal with base prefix requires at least one digit");
-					return null;
-				}
 			}
 
 			else if(here() == 'o')
 			{
 				base = 8;
 				advance();
-
-				if(!isDigit(here(), base))
-				{
-					error("numeric literal with base prefix requires at least one digit");
-					return null;
-				}
 			}
 
 			else if(here() == 'x')
 			{
 				base = 16;
 				advance();
-
-				if(!isDigit(here(), base))
-				{
-					error("numeric literal with base prefix requires at least one digit");
-					return null;
-				}
 			}
 
 			else if(CharClassifier.isDigit(here()))
@@ -459,7 +441,9 @@ public class Scanner
 
 			if(base != 10)
 			{
+				offset -= literal.length();
 				error("base prefixes are not supported with floating point literals");
+				offset += literal.length();
 				base = 10;
 			}
 
@@ -478,6 +462,12 @@ public class Scanner
 		{
 			suffix.appendCodePoint(here());
 			advance();
+		}
+
+		if(literal.length() == 0)
+		{
+			error("numeric literal requires at least one digit");
+			literal.append('0');
 		}
 
 		TokenType type;
@@ -507,7 +497,11 @@ public class Scanner
 			break;
 
 		default:
+			int tmp = prevOffset;
+			prevOffset = offset - suffix.length();
 			error("unknown literal suffix '%s'", suffix);
+			prevOffset = tmp;
+
 			type = isFloatingPointLiteral ? TokenType.LIT_FLOAT_DEDUCE : TokenType.LIT_INT_DEDUCE;
 			break;
 		}
