@@ -212,7 +212,9 @@ public class Scanner
 			default: break;
 			}
 
+			--offset;
 			error("invalid escape sequence \\%s", StringUtils.formatCodepoint(here()));
+			++offset;
 			return -1;
 		}
 
