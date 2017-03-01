@@ -173,7 +173,12 @@ public class Scanner
 
 		advance();
 
-		return Tokens.stringLiteral(builder.toString());
+		StringBuilder tokenBuilder = new StringBuilder();
+
+		for(int i = prevOffset; i != offset; ++i)
+			tokenBuilder.appendCodePoint(file.codepoints()[i]);
+
+		return Tokens.stringLiteral(tokenBuilder.toString(), builder.toString());
 	}
 
 	private int stringCodepoint()

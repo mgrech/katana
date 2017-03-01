@@ -104,8 +104,8 @@ public class Tokens
 		return new Token(TokenCategory.OP, type, value);
 	}
 
-	public static Token stringLiteral(String value)
+	public static Token stringLiteral(String token, String value)
 	{
-		return new Token(TokenCategory.LIT, TokenType.LIT_STRING, value);
+		return new Token(TokenCategory.LIT, TokenType.LIT_STRING, -1, token, value);
 	}
 }

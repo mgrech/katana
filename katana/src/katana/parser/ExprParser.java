@@ -295,7 +295,7 @@ public class ExprParser
 		case LIT_FLOAT32: return new AstExprLitFloat(new BigDecimal(token.value), Maybe.some(BuiltinType.FLOAT32));
 		case LIT_FLOAT64: return new AstExprLitFloat(new BigDecimal(token.value), Maybe.some(BuiltinType.FLOAT64));
 
-		case LIT_STRING: return new AstExprLitString(token.value);
+		case LIT_STRING: return new AstExprLitString((String)token.data);
 
 		case LIT_INT_DEDUCE:   return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.none());
 		case LIT_FLOAT_DEDUCE: return new AstExprLitFloat(new BigDecimal(token.value), Maybe.none());
