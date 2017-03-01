@@ -425,8 +425,7 @@ public class Scanner
 			else
 				literal.append('0');
 		}
-
-
+		
 		while(!atEnd() && (isDigit(here(), base) || here() == '\''))
 		{
 			if(here() != '\'')
