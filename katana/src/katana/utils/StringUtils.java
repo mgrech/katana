@@ -44,9 +44,11 @@ public class StringUtils
 
 	public static String formatCodepoint(int cp)
 	{
-		if(cp <= 0xFFFF)
-			return String.format("U+%04X", cp);
+		String name = String.format("{%s}", Character.getName(cp));
 
-		return String.format("U+%X", cp);
+		if(cp <= 0xFFFF)
+			return String.format("U+%04X %s", cp, name);
+
+		return String.format("U+%X %s", cp, name);
 	}
 }
