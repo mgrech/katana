@@ -508,7 +508,11 @@ public class Scanner
 
 		if(isFloatingPointLiteral && !isFloatingPointSuffix)
 		{
+			int tmp = prevOffset;
+			prevOffset = offset - suffix.length();
 			error("integer suffix used on floating point literal");
+			prevOffset = tmp;
+
 			type = TokenType.LIT_FLOAT_DEDUCE;
 		}
 
