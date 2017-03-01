@@ -22,8 +22,8 @@ import java.util.List;
 public class Scanner
 {
 	private final SourceFile file;
-	private int begin = 0;
-	private int end = 0;
+	private int prevOffset = 0;
+	private int offset = 0;
 
 	public static List<Token> tokenize(SourceFile file)
 	{
@@ -31,7 +31,7 @@ public class Scanner
 		Scanner scanner = new Scanner(file);
 
 		for(Token token; (token = scanner.next()) != null;)
-			result.add(token.withOffset(scanner.begin));
+			result.add(token.withOffset(scanner.prevOffset));
 
 		return result;
 	}
@@ -43,7 +43,7 @@ public class Scanner
 
 	private SourceLocation location()
 	{
-		return file.resolve(begin, end - begin);
+		return file.resolve(prevOffset, offset - prevOffset);
 	}
 
 	private Token next()
@@ -53,23 +53,23 @@ public class Scanner
 		if(atEnd())
 			return null;
 
-		begin = end;
+		prevOffset = offset;
 
 		int cp = here();
 
 		switch(cp)
 		{
-		case ',': advanceColumn(); return Tokens.PUNCT_COMMA;
-		case '$': advanceColumn(); return Tokens.PUNCT_DOLLAR;
-		case '{': advanceColumn(); return Tokens.PUNCT_LBRACE;
-		case '[': advanceColumn(); return Tokens.PUNCT_LBRACKET;
-		case '(': advanceColumn(); return Tokens.PUNCT_LPAREN;
-		case '}': advanceColumn(); return Tokens.PUNCT_RBRACE;
-		case ']': advanceColumn(); return Tokens.PUNCT_RBRACKET;
-		case ')': advanceColumn(); return Tokens.PUNCT_RPAREN;
-		case ';': advanceColumn(); return Tokens.PUNCT_SCOLON;
-		case '@': advanceColumn(); return label();
-		case '"': advanceColumn(); return stringLiteral();
+		case ',': advance(); return Tokens.PUNCT_COMMA;
+		case '$': advance(); return Tokens.PUNCT_DOLLAR;
+		case '{': advance(); return Tokens.PUNCT_LBRACE;
+		case '[': advance(); return Tokens.PUNCT_LBRACKET;
+		case '(': advance(); return Tokens.PUNCT_LPAREN;
+		case '}': advance(); return Tokens.PUNCT_RBRACE;
+		case ']': advance(); return Tokens.PUNCT_RBRACKET;
+		case ')': advance(); return Tokens.PUNCT_RPAREN;
+		case ';': advance(); return Tokens.PUNCT_SCOLON;
+		case '@': advance(); return label();
+		case '"': advance(); return stringLiteral();
 
 		default: break;
 		}
@@ -89,14 +89,14 @@ public class Scanner
 
 	private Token operatorSeq()
 	{
-		int before = end == 0 ? ' ' : file.codepoints()[end - 1];
+		int before = offset == 0 ? ' ' : file.codepoints()[offset - 1];
 
 		StringBuilder builder = new StringBuilder();
 
 		do
 		{
 			builder.appendCodePoint(here());
-			advanceColumn();
+			advance();
 		}
 
 		while(CharClassifier.isOpChar(here()));
@@ -125,7 +125,7 @@ public class Scanner
 		while(!atEnd() && CharClassifier.isIdentifierChar(here()))
 		{
 			builder.appendCodePoint(here());
-			advanceColumn();
+			advance();
 		}
 
 		return Tokens.label(builder.toString());
@@ -149,7 +149,7 @@ public class Scanner
 		if(atEnd())
 			error("unterminated string literal");
 
-		advanceColumn();
+		advance();
 
 		return Tokens.stringLiteral(builder.toString());
 	}
@@ -158,10 +158,10 @@ public class Scanner
 	{
 		if(here() == '\\')
 		{
-			advanceColumn();
+			advance();
 
 			int escape = here();
-			advanceColumn();
+			advance();
 
 			switch(escape)
 			{
@@ -187,7 +187,7 @@ public class Scanner
 		}
 
 		int cp = here();
-		advanceColumn();
+		advance();
 		return cp;
 	}
 
@@ -220,7 +220,7 @@ public class Scanner
 			error("expected hex digit in escape sequence");
 
 		int digit = fromHexDigit(here());
-		advanceColumn();
+		advance();
 		return digit;
 	}
 
@@ -245,7 +245,7 @@ public class Scanner
 		do
 		{
 			builder.appendCodePoint(here());
-			advanceColumn();
+			advance();
 		}
 		while(!atEnd() && CharClassifier.isIdentifierChar(here()));
 
@@ -335,7 +335,7 @@ public class Scanner
 
 		if(!atEnd() && here() == '0')
 		{
-			advanceColumn();
+			advance();
 
 			if(atEnd())
 				literal.append('0');
@@ -343,7 +343,7 @@ public class Scanner
 			else if(here() == 'b')
 			{
 				base = 2;
-				advanceColumn();
+				advance();
 
 				if(!isDigit(here(), base))
 					error("numeric literal with base prefix requires at least one digit");
@@ -352,7 +352,7 @@ public class Scanner
 			else if(here() == 'o')
 			{
 				base = 8;
-				advanceColumn();
+				advance();
 
 				if(!isDigit(here(), base))
 					error("numeric literal with base prefix requires at least one digit");
@@ -361,7 +361,7 @@ public class Scanner
 			else if(here() == 'x')
 			{
 				base = 16;
-				advanceColumn();
+				advance();
 
 				if(!isDigit(here(), base))
 					error("numeric literal with base prefix requires at least one digit");
@@ -380,7 +380,7 @@ public class Scanner
 			if(here() != '\'')
 				literal.appendCodePoint(here());
 
-			advanceColumn();
+			advance();
 		}
 
 		boolean isFloatingPointLiteral = !atEnd() && here() == '.';
@@ -391,14 +391,14 @@ public class Scanner
 		if(isFloatingPointLiteral)
 		{
 			literal.append('.');
-			advanceColumn();
+			advance();
 
 			while(!atEnd() && (isDigit(here(), base) || here() == '\''))
 			{
 				if(here() != '\'')
 					literal.appendCodePoint(here());
 
-				advanceColumn();
+				advance();
 			}
 		}
 
@@ -407,7 +407,7 @@ public class Scanner
 		while(!atEnd() && (CharClassifier.isIdentifierChar(here()) || CharClassifier.isDigit(here())))
 		{
 			suffix.appendCodePoint(here());
-			advanceColumn();
+			advance();
 		}
 
 		TokenType type = null;
@@ -460,19 +460,19 @@ public class Scanner
 			if(!atLineBreak())
 				break;
 
-			advanceColumn();
+			advance();
 		}
 	}
 
 	private void skipWhitespace()
 	{
 		while(!atEnd() && CharClassifier.isWhitespace(here()))
-			advanceColumn();
+			advance();
 	}
 
 	private void skipComment()
 	{
-		do advanceColumn();
+		do advance();
 		while(!atEnd() && !atLineBreak());
 	}
 
@@ -488,17 +488,17 @@ public class Scanner
 
 	private boolean atEnd()
 	{
-		return end == file.codepoints().length;
+		return offset == file.codepoints().length;
 	}
 
 	private int here()
 	{
-		return file.codepoints()[end];
+		return file.codepoints()[offset];
 	}
 
-	private void advanceColumn()
+	private void advance()
 	{
-		++end;
+		++offset;
 	}
 
 	private void error(String message)
