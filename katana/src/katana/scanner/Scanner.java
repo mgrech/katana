@@ -418,7 +418,7 @@ public class Scanner
 			}
 
 			else if(CharClassifier.isDigit(here()))
-				error("numeric literals must start with digit 1-9 or base prefix");
+				error("numeric literal must start with digit 1-9 or base prefix");
 
 			else
 				literal.append('0');
