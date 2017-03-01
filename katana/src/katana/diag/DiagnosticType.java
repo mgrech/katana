@@ -12,22 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package katana.scanner;
+package katana.diag;
 
-public class OffsetRange implements Cloneable
+public enum DiagnosticType
 {
-	public int begin;
-	public int end;
-
-	public OffsetRange(int begin, int end)
-	{
-		this.begin = begin;
-		this.end = end;
-	}
-
-	@Override
-	public OffsetRange clone()
-	{
-		return new OffsetRange(begin, end);
-	}
+	ERROR,
+	WARNING,
+	NOTE,
 }

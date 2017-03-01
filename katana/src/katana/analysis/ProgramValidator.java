@@ -165,7 +165,7 @@ public class ProgramValidator
 	private static void parseOperators(IdentityHashMap<AstFile, SemaScopeFile> scopes)
 	{
 		for(Map.Entry<AstFile, SemaScopeFile> scope : scopes.entrySet())
-			OperatorParser.replace(scope.getKey().delayedExprs, scope.getValue());
+			OperatorParser.replace(scope.getKey().lateParseExprs, scope.getValue());
 	}
 
 	private static void registerBuiltinOps(Collection<SemaScopeFile> scopes)

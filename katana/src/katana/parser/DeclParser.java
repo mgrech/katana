@@ -15,7 +15,6 @@
 package katana.parser;
 
 import katana.ast.AstPath;
-import katana.ast.DelayedExprParseList;
 import katana.ast.decl.*;
 import katana.ast.expr.AstExpr;
 import katana.ast.expr.AstExprLiteral;
@@ -26,8 +25,6 @@ import katana.op.Associativity;
 import katana.op.BuiltinOps;
 import katana.op.Kind;
 import katana.op.Operator;
-import katana.scanner.Scanner;
-import katana.scanner.ScannerState;
 import katana.scanner.TokenCategory;
 import katana.scanner.TokenType;
 import katana.utils.Maybe;
@@ -38,82 +35,82 @@ import java.util.List;
 
 public class DeclParser
 {
-	public static AstDecl parse(Scanner scanner, DelayedExprParseList delayedExprs)
+	public static AstDecl parse(ParseContext ctx)
 	{
-		boolean exported = ParseTools.option(scanner, TokenType.DECL_EXPORT, true);
-		boolean opaque = ParseTools.option(scanner, TokenType.TYPE_OPAQUE, true);
+		boolean exported = ParseTools.option(ctx, TokenType.DECL_EXPORT, true);
+		boolean opaque = ParseTools.option(ctx, TokenType.TYPE_OPAQUE, true);
 
 		if(opaque && !exported)
 			throw new CompileException("'opaque' must go after 'export'");
 
 		Maybe<Maybe<String>> extern = Maybe.none();
 
-		if(ParseTools.option(scanner, TokenType.DECL_EXTERN, true))
+		if(ParseTools.option(ctx, TokenType.DECL_EXTERN, true))
 		{
 			Maybe<String> externName = Maybe.none();
 
-			if(ParseTools.option(scanner, TokenType.LIT_STRING, false))
-				externName = Maybe.some(ParseTools.consume(scanner).value);
+			if(ParseTools.option(ctx, TokenType.LIT_STRING, false))
+				externName = Maybe.some(ParseTools.consume(ctx).value);
 
 			extern = Maybe.some(externName);
 		}
 
-		if(extern.isSome() && scanner.state().token.type != TokenType.DECL_FN)
+		if(extern.isSome() && ctx.token().type != TokenType.DECL_FN)
 			throw new CompileException("extern can only be applied to overloads");
 
-		switch(scanner.state().token.type)
+		switch(ctx.token().type)
 		{
-		case DECL_FN:     return parseFunction(scanner, exported, opaque, extern, delayedExprs);
-		case DECL_DATA:   return parseStruct(scanner, exported, opaque, delayedExprs);
-		case DECL_GLOBAL: return parseGlobal(scanner, exported, opaque, delayedExprs);
-		case DECL_OP:     return parseOperator(scanner, exported);
+		case DECL_FN:     return parseFunction(ctx, exported, opaque, extern);
+		case DECL_DATA:   return parseStruct(ctx, exported, opaque);
+		case DECL_GLOBAL: return parseGlobal(ctx, exported, opaque);
+		case DECL_OP:     return parseOperator(ctx, exported);
 
 		case DECL_IMPORT:
 			if(exported)
 				throw new CompileException("imports cannot be exported");
 
-			return parseImport(scanner);
+			return parseImport(ctx);
 
 		case DECL_MODULE:
 			if(exported)
 				throw new CompileException("modules cannot be exported");
 
-			return parseModule(scanner);
+			return parseModule(ctx);
 
 		case DECL_TYPE:
 			if(opaque)
 				throw new CompileException("type aliases cannot be exported opaquely");
 
-			return parseTypeAlias(scanner, exported, delayedExprs);
+			return parseTypeAlias(ctx, exported);
 
 		default: break;
 		}
 
-		ParseTools.unexpectedToken(scanner, TokenCategory.DECL);
+		ParseTools.unexpectedToken(ctx, TokenCategory.DECL);
 		throw new AssertionError("unreachable");
 	}
 
-	private static Kind parseOpKind(Scanner scanner)
+	private static Kind parseOpKind(ParseContext ctx)
 	{
-		if(ParseTools.option(scanner, TokenType.DECL_PREFIX, true))
+		if(ParseTools.option(ctx, TokenType.DECL_PREFIX, true))
 			return Kind.PREFIX;
 
-		if(ParseTools.option(scanner, TokenType.DECL_INFIX, true))
+		if(ParseTools.option(ctx, TokenType.DECL_INFIX, true))
 			return Kind.INFIX;
 
-		else if(ParseTools.option(scanner, TokenType.DECL_POSTFIX, true))
+		else if(ParseTools.option(ctx, TokenType.DECL_POSTFIX, true))
 			return Kind.POSTFIX;
 
-		ParseTools.unexpectedToken(scanner);
+		ParseTools.unexpectedToken(ctx);
 		throw new AssertionError("unreachable");
 	}
 
-	private static AstDecl parseOperator(Scanner scanner, boolean exported)
+	private static AstDecl parseOperator(ParseContext ctx, boolean exported)
 	{
-		scanner.advance();
+		ctx.advance();
 
-		String op = ParseTools.consumeExpected(scanner, TokenCategory.OP).value;
-		Kind kind = parseOpKind(scanner);
+		String op = ParseTools.consumeExpected(ctx, TokenCategory.OP).value;
+		Kind kind = parseOpKind(ctx);
 
 		if(BuiltinOps.find(op, kind).isSome())
 		{
@@ -123,31 +120,31 @@ public class DeclParser
 
 		if(kind == Kind.PREFIX)
 		{
-			ParseTools.expect(scanner, TokenType.PUNCT_SCOLON, true);
+			ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 			return new AstDeclOperator(exported, Operator.prefix(op));
 		}
 
 		else if(kind == Kind.POSTFIX)
 		{
-			ParseTools.expect(scanner, TokenType.PUNCT_SCOLON, true);
+			ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 			return new AstDeclOperator(exported, Operator.postfix(op));
 		}
 
 		Associativity assoc;
 
-		if(ParseTools.option(scanner, "left", true))
+		if(ParseTools.option(ctx, "left", true))
 			assoc = Associativity.LEFT;
-		else if(ParseTools.option(scanner, "right", true))
+		else if(ParseTools.option(ctx, "right", true))
 			assoc = Associativity.RIGHT;
-		else if(ParseTools.option(scanner, "none", true))
+		else if(ParseTools.option(ctx, "none", true))
 			assoc = Associativity.NONE;
 		else
 		{
-			ParseTools.unexpectedToken(scanner);
+			ParseTools.unexpectedToken(ctx);
 			throw new AssertionError("unreachable");
 		}
 
-		String precStr = ParseTools.consumeExpected(scanner, TokenType.LIT_INT_DEDUCE).value;
+		String precStr = ParseTools.consumeExpected(ctx, TokenType.LIT_INT_DEDUCE).value;
 		BigInteger prec = new BigInteger(precStr);
 
 		// precedence < 0 || precedence > 1000
@@ -157,22 +154,22 @@ public class DeclParser
 			throw new CompileException(String.format(fmt, op, precStr));
 		}
 
-		ParseTools.expect(scanner, TokenType.PUNCT_SCOLON, true);
+		ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 		return new AstDeclOperator(exported, Operator.infix(op, assoc, prec.intValue()));
 	}
 
-	private static AstDecl parseFunction(Scanner scanner, boolean exported, boolean opaque, Maybe<Maybe<String>> extern, DelayedExprParseList delayedExprs)
+	private static AstDecl parseFunction(ParseContext ctx, boolean exported, boolean opaque, Maybe<Maybe<String>> extern)
 	{
-		scanner.advance();
+		ctx.advance();
 
 		String op = null;
 		Kind kind = null;
 		String name = null;
 
-		if(ParseTools.option(scanner, TokenCategory.OP, false))
+		if(ParseTools.option(ctx, TokenCategory.OP, false))
 		{
-			op = ParseTools.consume(scanner).value;
-			kind = parseOpKind(scanner);
+			op = ParseTools.consume(ctx).value;
+			kind = parseOpKind(ctx);
 
 			if(BuiltinOps.find(op, kind).isSome())
 			{
@@ -182,9 +179,9 @@ public class DeclParser
 		}
 
 		else
-			name = ParseTools.consumeExpected(scanner, TokenType.IDENT).value;
+			name = ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 
-		List<AstDeclFunction.Param> params = parseParameterList(scanner, delayedExprs);
+		List<AstDeclFunction.Param> params = parseParameterList(ctx);
 
 		if((kind == Kind.PREFIX || kind == Kind.POSTFIX) && params.size() != 1)
 			throw new CompileException("unary operator requires exactly one parameter");
@@ -194,161 +191,161 @@ public class DeclParser
 
 		Maybe<AstType> ret = Maybe.none();
 
-		if(ParseTools.option(scanner, "=>", true))
-			ret = Maybe.some(TypeParser.parse(scanner, delayedExprs));
+		if(ParseTools.option(ctx, "=>", true))
+			ret = Maybe.some(TypeParser.parse(ctx));
 
 		if(extern.isSome())
 		{
-			ParseTools.expect(scanner, TokenType.PUNCT_SCOLON, true);
+			ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 			return new AstDeclExternFunction(exported, opaque, extern.unwrap(), name, params, ret);
 		}
 
-		List<AstStmt> body = parseBody(scanner, delayedExprs);
+		List<AstStmt> body = parseBody(ctx);
 
 		return name == null
 			? new AstDeclDefinedOperator(exported, opaque, op, kind, params, ret, body)
 			: new AstDeclDefinedFunction(exported, opaque, name, params, ret, body);
 	}
 
-	private static List<AstDeclFunction.Param> parseParameterList(Scanner scanner, DelayedExprParseList delayedExprs)
+	private static List<AstDeclFunction.Param> parseParameterList(ParseContext ctx)
 	{
-		ParseTools.expect(scanner, TokenType.PUNCT_LPAREN, true);
+		ParseTools.expect(ctx, TokenType.PUNCT_LPAREN, true);
 
 		List<AstDeclFunction.Param> params = new ArrayList<>();
 
-		if(!ParseTools.option(scanner, TokenType.PUNCT_RPAREN, true))
+		if(!ParseTools.option(ctx, TokenType.PUNCT_RPAREN, true))
 		{
-			params = ParseTools.separated(scanner, TokenType.PUNCT_COMMA, () -> parseParameter(scanner, delayedExprs));
-			ParseTools.expect(scanner, TokenType.PUNCT_RPAREN, true);
+			params = ParseTools.separated(ctx, TokenType.PUNCT_COMMA, () -> parseParameter(ctx));
+			ParseTools.expect(ctx, TokenType.PUNCT_RPAREN, true);
 		}
 
 		return params;
 	}
 
-	private static AstDeclFunction.Param parseParameter(Scanner scanner, DelayedExprParseList delayedExprs)
+	private static AstDeclFunction.Param parseParameter(ParseContext ctx)
 	{
-		AstType type = TypeParser.parse(scanner, delayedExprs);
-		String name = ParseTools.consumeExpected(scanner, TokenType.IDENT).value;
+		AstType type = TypeParser.parse(ctx);
+		String name = ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 		return new AstDeclFunction.Param(type, name);
 	}
 
-	private static List<AstStmt> parseBody(Scanner scanner, DelayedExprParseList delayedExprs)
+	private static List<AstStmt> parseBody(ParseContext ctx)
 	{
-		ParseTools.expect(scanner, TokenType.PUNCT_LBRACE, true);
+		ParseTools.expect(ctx, TokenType.PUNCT_LBRACE, true);
 
 		List<AstStmt> body = new ArrayList<>();
 
-		while(!ParseTools.option(scanner, TokenType.PUNCT_RBRACE, false))
-			body.add(StmtParser.parse(scanner, delayedExprs));
+		while(!ParseTools.option(ctx, TokenType.PUNCT_RBRACE, false))
+			body.add(StmtParser.parse(ctx));
 
-		ParseTools.expect(scanner, TokenType.PUNCT_RBRACE, true);
+		ParseTools.expect(ctx, TokenType.PUNCT_RBRACE, true);
 
 		return body;
 	}
 
-	private static AstDeclStruct parseStruct(Scanner scanner, boolean exported, boolean opaque, DelayedExprParseList delayedExprs)
+	private static AstDeclStruct parseStruct(ParseContext ctx, boolean exported, boolean opaque)
 	{
-		scanner.advance();
+		ctx.advance();
 
-		String name = ParseTools.consumeExpected(scanner, TokenType.IDENT).value;
-		boolean abiCompat = ParseTools.option(scanner, TokenType.DECL_ABI, true);
-		ParseTools.expect(scanner, TokenType.PUNCT_LBRACE, true);
+		String name = ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
+		boolean abiCompat = ParseTools.option(ctx, TokenType.DECL_ABI, true);
+		ParseTools.expect(ctx, TokenType.PUNCT_LBRACE, true);
 
 		List<AstDeclStruct.Field> fields = new ArrayList<>();
 
-		while(!ParseTools.option(scanner, TokenType.PUNCT_RBRACE, false))
-			fields.add(parseField(scanner, delayedExprs));
+		while(!ParseTools.option(ctx, TokenType.PUNCT_RBRACE, false))
+			fields.add(parseField(ctx));
 
-		ParseTools.expect(scanner, TokenType.PUNCT_RBRACE, true);
+		ParseTools.expect(ctx, TokenType.PUNCT_RBRACE, true);
 
 		return new AstDeclStruct(exported, opaque, name, abiCompat, fields);
 	}
 
-	private static AstDeclStruct.Field parseField(Scanner scanner, DelayedExprParseList delayedExprs)
+	private static AstDeclStruct.Field parseField(ParseContext ctx)
 	{
-		AstType type = TypeParser.parse(scanner, delayedExprs);
-		String name = ParseTools.consumeExpected(scanner, TokenType.IDENT).value;
-		ParseTools.expect(scanner, TokenType.PUNCT_SCOLON, true);
+		AstType type = TypeParser.parse(ctx);
+		String name = ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
+		ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 		return new AstDeclStruct.Field(type, name);
 	}
 
-	private static Maybe<AstExprLiteral> parseGlobalInitAndScolon(Scanner scanner, DelayedExprParseList delayedExprs)
+	private static Maybe<AstExprLiteral> parseGlobalInitAndScolon(ParseContext ctx)
 	{
-		if(ParseTools.option(scanner, TokenType.MISC_UNDEF, true))
+		if(ParseTools.option(ctx, TokenType.MISC_UNDEF, true))
 		{
-			ParseTools.expect(scanner, TokenType.PUNCT_SCOLON, true);
+			ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 			return Maybe.none();
 		}
 
-		AstExpr init = ExprParser.parse(scanner, delayedExprs);
+		AstExpr init = ExprParser.parse(ctx);
 
 		if(!(init instanceof AstExprLiteral))
 			throw new CompileException("global initializer must be literal");
 
-		ParseTools.expect(scanner, TokenType.PUNCT_SCOLON, true);
+		ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 		return Maybe.some((AstExprLiteral)init);
 	}
 
-	private static AstDeclGlobal parseGlobal(Scanner scanner, boolean exported, boolean opaque, DelayedExprParseList delayedExprs)
+	private static AstDeclGlobal parseGlobal(ParseContext ctx, boolean exported, boolean opaque)
 	{
-		scanner.advance();
+		ctx.advance();
 
-		ScannerState state = scanner.capture();
+		ParseContext tmp = ctx.clone();
 
-		if(ParseTools.option(scanner, TokenType.IDENT, false))
+		if(ParseTools.option(ctx, TokenType.IDENT, false))
 		{
-			String name = ParseTools.consume(scanner).value;
+			String name = ParseTools.consume(ctx).value;
 
-			if(ParseTools.option(scanner, "=", true))
+			if(ParseTools.option(ctx, "=", true))
 			{
-				Maybe<AstExprLiteral> init = parseGlobalInitAndScolon(scanner, delayedExprs);
+				Maybe<AstExprLiteral> init = parseGlobalInitAndScolon(ctx);
 				return new AstDeclGlobal(exported, opaque, Maybe.none(), name, init);
 			}
 		}
 
-		scanner.backtrack(state);
+		ctx.backtrack(tmp);
 
-		AstType type = TypeParser.parse(scanner, delayedExprs);
-		String name = ParseTools.consumeExpected(scanner, TokenType.IDENT).value;
-		ParseTools.expect(scanner, "=", true);
+		AstType type = TypeParser.parse(ctx);
+		String name = ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
+		ParseTools.expect(ctx, "=", true);
 
-		Maybe<AstExprLiteral> init = parseGlobalInitAndScolon(scanner, delayedExprs);
+		Maybe<AstExprLiteral> init = parseGlobalInitAndScolon(ctx);
 		return new AstDeclGlobal(exported, opaque, Maybe.some(type), name, init);
 	}
 
-	private static AstDecl parseImport(Scanner scanner)
+	private static AstDecl parseImport(ParseContext ctx)
 	{
-		scanner.advance();
+		ctx.advance();
 
-		AstPath path = ParseTools.path(scanner);
+		AstPath path = ParseTools.path(ctx);
 
-		if(ParseTools.option(scanner, TokenType.IDENT, false))
+		if(ParseTools.option(ctx, TokenType.IDENT, false))
 		{
-			String rename = ParseTools.consume(scanner).value;
-			ParseTools.expect(scanner, TokenType.PUNCT_SCOLON, true);
+			String rename = ParseTools.consume(ctx).value;
+			ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 			return new AstDeclRenamedImport(path, rename);
 		}
 
-		ParseTools.expect(scanner, TokenType.PUNCT_SCOLON, true);
+		ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 		return new AstDeclImport(path);
 	}
 
-	private static AstDeclModule parseModule(Scanner scanner)
+	private static AstDeclModule parseModule(ParseContext ctx)
 	{
-		scanner.advance();
+		ctx.advance();
 
-		AstPath path = ParseTools.path(scanner);
-		ParseTools.expect(scanner, TokenType.PUNCT_SCOLON, true);
+		AstPath path = ParseTools.path(ctx);
+		ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 		return new AstDeclModule(path);
 	}
 
-	private static AstDeclTypeAlias parseTypeAlias(Scanner scanner, boolean exported, DelayedExprParseList delayedExprs)
+	private static AstDeclTypeAlias parseTypeAlias(ParseContext ctx, boolean exported)
 	{
-		scanner.advance();
-		String name = ParseTools.consumeExpected(scanner, TokenType.IDENT).value;
-		ParseTools.expect(scanner, "=", true);
-		AstType type = TypeParser.parse(scanner, delayedExprs);
-		ParseTools.expect(scanner, TokenType.PUNCT_SCOLON, true);
+		ctx.advance();
+		String name = ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
+		ParseTools.expect(ctx, "=", true);
+		AstType type = TypeParser.parse(ctx);
+		ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 		return new AstDeclTypeAlias(exported, name, type);
 	}
 }

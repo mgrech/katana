@@ -100,16 +100,11 @@ public class SourceFile
 		return lines.get(index);
 	}
 
-	public SourceLocation resolve(int offset)
+	public SourceLocation resolve(int offset, int length)
 	{
-		Map.Entry<Integer, Line> entry = linesByOffset.floorEntry(offset);
-		int lineOffset = entry.getKey();
-		Line line = entry.getValue();
-		return new SourceLocation(this, line.number, offset - lineOffset, offset);
-	}
-
-	public SourceRange resolve(OffsetRange range)
-	{
-		return new SourceRange(resolve(range.begin), resolve(range.end));
+		Map.Entry<Integer, Line> lineEntry = linesByOffset.floorEntry(offset);
+		int lineOffset = lineEntry.getKey();
+		Line line = lineEntry.getValue();
+		return new SourceLocation(this, line.number, offset - lineOffset, length, offset);
 	}
 }

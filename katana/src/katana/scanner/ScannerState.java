@@ -16,23 +16,22 @@ package katana.scanner;
 
 public class ScannerState implements Cloneable
 {
-	public final OffsetRange range;
+	public int begin = 0;
+	public int end = 0;
 	public Token token = Tokens.BEGIN;
 
-	public ScannerState()
-	{
-		this.range = new OffsetRange(0, 0);
-	}
+	public ScannerState() {}
 
-	private ScannerState(OffsetRange range, Token token)
+	private ScannerState(int begin, int end, Token token)
 	{
-		this.range = range;
+		this.begin = begin;
+		this.end = end;
 		this.token = token;
 	}
 
 	@Override
 	public ScannerState clone()
 	{
-		return new ScannerState(range.clone(), token);
+		return new ScannerState(begin, end, token);
 	}
 }

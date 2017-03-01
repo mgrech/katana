@@ -19,8 +19,10 @@ import katana.ast.AstModule;
 import katana.ast.AstPath;
 import katana.ast.decl.*;
 import katana.diag.CompileException;
+import katana.diag.DiagnosticsManager;
 import katana.op.Operator;
 import katana.scanner.Scanner;
+import katana.scanner.SourceFile;
 import katana.scanner.TokenType;
 import katana.visitor.IVisitor;
 
@@ -35,18 +37,24 @@ public class FileParser implements IVisitor
 		this.file = file;
 	}
 
-	public static AstFile parse(Scanner scanner)
+	public static AstFile parse(SourceFile file, DiagnosticsManager diag)
 	{
-		AstFile file = new AstFile(scanner.file());
-		FileParser parser = new FileParser(file);
+		Scanner scanner = new Scanner(file);
+		scanner.advance();
+		ParseContext ctx = new ParseContext(scanner, diag);
 
-		while(scanner.state().token.type != TokenType.END)
+		AstFile ast = new AstFile();
+		FileParser parser = new FileParser(ast);
+
+		while(ctx.token().type != TokenType.END)
 		{
-			AstDecl decl = DeclParser.parse(scanner, file.delayedExprs);
+			AstDecl decl = DeclParser.parse(ctx);
 			decl.accept(parser);
 		}
 
-		return file;
+		ast.lateParseExprs = ctx.lateParseExprs();
+
+		return ast;
 	}
 
 	private AstModule findOrCreateModule(AstPath path)

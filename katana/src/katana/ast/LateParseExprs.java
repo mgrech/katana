@@ -22,9 +22,27 @@ import katana.ast.expr.AstExprOpPrefixSeq;
 import java.util.IdentityHashMap;
 import java.util.function.Consumer;
 
-public class DelayedExprParseList
+public class LateParseExprs implements Cloneable
 {
 	public IdentityHashMap<AstExprOpPrefixSeq, Consumer<AstExpr>> prefixSeqs = new IdentityHashMap<>();
 	public IdentityHashMap<AstExprOpInfixList, Consumer<AstExpr>> infixLists = new IdentityHashMap<>();
 	public IdentityHashMap<AstExprOpPostfixSeq, Consumer<AstExpr>> postfixSeqs = new IdentityHashMap<>();
+
+	public LateParseExprs()
+	{}
+
+	private LateParseExprs(IdentityHashMap<AstExprOpPrefixSeq, Consumer<AstExpr>> prefixSeqs,
+	                       IdentityHashMap<AstExprOpInfixList, Consumer<AstExpr>> infixLists,
+	                       IdentityHashMap<AstExprOpPostfixSeq, Consumer<AstExpr>> postfixSeqs)
+	{
+		this.prefixSeqs = prefixSeqs;
+		this.infixLists = infixLists;
+		this.postfixSeqs = postfixSeqs;
+	}
+
+	@Override
+	public LateParseExprs clone()
+	{
+		return new LateParseExprs(new IdentityHashMap<>(prefixSeqs), new IdentityHashMap<>(infixLists), new IdentityHashMap<>(postfixSeqs));
+	}
 }

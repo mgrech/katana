@@ -15,9 +15,9 @@
 package katana.parser;
 
 import katana.ast.AstPath;
-import katana.diag.CompileException;
-import katana.scanner.*;
-import katana.utils.StringUtils;
+import katana.scanner.Token;
+import katana.scanner.TokenCategory;
+import katana.scanner.TokenType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,133 +26,111 @@ import java.util.function.Supplier;
 
 public class ParseTools
 {
-	public static AstPath path(Scanner scanner)
+	public static AstPath path(ParseContext ctx)
 	{
-		Supplier<String> parseComponent = () -> consumeExpected(scanner, TokenType.IDENT).value;
-		List<String> components = separated(scanner, ".", parseComponent);
+		Supplier<String> parseComponent = () -> consumeExpected(ctx, TokenType.IDENT).value;
+		List<String> components = separated(ctx, ".", parseComponent);
 		return new AstPath(components);
 	}
 
-	public static <T> List<T> separated(Scanner scanner, String separator, Supplier<T> parser)
+	public static <T> List<T> separated(ParseContext ctx, String separator, Supplier<T> parser)
 	{
 		List<T> result = new ArrayList<>();
 
 		do result.add(parser.get());
-		while(option(scanner, separator, true));
+		while(option(ctx, separator, true));
 
 		return result;
 	}
 
-	public static <T> List<T> separated(Scanner scanner, TokenType separator, Supplier<T> parser)
+	public static <T> List<T> separated(ParseContext ctx, TokenType separator, Supplier<T> parser)
 	{
 		List<T> result = new ArrayList<>();
 
 		do result.add(parser.get());
-		while(option(scanner, separator, true));
+		while(option(ctx, separator, true));
 
 		return result;
 	}
 
-	public static <T> T parenthesized(Scanner scanner, Supplier<T> func)
+	public static <T> T parenthesized(ParseContext ctx, Supplier<T> func)
 	{
-		ParseTools.expect(scanner, TokenType.PUNCT_LPAREN, true);
+		ParseTools.expect(ctx, TokenType.PUNCT_LPAREN, true);
 		T result = func.get();
-		ParseTools.expect(scanner, TokenType.PUNCT_RPAREN, true);
+		ParseTools.expect(ctx, TokenType.PUNCT_RPAREN, true);
 		return result;
 	}
 
-	public static boolean option(Scanner scanner, Predicate<Token> predicate, boolean eat)
+	public static boolean option(ParseContext ctx, Predicate<Token> predicate, boolean eat)
 	{
-		if(!predicate.test(scanner.state().token))
+		if(!predicate.test(ctx.token()))
 			return false;
 
 		if(eat)
-			scanner.advance();
+			ctx.advance();
 
 		return true;
 	}
 
-	public static boolean option(Scanner scanner, String value, boolean eat)
+	public static boolean option(ParseContext ctx, String value, boolean eat)
 	{
-		return option(scanner, t -> t.value.equals(value), eat);
+		return option(ctx, t -> t.value.equals(value), eat);
 	}
 
-	public static boolean option(Scanner scanner, TokenCategory category, boolean eat)
+	public static boolean option(ParseContext ctx, TokenCategory category, boolean eat)
 	{
-		return option(scanner, t -> t.category == category, eat);
+		return option(ctx, t -> t.category == category, eat);
 	}
 
-	public static boolean option(Scanner scanner, TokenType type, boolean eat)
+	public static boolean option(ParseContext ctx, TokenType type, boolean eat)
 	{
-		return option(scanner, t -> t.type == type, eat);
+		return option(ctx, t -> t.type == type, eat);
 	}
 
-	public static void expect(Scanner scanner, String value, boolean eat)
+	public static void expect(ParseContext ctx, String value, boolean eat)
 	{
-		if(!option(scanner, value, eat))
-			unexpectedToken(scanner, value);
+		if(!option(ctx, value, eat))
+			unexpectedToken(ctx, value);
 	}
 
-	public static void expect(Scanner scanner, TokenCategory category, boolean eat)
+	public static void expect(ParseContext ctx, TokenCategory category, boolean eat)
 	{
-		if(!option(scanner, category, eat))
-			unexpectedToken(scanner, category);
+		if(!option(ctx, category, eat))
+			unexpectedToken(ctx, category);
 	}
 
-	public static void expect(Scanner scanner, TokenType type, boolean eat)
+	public static void expect(ParseContext ctx, TokenType type, boolean eat)
 	{
-		if(!option(scanner, type, eat))
-			unexpectedToken(scanner, type);
+		if(!option(ctx, type, eat))
+			unexpectedToken(ctx, type);
 	}
 
-	public static Token consume(Scanner scanner)
+	public static Token consume(ParseContext ctx)
 	{
-		Token token = scanner.state().token;
-		scanner.advance();
+		Token token = ctx.token();
+		ctx.advance();
 		return token;
 	}
 
-	public static Token consumeExpected(Scanner scanner, TokenCategory category)
+	public static Token consumeExpected(ParseContext ctx, TokenCategory category)
 	{
-		expect(scanner, category, false);
-		return consume(scanner);
+		expect(ctx, category, false);
+		return consume(ctx);
 	}
 
-	public static Token consumeExpected(Scanner scanner, TokenType type)
+	public static Token consumeExpected(ParseContext ctx, TokenType type)
 	{
-		expect(scanner, type, false);
-		return consume(scanner);
+		expect(ctx, type, false);
+		return consume(ctx);
 	}
 
-	public static <T> void unexpectedToken(Scanner scanner, T expected)
+	public static <T> void unexpectedToken(ParseContext ctx, T expected)
 	{
-		error(scanner, "unexpected token '%s', expected '%s'", scanner.state().token.value, expected);
+		ctx.error("unexpected token '%s', expected '%s'", ctx.token().value, expected);
 	}
 
-	public static void unexpectedToken(Scanner scanner)
+	public static void unexpectedToken(ParseContext ctx)
 	{
-		error(scanner, "unexpected token '%s'", scanner.state().token.value);
-	}
-
-	private static void error(Scanner scanner, String fmt, Object... args)
-	{
-		SourceRange range = scanner.file().resolve(scanner.state().range);
-		String message = String.format(fmt, args);
-		String line = scanner.file().line(range.begin.line);
-		String errorIndicator = makeErrorIndicator(scanner.file(), range);
-		throw new CompileException(String.format("%s: error: %s\n\t%s\n\t%s", range, message, line.trim(), errorIndicator));
-	}
-
-	private static String makeErrorIndicator(SourceFile file, SourceRange range)
-	{
-		String line = StringUtils.rtrim(file.line(range.begin.line));
-		int lengthPreLTrim = line.length();
-		line = StringUtils.ltrim(line);
-		int ltrimmedColumns = lengthPreLTrim - line.length();
-
-		int spaces = range.begin.column - ltrimmedColumns;
-		int length = range.end.column - range.begin.column;
-
-		return StringUtils.times(spaces, ' ') + StringUtils.times(length, '^');
+		ctx.error("unexpected token '%s'", ctx.token().value);
 	}
 }

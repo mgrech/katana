@@ -22,6 +22,7 @@ import katana.backend.llvm.ProgramCodeGenerator;
 import katana.cli.Command;
 import katana.cli.CommandException;
 import katana.diag.CompileException;
+import katana.diag.DiagnosticsManager;
 import katana.parser.ProgramParser;
 import katana.platform.TargetTriple;
 import katana.project.FileType;
@@ -56,7 +57,16 @@ public class CmdBuild
 			if(katanaFiles != null)
 			{
 				SourceManager sourceManager = SourceManager.loadFiles(project.root, project.sourceFiles.get(FileType.KATANA));
-				AstProgram ast = ProgramParser.parse(sourceManager);
+
+				DiagnosticsManager diag = new DiagnosticsManager(true);
+				AstProgram ast = ProgramParser.parse(sourceManager, diag);
+
+				if(!diag.successful())
+				{
+					diag.print();
+					return;
+				}
+
 				SemaProgram program = ProgramValidator.validate(ast, context);
 				ProgramCodeGenerator.generate(project, program, context);
 			}

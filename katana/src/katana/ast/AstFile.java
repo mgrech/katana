@@ -16,21 +16,14 @@ package katana.ast;
 
 import katana.ast.decl.AstDeclImport;
 import katana.ast.decl.AstDeclRenamedImport;
-import katana.scanner.SourceFile;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class AstFile
 {
-	public final SourceFile file;
 	public final Map<AstPath, AstDeclImport> imports = new HashMap<>();
 	public final Map<String, AstDeclRenamedImport> renamedImports = new HashMap<>();
 	public final Map<AstPath, AstModule> modules = new HashMap<>();
-	public final DelayedExprParseList delayedExprs = new DelayedExprParseList();
-
-	public AstFile(SourceFile file)
-	{
-		this.file = file;
-	}
+	public LateParseExprs lateParseExprs;
 }

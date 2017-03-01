@@ -31,6 +31,11 @@ public class Scanner
 		return file;
 	}
 
+	public SourceLocation location()
+	{
+		return file.resolve(state.begin, state.end - state.begin);
+	}
+
 	public ScannerState state()
 	{
 		return state;
@@ -55,7 +60,7 @@ public class Scanner
 		if(atEnd())
 			return Tokens.END;
 
-		state.range.begin = state.range.end;
+		state.begin = state.end;
 
 		int cp = here();
 
@@ -91,7 +96,7 @@ public class Scanner
 
 	private Token operatorSeq()
 	{
-		int before = state.range.end == 0 ? ' ' : file.codepoints()[state.range.end - 1];
+		int before = state.end == 0 ? ' ' : file.codepoints()[state.end - 1];
 
 		StringBuilder builder = new StringBuilder();
 
@@ -490,22 +495,21 @@ public class Scanner
 
 	private boolean atEnd()
 	{
-		return state.range.end == file.codepoints().length;
+		return state.end == file.codepoints().length;
 	}
 
 	private int here()
 	{
-		return file.codepoints()[state.range.end];
+		return file.codepoints()[state.end];
 	}
 
 	private void advanceColumn()
 	{
-		++state.range.end;
+		++state.end;
 	}
 
 	private void error(String message)
 	{
-		SourceLocation location = file.resolve(state.range.end);
-		throw new CompileException(String.format("%s: error: %s", message, location));
+		throw new CompileException(String.format("%s: error: %s", message, location()));
 	}
 }

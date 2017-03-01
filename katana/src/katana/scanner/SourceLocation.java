@@ -19,19 +19,23 @@ public class SourceLocation
 	public final SourceFile file;
 	public final int line;
 	public final int column;
+	public final int length;
 	public final int offset;
 
-	public SourceLocation(SourceFile file, int line, int column, int offset)
+	public SourceLocation(SourceFile file, int line, int column, int length, int offset)
 	{
 		this.file = file;
 		this.line = line;
 		this.column = column;
+		this.length = length;
 		this.offset = offset;
 	}
 
 	@Override
 	public String toString()
 	{
-		return String.format("%s:%s:%s", file.path(), line + 1, column + 1);
+		int beginColumn = column + 1;
+		int endColumn = beginColumn + length;
+		return String.format("%s:%s:%s-%s", file.path(), line + 1, beginColumn, endColumn);
 	}
 }

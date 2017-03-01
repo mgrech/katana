@@ -14,7 +14,7 @@
 
 package katana.op;
 
-import katana.ast.DelayedExprParseList;
+import katana.ast.LateParseExprs;
 import katana.ast.expr.*;
 import katana.diag.CompileException;
 import katana.sema.SemaSymbol;
@@ -259,7 +259,7 @@ public class OperatorParser
 		replace.accept(replacement);
 	}
 
-	public static void replace(DelayedExprParseList list, SemaScopeFile scope)
+	public static void replace(LateParseExprs list, SemaScopeFile scope)
 	{
 		for(Map.Entry<AstExprOpPrefixSeq, Consumer<AstExpr>> entry : list.prefixSeqs.entrySet())
 			replacePrefixOpSeq(entry.getKey(), entry.getValue(), scope);
