@@ -247,6 +247,12 @@ public class Scanner
 		int d6 = hexDigit();
 		int sum =  d1 | d2 | d3 | d4 | d5 | d6;
 
+		if(sum < 0)
+		{
+			error("expected hex digits in unicode escape sequence");
+			return -1;
+		}
+
 		if(sum > 0x10FFFF)
 		{
 			error("invalid codepoint in unicode escape sequence");
