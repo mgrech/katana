@@ -15,7 +15,8 @@
 package katana.parser;
 
 import katana.ast.type.*;
-import katana.diag.CompileException;
+import katana.scanner.SourceLocation;
+import katana.scanner.Token;
 import katana.scanner.TokenCategory;
 import katana.scanner.TokenType;
 import katana.utils.Maybe;
@@ -36,7 +37,7 @@ public class TypeParser
 		if(ParseTools.option(ctx, TokenType.DECL_FN, true))
 		{
 			if(const_)
-				throw new CompileException("forming type 'const function'");
+				ctx.error(-2, ParserDiagnostics.FORMING_CONST_FUNCTION_TYPE);
 
 			return parseFunction(ctx);
 		}
@@ -44,7 +45,7 @@ public class TypeParser
 		if(ParseTools.option(ctx, TokenType.PUNCT_LBRACE, true))
 		{
 			if(const_)
-				throw new CompileException("forming type 'const tuple'");
+				ctx.error(-2, ParserDiagnostics.FORMING_CONST_TUPLE_TYPE);
 
 			return parseTuple(ctx);
 		}
@@ -52,7 +53,7 @@ public class TypeParser
 		if(ParseTools.option(ctx, TokenType.PUNCT_LBRACKET, true))
 		{
 			if(const_)
-				throw new CompileException("forming type 'const array'");
+				ctx.error(-2, ParserDiagnostics.FORMING_CONST_ARRAY_TYPE);
 
 			return parseArray(ctx);
 		}
@@ -63,7 +64,10 @@ public class TypeParser
 		if(ParseTools.option(ctx, TokenType.TYPE_CONST, true))
 		{
 			if(const_)
-				throw new CompileException("duplicate const");
+			{
+				ctx.error(-1, ParserDiagnostics.DUPLICATE_CONST);
+				return doParse(ctx, true);
+			}
 
 			return new AstTypeConst(doParse(ctx, true));
 		}
@@ -73,17 +77,34 @@ public class TypeParser
 
 		if(ParseTools.option(ctx, TokenCategory.OP, false))
 		{
-			String ptrs = ParseTools.consume(ctx).value;
+			Token token = ParseTools.consume(ctx);
 			AstType type = parse(ctx);
 
-			for(char c : new StringBuilder(ptrs).reverse().toString().toCharArray())
+			int count = 0;
+			for(char c : token.value.toCharArray())
+			{
+				switch(c)
+				{
+				case '!':
+				case '?':
+					break;
+
+				default:
+					SourceLocation location = ctx.file().resolve(token.offset + count, 1);
+					ctx.error(location, ParserDiagnostics.UNEXPECTED_CHARACTER_IN_TYPE_QUALIFIERS, c);
+					break;
+				}
+
+				++count;
+			}
+
+			for(char c : new StringBuilder(token.value).reverse().toString().toCharArray())
 			{
 				switch(c)
 				{
 				case '!': type = new AstTypeNonNullablePointer(type); break;
-				case '?': type = new AstTypeNullablePointer(type); break;
-				default:
-					throw new CompileException(String.format("unexpected character '%s' while parsing type", c));
+				case '?': type = new AstTypeNullablePointer(type);    break;
+				default: break;
 				}
 			}
 
@@ -100,7 +121,7 @@ public class TypeParser
 		}
 
 		ParseTools.unexpectedToken(ctx, TokenCategory.TYPE);
-		throw new AssertionError("unreachable");
+		return null;
 	}
 
 	private static AstTypeFunction parseFunction(ParseContext ctx)
@@ -193,7 +214,6 @@ public class TypeParser
 		case TYPE_UINT:    return AstTypeBuiltin.UINT;
 		case TYPE_FLOAT32: return AstTypeBuiltin.FLOAT32;
 		case TYPE_FLOAT64: return AstTypeBuiltin.FLOAT64;
-
 		default: throw new AssertionError("unreachable");
 		}
 	}

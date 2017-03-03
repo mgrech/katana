@@ -15,6 +15,7 @@
 package katana.parser;
 
 import katana.ast.AstPath;
+import katana.diag.CompileException;
 import katana.scanner.Token;
 import katana.scanner.TokenCategory;
 import katana.scanner.TokenType;
@@ -126,11 +127,13 @@ public class ParseTools
 
 	public static <T> void unexpectedToken(ParseContext ctx, T expected)
 	{
-		ctx.error(null, "unexpected token '%s', expected '%s'", ctx.token().value, expected);
+		ctx.error(ParserDiagnostics.UNEXPECTED_TOKEN_EXPECTED, ctx.token().value, expected);
+		throw new CompileException("");
 	}
 
 	public static void unexpectedToken(ParseContext ctx)
 	{
-		ctx.error(null, "unexpected token '%s'", ctx.token().value);
+		ctx.error(ParserDiagnostics.UNEXPECTED_TOKEN, ctx.token().value);
+		throw new CompileException("");
 	}
 }
