@@ -1,4 +1,4 @@
-// Copyright 2016-2017 Markus Grech
+// Copyright 2017 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,13 +14,14 @@
 
 package katana.cli.cmd;
 
+import com.github.rvesse.airline.annotations.Command;
+import com.github.rvesse.airline.annotations.Option;
+import com.github.rvesse.airline.annotations.restrictions.Required;
 import katana.analysis.ProgramValidator;
 import katana.ast.AstProgram;
 import katana.backend.PlatformContext;
 import katana.backend.llvm.PlatformContextLlvm;
 import katana.backend.llvm.ProgramCodeGenerator;
-import katana.cli.Command;
-import katana.cli.CommandException;
 import katana.diag.CompileException;
 import katana.diag.DiagnosticsManager;
 import katana.parser.ProgramParser;
@@ -37,28 +38,41 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
 
-@Command(name = "build", desc = "builds project at given path in the working directory")
-public class CmdBuild
+@Command(name = "build", description = "Build project")
+public class CmdBuild implements Runnable
 {
-	@SuppressWarnings("unused")
-	public static void run(String[] args) throws IOException
-	{
-		if(args.length != 1)
-			throw new CommandException("invalid number of arguments, usage: build <source-dir>");
+	@Option(name = {"-P", "--project-dir"}, description = "Project directory")
+	@Required
+	public String projectDir;
 
+	@Option(name = {"-B", "--build-dir"}, description = "Build directory")
+	public String buildDir;
+
+	@Option(name = {"-Dt", "--diagnostic-traces"}, description = "Stack traces in diagnostics")
+	public boolean diagnosticTraces;
+
+	@Override
+	public void run()
+	{
 		PlatformContext context = new PlatformContextLlvm(TargetTriple.NATIVE);
-		Path root = Paths.get(args[0]).toAbsolutePath().normalize();
+		Path projectDir = Paths.get(this.projectDir).toAbsolutePath().normalize();
+		Path buildDir;
+
+		if(this.buildDir == null)
+			buildDir = Paths.get("");
+		else
+			buildDir = Paths.get(this.buildDir).toAbsolutePath().normalize();
 
 		try
 		{
-			Project project = ProjectManager.load(root, context.target());
+			Project project = ProjectManager.load(projectDir, context.target());
 			Set<Path> katanaFiles = project.sourceFiles.get(FileType.KATANA);
 
 			if(katanaFiles != null)
 			{
 				SourceManager sourceManager = SourceManager.loadFiles(project.root, project.sourceFiles.get(FileType.KATANA));
 
-				DiagnosticsManager diag = new DiagnosticsManager(true);
+				DiagnosticsManager diag = new DiagnosticsManager(diagnosticTraces);
 				AstProgram ast = ProgramParser.parse(sourceManager, diag);
 
 				if(!diag.successful())
@@ -68,13 +82,13 @@ public class CmdBuild
 				}
 
 				SemaProgram program = ProgramValidator.validate(ast, context);
-				ProgramCodeGenerator.generate(project, program, context);
+				ProgramCodeGenerator.generate(project, program, context, buildDir);
 			}
 
-			ProjectBuilder.build(project, context.target());
+			ProjectBuilder.build(project, context.target(), buildDir);
 		}
 
-		catch(CompileException e)
+		catch(CompileException | IOException e)
 		{
 			System.err.println(e.getMessage());
 			System.exit(1);

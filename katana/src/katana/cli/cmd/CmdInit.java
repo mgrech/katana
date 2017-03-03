@@ -14,22 +14,33 @@
 
 package katana.cli.cmd;
 
-import katana.cli.Command;
-import katana.cli.CommandException;
+import com.github.rvesse.airline.annotations.Command;
+import com.github.rvesse.airline.annotations.Option;
 import katana.project.ProjectManager;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
-@Command(name = "init", desc = "initializes new project in working directory")
-public class CmdInit
+@Command(name = "init", description = "Initialize new project")
+public class CmdInit implements Runnable
 {
-	@SuppressWarnings("unused")
-	public static void run(String[] args) throws IOException
-	{
-		if(args.length != 0)
-			throw new CommandException("invalid arguments, usage: katana init");
+	@Option(name = {"-P", "--project-dir"}, description = "Project directory")
+	public Path path;
 
-		ProjectManager.createDefaultProject(Paths.get(""));
+	public void run()
+	{
+		try
+		{
+			if(path == null)
+				path = Paths.get("");
+
+			ProjectManager.createDefaultProject(path);
+		}
+
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
 	}
 }

@@ -14,14 +14,13 @@
 
 package katana.cli.cmd;
 
+import com.github.rvesse.airline.annotations.Command;
 import katana.Katana;
-import katana.cli.Command;
 
-@Command(name = "version", desc = "prints out version information")
-public class CmdVersion
+@Command(name = "version", description = "Print Katana version")
+public class CmdVersion implements Runnable
 {
-	@SuppressWarnings("unused")
-	public static void run(String[] args)
+	public void run()
 	{
 		System.out.println(Katana.VERSION_STRING);
 	}

@@ -279,11 +279,11 @@ public class ProjectBuilder
 		}
 	}
 
-	public static void build(Project project, TargetTriple target) throws IOException
+	public static void build(Project project, TargetTriple target, Path buildDir) throws IOException
 	{
 		List<Path> objectFiles = new ArrayList<>();
 
-		Path katanaOutput = Paths.get(project.name + ".ll").toAbsolutePath().normalize();
+		Path katanaOutput = buildDir.resolve(project.name + ".ll");
 		objectFiles.add(compileLlvmFile(project, target, katanaOutput));
 
 		for(Map.Entry<FileType, Set<Path>> entry : project.sourceFiles.entrySet())

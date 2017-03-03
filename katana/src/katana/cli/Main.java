@@ -14,68 +14,32 @@
 
 package katana.cli;
 
+import com.github.rvesse.airline.Cli;
+import com.github.rvesse.airline.help.Help;
+import com.github.rvesse.airline.parser.errors.ParseException;
 import katana.cli.cmd.CmdBuild;
-import katana.cli.cmd.CmdHelp;
 import katana.cli.cmd.CmdInit;
 import katana.cli.cmd.CmdVersion;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Map;
-import java.util.TreeMap;
-
+@com.github.rvesse.airline.annotations.Cli(
+	name = "katana",
+	description = "Katana compiler",
+	defaultCommand = Help.class,
+	commands = {CmdBuild.class, CmdInit.class, CmdVersion.class})
 public class Main
 {
-	public static final Map<String, Class<?>> COMMANDS = new TreeMap<>();
-
-	private static void registerCommands()
+	public static void main(String[] args)
 	{
-		Class<?>[] commands = new Class<?>[]{ CmdBuild.class, CmdHelp.class, CmdInit.class, CmdVersion.class };
-
-		for(Class<?> clazz : commands)
-		{
-			String name = clazz.getAnnotation(Command.class).name();
-			COMMANDS.put(name, clazz);
-		}
-	}
-
-	public static void main(String[] args) throws Throwable
-	{
-		registerCommands();
-
-		if(args.length < 1)
-		{
-			System.err.println("missing command argument");
-			System.exit(1);
-		}
-
-		Class<?> command = COMMANDS.get(args[0]);
-
-		if(command == null)
-		{
-			System.err.print(String.format("unknown command '%s'. ", args[0]));
-			CmdHelp.run(new String[0]);
-			System.exit(1);
-		}
-
-		String[] commandArgs = new String[args.length - 1];
-		System.arraycopy(args, 1, commandArgs, 0, commandArgs.length);
+		Cli<Runnable> cli = new Cli<>(Main.class);
 
 		try
 		{
-			Method run = command.getMethod("run", String[].class);
-			run.invoke(null, (Object)commandArgs);
+			cli.parse(args).run();
 		}
 
-		catch(InvocationTargetException ex)
-		{
-			throw ex.getTargetException();
-		}
-
-		catch(CommandException ex)
+		catch(ParseException ex)
 		{
 			System.err.println(ex.getMessage());
-			System.exit(1);
 		}
 	}
 }

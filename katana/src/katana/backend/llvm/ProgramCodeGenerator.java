@@ -33,6 +33,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 
 public class ProgramCodeGenerator
 {
@@ -105,7 +106,7 @@ public class ProgramCodeGenerator
 		throw new CompileException(String.format("entry point must return 'void' or 'int32', got '%s'", TypeString.of(func.ret)));
 	}
 
-	public static void generate(Project project, SemaProgram program, PlatformContext platform) throws IOException
+	public static void generate(Project project, SemaProgram program, PlatformContext platform, Path buildDir) throws IOException
 	{
 		StringBuilder builder = new StringBuilder();
 		builder.append(String.format("target triple = \"%s\"\n\n", platform.target()));
@@ -120,7 +121,7 @@ public class ProgramCodeGenerator
 
 		byte[] output = builder.toString().getBytes(StandardCharsets.UTF_8);
 
-		try(OutputStream stream = new FileOutputStream(project.name + ".ll"))
+		try(OutputStream stream = new FileOutputStream(buildDir.resolve(project.name + ".ll").toFile()))
 		{
 			stream.write(output);
 		}
