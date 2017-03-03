@@ -18,16 +18,20 @@ public class DiagnosticId
 {
 	public final DiagnosticKind kind;
 	public final int number;
+	public final String fmt;
 
-	public DiagnosticId(DiagnosticKind kind, int number)
+	public DiagnosticId(DiagnosticKind kind, int number, String fmt)
 	{
 		this.kind = kind;
 		this.number = number;
+		this.fmt = fmt;
 	}
 
-	@Override
-	public String toString()
+	public String format(DiagnosticType type, Object... args)
 	{
-		return String.format("%s%03d", kind.toString().substring(0, 3), number);
+		String typeString = type.toString().toLowerCase();
+		String kindString = kind.toString().substring(0, 3);
+		String message = String.format(fmt, args);
+		return String.format("%s %s%03d: %s", typeString, kindString, number, message);
 	}
 }

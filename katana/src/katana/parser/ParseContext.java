@@ -46,9 +46,20 @@ public class ParseContext implements Cloneable
 		this.current = current;
 	}
 
-	private SourceLocation location()
+	private SourceLocation location(int relative)
 	{
-		return file.resolve(token().offset, token().value.length());
+		int index = current + relative;
+
+		if(index < 0 || index >= tokens.size())
+			return null;
+
+		Token token = tokens.get(index);
+		return file.resolve(token.offset, token.value.length());
+	}
+
+	public SourceFile file()
+	{
+		return file;
 	}
 
 	@Override
@@ -82,18 +93,18 @@ public class ParseContext implements Cloneable
 		++current;
 	}
 
-	public void error(DiagnosticId id, String fmt, Object... args)
+	public void error(DiagnosticId id, Object... args)
 	{
-		diag.error(id, location(), fmt, args);
+		diag.error(location(0), id, args);
 	}
 
-	public void warning(DiagnosticId id, String fmt, Object... args)
+	public void error(int relative, DiagnosticId id, Object... args)
 	{
-		diag.warning(id, location(), fmt, args);
+		diag.error(location(relative), id, args);
 	}
 
-	public void note(DiagnosticId id, String fmt, Object... args)
+	public void error(SourceLocation location, DiagnosticId id, Object... args)
 	{
-		diag.note(id, location(), fmt, args);
+		diag.error(location, id, args);
 	}
 }
