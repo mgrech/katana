@@ -36,11 +36,20 @@
 			<artifactId>airline</artifactId>
 			<version>2.2.0</version>
 		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/junit/junit -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
 		<finalName>katana</finalName>
-		<sourceDirectory>src</sourceDirectory>
+		<sourceDirectory>src/main</sourceDirectory>
+		<testSourceDirectory>src/test</testSourceDirectory>
 		<resources>
 			<resource>
 				<directory>resources</directory>
