@@ -53,6 +53,11 @@ public class SourceFile
 	public static SourceFile load(Path root, Path path) throws IOException
 	{
 		byte[] bytes = Files.readAllBytes(path);
+		return fromBytes(root, path, bytes);
+	}
+
+	public static SourceFile fromBytes(Path root, Path path, byte[] bytes)
+	{
 		int[] codepoints = new String(bytes, StandardCharsets.UTF_8).codePoints().toArray();
 
 		TreeMap<Integer, Line> linesByOffset = new TreeMap<>();
