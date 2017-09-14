@@ -17,8 +17,7 @@ package katana.testing.scanner.tests;
 import katana.scanner.TokenCategory;
 import katana.scanner.TokenType;
 import katana.testing.scanner.ScannerTests;
-import katana.testing.scanner.TokenizationResult;
-import katana.testing.scanner.Utils;
+import katana.testing.scanner.Tokenization;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -28,18 +27,23 @@ public class KeywordIdentifierTest
 	@Test
 	public void recognizesKeywords()
 	{
-		TokenizationResult result = Utils.tokenizeExpectSuccess(" void#type\npointer_cast ");
-		Utils.expectToken(result, 0, TokenCategory.TYPE, TokenType.TYPE_VOID, "void", 1);
-		Utils.expectToken(result, 1, TokenCategory.MISC, TokenType.MISC_POINTER_CAST, "pointer_cast", 11);
+		Tokenization tok = Tokenization.of(" void#type\npointer_cast ");
+		tok.expectNoErrors();
+		tok.expectToken(TokenCategory.TYPE, TokenType.TYPE_VOID, "void", 1);
+		tok.expectToken(TokenCategory.MISC, TokenType.MISC_POINTER_CAST, "pointer_cast", 11);
 	}
 
 	@Test
 	public void recognizesIdentifiers()
 	{
-		TokenizationResult result = Utils.tokenizeExpectSuccess("foo( bar.baz )voids");
-		Utils.expectToken(result, 0, TokenCategory.IDENT, TokenType.IDENT, "foo", 0);
-		Utils.expectToken(result, 2, TokenCategory.IDENT, TokenType.IDENT, "bar", 5);
-		Utils.expectToken(result, 4, TokenCategory.IDENT, TokenType.IDENT, "baz", 9);
-		Utils.expectToken(result, 6, TokenCategory.IDENT, TokenType.IDENT, "voids", 14);
+		Tokenization tok = Tokenization.of("foo( bar.baz )voids");
+		tok.expectNoErrors();
+		tok.expectToken(TokenCategory.IDENT, TokenType.IDENT, "foo", 0);
+		tok.expectIgnoreTokens(1);
+		tok.expectToken(TokenCategory.IDENT, TokenType.IDENT, "bar", 5);
+		tok.expectIgnoreTokens(1);
+		tok.expectToken(TokenCategory.IDENT, TokenType.IDENT, "baz", 9);
+		tok.expectIgnoreTokens(1);
+		tok.expectToken(TokenCategory.IDENT, TokenType.IDENT, "voids", 14);
 	}
 }

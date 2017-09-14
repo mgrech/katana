@@ -25,34 +25,54 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class Utils
+public class Tokenization
 {
 	private static final Path HERE = Paths.get("");
 
-	public static TokenizationResult tokenize(String s)
+	private final List<Token> tokens;
+	private final DiagnosticsManager diag;
+	private int currentToken = 0;
+
+	private Tokenization(List<Token> tokens, DiagnosticsManager diag)
+	{
+		this.tokens = tokens;
+		this.diag = diag;
+	}
+
+	public static Tokenization of(String s)
 	{
 		SourceFile file = SourceFile.fromBytes(HERE, HERE, s.getBytes(StandardCharsets.UTF_8));
 		DiagnosticsManager diag = new DiagnosticsManager(true);
 		List<Token> tokens = Scanner.tokenize(file, diag);
-		return new TokenizationResult(tokens, diag);
+		return new Tokenization(tokens, diag);
 	}
 
-	public static TokenizationResult tokenizeExpectSuccess(String s)
+	public void expectNoErrors()
 	{
-		TokenizationResult result = tokenize(s);
-
-		if(!result.diag.successful())
-			throw new CompileException(result.diag.summary());
-
-		return result;
+		if(!diag.successful())
+			throw new CompileException(diag.summary());
 	}
 
-	public static void expectToken(TokenizationResult result, int index, TokenCategory category, TokenType type, String value, int offset)
+	public void expectIgnoreTokens(int n)
 	{
-		Token token = result.tokens.get(index);
+		for(int i = 0; i != n; ++i)
+			tokens.get(currentToken + i);
+
+		currentToken += n;
+	}
+
+	public void expectToken(TokenCategory category, TokenType type, String value, int offset)
+	{
+		Token token = tokens.get(currentToken++);
 		assertEquals(category, token.category);
 		assertEquals(type, token.type);
 		assertEquals(value, token.value);
 		assertEquals(offset, token.offset);
+	}
+
+	public void expectToken(TokenCategory category, TokenType type, String value, int offset, Object data)
+	{
+		assertEquals(data, tokens.get(currentToken).data);
+		expectToken(category, type, value, offset);
 	}
 }

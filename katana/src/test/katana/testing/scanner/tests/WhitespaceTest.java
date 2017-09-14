@@ -17,8 +17,7 @@ package katana.testing.scanner.tests;
 import katana.scanner.TokenCategory;
 import katana.scanner.TokenType;
 import katana.testing.scanner.ScannerTests;
-import katana.testing.scanner.TokenizationResult;
-import katana.testing.scanner.Utils;
+import katana.testing.scanner.Tokenization;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -28,24 +27,27 @@ public class WhitespaceTest
 	@Test
 	public void skipsWhitespaceCharacters()
 	{
-		TokenizationResult result = Utils.tokenizeExpectSuccess("\ta\r ( ");
-		Utils.expectToken(result, 0, TokenCategory.IDENT, TokenType.IDENT, "a", 1);
-		Utils.expectToken(result, 1, TokenCategory.PUNCT, TokenType.PUNCT_LPAREN, "(", 4);
+		Tokenization tok = Tokenization.of("\ta\r ( ");
+		tok.expectNoErrors();
+		tok.expectToken(TokenCategory.IDENT, TokenType.IDENT, "a", 1);
+		tok.expectToken(TokenCategory.PUNCT, TokenType.PUNCT_LPAREN, "(", 4);
 	}
 
 	@Test
 	public void skipsComments()
 	{
-		TokenizationResult result = Utils.tokenizeExpectSuccess("#foo\na #bar \n\n#baz\nb");
-		Utils.expectToken(result, 0, TokenCategory.IDENT, TokenType.IDENT, "a", 5);
-		Utils.expectToken(result, 1, TokenCategory.IDENT, TokenType.IDENT, "b", 19);
+		Tokenization tok = Tokenization.of("#foo\na #bar \n\n#baz\nb");
+		tok.expectNoErrors();
+		tok.expectToken(TokenCategory.IDENT, TokenType.IDENT, "a", 5);
+		tok.expectToken(TokenCategory.IDENT, TokenType.IDENT, "b", 19);
 	}
 
 	@Test
 	public void skipsLineBreaks()
 	{
-		TokenizationResult result = Utils.tokenizeExpectSuccess("a\nb");
-		Utils.expectToken(result, 0, TokenCategory.IDENT, TokenType.IDENT, "a", 0);
-		Utils.expectToken(result, 1, TokenCategory.IDENT, TokenType.IDENT, "b", 2);
+		Tokenization tok = Tokenization.of("a\nb");
+		tok.expectNoErrors();
+		tok.expectToken(TokenCategory.IDENT, TokenType.IDENT, "a", 0);
+		tok.expectToken(TokenCategory.IDENT, TokenType.IDENT, "b", 2);
 	}
 }
