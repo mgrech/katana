@@ -36,9 +36,10 @@ public class KeywordIdentifierTest
 	@Test
 	public void recognizesIdentifiers()
 	{
-		TokenizationResult result = Utils.tokenizeExpectSuccess("foo( bar.baz )");
+		TokenizationResult result = Utils.tokenizeExpectSuccess("foo( bar.baz )voids");
 		Utils.expectToken(result, 0, TokenCategory.IDENT, TokenType.IDENT, "foo", 0);
 		Utils.expectToken(result, 2, TokenCategory.IDENT, TokenType.IDENT, "bar", 5);
 		Utils.expectToken(result, 4, TokenCategory.IDENT, TokenType.IDENT, "baz", 9);
+		Utils.expectToken(result, 6, TokenCategory.IDENT, TokenType.IDENT, "voids", 14);
 	}
 }
