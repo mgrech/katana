@@ -77,7 +77,7 @@ public class CmdBuild implements Runnable
 
 				if(!diag.successful())
 				{
-					diag.print();
+					System.err.print(diag.summary());
 					return;
 				}
 

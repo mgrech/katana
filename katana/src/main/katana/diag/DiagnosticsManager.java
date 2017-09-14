@@ -62,10 +62,17 @@ public class DiagnosticsManager
 		return successful;
 	}
 
-	public void print()
+	public String summary()
 	{
+		StringBuilder builder = new StringBuilder();
+
 		for(Diagnostic diagnostic : diagnostics)
-			System.err.println(diagnostic);
+		{
+			builder.append(diagnostic);
+			builder.append('\n');
+		}
+
+		return builder.toString();
 	}
 
 	public void rewind(int amount)
