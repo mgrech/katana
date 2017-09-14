@@ -16,29 +16,43 @@ package katana.testing.scanner;
 
 import katana.diag.CompileException;
 import katana.diag.DiagnosticsManager;
-import katana.scanner.Scanner;
-import katana.scanner.SourceFile;
-import katana.scanner.Token;
+import katana.scanner.*;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+
 public class Utils
 {
 	private static final Path HERE = Paths.get("");
 
-	public static List<Token> tokenizeString(String s)
+	public static TokenizationResult tokenize(String s)
 	{
 		SourceFile file = SourceFile.fromBytes(HERE, HERE, s.getBytes(StandardCharsets.UTF_8));
 		DiagnosticsManager diag = new DiagnosticsManager(true);
+		List<Token> tokens = Scanner.tokenize(file, diag);
+		return new TokenizationResult(tokens, diag);
+	}
 
-		List<Token> result = Scanner.tokenize(file, diag);
+	public static TokenizationResult tokenizeExpectSuccess(String s)
+	{
+		TokenizationResult result = tokenize(s);
 
-		if(!diag.successful())
-			throw new CompileException(diag.summary());
+		if(!result.diag.successful())
+			throw new CompileException(result.diag.summary());
 
 		return result;
+	}
+
+	public static void expectToken(TokenizationResult result, int index, TokenCategory category, TokenType type, String value, int offset)
+	{
+		Token token = result.tokens.get(index);
+		assertEquals(category, token.category);
+		assertEquals(type, token.type);
+		assertEquals(value, token.value);
+		assertEquals(offset, token.offset);
 	}
 }

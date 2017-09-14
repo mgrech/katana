@@ -23,29 +23,22 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category(ScannerTests.class)
-public class WhitespaceTest
+public class KeywordIdentifierTest
 {
 	@Test
-	public void skipsWhitespaceCharacters()
+	public void recognizesKeywords()
 	{
-		TokenizationResult result = Utils.tokenizeExpectSuccess("\ta\r ( ");
-		Utils.expectToken(result, 0, TokenCategory.IDENT, TokenType.IDENT, "a", 1);
-		Utils.expectToken(result, 1, TokenCategory.PUNCT, TokenType.PUNCT_LPAREN, "(", 4);
+		TokenizationResult result = Utils.tokenizeExpectSuccess(" void#type\npointer_cast ");
+		Utils.expectToken(result, 0, TokenCategory.TYPE, TokenType.TYPE_VOID, "void", 1);
+		Utils.expectToken(result, 1, TokenCategory.MISC, TokenType.MISC_POINTER_CAST, "pointer_cast", 11);
 	}
 
 	@Test
-	public void skipsComments()
+	public void recognizesIdentifiers()
 	{
-		TokenizationResult result = Utils.tokenizeExpectSuccess("#foo\na #bar \n\n#baz\nb");
-		Utils.expectToken(result, 0, TokenCategory.IDENT, TokenType.IDENT, "a", 5);
-		Utils.expectToken(result, 1, TokenCategory.IDENT, TokenType.IDENT, "b", 19);
-	}
-
-	@Test
-	public void skipsLineBreaks()
-	{
-		TokenizationResult result = Utils.tokenizeExpectSuccess("a\nb");
-		Utils.expectToken(result, 0, TokenCategory.IDENT, TokenType.IDENT, "a", 0);
-		Utils.expectToken(result, 1, TokenCategory.IDENT, TokenType.IDENT, "b", 2);
+		TokenizationResult result = Utils.tokenizeExpectSuccess("foo( bar.baz )");
+		Utils.expectToken(result, 0, TokenCategory.IDENT, TokenType.IDENT, "foo", 0);
+		Utils.expectToken(result, 2, TokenCategory.IDENT, TokenType.IDENT, "bar", 5);
+		Utils.expectToken(result, 4, TokenCategory.IDENT, TokenType.IDENT, "baz", 9);
 	}
 }
