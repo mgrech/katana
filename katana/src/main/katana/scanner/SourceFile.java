@@ -74,6 +74,9 @@ public class SourceFile
 				++lineNumber;
 			}
 
+		if(lineOffset != codepoints.length)
+			linesByOffset.put(lineNumber, new Line(lineNumber, codepoints.length - lineOffset));
+
 		List<String> lines = new ArrayList<>();
 
 		int lineStart = 0;
@@ -86,6 +89,13 @@ public class SourceFile
 				lines.add(new String(lineBytes, StandardCharsets.UTF_8));
 				lineStart = i + 1;
 			}
+
+		if(lineStart != bytes.length)
+		{
+			byte[] lineBytes = new byte[bytes.length - lineStart];
+			System.arraycopy(bytes, lineStart, lineBytes, 0, lineBytes.length);
+			lines.add(new String(lineBytes, StandardCharsets.UTF_8));
+		}
 
 		return new SourceFile(root.relativize(path), codepoints, linesByOffset, lines);
 	}
