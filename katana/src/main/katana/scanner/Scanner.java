@@ -81,26 +81,14 @@ public class Scanner
 			if(cp == '"')
 			{
 				advance();
-				Token lit = stringLiteral();
-
-				if(lit == null)
-					continue;
-
-				return lit;
+				return stringLiteral();
 			}
 
 			if(CharClassifier.isOpChar(cp))
 				return operatorSeq();
 
 			if(CharClassifier.isDigit(cp))
-			{
-				Token lit = numericLiteral();
-
-				if(lit == null)
-					continue;
-
-				return lit;
-			}
+				return numericLiteral();
 
 			if(CharClassifier.isIdentifierHead(cp))
 				return identifierOrKeyword();
