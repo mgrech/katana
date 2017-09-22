@@ -29,8 +29,8 @@ public class KeywordIdentifierTest
 	{
 		Tokenization tok = Tokenization.of(" void#type\npointer_cast ");
 		tok.expectNoErrors();
-		tok.expectToken(TokenCategory.TYPE, TokenType.TYPE_VOID, "void", 1);
-		tok.expectToken(TokenCategory.MISC, TokenType.MISC_POINTER_CAST, "pointer_cast", 11);
+		tok.expectToken(1, TokenCategory.TYPE, TokenType.TYPE_VOID, "void");
+		tok.expectToken(11, TokenCategory.MISC, TokenType.MISC_POINTER_CAST, "pointer_cast");
 	}
 
 	@Test
@@ -38,12 +38,12 @@ public class KeywordIdentifierTest
 	{
 		Tokenization tok = Tokenization.of("foo( bar.baz )voids");
 		tok.expectNoErrors();
-		tok.expectToken(TokenCategory.IDENT, TokenType.IDENT, "foo", 0);
+		tok.expectToken(0, TokenCategory.IDENT, TokenType.IDENT, "foo");
 		tok.expectIgnoreTokens(1);
-		tok.expectToken(TokenCategory.IDENT, TokenType.IDENT, "bar", 5);
+		tok.expectToken(5, TokenCategory.IDENT, TokenType.IDENT, "bar");
 		tok.expectIgnoreTokens(1);
-		tok.expectToken(TokenCategory.IDENT, TokenType.IDENT, "baz", 9);
+		tok.expectToken(9, TokenCategory.IDENT, TokenType.IDENT, "baz");
 		tok.expectIgnoreTokens(1);
-		tok.expectToken(TokenCategory.IDENT, TokenType.IDENT, "voids", 14);
+		tok.expectToken(14, TokenCategory.IDENT, TokenType.IDENT, "voids");
 	}
 }

@@ -20,11 +20,11 @@ import katana.utils.StringUtils;
 
 public class Diagnostic
 {
-	private final SourceLocation location;
-	private final DiagnosticType type;
-	private final DiagnosticId id;
-	private final Object[] args;
-	private final Maybe<StackTrace> trace;
+	public final SourceLocation location;
+	public final DiagnosticType type;
+	public final DiagnosticId id;
+	public final Object[] args;
+	public final Maybe<StackTrace> trace;
 
 	public Diagnostic(SourceLocation location, DiagnosticType type, DiagnosticId id, Object[] args, Maybe<StackTrace> trace)
 	{

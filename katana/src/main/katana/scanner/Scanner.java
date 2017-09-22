@@ -410,7 +410,13 @@ public class Scanner
 			}
 
 			else if(CharClassifier.isDigit(here()))
+			{
+				while(!atEnd() && here() == '0')
+					advance();
+
 				error(ScannerDiagnostics.INVALID_START_IN_NUMERIC_LITERAL);
+				prevOffset = offset;
+			}
 
 			else
 				literal.append('0');
@@ -423,6 +429,9 @@ public class Scanner
 
 			advance();
 		}
+
+		while(literal.length() > 1 && literal.charAt(0) == '0')
+			literal.deleteCharAt(0);
 
 		boolean isFloatingPointLiteral = !atEnd() && here() == '.';
 

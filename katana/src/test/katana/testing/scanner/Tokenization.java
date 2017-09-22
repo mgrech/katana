@@ -14,8 +14,7 @@
 
 package katana.testing.scanner;
 
-import katana.diag.CompileException;
-import katana.diag.DiagnosticsManager;
+import katana.diag.*;
 import katana.scanner.*;
 
 import java.nio.charset.StandardCharsets;
@@ -32,6 +31,7 @@ public class Tokenization
 	private final List<Token> tokens;
 	private final DiagnosticsManager diag;
 	private int currentToken = 0;
+	private int currentDiagnostic = 0;
 
 	private Tokenization(List<Token> tokens, DiagnosticsManager diag)
 	{
@@ -53,6 +53,15 @@ public class Tokenization
 			throw new CompileException(diag.summary());
 	}
 
+	public void expectError(int offset, DiagnosticId id, int length)
+	{
+		Diagnostic msg = diag.get(currentDiagnostic++);
+		assertEquals("wrong diagnostic type",   DiagnosticType.ERROR, msg.type);
+		assertEquals("wrong diagnostic id",     id, msg.id);
+		assertEquals("wrong diagnostic offset", offset, msg.location.offset);
+		assertEquals("wrong diagnostic length", length, msg.location.length);
+	}
+
 	public void expectIgnoreTokens(int n)
 	{
 		for(int i = 0; i != n; ++i)
@@ -61,18 +70,18 @@ public class Tokenization
 		currentToken += n;
 	}
 
-	public void expectToken(TokenCategory category, TokenType type, String value, int offset)
+	public void expectToken(int offset, TokenCategory category, TokenType type, String value)
 	{
 		Token token = tokens.get(currentToken++);
-		assertEquals(category, token.category);
-		assertEquals(type, token.type);
-		assertEquals(value, token.value);
-		assertEquals(offset, token.offset);
+		assertEquals("wrong token offset",   offset, token.offset);
+		assertEquals("wrong token category", category, token.category);
+		assertEquals("wrong token type",     type, token.type);
+		assertEquals("wrong token value",    value, token.value);
 	}
 
-	public void expectToken(TokenCategory category, TokenType type, String value, int offset, Object data)
+	public void expectToken(int offset, TokenCategory category, TokenType type, String value, Object data)
 	{
-		assertEquals(data, tokens.get(currentToken).data);
-		expectToken(category, type, value, offset);
+		assertEquals("wrong token data", data, tokens.get(currentToken).data);
+		expectToken(offset, category, type, value);
 	}
 }

@@ -29,8 +29,8 @@ public class WhitespaceTest
 	{
 		Tokenization tok = Tokenization.of("\ta\r ( ");
 		tok.expectNoErrors();
-		tok.expectToken(TokenCategory.IDENT, TokenType.IDENT, "a", 1);
-		tok.expectToken(TokenCategory.PUNCT, TokenType.PUNCT_LPAREN, "(", 4);
+		tok.expectToken(1, TokenCategory.IDENT, TokenType.IDENT, "a");
+		tok.expectToken(4, TokenCategory.PUNCT, TokenType.PUNCT_LPAREN, "(");
 	}
 
 	@Test
@@ -38,8 +38,8 @@ public class WhitespaceTest
 	{
 		Tokenization tok = Tokenization.of("#foo\na #bar \n\n#baz\nb");
 		tok.expectNoErrors();
-		tok.expectToken(TokenCategory.IDENT, TokenType.IDENT, "a", 5);
-		tok.expectToken(TokenCategory.IDENT, TokenType.IDENT, "b", 19);
+		tok.expectToken(5, TokenCategory.IDENT, TokenType.IDENT, "a");
+		tok.expectToken(19, TokenCategory.IDENT, TokenType.IDENT, "b");
 	}
 
 	@Test
@@ -47,7 +47,7 @@ public class WhitespaceTest
 	{
 		Tokenization tok = Tokenization.of("a\nb");
 		tok.expectNoErrors();
-		tok.expectToken(TokenCategory.IDENT, TokenType.IDENT, "a", 0);
-		tok.expectToken(TokenCategory.IDENT, TokenType.IDENT, "b", 2);
+		tok.expectToken(0, TokenCategory.IDENT, TokenType.IDENT, "a");
+		tok.expectToken(2, TokenCategory.IDENT, TokenType.IDENT, "b");
 	}
 }

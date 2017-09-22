@@ -57,6 +57,11 @@ public class DiagnosticsManager
 		diagnose(location, id, DiagnosticType.ERROR, args);
 	}
 
+	public Diagnostic get(int index)
+	{
+		return diagnostics.get(index);
+	}
+
 	public boolean successful()
 	{
 		return successful;
