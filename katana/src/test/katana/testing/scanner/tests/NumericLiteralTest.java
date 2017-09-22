@@ -46,7 +46,7 @@ public class NumericLiteralTest
 	}
 
 	@Test
-	public void acceptsIntegerLiteralWithBasePrefix()
+	public void acceptsIntegerLiteralsWithBasePrefix()
 	{
 		Tokenization tok = Tokenization.of("0b101 0o777 0xabc 0xDEF 0b0");
 		tok.expectNoErrors();
