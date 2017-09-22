@@ -65,4 +65,49 @@ public class NumericLiteralTest
 		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_INT_DEDUCE, "1", 2);
 		tok.expectToken(5, TokenCategory.LIT, TokenType.LIT_INT_DEDUCE, "1", 16);
 	}
+
+	@Test
+	public void rejectsIntegerLiteralsWithBasePrefixOnly()
+	{
+		Tokenization tok = Tokenization.of("0o 0b");
+		tok.expectError(0, ScannerDiagnostics.EMPTY_NUMERIC_LITERAL, 2);
+		tok.expectError(3, ScannerDiagnostics.EMPTY_NUMERIC_LITERAL, 2);
+		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_INT_DEDUCE, "0", 8);
+		tok.expectToken(3, TokenCategory.LIT, TokenType.LIT_INT_DEDUCE, "0", 2);
+	}
+
+	@Test
+	public void rejectsIntegerLiteralWithOutOfRangeDigit()
+	{
+	}
+
+	@Test
+	public void acceptsFloatingPointLiterals()
+	{
+	}
+
+	@Test
+	public void rejectsFloatingPointLiteralWithBasePrefix()
+	{
+	}
+
+	@Test
+	public void acceptsSuffixes()
+	{
+	}
+
+	@Test
+	public void rejectsInvalidSuffixes()
+	{
+	}
+
+	@Test
+	public void acceptsDigitSeparators()
+	{
+		Tokenization tok = Tokenization.of("1'2''3 0x1' 0b'100'i32");
+		tok.expectNoErrors();
+		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_INT_DEDUCE, "123", 10);
+		tok.expectToken(7, TokenCategory.LIT, TokenType.LIT_INT_DEDUCE, "1", 16);
+		tok.expectToken(12, TokenCategory.LIT, TokenType.LIT_INT32, "100", 2);
+	}
 }
