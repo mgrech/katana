@@ -35,6 +35,8 @@ public class StackTrace
 		// trim this stack frame
 		trace.trimInnermostFrame();
 
+		trace.trace.removeIf((elem) -> elem.getClassName().contains("reflect") || elem.getClassName().contains("junit"));
+
 		return trace;
 	}
 
