@@ -1,4 +1,4 @@
-module io.katana
+module io.katana.compiler
 {
 	requires airline;
 	requires com.fasterxml.jackson.core;
