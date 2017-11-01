@@ -41,7 +41,7 @@
 
 	<build>
 		<finalName>katana</finalName>
-		<sourceDirectory>src/main</sourceDirectory>
+		<sourceDirectory>src/main/io.katana.compiler</sourceDirectory>
 		<testSourceDirectory>src/test</testSourceDirectory>
 		<resources>
 			<resource>
