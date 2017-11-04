@@ -65,8 +65,12 @@ public class ProjectBuilder
 		command.add("-DKATANA_OS_" + target.os.name());
 	}
 
-	private static void addPicFlag(List<String> command, ProjectType type)
+	private static void addPicFlag(List<String> command, TargetTriple triple, ProjectType type)
 	{
+		// code is always position-independent on windows
+		if(triple.os == Os.WINDOWS)
+			return;
+
 		switch(type)
 		{
 		case EXECUTABLE:
@@ -109,7 +113,7 @@ public class ProjectBuilder
 		List<String> command = new ArrayList<>();
 		command.add("clang");
 
-		addPicFlag(command, type);
+		addPicFlag(command, target, type);
 
 		command.add("-c");
 		command.add(path.toString());
@@ -130,7 +134,7 @@ public class ProjectBuilder
 		command.add("-std=c11");
 		addPpCompileFlags(command, target);
 		addCommonLangCompileFlags(command, target);
-		addPicFlag(command, type);
+		addPicFlag(command, target, type);
 
 		command.add("-c");
 		command.add(path.toString());
@@ -151,7 +155,7 @@ public class ProjectBuilder
 		command.add("-std=c++14");
 		addPpCompileFlags(command, target);
 		addCommonLangCompileFlags(command, target);
-		addPicFlag(command, type);
+		addPicFlag(command, target, type);
 
 		command.add("-c");
 		command.add(path.toString());
@@ -170,7 +174,7 @@ public class ProjectBuilder
 		command.add("clang");
 
 		command.add("-Wno-override-module");
-		addPicFlag(command, project.type);
+		addPicFlag(command, target, project.type);
 
 		command.add("-c");
 		command.add(path.toString());
