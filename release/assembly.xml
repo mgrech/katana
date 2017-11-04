@@ -32,5 +32,10 @@
 			<source>files/katana.cmd</source>
 			<lineEnding>windows</lineEnding>
 		</file>
+		<file>
+			<source>files/katana</source>
+			<fileMode>755</fileMode>
+			<lineEnding>unix</lineEnding>
+		</file>
 	</files>
 </assembly>
