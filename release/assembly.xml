@@ -1,0 +1,36 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.0.0"
+	  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	  xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
+
+	<id>release</id>
+
+	<formats>
+		<format>zip</format>
+	</formats>
+
+	<dependencySets>
+		<dependencySet>
+			<includes>
+				<include>io.katana:compiler</include>
+			</includes>
+			<outputFileNameMapping>compiler.jar</outputFileNameMapping>
+		</dependencySet>
+		<dependencySet>
+			<includes>
+				<include>io.katana:jre</include>
+			</includes>
+			<outputDirectory>jre</outputDirectory>
+			<unpack>true</unpack>
+		</dependencySet>
+	</dependencySets>
+
+	<files>
+		<file>
+			<source>${project.parent.basedir}/LICENSE</source>
+		</file>
+		<file>
+			<source>files/katana.cmd</source>
+			<lineEnding>windows</lineEnding>
+		</file>
+	</files>
+</assembly>

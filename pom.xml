@@ -25,5 +25,6 @@
 	<modules>
 		<module>compiler</module>
 		<module>jre</module>
+		<module>release</module>
 	</modules>
 </project>
