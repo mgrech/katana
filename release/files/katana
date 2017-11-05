@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-${SCRIPT_DIR}/jre/bin/java -jar ${SCRIPT_DIR}/compiler.jar "$@"
+
+KATANA_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+${KATANA_HOME}/jre/bin/java -jar ${KATANA_HOME}/compiler.jar "$@"
