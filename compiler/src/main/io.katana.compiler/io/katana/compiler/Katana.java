@@ -14,8 +14,9 @@
 
 package io.katana.compiler;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
@@ -23,7 +24,7 @@ import java.util.Properties;
 public class Katana
 {
 	public static final Path HOME = locateHome();
-	public static final String VERSION_STRING = loadVersion();
+	public static final String VERSION = loadVersion();
 
 	private static Path locateHome()
 	{
@@ -39,12 +40,11 @@ public class Katana
 	{
 		try
 		{
-			InputStream is = Katana.class.getClassLoader().getResourceAsStream("resources/version.txt");
+			byte[] version = Files.readAllBytes(HOME.resolve("build.txt"));
 			Properties properties = new Properties();
-			properties.load(is);
+			properties.load(new ByteArrayInputStream(version));
 			return properties.getProperty("version");
 		}
-
 		catch(IOException ex)
 		{
 			throw new RuntimeException(ex);

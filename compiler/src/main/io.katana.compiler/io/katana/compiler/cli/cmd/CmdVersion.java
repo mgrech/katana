@@ -22,6 +22,6 @@ public class CmdVersion implements Runnable
 {
 	public void run()
 	{
-		System.out.println(Katana.VERSION_STRING);
+		System.out.println(Katana.VERSION);
 	}
 }
