@@ -24,6 +24,14 @@
 		</dependencySet>
 	</dependencySets>
 
+	<fileSets>
+		<fileSet>
+			<directory>files/template</directory>
+			<outputDirectory>template</outputDirectory>
+			<filtered>true</filtered>
+		</fileSet>
+	</fileSets>
+
 	<files>
 		<file>
 			<source>${project.parent.basedir}/LICENSE</source>

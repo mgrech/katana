@@ -14,13 +14,14 @@
 
 package io.katana.compiler.project;
 
+import io.katana.compiler.Katana;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.platform.TargetTriple;
 import io.katana.compiler.project.conditionals.Condition;
 import io.katana.compiler.project.conditionals.ConditionParser;
+import io.katana.compiler.utils.FileUtils;
 import io.katana.compiler.utils.JsonUtils;
 import io.katana.compiler.utils.Maybe;
-import io.katana.compiler.utils.ResourceExtractor;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +32,7 @@ import java.util.regex.Pattern;
 
 public class ProjectManager
 {
+	private static final Path PROJECT_TEMPLATE_PATH = Katana.HOME.resolve("template");
 	private static final String PROJECT_CONFIG_NAME = "project.json";
 	private static final Pattern LIB_NAME_PATTERN = Pattern.compile("[-A-Za-z0-9_]+");
 	private static final Pattern PROJECT_NAME_PATTERN = Pattern.compile("[-A-Za-z0-9_]+");
@@ -245,6 +247,6 @@ public class ProjectManager
 
 	public static void createDefaultProject(Path path) throws IOException
 	{
-		ResourceExtractor.extract("project-template", path);
+		FileUtils.copyDirectory(PROJECT_TEMPLATE_PATH, path);
 	}
 }
