@@ -8,8 +8,8 @@
 		"source"
 	],
 
-	// library dependencies
-	"libs": ["krt"],
+	// native library dependencies
+	"libs": [],
 
 	// binary type to generate - executable or library
 	"type": "executable",
