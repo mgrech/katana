@@ -29,19 +29,14 @@ import java.util.Set;
 
 public class ProjectBuilder
 {
-	private static ProcessBuilder buildCommand(List<String> command, TargetTriple target)
-	{
-		if(target.os == Os.WINDOWS)
-			return VsTools.buildDevCmdCommand(command, target);
+	private static final Path KATANA_INCLUDE_DIR = Katana.HOME.resolve("include").toAbsolutePath().normalize();
+	private static final Path KATANA_LIBRARY_DIR = Katana.HOME.resolve("lib").toAbsolutePath().normalize();
 
-		return new ProcessBuilder(command);
-	}
-
-	private static void runCommand(List<String> command, TargetTriple target)
+	private static void runCommand(List<String> command)
 	{
 		System.out.println(String.join(" ", command));
 
-		ProcessBuilder builder = buildCommand(command, target);
+		ProcessBuilder builder = new ProcessBuilder(command);
 		builder.inheritIO();
 
 		try
@@ -85,8 +80,6 @@ public class ProjectBuilder
 		}
 	}
 
-	private static final Path KATANA_INCDIR = Katana.HOME.resolve("include").toAbsolutePath().normalize();
-
 	private static String objectFileExtension(TargetTriple target)
 	{
 		if(target.os == Os.WINDOWS)
@@ -102,10 +95,7 @@ public class ProjectBuilder
 		command.add("-fno-strict-aliasing");
 		command.add("-fvisibility=hidden");
 
-		command.add("-I" + KATANA_INCDIR);
-
-		if(target.os == Os.WINDOWS)
-			command.add("-fms-compatibility-version=19");
+		command.add("-I" + KATANA_INCLUDE_DIR);
 	}
 
 	private static Path compileAsmFile(Path path, TargetTriple target, ProjectType type) throws IOException
@@ -122,7 +112,7 @@ public class ProjectBuilder
 		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
-		runCommand(command, target);
+		runCommand(command);
 		return Paths.get(filename);
 	}
 
@@ -143,7 +133,7 @@ public class ProjectBuilder
 		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
-		runCommand(command, target);
+		runCommand(command);
 		return Paths.get(filename);
 	}
 
@@ -164,7 +154,7 @@ public class ProjectBuilder
 		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
-		runCommand(command, target);
+		runCommand(command);
 		return Paths.get(filename);
 	}
 
@@ -183,7 +173,7 @@ public class ProjectBuilder
 		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
-		runCommand(command, target);
+		runCommand(command);
 		return Paths.get(filename);
 	}
 
@@ -213,61 +203,37 @@ public class ProjectBuilder
 		throw new AssertionError("unreachable");
 	}
 
-	private static final Path LIBDIR = Katana.HOME.resolve("lib").toAbsolutePath().normalize();
-
 	private static void link(Project project, List<Path> filePaths, TargetTriple target) throws IOException
 	{
 		String binaryName = project.name + fileExtensionFor(project.type, target);
 
 		List<String> command = new ArrayList<>();
 
-		if(target.os == Os.WINDOWS)
+		command.add("clang");
+		command.add("-fuse-ld=lld");
+
+		if(project.type == ProjectType.LIBRARY)
+			command.add("-shared");
+
+		command.add("-L" + KATANA_LIBRARY_DIR);
+
+		for(String lib : project.libraries)
+			command.add("-l" + lib);
+
+		if(target.os != Os.WINDOWS)
 		{
-			command.add("link");
-			command.add("/nologo");
-
-			if(project.type == ProjectType.EXECUTABLE)
-				command.add("/subsystem:console");
-
-			if(project.type == ProjectType.LIBRARY)
-				command.add("/dll");
-
-			command.add("/libpath:" + LIBDIR);
-
-			for(String lib : project.libraries)
-				command.add(lib + ".lib");
-
-			// https://blogs.msdn.microsoft.com/vcblog/2015/03/03/introducing-the-universal-crt/
-			command.add("msvcrt.lib");
-			command.add("vcruntime.lib");
-			command.add("ucrt.lib");
-
-			command.add("/out:" + binaryName);
-		}
-
-		else
-		{
-			command.add("clang");
-
-			if(project.type == ProjectType.LIBRARY)
-				command.add("-shared");
-
 			command.add("-Wl,-rpath,$ORIGIN");
 			command.add("-Wl,-z,now");
 			command.add("-Wl,-z,relro");
-
-			command.add("-L" + LIBDIR);
-
-			for(String lib : project.libraries)
-				command.add("-l" + lib);
-
-			command.add("-o");
-			command.add(binaryName);
 		}
+
+		command.add("-o");
+		command.add(binaryName);
 
 		// append all source files
 		filePaths.stream().map(Path::toString).forEach(command::add);
-		runCommand(command, target);
+
+		runCommand(command);
 	}
 
 	private static Path compileFile(FileType fileType, Path path, TargetTriple target, ProjectType projectType) throws IOException
