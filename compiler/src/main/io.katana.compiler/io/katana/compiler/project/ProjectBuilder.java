@@ -88,7 +88,7 @@ public class ProjectBuilder
 		return ".o";
 	}
 
-	private static void addCommonLangCompileFlags(List<String> command, TargetTriple target)
+	private static void addCommonLangCompileFlags(List<String> command)
 	{
 		command.add("-pedantic");
 		command.add("-Wall");
@@ -123,7 +123,7 @@ public class ProjectBuilder
 
 		command.add("-std=c11");
 		addPpCompileFlags(command, target);
-		addCommonLangCompileFlags(command, target);
+		addCommonLangCompileFlags(command);
 		addPicFlag(command, target, type);
 
 		command.add("-c");
@@ -144,7 +144,7 @@ public class ProjectBuilder
 
 		command.add("-std=c++14");
 		addPpCompileFlags(command, target);
-		addCommonLangCompileFlags(command, target);
+		addCommonLangCompileFlags(command);
 		addPicFlag(command, target, type);
 
 		command.add("-c");
