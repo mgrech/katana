@@ -140,7 +140,7 @@ public class ProjectBuilder
 	private static Path compileCppFile(Path path, TargetTriple target, ProjectType type) throws IOException
 	{
 		List<String> command = new ArrayList<>();
-		command.add("clang");
+		command.add("clang++");
 
 		command.add("-std=c++14");
 		addPpCompileFlags(command, target);
@@ -209,7 +209,7 @@ public class ProjectBuilder
 
 		List<String> command = new ArrayList<>();
 
-		command.add("clang");
+		command.add("clang++");
 		command.add("-fuse-ld=lld");
 
 		if(project.type == ProjectType.LIBRARY)
