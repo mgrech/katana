@@ -34,6 +34,11 @@
 
 	<files>
 		<file>
+			<source>files/katana.h</source>
+			<outputDirectory>include</outputDirectory>
+			<filtered>true</filtered>
+		</file>
+		<file>
 			<source>${project.parent.basedir}/LICENSE</source>
 		</file>
 		<file>
