@@ -15,6 +15,7 @@
 package io.katana.compiler;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOError;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,7 +34,14 @@ public class Katana
 		if(homePath == null)
 			throw new RuntimeException("KATANA_HOME not found");
 
-		return Paths.get(homePath);
+		try
+		{
+			return Paths.get(homePath).toRealPath();
+		}
+		catch(IOException ex)
+		{
+			throw new IOError(ex);
+		}
 	}
 
 	private static String loadVersion()

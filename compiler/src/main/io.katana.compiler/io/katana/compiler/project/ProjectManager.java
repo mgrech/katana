@@ -54,31 +54,34 @@ public class ProjectManager
 			configError("property '%s' does not match pattern '%s', got '%s'", name, pattern, value);
 	}
 
-	private static void validatePath(Path root, String pathString)
+	// paths should be relative, normalized paths referring to files below the project root
+	// symbolic links are disallowed to prevent breaking out of the project directory
+	private static void validatePath(Path root, String pathString) throws IOException
 	{
 		Path path = Paths.get(pathString);
 
 		if(path.isAbsolute())
 			throw new InvalidPathException(pathString, "given source path is absolute");
 
-		if(!root.resolve(path).toAbsolutePath().normalize().startsWith(root))
-			throw new InvalidPathException(path.toString(), "given source path is not a child of the project root");
+		if(!path.normalize().equals(path))
+			throw new InvalidPathException(pathString, "given source path is not normalized");
+
+		if(!root.resolve(path).toRealPath().startsWith(root))
+			throw new InvalidPathException(path.toString(), "given source path does not refer to a child of the project directory");
 	}
 
-	private static FileType fileTypefromPath(Path path)
+	private static FileType fileTypefromName(String name)
 	{
-		String pathString = path.toString();
-
-		if(pathString.endsWith(".ks"))
+		if(name.endsWith(".ks"))
 			return FileType.KATANA;
 
-		if(pathString.endsWith(".asm"))
+		if(name.endsWith(".asm"))
 			return FileType.ASM;
 
-		if(pathString.endsWith(".c"))
+		if(name.endsWith(".c"))
 			return FileType.C;
 
-		if(pathString.endsWith(".cpp"))
+		if(name.endsWith(".cpp"))
 			return FileType.CPP;
 
 		return null;
@@ -86,14 +89,7 @@ public class ProjectManager
 
 	private static void addFile(Map<FileType, Set<Path>> files, FileType type, Path path)
 	{
-		Set<Path> paths = files.get(type);
-
-		if(paths == null)
-		{
-			paths = new TreeSet<>();
-			files.put(type, paths);
-		}
-
+		Set<Path> paths = files.computeIfAbsent(type, (t) -> new TreeSet<>());
 		paths.add(path);
 	}
 
@@ -104,15 +100,16 @@ public class ProjectManager
 		if(!file.exists())
 			throw new CompileException(String.format("file or directory '%s' does not exit", path));
 
-		if(path.toFile().isDirectory())
-			Files.walkFileTree(path, new SimpleFileVisitor<Path>()
+		if(file.isDirectory())
+		{
+			Files.walkFileTree(path, new SimpleFileVisitor<>()
 			{
 				@Override
 				public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException
 				{
 					if(attrs.isRegularFile())
 					{
-						FileType type = fileTypefromPath(path);
+						FileType type = fileTypefromName(path.getFileName().toString());
 
 						if(type != null)
 							addFile(files, type, path);
@@ -121,10 +118,10 @@ public class ProjectManager
 					return FileVisitResult.CONTINUE;
 				}
 			});
-
+		}
 		else
 		{
-			FileType type = fileTypefromPath(path);
+			FileType type = fileTypefromName(file.getName());
 
 			if(type == null)
 				throw new CompileException(String.format("source file path '%s' refers to unknown file type", path));

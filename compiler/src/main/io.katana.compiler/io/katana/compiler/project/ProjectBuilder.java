@@ -38,8 +38,8 @@ import java.util.Set;
 
 public class ProjectBuilder
 {
-	private static final Path KATANA_INCLUDE_DIR = Katana.HOME.resolve("include").toAbsolutePath().normalize();
-	private static final Path KATANA_LIBRARY_DIR = Katana.HOME.resolve("lib").toAbsolutePath().normalize();
+	private static final Path KATANA_INCLUDE_DIR = Katana.HOME.resolve("include");
+	private static final Path KATANA_LIBRARY_DIR = Katana.HOME.resolve("lib");
 
 	private static void runCommand(List<String> command)
 	{

@@ -46,11 +46,11 @@ public class CmdBuild implements Runnable
 	@Override
 	public void run()
 	{
-		Path projectPath = Paths.get(projectDir).toAbsolutePath().normalize();
-		Path buildPath = Paths.get(buildDir == null ? "" : buildDir).toAbsolutePath().normalize();
-
 		try
 		{
+			Path projectPath = Paths.get(projectDir).toRealPath();
+			Path buildPath = Paths.get(buildDir == null ? "" : buildDir).toRealPath();
+
 			PlatformContext context = new PlatformContextLlvm(TargetTriple.NATIVE);
 			DiagnosticsManager diag = new DiagnosticsManager(diagnosticTraces);
 			Project project = ProjectManager.load(projectPath, context.target());
