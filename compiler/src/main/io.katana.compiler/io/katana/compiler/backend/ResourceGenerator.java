@@ -79,8 +79,8 @@ public class ResourceGenerator
 	private void generateHeader()
 	{
 		append(".section .kt_resources, \"ad\"\n");
-		append(".globl kt_resources\n");
-		append("kt_resources:\n");
+		append(".globl __kt_resources\n");
+		append("__kt_resources:\n");
 		append("\t.align %s\n", target.arch.pointerAlign);
 		generateInt("(data - metadata) / %s", 4 * target.arch.pointerSize.intValue());
 		append("\n");
