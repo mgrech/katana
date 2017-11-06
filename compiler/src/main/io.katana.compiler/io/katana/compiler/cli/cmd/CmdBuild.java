@@ -54,7 +54,6 @@ public class CmdBuild implements Runnable
 	@Override
 	public void run()
 	{
-		PlatformContext context = new PlatformContextLlvm(TargetTriple.NATIVE);
 		Path projectDir = Paths.get(this.projectDir).toAbsolutePath().normalize();
 		Path buildDir;
 
@@ -65,29 +64,11 @@ public class CmdBuild implements Runnable
 
 		try
 		{
+			PlatformContext context = new PlatformContextLlvm(TargetTriple.NATIVE);
+			DiagnosticsManager diag = new DiagnosticsManager(diagnosticTraces);
 			Project project = ProjectManager.load(projectDir, context.target());
-			Set<Path> katanaFiles = project.sourceFiles.get(FileType.KATANA);
-
-			if(katanaFiles != null)
-			{
-				SourceManager sourceManager = SourceManager.loadFiles(project.root, project.sourceFiles.get(FileType.KATANA));
-
-				DiagnosticsManager diag = new DiagnosticsManager(diagnosticTraces);
-				AstProgram ast = ProgramParser.parse(sourceManager, diag);
-
-				if(!diag.successful())
-				{
-					System.err.print(diag.summary());
-					return;
-				}
-
-				SemaProgram program = ProgramValidator.validate(ast, context);
-				ProgramCodeGenerator.generate(project, program, context, buildDir);
-			}
-
-			ProjectBuilder.build(project, context.target(), buildDir);
+			ProjectBuilder.build(diag, project, context, buildDir);
 		}
-
 		catch(CompileException | IOException e)
 		{
 			System.err.println(e.getMessage());

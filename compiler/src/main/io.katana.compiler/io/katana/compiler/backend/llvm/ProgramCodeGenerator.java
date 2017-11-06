@@ -106,7 +106,7 @@ public class ProgramCodeGenerator
 		throw new CompileException(String.format("entry point must return 'void' or 'int32', got '%s'", TypeString.of(func.ret)));
 	}
 
-	public static void generate(Project project, SemaProgram program, PlatformContext platform, Path buildDir) throws IOException
+	public static void generate(Project project, SemaProgram program, PlatformContext platform, Path outputFile) throws IOException
 	{
 		StringBuilder builder = new StringBuilder();
 		builder.append(String.format("target triple = \"%s\"\n\n", platform.target()));
@@ -121,7 +121,7 @@ public class ProgramCodeGenerator
 
 		byte[] output = builder.toString().getBytes(StandardCharsets.UTF_8);
 
-		try(OutputStream stream = new FileOutputStream(buildDir.resolve(project.name + ".ll").toFile()))
+		try(OutputStream stream = new FileOutputStream(outputFile.toFile()))
 		{
 			stream.write(output);
 		}

@@ -15,9 +15,18 @@
 package io.katana.compiler.project;
 
 import io.katana.compiler.Katana;
+import io.katana.compiler.analysis.ProgramValidator;
+import io.katana.compiler.ast.AstProgram;
+import io.katana.compiler.backend.PlatformContext;
+import io.katana.compiler.backend.llvm.ProgramCodeGenerator;
 import io.katana.compiler.diag.CompileException;
+import io.katana.compiler.diag.DiagnosticsManager;
+import io.katana.compiler.parser.ProgramParser;
 import io.katana.compiler.platform.Os;
 import io.katana.compiler.platform.TargetTriple;
+import io.katana.compiler.scanner.SourceManager;
+import io.katana.compiler.sema.SemaProgram;
+import io.katana.compiler.utils.Maybe;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -249,12 +258,32 @@ public class ProjectBuilder
 		}
 	}
 
-	public static void build(Project project, TargetTriple target, Path buildDir) throws IOException
+	private static Maybe<Path> compileKatanaSources(DiagnosticsManager diag, Project project, PlatformContext context, Path buildDir) throws IOException
 	{
+		Set<Path> katanaFiles = project.sourceFiles.get(FileType.KATANA);
+
+		if(katanaFiles == null)
+			return Maybe.none();
+
+		SourceManager sourceManager = SourceManager.loadFiles(project.root, project.sourceFiles.get(FileType.KATANA));
+		AstProgram ast = ProgramParser.parse(sourceManager, diag);
+		SemaProgram program = ProgramValidator.validate(ast, context);
+
+		if(!diag.successful())
+			throw new CompileException(diag.summary());
+
+		Path katanaOutputFile = buildDir.resolve(project.name + ".ll");
+		ProgramCodeGenerator.generate(project, program, context, katanaOutputFile);
+		return Maybe.some(katanaOutputFile);
+	}
+
+	public static void build(DiagnosticsManager diag, Project project, PlatformContext context, Path buildDir) throws IOException
+	{
+		Maybe<Path> katanaOutput = compileKatanaSources(diag, project, context, buildDir);
 		List<Path> objectFiles = new ArrayList<>();
 
-		Path katanaOutput = buildDir.resolve(project.name + ".ll");
-		objectFiles.add(compileLlvmFile(project, target, katanaOutput));
+		if(katanaOutput.isSome())
+			objectFiles.add(compileLlvmFile(project, context.target(), katanaOutput.get()));
 
 		for(Map.Entry<FileType, Set<Path>> entry : project.sourceFiles.entrySet())
 		{
@@ -263,10 +292,10 @@ public class ProjectBuilder
 
 			if(type != FileType.KATANA)
 				for(Path path : paths)
-					objectFiles.add(compileFile(type, path, target, project.type));
+					objectFiles.add(compileFile(type, path, context.target(), project.type));
 		}
 
-		link(project, objectFiles, target);
+		link(project, objectFiles, context.target());
 		System.out.println("build successful.");
 	}
 }
