@@ -24,6 +24,7 @@ import io.katana.compiler.utils.JsonUtils;
 import io.katana.compiler.utils.Maybe;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -56,18 +57,22 @@ public class ProjectManager
 
 	// paths should be relative, normalized paths referring to files below the project root
 	// symbolic links are disallowed to prevent breaking out of the project directory
-	private static void validatePath(Path root, String pathString) throws IOException
+	private static Path validatePath(Path root, String pathString) throws IOException
 	{
 		Path path = Paths.get(pathString);
 
 		if(path.isAbsolute())
-			throw new InvalidPathException(pathString, "given source path is absolute");
+			throw new InvalidPathException(pathString, "given path is absolute");
 
 		if(!path.normalize().equals(path))
-			throw new InvalidPathException(pathString, "given source path is not normalized");
+			throw new InvalidPathException(pathString, "given path is not normalized");
 
-		if(!root.resolve(path).toRealPath().startsWith(root))
-			throw new InvalidPathException(path.toString(), "given source path does not refer to a child of the project directory");
+		path = root.resolve(path).toRealPath();
+
+		if(!path.startsWith(root))
+			throw new InvalidPathException(path.toString(), "given path does not refer to a child of the project directory");
+
+		return path;
 	}
 
 	private static FileType fileTypefromName(String name)
@@ -130,22 +135,9 @@ public class ProjectManager
 		}
 	}
 
-	private static Map<FileType, Set<Path>> discoverSourceFiles(Path root, List<String> paths) throws IOException
-	{
-		Map<FileType, Set<Path>> result = new TreeMap<>();
-
-		for(String pathString : paths)
-		{
-			Path path = root.resolve(Paths.get(pathString));
-			discoverSourceFiles(path, result);
-		}
-
-		return result;
-	}
-
 	private static Map<FileType, Set<Path>> validateSources(Path root, List<String> sources, TargetTriple target) throws IOException
 	{
-		List<String> paths = new ArrayList<>();
+		List<Path> paths = new ArrayList<>();
 
 		for(String sourcePath : sources)
 		{
@@ -157,16 +149,15 @@ public class ProjectManager
 			switch(parts.length)
 			{
 			case 1:
-				validatePath(root, parts[0]);
-				paths.add(parts[0]);
+				paths.add(validatePath(root, parts[0]));
 				break;
 
 			case 2:
 				Condition condition = ConditionParser.parse(parts[0]);
-				validatePath(root, parts[1]);
+				Path path = validatePath(root, parts[1]);
 
 				if(condition.test(target))
-					paths.add(parts[1]);
+					paths.add(path);
 
 				break;
 
@@ -176,7 +167,12 @@ public class ProjectManager
 			}
 		}
 
-		return discoverSourceFiles(root, paths);
+		Map<FileType, Set<Path>> result = new HashMap<>();
+
+		for(Path path : paths)
+			discoverSourceFiles(path, result);
+
+		return result;
 	}
 
 	private static List<String> validateLibs(List<String> libs, TargetTriple target)
@@ -215,6 +211,26 @@ public class ProjectManager
 		return result;
 	}
 
+	private static Map<String, Path> loadResources(Path projectRoot) throws IOException
+	{
+		File resourceConfig = projectRoot.resolve("resources.txt").toFile();
+		Properties properties = new Properties();
+
+		if(resourceConfig.exists())
+			properties.load(new FileInputStream(resourceConfig));
+
+		Map<String, Path> resources = new TreeMap<>();
+
+		for(Map.Entry<?, ?> entry : properties.entrySet())
+		{
+			String key = (String)entry.getKey();
+			String path = (String)entry.getValue();
+			resources.put(key, validatePath(projectRoot, path));
+		}
+
+		return resources;
+	}
+
 	private static Project validateConfig(Path root, ProjectConfig config, TargetTriple target) throws IOException
 	{
 		validateNonNull("name", config.name);
@@ -232,7 +248,8 @@ public class ProjectManager
 
 		Map<FileType, Set<Path>> sources = validateSources(root, config.sources, target);
 		List<String> libs = validateLibs(config.libs, target);
-		return new Project(root, config.name, sources, libs, config.type, Maybe.wrap(config.entryPoint));
+		Map<String, Path> resourceFiles = loadResources(root);
+		return new Project(root, config.name, sources, libs, config.type, Maybe.wrap(config.entryPoint), resourceFiles);
 	}
 
 	public static Project load(Path root, TargetTriple target) throws IOException

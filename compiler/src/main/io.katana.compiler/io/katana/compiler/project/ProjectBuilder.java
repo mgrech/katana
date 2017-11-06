@@ -18,6 +18,7 @@ import io.katana.compiler.Katana;
 import io.katana.compiler.analysis.ProgramValidator;
 import io.katana.compiler.ast.AstProgram;
 import io.katana.compiler.backend.PlatformContext;
+import io.katana.compiler.backend.ResourceGenerator;
 import io.katana.compiler.backend.llvm.ProgramCodeGenerator;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.diag.DiagnosticsManager;
@@ -281,6 +282,10 @@ public class ProjectBuilder
 	{
 		Maybe<Path> katanaOutput = compileKatanaSources(diag, project, context, buildDir);
 		List<Path> objectFiles = new ArrayList<>();
+
+		Path resourcePath = buildDir.resolve("resources.asm");
+		ResourceGenerator.generate(context.target(), project.resourceFiles, resourcePath);
+		objectFiles.add(compileAsmFile(resourcePath, context.target(), project.type));
 
 		if(katanaOutput.isSome())
 			objectFiles.add(compileLlvmFile(project, context.target(), katanaOutput.get()));

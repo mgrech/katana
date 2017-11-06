@@ -27,12 +27,10 @@ import io.katana.compiler.sema.decl.SemaDecl;
 import io.katana.compiler.sema.decl.SemaDeclFunction;
 import io.katana.compiler.sema.decl.SemaDeclOverloadSet;
 import io.katana.compiler.sema.type.SemaType;
+import io.katana.compiler.utils.FileUtils;
 import io.katana.compiler.utils.Maybe;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 public class ProgramCodeGenerator
@@ -119,11 +117,6 @@ public class ProgramCodeGenerator
 		if(project.entryPoint.isSome())
 			generateEntryPointWrapper(builder, findEntryPointFunction(program, project.entryPoint.unwrap()));
 
-		byte[] output = builder.toString().getBytes(StandardCharsets.UTF_8);
-
-		try(OutputStream stream = new FileOutputStream(outputFile.toFile()))
-		{
-			stream.write(output);
-		}
+		FileUtils.writeFile(builder.toString(), outputFile);
 	}
 }

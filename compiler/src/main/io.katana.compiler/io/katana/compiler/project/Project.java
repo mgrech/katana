@@ -29,8 +29,9 @@ public class Project
 	public final List<String> libraries;
 	public final ProjectType type;
 	public final Maybe<String> entryPoint;
+	public final Map<String, Path> resourceFiles;
 
-	public Project(Path root, String name, Map<FileType, Set<Path>> sourceFiles, List<String> libraries, ProjectType type, Maybe<String> entryPoint)
+	public Project(Path root, String name, Map<FileType, Set<Path>> sourceFiles, List<String> libraries, ProjectType type, Maybe<String> entryPoint, Map<String, Path> resourceFiles)
 	{
 		this.root = root;
 		this.name = name;
@@ -38,5 +39,6 @@ public class Project
 		this.libraries = libraries;
 		this.type = type;
 		this.entryPoint = entryPoint;
+		this.resourceFiles = resourceFiles;
 	}
 }
