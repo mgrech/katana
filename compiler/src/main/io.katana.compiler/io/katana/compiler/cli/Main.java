@@ -36,10 +36,10 @@ public class Main
 		{
 			cli.parse(args).run();
 		}
-
 		catch(ParseException ex)
 		{
 			System.err.println(ex.getMessage());
+			System.exit(1);
 		}
 	}
 }
