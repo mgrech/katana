@@ -17,26 +17,18 @@ package io.katana.compiler.cli.cmd;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
 import com.github.rvesse.airline.annotations.restrictions.Required;
-import io.katana.compiler.analysis.ProgramValidator;
-import io.katana.compiler.ast.AstProgram;
 import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.backend.llvm.PlatformContextLlvm;
-import io.katana.compiler.backend.llvm.ProgramCodeGenerator;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.diag.DiagnosticsManager;
-import io.katana.compiler.parser.ProgramParser;
 import io.katana.compiler.platform.TargetTriple;
-import io.katana.compiler.project.FileType;
 import io.katana.compiler.project.Project;
 import io.katana.compiler.project.ProjectBuilder;
 import io.katana.compiler.project.ProjectManager;
-import io.katana.compiler.scanner.SourceManager;
-import io.katana.compiler.sema.SemaProgram;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Set;
 
 @Command(name = "build", description = "Build project")
 public class CmdBuild implements Runnable
