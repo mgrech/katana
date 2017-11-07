@@ -69,12 +69,12 @@
 						</goals>
 						<configuration>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
-							<minimizeJar>true</minimizeJar>
 							<filters>
 								<filter>
 									<artifact>*:*</artifact>
 									<excludes>
-										<exclude>META-INF/</exclude>
+										<exclude>META-INF/*</exclude>
+										<exclude>META-INF/maven/</exclude>
 									</excludes>
 								</filter>
 							</filters>
@@ -83,6 +83,7 @@
 									<resource>META-INF/MANIFEST.MF</resource>
 									<file>resources/META-INF/MANIFEST.MF</file>
 								</transformer>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
 							</transformers>
 						</configuration>
 					</execution>
