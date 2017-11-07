@@ -219,7 +219,11 @@ public class ProjectBuilder
 
 		List<String> command = new ArrayList<>();
 
-		command.add("clang++");
+		if(project.sourceFiles.get(FileType.CPP) == null)
+			command.add("clang");
+		else
+			command.add("clang++");
+
 		command.add("-fuse-ld=lld");
 
 		if(project.type == ProjectType.LIBRARY)
