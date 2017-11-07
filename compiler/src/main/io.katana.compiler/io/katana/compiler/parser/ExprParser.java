@@ -145,6 +145,9 @@ public class ExprParser
 		if(ParseTools.option(ctx, TokenType.PUNCT_SCOLON, true))
 			throw new CompileException("';' does not denote a valid empty statement, use '{}' instead");
 
+		if(ctx.token() == null)
+			throw new CompileException("unexpected end of file");
+
 		ParseTools.unexpectedToken(ctx);
 		throw new AssertionError("unreachable");
 	}

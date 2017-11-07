@@ -64,6 +64,9 @@ public class ParseTools
 
 	public static boolean option(ParseContext ctx, Predicate<Token> predicate, boolean eat)
 	{
+		if(ctx.token() == null)
+			return false;
+
 		if(!predicate.test(ctx.token()))
 			return false;
 
