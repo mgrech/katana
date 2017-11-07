@@ -16,6 +16,7 @@ package io.katana.compiler.parser;
 
 import io.katana.compiler.ast.AstPath;
 import io.katana.compiler.diag.CompileException;
+import io.katana.compiler.diag.DiagnosticType;
 import io.katana.compiler.scanner.Token;
 import io.katana.compiler.scanner.TokenCategory;
 import io.katana.compiler.scanner.TokenType;
@@ -130,13 +131,13 @@ public class ParseTools
 
 	public static <T> void unexpectedToken(ParseContext ctx, T expected)
 	{
-		ctx.error(ParserDiagnostics.UNEXPECTED_TOKEN_EXPECTED, ctx.token().value, expected);
-		throw new CompileException("");
+		String message = ParserDiagnostics.UNEXPECTED_TOKEN_EXPECTED.format(DiagnosticType.ERROR, ctx.token().value, expected);
+		throw new CompileException(message);
 	}
 
 	public static void unexpectedToken(ParseContext ctx)
 	{
-		ctx.error(ParserDiagnostics.UNEXPECTED_TOKEN, ctx.token().value);
-		throw new CompileException("");
+		String message = ParserDiagnostics.UNEXPECTED_TOKEN.format(DiagnosticType.ERROR, ctx.token().value);
+		throw new CompileException(message);
 	}
 }
