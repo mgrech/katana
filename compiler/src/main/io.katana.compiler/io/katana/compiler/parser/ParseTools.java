@@ -16,7 +16,6 @@ package io.katana.compiler.parser;
 
 import io.katana.compiler.ast.AstPath;
 import io.katana.compiler.diag.CompileException;
-import io.katana.compiler.diag.DiagnosticType;
 import io.katana.compiler.scanner.Token;
 import io.katana.compiler.scanner.TokenCategory;
 import io.katana.compiler.scanner.TokenType;
