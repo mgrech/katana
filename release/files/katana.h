@@ -58,7 +58,7 @@ typedef kuint32 kuint;
 #endif
 
 KSTATIC_ASSERT(sizeof(kbool) == 1)
-
+KSTATIC_ASSERT(sizeof(kbyte) == 1)
 KSTATIC_ASSERT(sizeof(kint8)  == 1 && sizeof(kuint8)  == 1)
 KSTATIC_ASSERT(sizeof(kint16) == 2 && sizeof(kuint16) == 2)
 KSTATIC_ASSERT(sizeof(kint32) == 4 && sizeof(kuint32) == 4)
