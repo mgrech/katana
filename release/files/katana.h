@@ -29,6 +29,7 @@ typedef bool               kbool;
 #else
 typedef _Bool              kbool;
 #endif
+typedef char               kbyte;
 typedef signed char        kint8;
 typedef unsigned char      kuint8;
 typedef short              kint16;
