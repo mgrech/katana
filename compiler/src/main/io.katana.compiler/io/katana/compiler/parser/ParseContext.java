@@ -88,6 +88,11 @@ public class ParseContext implements Cloneable
 		return tokens.get(current);
 	}
 
+	public DiagnosticsManager diagnostics()
+	{
+		return diag;
+	}
+
 	public void advance()
 	{
 		++current;

@@ -131,13 +131,13 @@ public class ParseTools
 
 	public static <T> void unexpectedToken(ParseContext ctx, T expected)
 	{
-		String message = ParserDiagnostics.UNEXPECTED_TOKEN_EXPECTED.format(DiagnosticType.ERROR, ctx.token().value, expected);
-		throw new CompileException(message);
+		ctx.error(ParserDiagnostics.UNEXPECTED_TOKEN_EXPECTED, ctx.token().value, expected);
+		throw new CompileException(ctx.diagnostics().summary());
 	}
 
 	public static void unexpectedToken(ParseContext ctx)
 	{
-		String message = ParserDiagnostics.UNEXPECTED_TOKEN.format(DiagnosticType.ERROR, ctx.token().value);
-		throw new CompileException(message);
+		ctx.error(ParserDiagnostics.UNEXPECTED_TOKEN, ctx.token().value);
+		throw new CompileException(ctx.diagnostics().summary());
 	}
 }
