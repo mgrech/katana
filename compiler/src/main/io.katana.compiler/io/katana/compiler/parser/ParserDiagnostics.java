@@ -26,4 +26,5 @@ public class ParserDiagnostics
 	public static final DiagnosticId FORMING_CONST_ARRAY_TYPE                = new DiagnosticId(DiagnosticKind.SYNTACTIC, 5, "forming const array type");
 	public static final DiagnosticId DUPLICATE_CONST                         = new DiagnosticId(DiagnosticKind.SYNTACTIC, 6, "duplicate 'const'");
 	public static final DiagnosticId UNEXPECTED_CHARACTER_IN_TYPE_QUALIFIERS = new DiagnosticId(DiagnosticKind.SYNTACTIC, 7, "unexpected character '%s' while parsing type qualifiers");
+	public static final DiagnosticId SEMICOLON_IS_INVALID_EMPTY_STATEMENT    = new DiagnosticId(DiagnosticKind.SYNTACTIC, 8, "';' does not denote a valid empty statement, use '{}' instead");
 }

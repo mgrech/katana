@@ -142,8 +142,12 @@ public class ExprParser
 		if(ParseTools.option(ctx, TokenType.TYPE_CONST, true))
 			return parseConst(ctx);
 
-		if(ParseTools.option(ctx, TokenType.PUNCT_SCOLON, true))
-			throw new CompileException("';' does not denote a valid empty statement, use '{}' instead");
+		if(ParseTools.option(ctx, TokenType.PUNCT_SCOLON, false))
+		{
+			ctx.error(ParserDiagnostics.SEMICOLON_IS_INVALID_EMPTY_STATEMENT);
+			ctx.advance();
+			throw new CompileException(ctx.diagnostics().summary());
+		}
 
 		if(ctx.token() == null)
 			throw new CompileException("unexpected end of file");
