@@ -1,0 +1,15 @@
+katana-version = "${project.version}"
+
+name = "hello"
+version = "1.0"
+
+[targets.hello]
+type = "executable"
+entry-point = "hello.main"
+sources = ["source"]
+system-libraries = []
+asm-options = []
+c-options = []
+cpp-options = []
+link-options = []
+resource-list = ""

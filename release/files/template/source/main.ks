@@ -1,4 +1,4 @@
-module main;
+module hello;
 
 extern fn hello();
 
