@@ -23,12 +23,14 @@ public class Project
 	public String name;
 	public String version;
 	public Map<String, BuildTarget> targets;
+	public Path buildRoot;
 
-	public Project(Path root, String name, String version, Map<String, BuildTarget> targets)
+	public Project(Path root, String name, String version, Map<String, BuildTarget> targets, Path buildRoot)
 	{
 		this.root = root;
 		this.name = name;
 		this.version = version;
 		this.targets = targets;
+		this.buildRoot = buildRoot;
 	}
 }

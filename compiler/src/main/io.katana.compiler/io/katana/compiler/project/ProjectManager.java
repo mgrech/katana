@@ -264,7 +264,7 @@ public class ProjectManager
 		return result;
 	}
 
-	private static BuildTarget validateTarget(Path root, String name, ProjectTargetToml toml, TargetTriple target) throws IOException
+	private static BuildTarget validateTarget(Path root, Path buildRoot, String name, ProjectTargetToml toml, TargetTriple target) throws IOException
 	{
 		validateNonNull("type", toml.type);
 		validateNonNull("sources", toml.sources);
@@ -303,12 +303,12 @@ public class ProjectManager
 		else
 			result.resourceFiles = new TreeMap<>();
 
-		result.outputDirectory = root.resolve("build/" + name);
+		result.outputDirectory = buildRoot.resolve(name);
 
 		return result;
 	}
 
-	private static Project validateConfig(Path root, ProjectConfigToml toml, TargetTriple target) throws IOException
+	private static Project validateConfig(Path root, Path buildRoot, ProjectConfigToml toml, TargetTriple target) throws IOException
 	{
 		validateNonNull("katana-version", toml.katanaVersion);
 		validateNonNull("name", toml.name);
@@ -321,10 +321,10 @@ public class ProjectManager
 		for(Map.Entry<String, ProjectTargetToml> entry : toml.targets.entrySet())
 		{
 			String name = entry.getKey();
-			targets.put(name, validateTarget(root, name, entry.getValue(), target));
+			targets.put(name, validateTarget(root, buildRoot, name, entry.getValue(), target));
 		}
 
-		return new Project(root, toml.name, toml.version, targets);
+		return new Project(root, toml.name, toml.version, targets, buildRoot);
 	}
 
 	private static ProjectConfigToml loadConfig(Path path) throws IOException
@@ -339,10 +339,10 @@ public class ProjectManager
 		return config;
 	}
 
-	public static Project load(Path root, TargetTriple target) throws IOException
+	public static Project load(Path root, Path buildRoot, TargetTriple target) throws IOException
 	{
 		ProjectConfigToml config = loadConfig(root.resolve(PROJECT_CONFIG_NAME));
-		return validateConfig(root, config, target);
+		return validateConfig(root, buildRoot, config, target);
 	}
 
 	public static void createDefaultProject(Path path) throws IOException

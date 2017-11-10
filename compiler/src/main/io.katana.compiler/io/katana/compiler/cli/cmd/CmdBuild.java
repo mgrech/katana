@@ -37,6 +37,9 @@ public class CmdBuild implements Runnable
 	@Option(name = {"-P", "--project-dir"}, description = "Project directory")
 	public String projectDir;
 
+	@Option(name = {"-B", "--build-dir"}, description = "Build directory")
+	public String buildDir;
+
 	@Option(name = {"-Dt", "--diagnostic-traces"}, description = "Stack traces in diagnostics")
 	public boolean diagnosticTraces;
 
@@ -45,10 +48,13 @@ public class CmdBuild implements Runnable
 	{
 		try
 		{
-			Path projectPath = (projectDir == null ? Paths.get("") : Paths.get(projectDir)).toRealPath();
+			Path projectRoot = (projectDir == null ? Paths.get("") : Paths.get(projectDir)).toRealPath();
+			Path buildRoot = buildDir != null ? Paths.get(buildDir).toAbsolutePath().normalize()
+				: projectDir == null ? projectRoot.resolve("build") : Paths.get("").toRealPath();
+
 			PlatformContext context = new PlatformContextLlvm(TargetTriple.NATIVE);
 			DiagnosticsManager diag = new DiagnosticsManager(diagnosticTraces);
-			Project project = ProjectManager.load(projectPath, context.target());
+			Project project = ProjectManager.load(projectRoot, buildRoot, context.target());
 
 			for(Map.Entry<String, BuildTarget> entry : project.targets.entrySet())
 				ProjectBuilder.build(diag, project.root, entry.getValue(), context);
