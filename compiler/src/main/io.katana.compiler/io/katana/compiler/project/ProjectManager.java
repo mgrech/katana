@@ -349,4 +349,15 @@ public class ProjectManager
 	{
 		FileUtils.copyDirectory(PROJECT_TEMPLATE_PATH, path);
 	}
+
+	public static Path locateProjectRoot() throws IOException
+	{
+		Path current = Paths.get("").toRealPath();
+
+		for(; current != null; current = current.getParent())
+			if(current.resolve(PROJECT_CONFIG_NAME).toFile().exists())
+				return current;
+
+		return null;
+	}
 }

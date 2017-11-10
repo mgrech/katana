@@ -53,7 +53,16 @@ public class CmdBuild implements Runnable
 	{
 		try
 		{
-			Path projectRoot = (projectDir == null ? Paths.get("") : Paths.get(projectDir)).toRealPath();
+			Path projectRoot = projectDir == null ? null : Paths.get(projectDir).toRealPath();
+
+			if(projectRoot == null)
+			{
+				projectRoot = ProjectManager.locateProjectRoot();
+
+				if(projectRoot == null)
+					throw new CompileException("project root could not be found");
+			}
+
 			Path buildRoot = buildDir != null ? Paths.get(buildDir).toAbsolutePath().normalize()
 				: projectDir == null ? projectRoot.resolve("build") : Paths.get("").toRealPath();
 
