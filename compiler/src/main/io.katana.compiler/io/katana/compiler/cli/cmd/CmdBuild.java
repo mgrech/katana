@@ -14,6 +14,7 @@
 
 package io.katana.compiler.cli.cmd;
 
+import com.github.rvesse.airline.annotations.Arguments;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
 import io.katana.compiler.backend.PlatformContext;
@@ -29,11 +30,15 @@ import io.katana.compiler.project.ProjectManager;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 
 @Command(name = "build", description = "Build project")
 public class CmdBuild implements Runnable
 {
+	@Arguments(description = "Targets to build")
+	public List<String> targets;
+
 	@Option(name = {"-P", "--project-dir"}, description = "Project directory")
 	public String projectDir;
 
@@ -56,8 +61,23 @@ public class CmdBuild implements Runnable
 			DiagnosticsManager diag = new DiagnosticsManager(diagnosticTraces);
 			Project project = ProjectManager.load(projectRoot, buildRoot, context.target());
 
-			for(Map.Entry<String, BuildTarget> entry : project.targets.entrySet())
-				ProjectBuilder.build(diag, project.root, entry.getValue(), context);
+			if(targets == null || targets.isEmpty())
+			{
+				for(Map.Entry<String, BuildTarget> entry : project.targets.entrySet())
+					ProjectBuilder.build(diag, project.root, entry.getValue(), context);
+			}
+			else
+			{
+				for(String targetName : targets)
+				{
+					BuildTarget target = project.targets.get(targetName);
+
+					if(target == null)
+						throw new CompileException(String.format("unknown build target '%s'", targetName));
+
+					ProjectBuilder.build(diag, project.root, target, context);
+				}
+			}
 		}
 		catch(CompileException ex)
 		{
