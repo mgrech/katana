@@ -43,13 +43,13 @@ public class ProjectBuilder
 	private static final Path KATANA_INCLUDE_DIR = Katana.HOME.resolve("include");
 	private static final Path KATANA_LIBRARY_DIR = Katana.HOME.resolve("lib");
 
-	private static void runCommand(Path workingDirectory, List<String> command)
+	private static void runBuildCommand(BuildTarget build, List<String> command)
 	{
-		System.out.println(String.join(" ", command));
+		System.out.println(String.format("[%s] %s", build.name, String.join(" ", command)));
 
 		ProcessBuilder builder = new ProcessBuilder(command);
 		builder.inheritIO();
-		builder.directory(workingDirectory.toFile());
+		builder.directory(build.outputDirectory.toFile());
 
 		try
 		{
@@ -125,7 +125,7 @@ public class ProjectBuilder
 		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
-		runCommand(build.outputDirectory, command);
+		runBuildCommand(build, command);
 		return Paths.get(filename);
 	}
 
@@ -147,7 +147,7 @@ public class ProjectBuilder
 		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
-		runCommand(build.outputDirectory, command);
+		runBuildCommand(build, command);
 		return Paths.get(filename);
 	}
 
@@ -169,7 +169,7 @@ public class ProjectBuilder
 		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
-		runCommand(build.outputDirectory, command);
+		runBuildCommand(build, command);
 		return Paths.get(filename);
 	}
 
@@ -188,7 +188,7 @@ public class ProjectBuilder
 		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
-		runCommand(build.outputDirectory, command);
+		runBuildCommand(build, command);
 		return Paths.get(filename);
 	}
 
@@ -253,7 +253,7 @@ public class ProjectBuilder
 		// append all source files
 		filePaths.stream().map(Path::toString).forEach(command::add);
 
-		runCommand(build.outputDirectory, command);
+		runBuildCommand(build, command);
 	}
 
 	private static Path compileFile(BuildTarget build, FileType fileType, Path path, TargetTriple target) throws IOException
@@ -315,6 +315,6 @@ public class ProjectBuilder
 		}
 
 		link(build, objectFiles, context.target());
-		System.out.println("build successful.");
+		System.out.println(String.format("[%s] build successful.", build.name));
 	}
 }
