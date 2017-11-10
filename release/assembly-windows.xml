@@ -26,33 +26,17 @@
 
 	<fileSets>
 		<fileSet>
-			<directory>files/template</directory>
-			<outputDirectory>template</outputDirectory>
+			<directory>files/generic</directory>
+			<outputDirectory></outputDirectory>
 			<filtered>true</filtered>
 		</fileSet>
 	</fileSets>
 
 	<files>
 		<file>
-			<source>files/katana.h</source>
-			<outputDirectory>include</outputDirectory>
-			<filtered>true</filtered>
-		</file>
-		<file>
-			<source>${project.parent.basedir}/LICENSE</source>
-		</file>
-		<file>
-			<source>files/build.txt</source>
-			<filtered>true</filtered>
-		</file>
-		<file>
-			<source>files/katana.cmd</source>
+			<source>files/windows/katana.cmd</source>
+			<outputDirectory></outputDirectory>
 			<lineEnding>windows</lineEnding>
-		</file>
-		<file>
-			<source>files/katana</source>
-			<fileMode>755</fileMode>
-			<lineEnding>unix</lineEnding>
 		</file>
 	</files>
 </assembly>
