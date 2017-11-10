@@ -214,9 +214,9 @@ public class ProjectManager
 		return result;
 	}
 
-	private static Map<String, Path> loadResources(Path projectRoot, Path list) throws IOException
+	private static Map<String, Path> loadResourceList(Path projectRoot, Path path) throws IOException
 	{
-		File resourceConfig = projectRoot.resolve(list).toFile();
+		File resourceConfig = projectRoot.resolve(path).toFile();
 		Properties properties = new Properties();
 
 		if(resourceConfig.exists())
@@ -227,8 +227,8 @@ public class ProjectManager
 		for(Map.Entry<?, ?> entry : properties.entrySet())
 		{
 			String key = (String)entry.getKey();
-			String path = (String)entry.getValue();
-			resources.put(key, validatePath(projectRoot, path));
+			String resourcePath = (String)entry.getValue();
+			resources.put(key, validatePath(projectRoot, projectRoot.relativize(path.getParent().resolve(resourcePath)).toString()));
 		}
 
 		return resources;
@@ -299,7 +299,7 @@ public class ProjectManager
 		result.systemLibraries = validateLibs(toml.systemLibraries, target);
 
 		if(toml.resourceList != null && !toml.resourceList.isEmpty())
-			result.resourceFiles = loadResources(root, validatePath(root, toml.resourceList));
+			result.resourceFiles = loadResourceList(root, validatePath(root, toml.resourceList));
 		else
 			result.resourceFiles = new TreeMap<>();
 
