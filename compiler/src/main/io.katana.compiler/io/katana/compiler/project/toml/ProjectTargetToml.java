@@ -12,23 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.project;
+package io.katana.compiler.project.toml;
 
-import java.nio.file.Path;
-import java.util.Map;
+import java.util.List;
 
-public class Project
+public class ProjectTargetToml
 {
-	public Path root;
-	public String name;
-	public String version;
-	public Map<String, BuildTarget> targets;
-
-	public Project(Path root, String name, String version, Map<String, BuildTarget> targets)
-	{
-		this.root = root;
-		this.name = name;
-		this.version = version;
-		this.targets = targets;
-	}
+	public String type;
+	public String entryPoint;
+	public List<String> sources;
+	public String resourceList;
+	public List<String> systemLibraries;
+	public List<String> asmOptions;
+	public List<String> cOptions;
+	public List<String> cppOptions;
+	public List<String> linkOptions;
 }

@@ -14,14 +14,8 @@
 
 package io.katana.compiler.project;
 
-import java.util.List;
-
-public class ProjectConfig
+public enum BuildType
 {
-	public String name;
-	public List<String> sources;
-	public List<String> libs;
-	public ProjectType type;
-	public String entryPoint; // can be null
-	public String katanaVersion;
+	EXECUTABLE,
+	LIBRARY,
 }

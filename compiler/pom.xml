@@ -14,18 +14,18 @@
 	<packaging>jar</packaging>
 
 	<dependencies>
-		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>2.9.1</version>
-		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/com.github.rvesse/airline -->
 		<dependency>
 			<groupId>com.github.rvesse</groupId>
 			<artifactId>airline</artifactId>
 			<version>2.3.0</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/io.ous/jtoml -->
+		<dependency>
+			<groupId>io.ous</groupId>
+			<artifactId>jtoml</artifactId>
+			<version>2.0.0</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/junit/junit -->

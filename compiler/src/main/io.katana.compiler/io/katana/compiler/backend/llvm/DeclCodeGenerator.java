@@ -106,7 +106,7 @@ public class DeclCodeGenerator implements IVisitor
 
 			if(function.exported)
 			{
-				switch(context.project().type)
+				switch(context.build().type)
 				{
 				case LIBRARY: context.write("dllexport "); break;
 				case EXECUTABLE: break;

@@ -20,7 +20,7 @@ import io.katana.compiler.ast.AstPath;
 import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.diag.TypeString;
-import io.katana.compiler.project.Project;
+import io.katana.compiler.project.BuildTarget;
 import io.katana.compiler.sema.SemaModule;
 import io.katana.compiler.sema.SemaProgram;
 import io.katana.compiler.sema.decl.SemaDecl;
@@ -104,18 +104,18 @@ public class ProgramCodeGenerator
 		throw new CompileException(String.format("entry point must return 'void' or 'int32', got '%s'", TypeString.of(func.ret)));
 	}
 
-	public static void generate(Project project, SemaProgram program, PlatformContext platform, Path outputFile) throws IOException
+	public static void generate(BuildTarget build, SemaProgram program, PlatformContext platform, Path outputFile) throws IOException
 	{
 		StringBuilder builder = new StringBuilder();
 		builder.append(String.format("target triple = \"%s\"\n\n", platform.target()));
 
 		StringPool stringPool = new StringPool();
-		FileCodegenContext context = new FileCodegenContext(project, platform, builder, stringPool);
+		FileCodegenContext context = new FileCodegenContext(build, platform, builder, stringPool);
 		generateDecls(new DeclCodeGenerator(context), program.root);
 		stringPool.generate(builder);
 
-		if(project.entryPoint.isSome())
-			generateEntryPointWrapper(builder, findEntryPointFunction(program, project.entryPoint.unwrap()));
+		if(build.entryPoint != null)
+			generateEntryPointWrapper(builder, findEntryPointFunction(program, build.entryPoint));
 
 		FileUtils.writeFile(builder.toString(), outputFile);
 	}

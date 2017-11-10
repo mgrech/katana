@@ -15,26 +15,26 @@
 package io.katana.compiler.backend.llvm;
 
 import io.katana.compiler.backend.PlatformContext;
-import io.katana.compiler.project.Project;
+import io.katana.compiler.project.BuildTarget;
 
 public class FileCodegenContext
 {
-	private final Project project;
+	private final BuildTarget build;
 	private final PlatformContext platform;
 	private final StringBuilder builder;
 	private final StringPool stringPool;
 
-	public FileCodegenContext(Project project, PlatformContext platform, StringBuilder builder, StringPool stringPool)
+	public FileCodegenContext(BuildTarget build, PlatformContext platform, StringBuilder builder, StringPool stringPool)
 	{
-		this.project = project;
+		this.build = build;
 		this.platform = platform;
 		this.builder = builder;
 		this.stringPool = stringPool;
 	}
 
-	public Project project()
+	public BuildTarget build()
 	{
-		return project;
+		return build;
 	}
 
 	public PlatformContext platform()

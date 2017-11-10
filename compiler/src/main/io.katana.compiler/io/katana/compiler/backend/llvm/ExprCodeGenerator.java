@@ -386,7 +386,7 @@ public class ExprCodeGenerator implements IVisitor
 	{
 		// array literals should not generate any temporary variables as they are required to be literals
 		// hence we do not pass a builder to this context (null)
-		FileCodegenContext tmpContext = new FileCodegenContext(context.project(), context.platform(), null, context.stringPool());
+		FileCodegenContext tmpContext = new FileCodegenContext(context.build(), context.platform(), null, context.stringPool());
 		StringBuilder builder = new StringBuilder();
 
 		builder.append('[');

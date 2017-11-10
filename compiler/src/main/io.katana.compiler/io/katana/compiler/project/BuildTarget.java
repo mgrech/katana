@@ -1,4 +1,4 @@
-// Copyright 2016-2017 Markus Grech
+// Copyright 2017 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,22 @@
 
 package io.katana.compiler.project;
 
-public enum ProjectType
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+public class BuildTarget
 {
-	EXECUTABLE,
-	LIBRARY,
+	public String name;
+	public BuildType type;
+	public String entryPoint;
+	public Map<FileType, Set<Path>> sourceFiles;
+	public List<String> asmOptions;
+	public List<String> cOptions;
+	public List<String> cppOptions;
+	public List<String> linkOptions;
+	public List<String> systemLibraries;
+	public Map<String, Path> resourceFiles;
+	public Path outputDirectory;
 }

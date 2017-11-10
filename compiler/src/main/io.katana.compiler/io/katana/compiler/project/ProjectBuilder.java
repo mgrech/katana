@@ -30,6 +30,7 @@ import io.katana.compiler.sema.SemaProgram;
 import io.katana.compiler.utils.Maybe;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -42,12 +43,13 @@ public class ProjectBuilder
 	private static final Path KATANA_INCLUDE_DIR = Katana.HOME.resolve("include");
 	private static final Path KATANA_LIBRARY_DIR = Katana.HOME.resolve("lib");
 
-	private static void runCommand(List<String> command)
+	private static void runCommand(Path workingDirectory, List<String> command)
 	{
 		System.out.println(String.join(" ", command));
 
 		ProcessBuilder builder = new ProcessBuilder(command);
 		builder.inheritIO();
+		builder.directory(workingDirectory.toFile());
 
 		try
 		{
@@ -70,7 +72,7 @@ public class ProjectBuilder
 		command.add("-DKATANA_OS_" + target.os.name());
 	}
 
-	private static void addPicFlag(List<String> command, TargetTriple triple, ProjectType type)
+	private static void addPicFlag(List<String> command, TargetTriple triple, BuildType type)
 	{
 		// code is always position-independent on windows
 		if(triple.os == Os.WINDOWS)
@@ -108,12 +110,13 @@ public class ProjectBuilder
 		command.add("-I" + KATANA_INCLUDE_DIR);
 	}
 
-	private static Path compileAsmFile(Path path, TargetTriple target, ProjectType type) throws IOException
+	private static Path compileAsmFile(BuildTarget build, Path path, TargetTriple target) throws IOException
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang");
+		command.addAll(build.asmOptions);
 
-		addPicFlag(command, target, type);
+		addPicFlag(command, target, build.type);
 
 		command.add("-c");
 		command.add(path.toString());
@@ -122,19 +125,20 @@ public class ProjectBuilder
 		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
-		runCommand(command);
+		runCommand(build.outputDirectory, command);
 		return Paths.get(filename);
 	}
 
-	private static Path compileCFile(Path path, TargetTriple target, ProjectType type) throws IOException
+	private static Path compileCFile(BuildTarget build, Path path, TargetTriple target) throws IOException
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang");
+		command.addAll(build.cOptions);
 
 		command.add("-std=c11");
 		addPpCompileFlags(command, target);
 		addCommonLangCompileFlags(command);
-		addPicFlag(command, target, type);
+		addPicFlag(command, target, build.type);
 
 		command.add("-c");
 		command.add(path.toString());
@@ -143,19 +147,20 @@ public class ProjectBuilder
 		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
-		runCommand(command);
+		runCommand(build.outputDirectory, command);
 		return Paths.get(filename);
 	}
 
-	private static Path compileCppFile(Path path, TargetTriple target, ProjectType type) throws IOException
+	private static Path compileCppFile(BuildTarget build, Path path, TargetTriple target) throws IOException
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang++");
+		command.addAll(build.cppOptions);
 
 		command.add("-std=c++14");
 		addPpCompileFlags(command, target);
 		addCommonLangCompileFlags(command);
-		addPicFlag(command, target, type);
+		addPicFlag(command, target, build.type);
 
 		command.add("-c");
 		command.add(path.toString());
@@ -164,17 +169,17 @@ public class ProjectBuilder
 		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
-		runCommand(command);
+		runCommand(build.outputDirectory, command);
 		return Paths.get(filename);
 	}
 
-	private static Path compileLlvmFile(Project project, TargetTriple target, Path path) throws IOException
+	private static Path compileLlvmFile(BuildTarget build, TargetTriple target, Path path) throws IOException
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang");
 
 		command.add("-Wno-override-module");
-		addPicFlag(command, target, project.type);
+		addPicFlag(command, target, build.type);
 
 		command.add("-c");
 		command.add(path.toString());
@@ -183,11 +188,11 @@ public class ProjectBuilder
 		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
-		runCommand(command);
+		runCommand(build.outputDirectory, command);
 		return Paths.get(filename);
 	}
 
-	private static String fileExtensionFor(ProjectType type, TargetTriple target)
+	private static String fileExtensionFor(BuildType type, TargetTriple target)
 	{
 		switch(type)
 		{
@@ -213,25 +218,26 @@ public class ProjectBuilder
 		throw new AssertionError("unreachable");
 	}
 
-	private static void link(Project project, List<Path> filePaths, TargetTriple target) throws IOException
+	private static void link(BuildTarget build, List<Path> filePaths, TargetTriple target) throws IOException
 	{
-		String binaryName = project.name + fileExtensionFor(project.type, target);
+		String binaryName = build.name + fileExtensionFor(build.type, target);
 
 		List<String> command = new ArrayList<>();
 
-		if(project.sourceFiles.get(FileType.CPP) == null)
+		if(build.sourceFiles.get(FileType.CPP) == null)
 			command.add("clang");
 		else
 			command.add("clang++");
 
 		command.add("-fuse-ld=lld");
+		command.addAll(build.linkOptions);
 
-		if(project.type == ProjectType.LIBRARY)
+		if(build.type == BuildType.LIBRARY)
 			command.add("-shared");
 
 		command.add("-L" + KATANA_LIBRARY_DIR);
 
-		for(String lib : project.libraries)
+		for(String lib : build.systemLibraries)
 			command.add("-l" + lib);
 
 		if(target.os != Os.WINDOWS)
@@ -247,64 +253,68 @@ public class ProjectBuilder
 		// append all source files
 		filePaths.stream().map(Path::toString).forEach(command::add);
 
-		runCommand(command);
+		runCommand(build.outputDirectory, command);
 	}
 
-	private static Path compileFile(FileType fileType, Path path, TargetTriple target, ProjectType projectType) throws IOException
+	private static Path compileFile(BuildTarget build, FileType fileType, Path path, TargetTriple target) throws IOException
 	{
 		switch(fileType)
 		{
-		case ASM: return compileAsmFile(path, target, projectType);
-		case C:   return compileCFile(path, target, projectType);
-		case CPP: return compileCppFile(path, target, projectType);
+		case ASM: return compileAsmFile(build, path, target);
+		case C:   return compileCFile(build, path, target);
+		case CPP: return compileCppFile(build, path, target);
 
 		default:
 			throw new AssertionError("unreachable");
 		}
 	}
 
-	private static Maybe<Path> compileKatanaSources(DiagnosticsManager diag, Project project, PlatformContext context, Path buildDir) throws IOException
+	private static Maybe<Path> compileKatanaSources(DiagnosticsManager diag, Path root, BuildTarget build, PlatformContext context, Path buildDir) throws IOException
 	{
-		Set<Path> katanaFiles = project.sourceFiles.get(FileType.KATANA);
+		Set<Path> katanaFiles = build.sourceFiles.get(FileType.KATANA);
 
 		if(katanaFiles == null)
 			return Maybe.none();
 
-		SourceManager sourceManager = SourceManager.loadFiles(project.root, project.sourceFiles.get(FileType.KATANA));
+		SourceManager sourceManager = SourceManager.loadFiles(root, build.sourceFiles.get(FileType.KATANA));
 		AstProgram ast = ProgramParser.parse(sourceManager, diag);
 		SemaProgram program = ProgramValidator.validate(ast, context);
 
 		if(!diag.successful())
 			throw new CompileException(diag.summary());
 
-		Path katanaOutputFile = buildDir.resolve(project.name + ".ll");
-		ProgramCodeGenerator.generate(project, program, context, katanaOutputFile);
+		Path katanaOutputFile = buildDir.resolve(build.name + ".ll");
+		ProgramCodeGenerator.generate(build, program, context, katanaOutputFile);
 		return Maybe.some(katanaOutputFile);
 	}
 
-	public static void build(DiagnosticsManager diag, Project project, PlatformContext context, Path buildDir) throws IOException
+	public static void build(DiagnosticsManager diag, Path root, BuildTarget build, PlatformContext context) throws IOException
 	{
-		Maybe<Path> katanaOutput = compileKatanaSources(diag, project, context, buildDir);
+		if(!build.outputDirectory.toFile().exists())
+			Files.createDirectories(build.outputDirectory);
+
+		Maybe<Path> katanaOutput = compileKatanaSources(diag, root, build, context, build.outputDirectory);
 		List<Path> objectFiles = new ArrayList<>();
 
-		Path resourcePath = buildDir.resolve("resources.asm");
-		ResourceGenerator.generate(context.target(), project.resourceFiles, resourcePath);
-		objectFiles.add(compileAsmFile(resourcePath, context.target(), project.type));
+		Path resourcePath = build.outputDirectory.resolve("resources.asm");
+		ResourceGenerator.generate(context.target(), build.resourceFiles, resourcePath);
+
+		objectFiles.add(compileAsmFile(build, resourcePath, context.target()));
 
 		if(katanaOutput.isSome())
-			objectFiles.add(compileLlvmFile(project, context.target(), katanaOutput.get()));
+			objectFiles.add(compileLlvmFile(build, context.target(), katanaOutput.get()));
 
-		for(Map.Entry<FileType, Set<Path>> entry : project.sourceFiles.entrySet())
+		for(Map.Entry<FileType, Set<Path>> entry : build.sourceFiles.entrySet())
 		{
 			FileType type = entry.getKey();
 			Set<Path> paths = entry.getValue();
 
 			if(type != FileType.KATANA)
 				for(Path path : paths)
-					objectFiles.add(compileFile(type, path, context.target(), project.type));
+					objectFiles.add(compileFile(build, type, path, context.target()));
 		}
 
-		link(project, objectFiles, context.target());
+		link(build, objectFiles, context.target());
 		System.out.println("build successful.");
 	}
 }
