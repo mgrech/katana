@@ -69,6 +69,7 @@
 						</goals>
 						<configuration>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
+							<minimizeJar>true</minimizeJar>
 							<filters>
 								<filter>
 									<artifact>*:*</artifact>
@@ -76,6 +77,12 @@
 										<exclude>META-INF/*</exclude>
 										<exclude>META-INF/maven/</exclude>
 									</excludes>
+								</filter>
+								<filter>
+									<artifact>com.github.rvesse:airline:*</artifact>
+									<includes>
+										<include>**</include>
+									</includes>
 								</filter>
 							</filters>
 							<transformers>
