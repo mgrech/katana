@@ -398,11 +398,25 @@ public class ProjectManager
 		TomlTable toml = TomlUtils.loadToml(path);
 		ProjectToml config = toml.asObject(ProjectToml.class);
 
-		for(Map.Entry<String, Object> entry : toml.getTomlTable("targets").toMap().entrySet())
-			config.targets.put(entry.getKey(), ((TomlTable)entry.getValue()).asObject(TargetToml.class));
+		TomlTable targetsToml = toml.getTomlTable("targets");
 
-		for(Map.Entry<String, Object> entry : toml.getTomlTable("profiles").toMap().entrySet())
-			config.profiles.put(entry.getKey(), ((TomlTable)entry.getValue()).asObject(ProfileToml.class));
+		if(targetsToml != null)
+		{
+			for(Map.Entry<String, Object> entry : targetsToml.toMap().entrySet())
+			{
+				config.targets.put(entry.getKey(), ((TomlTable)entry.getValue()).asObject(TargetToml.class));
+			}
+		}
+
+		TomlTable profilesToml = toml.getTomlTable("profiles");
+
+		if(profilesToml != null)
+		{
+			for(Map.Entry<String, Object> entry : profilesToml.toMap().entrySet())
+			{
+				config.profiles.put(entry.getKey(), ((TomlTable)entry.getValue()).asObject(ProfileToml.class));
+			}
+		}
 
 		return config;
 	}
