@@ -37,7 +37,9 @@ import java.util.regex.Pattern;
 public class ProjectManager
 {
 	private static final Path PROJECT_TEMPLATE_PATH = Katana.HOME.resolve("template");
+	private static final Path DEFAULT_PROFILE_PATH = Katana.HOME.resolve("profiles.toml");
 	private static final String PROJECT_CONFIG_NAME = "project.toml";
+
 	private static final Pattern LIB_NAME_PATTERN = Pattern.compile("[-A-Za-z0-9_]+");
 	private static final Pattern PROJECT_NAME_PATTERN = Pattern.compile("[-A-Za-z0-9_]+");
 	private static final Pattern PROJECT_VERSION_PATTERN = Pattern.compile("(0|(?:[1-9][0-9]*))\\.(0|(?:[1-9][0-9]*))(\\.(0|(?:[1-9][0-9]*)))?");
@@ -393,6 +395,17 @@ public class ProjectManager
 		return new Project(root, toml.name, toml.version, targets, buildRoot);
 	}
 
+	private static Map<String, ProfileToml> loadDefaultProfiles() throws IOException
+	{
+		TomlTable toml = TomlUtils.loadToml(DEFAULT_PROFILE_PATH);
+		Map<String, ProfileToml> profiles = new HashMap<>();
+
+		for(Map.Entry<String, Object> entry : toml.entrySet())
+			profiles.put(entry.getKey(), ((TomlTable)entry.getValue()).asObject(ProfileToml.class));
+
+		return profiles;
+	}
+
 	private static ProjectToml loadConfig(Path path) throws IOException
 	{
 		TomlTable toml = TomlUtils.loadToml(path);
@@ -424,6 +437,7 @@ public class ProjectManager
 	public static Project load(Path root, Path buildRoot, TargetTriple target) throws IOException
 	{
 		ProjectToml config = loadConfig(root.resolve(PROJECT_CONFIG_NAME));
+		config.profiles.putAll(loadDefaultProfiles());
 		return validateConfig(root, buildRoot, config, target);
 	}
 
