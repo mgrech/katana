@@ -19,6 +19,7 @@ import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.platform.TargetTriple;
 import io.katana.compiler.project.conditionals.Condition;
 import io.katana.compiler.project.conditionals.ConditionParser;
+import io.katana.compiler.project.toml.ProfileToml;
 import io.katana.compiler.project.toml.ProjectToml;
 import io.katana.compiler.project.toml.TargetToml;
 import io.katana.compiler.utils.FileUtils;
@@ -307,6 +308,47 @@ public class ProjectManager
 		return result;
 	}
 
+	private static void copyOptions(ProfileToml src, ProfileToml dst)
+	{
+		dst.asmOptions.addAll(src.asmOptions);
+		dst.cOptions.addAll(src.cOptions);
+		dst.cppOptions.addAll(src.cppOptions);
+		dst.linkOptions.addAll(src.linkOptions);
+	}
+
+	private static void flattenProfileHierarchy(ProfileToml profile, Map<String, ProfileToml> profiles)
+	{
+		for(String inheritedName : profile.inherit)
+		{
+			ProfileToml inherited = profiles.get(inheritedName);
+			flattenProfileHierarchy(inherited, profiles);
+			copyOptions(inherited, profile);
+		}
+	}
+
+	private static void flattenProfileHierarchy(Map<String, ProfileToml> profiles)
+	{
+		for(Map.Entry<String, ProfileToml> entry : profiles.entrySet())
+			flattenProfileHierarchy(entry.getValue(), profiles);
+	}
+
+	private static void applyProfiles(Map<String, BuildTarget> targets, Map<String, TargetToml> targetTomls, Map<String, ProfileToml> profileTomls)
+	{
+		for(BuildTarget target : targets.values())
+		{
+			TargetToml targetToml = targetTomls.get(target.name);
+
+			for(String profileName : targetToml.profiles)
+			{
+				ProfileToml profileToml = profileTomls.get(profileName);
+				target.asmOptions.addAll(profileToml.asmOptions);
+				target.cOptions.addAll(profileToml.cOptions);
+				target.cppOptions.addAll(profileToml.cppOptions);
+				target.linkOptions.addAll(profileToml.linkOptions);
+			}
+		}
+	}
+
 	private static Project validateConfig(Path root, Path buildRoot, ProjectToml toml, TargetTriple target) throws IOException
 	{
 		validateNonNull("katana-version", toml.katanaVersion);
@@ -323,6 +365,9 @@ public class ProjectManager
 			targets.put(name, validateTarget(root, buildRoot, name, entry.getValue(), target));
 		}
 
+		flattenProfileHierarchy(toml.profiles);
+		applyProfiles(targets, toml.targets, toml.profiles);
+
 		return new Project(root, toml.name, toml.version, targets, buildRoot);
 	}
 
@@ -333,6 +378,9 @@ public class ProjectManager
 
 		for(Map.Entry<String, Object> entry : toml.getTomlTable("targets").toMap().entrySet())
 			config.targets.put(entry.getKey(), ((TomlTable)entry.getValue()).asObject(TargetToml.class));
+
+		for(Map.Entry<String, Object> entry : toml.getTomlTable("profiles").toMap().entrySet())
+			config.profiles.put(entry.getKey(), ((TomlTable)entry.getValue()).asObject(ProfileToml.class));
 
 		return config;
 	}
