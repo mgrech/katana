@@ -316,20 +316,27 @@ public class ProjectManager
 		dst.linkOptions.addAll(src.linkOptions);
 	}
 
-	private static void flattenProfileHierarchy(ProfileToml profile, Map<String, ProfileToml> profiles)
+	private static void flattenProfileHierarchy(ProfileToml profile, Map<String, ProfileToml> profiles, Set<ProfileToml> flattened)
 	{
+		if(flattened.contains(profile))
+			return;
+
+		flattened.add(profile);
+
 		for(String inheritedName : profile.inherit)
 		{
 			ProfileToml inherited = profiles.get(inheritedName);
-			flattenProfileHierarchy(inherited, profiles);
+			flattenProfileHierarchy(inherited, profiles, flattened);
 			copyOptions(inherited, profile);
 		}
 	}
 
 	private static void flattenProfileHierarchy(Map<String, ProfileToml> profiles)
 	{
-		for(Map.Entry<String, ProfileToml> entry : profiles.entrySet())
-			flattenProfileHierarchy(entry.getValue(), profiles);
+		Set<ProfileToml> flattened = Collections.newSetFromMap(new IdentityHashMap<>());
+
+		for(ProfileToml profile : profiles.values())
+			flattenProfileHierarchy(profile, profiles, flattened);
 	}
 
 	private static void applyProfiles(Map<String, BuildTarget> targets, Map<String, TargetToml> targetTomls, Map<String, ProfileToml> profileTomls)
