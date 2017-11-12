@@ -1,0 +1,41 @@
+[c11]
+c-options = ["-std=c11", "-pedantic", "-pedantic-errors"]
+
+[cpp11]
+cpp-options = ["-std=c++11", "-pedantic", "-pedantic-errors"]
+
+[cpp14]
+cpp-options = ["-std=c++14", "-pedantic", "-pedantic-errors"]
+
+[cpp17]
+cpp-options = ["-std=c++17", "-pedantic", "-pedantic-errors"]
+
+[warnings]
+c-options   = ["-Wall", "-Werror"]
+cpp-options = ["-Wall", "-Werror"]
+
+[opt-size]
+c-options    = ["-Os"]
+cpp-options  = ["-Os"]
+llvm-options = ["-Os"]
+
+[opt-quick]
+c-options    = ["-O1"]
+cpp-options  = ["-O1"]
+llvm-options = ["-O1"]
+
+[opt-speed]
+c-options    = ["-flto", "-O3"]
+cpp-options  = ["-flto", "-O3"]
+llvm-options = ["-flto", "-O3"]
+link-options = ["-flto", "-O3"]
+
+[debug]
+c-options    = ["-g"]
+cpp-options  = ["-g"]
+llvm-options = ["-g"]
+
+[release]
+inherit = ["opt-speed"]
+c-options   = ["-DNDEBUG"]
+cpp-options = ["-DNDEBUG"]
