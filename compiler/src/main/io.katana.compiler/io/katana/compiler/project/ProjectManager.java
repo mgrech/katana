@@ -19,8 +19,8 @@ import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.platform.TargetTriple;
 import io.katana.compiler.project.conditionals.Condition;
 import io.katana.compiler.project.conditionals.ConditionParser;
-import io.katana.compiler.project.toml.ProjectConfigToml;
-import io.katana.compiler.project.toml.ProjectTargetToml;
+import io.katana.compiler.project.toml.ProjectToml;
+import io.katana.compiler.project.toml.TargetToml;
 import io.katana.compiler.utils.FileUtils;
 import io.katana.compiler.utils.TomlUtils;
 import io.ous.jtoml.TomlTable;
@@ -236,9 +236,6 @@ public class ProjectManager
 
 	private static List<String> validateOptions(List<String> options, TargetTriple target)
 	{
-		if(options == null)
-			return new ArrayList<>();
-
 		List<String> result = new ArrayList<>();
 
 		for(String option : options)
@@ -267,7 +264,7 @@ public class ProjectManager
 		return result;
 	}
 
-	private static BuildTarget validateTarget(Path root, Path buildRoot, String name, ProjectTargetToml toml, TargetTriple target) throws IOException
+	private static BuildTarget validateTarget(Path root, Path buildRoot, String name, TargetToml toml, TargetTriple target) throws IOException
 	{
 		validateNonNull("type", toml.type);
 		validateNonNull("sources", toml.sources);
@@ -298,11 +295,7 @@ public class ProjectManager
 		result.cOptions = validateOptions(toml.cOptions, target);
 		result.cppOptions = validateOptions(toml.cppOptions, target);
 		result.linkOptions = validateOptions(toml.linkOptions, target);
-
-		if(toml.systemLibraries == null)
-			result.systemLibraries = new ArrayList<>();
-		else
-			result.systemLibraries = validateLibs(toml.systemLibraries, target);
+		result.systemLibraries = validateLibs(toml.systemLibraries, target);
 
 		if(toml.resourceList != null && !toml.resourceList.isEmpty())
 			result.resourceFiles = loadResourceList(root, validatePath(root, toml.resourceList));
@@ -314,7 +307,7 @@ public class ProjectManager
 		return result;
 	}
 
-	private static Project validateConfig(Path root, Path buildRoot, ProjectConfigToml toml, TargetTriple target) throws IOException
+	private static Project validateConfig(Path root, Path buildRoot, ProjectToml toml, TargetTriple target) throws IOException
 	{
 		validateNonNull("katana-version", toml.katanaVersion);
 		validateNonNull("name", toml.name);
@@ -324,7 +317,7 @@ public class ProjectManager
 
 		Map<String, BuildTarget> targets = new HashMap<>();
 
-		for(Map.Entry<String, ProjectTargetToml> entry : toml.targets.entrySet())
+		for(Map.Entry<String, TargetToml> entry : toml.targets.entrySet())
 		{
 			String name = entry.getKey();
 			targets.put(name, validateTarget(root, buildRoot, name, entry.getValue(), target));
@@ -333,21 +326,20 @@ public class ProjectManager
 		return new Project(root, toml.name, toml.version, targets, buildRoot);
 	}
 
-	private static ProjectConfigToml loadConfig(Path path) throws IOException
+	private static ProjectToml loadConfig(Path path) throws IOException
 	{
 		TomlTable toml = TomlUtils.loadToml(path);
-		ProjectConfigToml config = toml.asObject(ProjectConfigToml.class);
-		config.targets = new HashMap<>();
+		ProjectToml config = toml.asObject(ProjectToml.class);
 
 		for(Map.Entry<String, Object> entry : toml.getTomlTable("targets").toMap().entrySet())
-			config.targets.put(entry.getKey(), ((TomlTable)entry.getValue()).asObject(ProjectTargetToml.class));
+			config.targets.put(entry.getKey(), ((TomlTable)entry.getValue()).asObject(TargetToml.class));
 
 		return config;
 	}
 
 	public static Project load(Path root, Path buildRoot, TargetTriple target) throws IOException
 	{
-		ProjectConfigToml config = loadConfig(root.resolve(PROJECT_CONFIG_NAME));
+		ProjectToml config = loadConfig(root.resolve(PROJECT_CONFIG_NAME));
 		return validateConfig(root, buildRoot, config, target);
 	}
 

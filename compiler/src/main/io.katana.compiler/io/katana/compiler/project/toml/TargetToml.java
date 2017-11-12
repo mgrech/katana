@@ -14,12 +14,18 @@
 
 package io.katana.compiler.project.toml;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 
-public class ProjectConfigToml
+public class TargetToml
 {
-	public String katanaVersion;
-	public String name;
-	public String version;
-	public HashMap<String, ProjectTargetToml> targets;
+	public String type;
+	public String entryPoint;
+	public List<String> sources;
+	public String resourceList;
+	public List<String> systemLibraries = new ArrayList<>();
+	public List<String> asmOptions = new ArrayList<>();
+	public List<String> cOptions = new ArrayList<>();
+	public List<String> cppOptions = new ArrayList<>();
+	public List<String> linkOptions = new ArrayList<>();
 }
