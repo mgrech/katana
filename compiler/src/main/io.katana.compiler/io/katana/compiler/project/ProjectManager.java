@@ -236,6 +236,9 @@ public class ProjectManager
 
 	private static List<String> validateOptions(List<String> options, TargetTriple target)
 	{
+		if(options == null)
+			return new ArrayList<>();
+
 		List<String> result = new ArrayList<>();
 
 		for(String option : options)
@@ -268,7 +271,6 @@ public class ProjectManager
 	{
 		validateNonNull("type", toml.type);
 		validateNonNull("sources", toml.sources);
-		validateNonNull("system-libraries", toml.systemLibraries);
 
 		BuildType type;
 
@@ -296,7 +298,11 @@ public class ProjectManager
 		result.cOptions = validateOptions(toml.cOptions, target);
 		result.cppOptions = validateOptions(toml.cppOptions, target);
 		result.linkOptions = validateOptions(toml.linkOptions, target);
-		result.systemLibraries = validateLibs(toml.systemLibraries, target);
+
+		if(toml.systemLibraries == null)
+			result.systemLibraries = new ArrayList<>();
+		else
+			result.systemLibraries = validateLibs(toml.systemLibraries, target);
 
 		if(toml.resourceList != null && !toml.resourceList.isEmpty())
 			result.resourceFiles = loadResourceList(root, validatePath(root, toml.resourceList));
