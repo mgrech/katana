@@ -28,6 +28,7 @@ public class BuildTarget
 	public List<String> asmOptions;
 	public List<String> cOptions;
 	public List<String> cppOptions;
+	public List<String> llvmOptions;
 	public List<String> linkOptions;
 	public List<String> systemLibraries;
 	public Map<String, Path> resourceFiles;

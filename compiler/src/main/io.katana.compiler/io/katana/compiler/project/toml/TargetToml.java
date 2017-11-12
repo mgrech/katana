@@ -27,6 +27,7 @@ public class TargetToml
 	public List<String> asmOptions = new ArrayList<>();
 	public List<String> cOptions = new ArrayList<>();
 	public List<String> cppOptions = new ArrayList<>();
+	public List<String> llvmOptions = new ArrayList<>();
 	public List<String> linkOptions = new ArrayList<>();
 	public List<String> profiles = new ArrayList<>();
 }

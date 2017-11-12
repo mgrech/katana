@@ -148,6 +148,7 @@ public class ProjectBuilder
 		command.add("clang");
 
 		command.add("-Wno-override-module");
+		command.addAll(build.llvmOptions);
 
 		command.add("-c");
 		command.add(path.toString());

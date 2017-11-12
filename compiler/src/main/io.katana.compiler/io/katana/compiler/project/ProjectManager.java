@@ -295,6 +295,7 @@ public class ProjectManager
 		result.asmOptions = validateOptions(toml.asmOptions, target);
 		result.cOptions = validateOptions(toml.cOptions, target);
 		result.cppOptions = validateOptions(toml.cppOptions, target);
+		result.llvmOptions = validateOptions(toml.llvmOptions, target);
 		result.linkOptions = validateOptions(toml.linkOptions, target);
 		result.systemLibraries = validateLibs(toml.systemLibraries, target);
 
@@ -325,6 +326,7 @@ public class ProjectManager
 		dst.asmOptions  = mergeUnique(src.asmOptions,  dst.asmOptions);
 		dst.cOptions    = mergeUnique(src.cOptions,    dst.cOptions);
 		dst.cppOptions  = mergeUnique(src.cppOptions,  dst.cppOptions);
+		dst.llvmOptions = mergeUnique(src.llvmOptions, dst.llvmOptions);
 		dst.linkOptions = mergeUnique(src.linkOptions, dst.linkOptions);
 	}
 
@@ -363,6 +365,7 @@ public class ProjectManager
 				target.asmOptions.addAll(profileToml.asmOptions);
 				target.cOptions.addAll(profileToml.cOptions);
 				target.cppOptions.addAll(profileToml.cppOptions);
+				target.llvmOptions.addAll(profileToml.llvmOptions);
 				target.linkOptions.addAll(profileToml.linkOptions);
 			}
 		}
