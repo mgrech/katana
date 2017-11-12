@@ -66,30 +66,10 @@ public class ProjectBuilder
 		}
 	}
 
-	private static void addPpCompileFlags(List<String> command, TargetTriple target)
+	private static void addDefaultDefines(List<String> command, TargetTriple target)
 	{
 		command.add("-DKATANA_ARCH_" + target.arch.name());
 		command.add("-DKATANA_OS_" + target.os.name());
-	}
-
-	private static void addPicFlag(List<String> command, TargetTriple triple, BuildType type)
-	{
-		// code is always position-independent on windows
-		if(triple.os == Os.WINDOWS)
-			return;
-
-		switch(type)
-		{
-		case EXECUTABLE:
-			command.add("-fPIE");
-			break;
-
-		case LIBRARY:
-			command.add("-fPIC");
-			break;
-
-		default: throw new AssertionError("unreachable");
-		}
 	}
 
 	private static String objectFileExtension(TargetTriple target)
@@ -100,13 +80,8 @@ public class ProjectBuilder
 		return ".o";
 	}
 
-	private static void addCommonLangCompileFlags(List<String> command)
+	private static void addDefaultIncludes(List<String> command)
 	{
-		command.add("-pedantic");
-		command.add("-Wall");
-		command.add("-fno-strict-aliasing");
-		command.add("-fvisibility=hidden");
-
 		command.add("-I" + KATANA_INCLUDE_DIR);
 	}
 
@@ -115,8 +90,6 @@ public class ProjectBuilder
 		List<String> command = new ArrayList<>();
 		command.add("clang");
 		command.addAll(build.asmOptions);
-
-		addPicFlag(command, target, build.type);
 
 		command.add("-c");
 		command.add(path.toString());
@@ -135,10 +108,8 @@ public class ProjectBuilder
 		command.add("clang");
 		command.addAll(build.cOptions);
 
-		command.add("-std=c11");
-		addPpCompileFlags(command, target);
-		addCommonLangCompileFlags(command);
-		addPicFlag(command, target, build.type);
+		addDefaultDefines(command, target);
+		addDefaultIncludes(command);
 
 		command.add("-c");
 		command.add(path.toString());
@@ -157,10 +128,8 @@ public class ProjectBuilder
 		command.add("clang++");
 		command.addAll(build.cppOptions);
 
-		command.add("-std=c++14");
-		addPpCompileFlags(command, target);
-		addCommonLangCompileFlags(command);
-		addPicFlag(command, target, build.type);
+		addDefaultDefines(command, target);
+		addDefaultIncludes(command);
 
 		command.add("-c");
 		command.add(path.toString());
@@ -179,7 +148,6 @@ public class ProjectBuilder
 		command.add("clang");
 
 		command.add("-Wno-override-module");
-		addPicFlag(command, target, build.type);
 
 		command.add("-c");
 		command.add(path.toString());
