@@ -308,12 +308,24 @@ public class ProjectManager
 		return result;
 	}
 
+	private static List<String> mergeUnique(List<String> first, List<String> second)
+	{
+		List<String> result = new ArrayList<>();
+		result.addAll(first);
+
+		for(String s : second)
+			if(!result.contains(s))
+				result.add(s);
+
+		return result;
+	}
+
 	private static void copyOptions(ProfileToml src, ProfileToml dst)
 	{
-		dst.asmOptions.addAll(src.asmOptions);
-		dst.cOptions.addAll(src.cOptions);
-		dst.cppOptions.addAll(src.cppOptions);
-		dst.linkOptions.addAll(src.linkOptions);
+		dst.asmOptions  = mergeUnique(src.asmOptions,  dst.asmOptions);
+		dst.cOptions    = mergeUnique(src.cOptions,    dst.cOptions);
+		dst.cppOptions  = mergeUnique(src.cppOptions,  dst.cppOptions);
+		dst.linkOptions = mergeUnique(src.linkOptions, dst.linkOptions);
 	}
 
 	private static void flattenProfileHierarchy(ProfileToml profile, Map<String, ProfileToml> profiles, Set<ProfileToml> flattened)
