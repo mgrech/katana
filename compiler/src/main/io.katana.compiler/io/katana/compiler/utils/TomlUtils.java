@@ -45,12 +45,13 @@ public class TomlUtils
 
 		for(Map.Entry<String, Object> entry : toml.entrySet())
 		{
+			String key = entry.getKey();
 			Object value = entry.getValue();
 
 			if(value instanceof TomlTable)
-				value = renameFields((TomlTable)value);
-
-			result.put(renameKey(entry.getKey()), value);
+				result.put(key, renameFields((TomlTable)value));
+			else
+				result.put(renameKey(key), value);
 		}
 
 		return result;
