@@ -39,3 +39,8 @@ llvm-options = ["-g"]
 inherit = ["opt-speed"]
 c-options   = ["-DNDEBUG"]
 cpp-options = ["-DNDEBUG"]
+
+[no-tbaa]
+c-options = ["-fno-strict-aliasing"]
+cpp-options = ["-fno-strict-aliasing"]
+
