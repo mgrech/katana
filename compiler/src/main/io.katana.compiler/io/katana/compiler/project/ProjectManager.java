@@ -371,6 +371,10 @@ public class ProjectManager
 			for(String profileName : targetToml.profiles)
 			{
 				ProfileToml profileToml = profileTomls.get(profileName);
+
+				if(profileToml == null)
+					throw new CompileException(String.format("unknown profile '%s'", profileName));
+
 				target.asmOptions.addAll(profileToml.asmOptions);
 				target.cOptions.addAll(profileToml.cOptions);
 				target.cppOptions.addAll(profileToml.cppOptions);
