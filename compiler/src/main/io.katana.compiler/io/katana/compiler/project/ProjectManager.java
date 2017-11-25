@@ -355,14 +355,15 @@ public class ProjectManager
 			flattenProfileHierarchy(profile, profiles, flattened);
 	}
 
-	private static void applyProfiles(Map<String, BuildTarget> targets,
+	private static void applyProfiles(Map<String, BuildTarget> buildTargets,
 	                                  Map<String, TargetToml> targetTomls,
 	                                  Map<String, ProfileToml> profileTomls,
-	                                  Set<String> buildProfiles)
+	                                  Set<String> buildProfiles,
+	                                  TargetTriple target)
 	{
-		for(BuildTarget target : targets.values())
+		for(BuildTarget build : buildTargets.values())
 		{
-			TargetToml targetToml = targetTomls.get(target.name);
+			TargetToml targetToml = targetTomls.get(build.name);
 
 			for(String buildProfile : buildProfiles)
 				if(!targetToml.profiles.contains(buildProfile))
@@ -375,11 +376,11 @@ public class ProjectManager
 				if(profileToml == null)
 					throw new CompileException(String.format("unknown profile '%s'", profileName));
 
-				target.asmOptions.addAll(profileToml.asmOptions);
-				target.cOptions.addAll(profileToml.cOptions);
-				target.cppOptions.addAll(profileToml.cppOptions);
-				target.llvmOptions.addAll(profileToml.llvmOptions);
-				target.linkOptions.addAll(profileToml.linkOptions);
+				build.asmOptions .addAll(validateOptions(profileToml.asmOptions,  target));
+				build.cOptions   .addAll(validateOptions(profileToml.cOptions,    target));
+				build.cppOptions .addAll(validateOptions(profileToml.cppOptions,  target));
+				build.llvmOptions.addAll(validateOptions(profileToml.llvmOptions, target));
+				build.linkOptions.addAll(validateOptions(profileToml.linkOptions, target));
 			}
 		}
 	}
@@ -401,7 +402,7 @@ public class ProjectManager
 		}
 
 		flattenProfileHierarchy(toml.profiles);
-		applyProfiles(targets, toml.targets, toml.profiles, buildProfiles);
+		applyProfiles(targets, toml.targets, toml.profiles, buildProfiles, target);
 
 		return new Project(root, toml.name, toml.version, targets, buildRoot);
 	}
