@@ -355,11 +355,18 @@ public class ProjectManager
 			flattenProfileHierarchy(profile, profiles, flattened);
 	}
 
-	private static void applyProfiles(Map<String, BuildTarget> targets, Map<String, TargetToml> targetTomls, Map<String, ProfileToml> profileTomls)
+	private static void applyProfiles(Map<String, BuildTarget> targets,
+	                                  Map<String, TargetToml> targetTomls,
+	                                  Map<String, ProfileToml> profileTomls,
+	                                  Set<String> buildProfiles)
 	{
 		for(BuildTarget target : targets.values())
 		{
 			TargetToml targetToml = targetTomls.get(target.name);
+
+			for(String buildProfile : buildProfiles)
+				if(!targetToml.profiles.contains(buildProfile))
+					targetToml.profiles.add(buildProfile);
 
 			for(String profileName : targetToml.profiles)
 			{
@@ -373,7 +380,7 @@ public class ProjectManager
 		}
 	}
 
-	private static Project validateConfig(Path root, Path buildRoot, ProjectToml toml, TargetTriple target) throws IOException
+	private static Project validateConfig(Path root, Path buildRoot, Set<String> buildProfiles, ProjectToml toml, TargetTriple target) throws IOException
 	{
 		validateNonNull("katana-version", toml.katanaVersion);
 		validateNonNull("name", toml.name);
@@ -390,7 +397,7 @@ public class ProjectManager
 		}
 
 		flattenProfileHierarchy(toml.profiles);
-		applyProfiles(targets, toml.targets, toml.profiles);
+		applyProfiles(targets, toml.targets, toml.profiles, buildProfiles);
 
 		return new Project(root, toml.name, toml.version, targets, buildRoot);
 	}
@@ -434,11 +441,11 @@ public class ProjectManager
 		return config;
 	}
 
-	public static Project load(Path root, Path buildRoot, TargetTriple target) throws IOException
+	public static Project load(Path root, Path buildRoot, Set<String> buildProfiles, TargetTriple target) throws IOException
 	{
 		ProjectToml config = loadConfig(root.resolve(PROJECT_CONFIG_NAME));
 		config.profiles.putAll(loadDefaultProfiles());
-		return validateConfig(root, buildRoot, config, target);
+		return validateConfig(root, buildRoot, buildProfiles, config, target);
 	}
 
 	public static void createDefaultProject(Path path) throws IOException

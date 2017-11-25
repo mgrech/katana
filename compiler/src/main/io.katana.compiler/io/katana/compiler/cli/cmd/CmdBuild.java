@@ -30,6 +30,8 @@ import io.katana.compiler.project.ProjectManager;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +46,9 @@ public class CmdBuild implements Runnable
 
 	@Option(name = {"-B", "--build-dir"}, description = "Build directory")
 	public String buildDir;
+
+	@Option(name = {"-Bp", "--build-profiles"}, description = "Build profiles")
+	public List<String> profiles;
 
 	@Option(name = {"-Dt", "--diagnostic-traces"}, description = "Stack traces in diagnostics")
 	public boolean diagnosticTraces;
@@ -68,7 +73,9 @@ public class CmdBuild implements Runnable
 
 			PlatformContext context = new PlatformContextLlvm(TargetTriple.NATIVE);
 			DiagnosticsManager diag = new DiagnosticsManager(diagnosticTraces);
-			Project project = ProjectManager.load(projectRoot, buildRoot, context.target());
+
+			List<String> buildProfiles = profiles == null ? new ArrayList<>() : profiles;
+			Project project = ProjectManager.load(projectRoot, buildRoot, new HashSet<>(buildProfiles), context.target());
 
 			if(targets == null || targets.isEmpty())
 			{
