@@ -47,12 +47,12 @@ public class TargetTriple
 		Os os = Os.UNKNOWN;
 		Environment env = Environment.UNKNOWN;
 
-		String osArch = System.getProperty("os.arch").toLowerCase();
-		String osName = System.getProperty("os.name").toLowerCase();
+		String osArch = System.getProperty("os.arch").toLowerCase().replaceAll("[-_\\s]", "");
+		String osName = System.getProperty("os.name").toLowerCase().replaceAll("[-_\\s]", "");
 
 		if(osArch.equals("x86"))
 			arch = Arch.X86;
-		else if(osArch.equals("amd64"))
+		else if(osArch.equals("amd64") || osArch.equals("x8664"))
 			arch = Arch.AMD64;
 
 		if(osName.startsWith("windows"))
