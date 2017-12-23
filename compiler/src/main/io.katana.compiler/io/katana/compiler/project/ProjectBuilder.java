@@ -85,7 +85,7 @@ public class ProjectBuilder
 		command.add("-I" + KATANA_INCLUDE_DIR);
 	}
 
-	private static Path compileAsmFile(BuildTarget build, Path path, TargetTriple target) throws IOException
+	private static Path compileAsmFile(BuildTarget build, Path path, TargetTriple target)
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang");
@@ -102,7 +102,7 @@ public class ProjectBuilder
 		return Paths.get(filename);
 	}
 
-	private static Path compileCFile(BuildTarget build, Path path, TargetTriple target) throws IOException
+	private static Path compileCFile(BuildTarget build, Path path, TargetTriple target)
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang");
@@ -122,7 +122,7 @@ public class ProjectBuilder
 		return Paths.get(filename);
 	}
 
-	private static Path compileCppFile(BuildTarget build, Path path, TargetTriple target) throws IOException
+	private static Path compileCppFile(BuildTarget build, Path path, TargetTriple target)
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang++");
@@ -142,7 +142,7 @@ public class ProjectBuilder
 		return Paths.get(filename);
 	}
 
-	private static Path compileLlvmFile(BuildTarget build, TargetTriple target, Path path) throws IOException
+	private static Path compileLlvmFile(BuildTarget build, TargetTriple target, Path path)
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang");
@@ -187,7 +187,7 @@ public class ProjectBuilder
 		throw new AssertionError("unreachable");
 	}
 
-	private static void link(BuildTarget build, List<Path> filePaths, TargetTriple target) throws IOException
+	private static void link(BuildTarget build, List<Path> filePaths, TargetTriple target)
 	{
 		String binaryName = build.name + fileExtensionFor(build.type, target);
 
@@ -225,7 +225,7 @@ public class ProjectBuilder
 		runBuildCommand(build, command);
 	}
 
-	private static Path compileFile(BuildTarget build, FileType fileType, Path path, TargetTriple target) throws IOException
+	private static Path compileFile(BuildTarget build, FileType fileType, Path path, TargetTriple target)
 	{
 		switch(fileType)
 		{
