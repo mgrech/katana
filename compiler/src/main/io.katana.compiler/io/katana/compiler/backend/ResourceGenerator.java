@@ -55,7 +55,7 @@ public class ResourceGenerator
 
 	private void generateInt(String format, Object... args)
 	{
-		append("\t.%s %s\n", intDirective(), String.format(format, args));
+		append(".%s %s\n", intDirective(), String.format(format, args));
 	}
 
 	private String escape(String s)
@@ -79,23 +79,26 @@ public class ResourceGenerator
 	private void generateHeader()
 	{
 		append(".section .kt_resources, \"ad\"\n");
+		append("\n");
+
 		append(".globl __kt_resources\n");
 		append("__kt_resources:\n");
-		append("\t.align %s\n", target.arch.pointerAlign);
-		generateInt("(data - metadata) / %s", 4 * target.arch.pointerSize.intValue());
+		append(".align %s\n", target.arch.pointerAlign);
+		generateInt("%s", resources.size());
 		append("\n");
 	}
 
 	private void generateMetadata()
 	{
-		append("metadata:\n");
-
-		for(int i = 0; i != resources.size(); ++i)
+		int i = 0;
+		for(Map.Entry<String, Path> entry : resources.entrySet())
 		{
-			generateInt("key%s - key%s", i + 1, i);
+			generateInt("%s", entry.getKey().length());
 			generateInt("key%s", i);
-			generateInt("res%s - res%s", i + 1, i);
+			generateInt("%s", entry.getValue().toFile().length());
 			generateInt("res%s", i);
+
+			++i;
 		}
 
 		append("\n");
@@ -103,19 +106,13 @@ public class ResourceGenerator
 
 	private void generateData()
 	{
-		append("data:\n");
-
 		int i = 0;
 		for(String key : resources.keySet())
 			append("key%s: .ascii %s\n", i++, escape(key));
 
-		append("key%s:\n", i);
-
 		int j = 0;
 		for(Path resourcePath : resources.values())
 			append("res%s: .incbin %s\n", j++, escape(resourcePath.toString()));
-
-		append("res%s:\n", j);
 	}
 
 	private String generate()
