@@ -2,7 +2,7 @@
 	  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	  xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
 
-	<id>linux</id>
+	<id>macos</id>
 
 	<formats>
 		<format>zip</format>
@@ -34,7 +34,7 @@
 
 	<files>
 		<file>
-			<source>files/linux/katana</source>
+			<source>files/macos/katana</source>
 			<outputDirectory></outputDirectory>
 			<fileMode>755</fileMode>
 			<lineEnding>unix</lineEnding>

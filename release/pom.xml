@@ -44,10 +44,22 @@
 			<activation>
 				<os>
 					<family>unix</family>
+					<name>Linux</name>
 				</os>
 			</activation>
 			<properties>
 				<io.katana.build.os>linux</io.katana.build.os>
+			</properties>
+		</profile>
+		<profile>
+			<id>macos</id>
+			<activation>
+				<os>
+					<family>mac</family>
+				</os>
+			</activation>
+			<properties>
+				<io.katana.build.os>macos</io.katana.build.os>
 			</properties>
 		</profile>
 	</profiles>
@@ -72,7 +84,6 @@
 					<descriptors>
 						<descriptor>assembly-${io.katana.build.os}.xml</descriptor>
 					</descriptors>
-					<appendAssemblyId>false</appendAssemblyId>
 				</configuration>
 			</plugin>
 		</plugins>
