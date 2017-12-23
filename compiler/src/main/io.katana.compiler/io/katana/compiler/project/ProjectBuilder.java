@@ -212,13 +212,6 @@ public class ProjectBuilder
 		for(String lib : build.systemLibraries)
 			command.add("-l" + lib);
 
-		if(target.os != Os.WINDOWS)
-		{
-			command.add("-Wl,-rpath,$ORIGIN");
-			command.add("-Wl,-z,now");
-			command.add("-Wl,-z,relro");
-		}
-
 		command.add("-o");
 		command.add(binaryName);
 
