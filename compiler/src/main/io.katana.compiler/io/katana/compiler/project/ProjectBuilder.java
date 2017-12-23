@@ -198,7 +198,9 @@ public class ProjectBuilder
 		else
 			command.add("clang++");
 
-		command.add("-fuse-ld=lld");
+		if(target.os != Os.MACOS)
+			command.add("-fuse-ld=lld");
+
 		command.addAll(build.linkOptions);
 
 		if(build.type == BuildType.LIBRARY)
