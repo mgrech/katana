@@ -206,7 +206,8 @@ public class ProjectBuilder
 		if(build.type == BuildType.LIBRARY)
 			command.add("-shared");
 
-		command.add("-L" + KATANA_LIBRARY_DIR);
+		if(KATANA_LIBRARY_DIR.toFile().exists())
+			command.add("-L" + KATANA_LIBRARY_DIR);
 
 		for(String lib : build.systemLibraries)
 			command.add("-l" + lib);
