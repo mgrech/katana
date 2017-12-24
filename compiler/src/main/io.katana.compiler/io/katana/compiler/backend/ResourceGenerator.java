@@ -86,7 +86,7 @@ public class ResourceGenerator
 		// on windows sections names are truncated to 8 bytes for executables, see
 		// https://msdn.microsoft.com/en-us/library/windows/desktop/ms680547(v=vs.85).aspx#section_table__section_headers_
 		case WINDOWS: return ".section .ktrsrcs, \"d\"\n";
-		case LINUX:   return ".section .kt_resources, \"ad\"\n";
+		case LINUX:   return ".section .kt_resources, \"aw\"\n";
 		case MACOS:   return ".section __KT, __resources\n";
 		default: break;
 		}
