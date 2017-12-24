@@ -13,4 +13,4 @@ c-options = []
 cpp-options = []
 link-options = []
 resource-list = ""
-profiles = ["cpp17", "warnings"]
+profiles = ["cpp14", "warnings"]
