@@ -76,9 +76,27 @@ public class ResourceGenerator
 		return '"' + builder.toString() + '"';
 	}
 
+	// PE, ELF: https://sourceware.org/binutils/docs/as/Section.html
+	// Mach-O:  https://developer.apple.com/library/content/documentation/DeveloperTools/Reference/Assembler/040-Assembler_Directives/asm_directives.html
+	// we want our section to be readable and writable
+	private String resourceSectionDirective()
+	{
+		switch(target.os)
+		{
+		// on windows sections names are truncated to 8 bytes for executables, see
+		// https://msdn.microsoft.com/en-us/library/windows/desktop/ms680547(v=vs.85).aspx#section_table__section_headers_
+		case WINDOWS: return ".section .ktrsrcs, \"d\"\n";
+		case LINUX:   return ".section .kt_resources, \"ad\"\n";
+		case MACOS:   return ".section __KT, __resources\n";
+		default: break;
+		}
+
+		throw new AssertionError("unknown os");
+	}
+
 	private void generateHeader()
 	{
-		append(".section .kt_resources, \"ad\"\n");
+		append(resourceSectionDirective());
 		append("\n");
 
 		append(".globl __kt_resources\n");
