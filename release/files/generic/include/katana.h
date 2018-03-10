@@ -16,13 +16,34 @@
 
 #define KATANA_VERSION "${project.version}"
 
+// KEXTERNC void foo();
+// KEXTERNC int bar;
+//
+// expected in C++:
+// extern "C" void foo();
+// extern "C" int bar;
+//
+// expected in C:
+// extern void foo();
+// extern int bar; -- 'extern' required here, otherwise a definition (!)
 #ifdef __cplusplus
 #define KEXTERNC extern "C"
 #else
-#define KEXTERNC
+#define KEXTERNC extern
 #endif
 
-#define KEXPORT KEXTERNC __attribute__((visibility("default")))
+// KEXPORT void foo()
+// KEXPORT int bar;
+//
+// expected in C++:
+// extern "C" KVISIBLE void foo()
+// extern "C" KVISIBLE int bar; -- requires separate definition (!)
+//
+// expected in C:
+// extern KVISIBLE void foo()
+// extern KVISIBLE int bar; -- for symmetry with C++
+#define KEXPORT KEXTERNC KVISIBLE
+#define KVISIBLE __attribute__((visibility("default")))
 
 #ifdef __cplusplus
 typedef bool               kbool;
