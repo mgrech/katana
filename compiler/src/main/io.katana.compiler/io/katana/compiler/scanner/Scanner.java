@@ -56,7 +56,7 @@ public class Scanner
 		{
 			skipWhitespaceAndComments();
 
-			if(atEnd())
+			if(eof())
 				return null;
 
 			prevOffset = offset;
@@ -114,7 +114,7 @@ public class Scanner
 
 		while(CharClassifier.isOpChar(here()));
 
-		int after = atEnd() ? ' ' : here();
+		int after = eof() ? ' ' : here();
 
 		boolean leftws = " \t\r\n([{;,".indexOf(before) != -1;
 		boolean rightws = " \t\r\n)]};,#".indexOf(after) != -1;
@@ -135,7 +135,7 @@ public class Scanner
 	{
 		StringBuilder builder = new StringBuilder();
 
-		while(!atEnd() && CharClassifier.isIdentifierTail(here()))
+		while(!eof() && CharClassifier.isIdentifierTail(here()))
 		{
 			builder.appendCodePoint(here());
 			advance();
@@ -148,7 +148,7 @@ public class Scanner
 	{
 		StringBuilder builder = new StringBuilder();
 
-		while(!atEnd() && here() != '"' && here() != '\r' && here() != '\n')
+		while(!eof() && here() != '"' && here() != '\r' && here() != '\n')
 		{
 			int cp = stringCodepoint();
 
@@ -156,7 +156,7 @@ public class Scanner
 				builder.appendCodePoint(cp);
 		}
 
-		if(atEnd() || here() == '\r' || here() == '\n')
+		if(eof() || here() == '\r' || here() == '\n')
 			error(ScannerDiagnostics.UNTERMINATED_STRING);
 		else
 			advance();
@@ -266,7 +266,7 @@ public class Scanner
 
 	private int hexDigit()
 	{
-		if(atEnd() || !CharClassifier.isHexDigit(here()))
+		if(eof() || !CharClassifier.isHexDigit(here()))
 		{
 			advance();
 			return -1;
@@ -300,7 +300,7 @@ public class Scanner
 			builder.appendCodePoint(here());
 			advance();
 		}
-		while(!atEnd() && CharClassifier.isIdentifierTail(here()));
+		while(!eof() && CharClassifier.isIdentifierTail(here()));
 
 		return checkForKeywords(builder.toString());
 	}
@@ -378,11 +378,11 @@ public class Scanner
 
 		int base = 10;
 
-		if(!atEnd() && here() == '0')
+		if(!eof() && here() == '0')
 		{
 			advance();
 
-			if(atEnd())
+			if(eof())
 				literal.append('0');
 
 			else if(here() == 'b')
@@ -405,7 +405,7 @@ public class Scanner
 
 			else if(CharClassifier.isDecDigit(here()))
 			{
-				while(!atEnd() && here() == '0')
+				while(!eof() && here() == '0')
 					advance();
 
 				error(ScannerDiagnostics.INVALID_START_IN_NUMERIC_LITERAL);
@@ -416,7 +416,7 @@ public class Scanner
 				literal.append('0');
 		}
 
-		while(!atEnd() && (CharClassifier.isAnyDigit(here()) || here() == '\''))
+		while(!eof() && (CharClassifier.isAnyDigit(here()) || here() == '\''))
 		{
 			if(here() != '\'')
 			{
@@ -443,14 +443,14 @@ public class Scanner
 		while(literal.length() > 1 && literal.charAt(0) == '0')
 			literal.deleteCharAt(0);
 
-		boolean isFloatingPointLiteral = !atEnd() && here() == '.';
+		boolean isFloatingPointLiteral = !eof() && here() == '.';
 
 		if(isFloatingPointLiteral)
 		{
 			literal.append('.');
 			advance();
 
-			while(!atEnd() && (CharClassifier.isDigit(here(), base) || here() == '\''))
+			while(!eof() && (CharClassifier.isDigit(here(), base) || here() == '\''))
 			{
 				if(here() != '\'')
 					literal.appendCodePoint(here());
@@ -468,13 +468,13 @@ public class Scanner
 
 		StringBuilder suffix = new StringBuilder();
 
-		if(!atEnd() && here() == '$')
+		if(!eof() && here() == '$')
 		{
 			int suffixOffset = offset;
 
 			advance();
 
-			while(!atEnd() && CharClassifier.isIdentifierTail(here()))
+			while(!eof() && CharClassifier.isIdentifierTail(here()))
 			{
 				suffix.appendCodePoint(here());
 				advance();
@@ -560,10 +560,10 @@ public class Scanner
 		{
 			skipWhitespace();
 
-			if(atComment())
+			if(!eof() && here() == '#')
 				skipComment();
 
-			if(!atLineBreak())
+			if(eof() || !CharClassifier.isLineBreak(here()))
 				break;
 
 			advance();
@@ -572,27 +572,17 @@ public class Scanner
 
 	private void skipWhitespace()
 	{
-		while(!atEnd() && CharClassifier.isWhitespace(here()))
+		while(!eof() && CharClassifier.isWhitespace(here()))
 			advance();
 	}
 
 	private void skipComment()
 	{
 		do advance();
-		while(!atEnd() && !atLineBreak());
+		while(!eof() && !CharClassifier.isLineBreak(here()));
 	}
 
-	private boolean atLineBreak()
-	{
-		return !atEnd() && CharClassifier.isLineBreak(here());
-	}
-
-	private boolean atComment()
-	{
-		return !atEnd() && here() == '#';
-	}
-
-	private boolean atEnd()
+	private boolean eof()
 	{
 		return offset == file.codepoints().length;
 	}
