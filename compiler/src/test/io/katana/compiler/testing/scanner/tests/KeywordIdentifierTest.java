@@ -15,9 +15,9 @@
 package io.katana.compiler.testing.scanner.tests;
 
 import io.katana.compiler.scanner.TokenCategory;
+import io.katana.compiler.scanner.TokenType;
 import io.katana.compiler.testing.scanner.ScannerTests;
 import io.katana.compiler.testing.scanner.Tokenization;
-import io.katana.compiler.scanner.TokenType;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -28,16 +28,15 @@ public class KeywordIdentifierTest
 	public void recognizesKeywords()
 	{
 		Tokenization tok = Tokenization.of(" void#type\npointer_cast ");
-		tok.expectNoErrors();
 		tok.expectToken(1, TokenCategory.TYPE, TokenType.TYPE_VOID, "void");
 		tok.expectToken(11, TokenCategory.MISC, TokenType.MISC_POINTER_CAST, "pointer_cast");
+		tok.expectNoFurtherTokensOrErrors();
 	}
 
 	@Test
 	public void recognizesIdentifiers()
 	{
 		Tokenization tok = Tokenization.of("foo( bar.baz )voids");
-		tok.expectNoErrors();
 		tok.expectToken(0, TokenCategory.IDENT, TokenType.IDENT, "foo");
 		tok.expectIgnoreTokens(1);
 		tok.expectToken(5, TokenCategory.IDENT, TokenType.IDENT, "bar");
@@ -45,5 +44,6 @@ public class KeywordIdentifierTest
 		tok.expectToken(9, TokenCategory.IDENT, TokenType.IDENT, "baz");
 		tok.expectIgnoreTokens(1);
 		tok.expectToken(14, TokenCategory.IDENT, TokenType.IDENT, "voids");
+		tok.expectNoFurtherTokensOrErrors();
 	}
 }

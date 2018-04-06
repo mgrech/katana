@@ -27,11 +27,16 @@ public class DiagnosticId
 		this.fmt = fmt;
 	}
 
+	public String name()
+	{
+		String kindString = kind.toString().substring(0, 3);
+		return String.format("%s%03d", kindString, number);
+	}
+
 	public String format(DiagnosticType type, Object... args)
 	{
 		String typeString = type.toString().toLowerCase();
-		String kindString = kind.toString().substring(0, 3);
 		String message = String.format(fmt, args);
-		return String.format("%s %s%03d: %s", typeString, kindString, number, message);
+		return String.format("%s %s: %s", typeString, name(), message);
 	}
 }

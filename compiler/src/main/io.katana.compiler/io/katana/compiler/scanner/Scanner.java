@@ -84,11 +84,13 @@ public class Scanner
 				return stringLiteral();
 			}
 
+			int[] cps = file.codepoints();
+
+			if(CharClassifier.isDecDigit(cp) || cp == '.' && offset + 1 < cps.length && CharClassifier.isDecDigit(cps[offset + 1]))
+				return numericLiteral();
+
 			if(CharClassifier.isOpChar(cp))
 				return operatorSeq();
-
-			if(CharClassifier.isDigit(cp))
-				return numericLiteral();
 
 			if(CharClassifier.isIdentifierHead(cp))
 				return identifierOrKeyword();
@@ -277,7 +279,7 @@ public class Scanner
 
 	private int fromHexDigit(int cp)
 	{
-		if(CharClassifier.isDigit(cp))
+		if(CharClassifier.isDecDigit(cp))
 			return cp - '0';
 
 		if(cp >= 'a' && cp <= 'f')
@@ -369,17 +371,9 @@ public class Scanner
 		}
 	}
 
-	private boolean isDigit(int cp, int base)
-	{
-		if(base < 2 || base > 16)
-			throw new AssertionError("invalid argument");
-
-		int index = "0123456789abcdef".indexOf(Character.toLowerCase(cp));
-		return index != -1 && index < base;
-	}
-
 	private Token numericLiteral()
 	{
+		boolean invalid = false;
 		StringBuilder literal = new StringBuilder();
 
 		int base = 10;
@@ -409,7 +403,7 @@ public class Scanner
 				advance();
 			}
 
-			else if(CharClassifier.isDigit(here()))
+			else if(CharClassifier.isDecDigit(here()))
 			{
 				while(!atEnd() && here() == '0')
 					advance();
@@ -422,10 +416,26 @@ public class Scanner
 				literal.append('0');
 		}
 
-		while(!atEnd() && (isDigit(here(), base) || here() == '\''))
+		while(!atEnd() && (CharClassifier.isAnyDigit(here()) || here() == '\''))
 		{
 			if(here() != '\'')
+			{
 				literal.appendCodePoint(here());
+
+				if(!(CharClassifier.isDigit(here(), base)))
+				{
+					int tmpPrevOffset = prevOffset;
+					int tmpOffset = offset;
+
+					prevOffset = offset;
+					++offset;
+					error(ScannerDiagnostics.INVALID_DIGIT_FOR_BASE, base);
+					invalid = true;
+
+					prevOffset = tmpPrevOffset;
+					offset = tmpOffset;
+				}
+			}
 
 			advance();
 		}
@@ -440,7 +450,7 @@ public class Scanner
 			literal.append('.');
 			advance();
 
-			while(!atEnd() && (isDigit(here(), base) || here() == '\''))
+			while(!atEnd() && (CharClassifier.isDigit(here(), base) || here() == '\''))
 			{
 				if(here() != '\'')
 					literal.appendCodePoint(here());
@@ -449,18 +459,37 @@ public class Scanner
 			}
 		}
 
-		StringBuilder suffix = new StringBuilder();
-
-		while(!atEnd() && (CharClassifier.isIdentifierTail(here()) || CharClassifier.isDigit(here())))
-		{
-			suffix.appendCodePoint(here());
-			advance();
-		}
-
 		if(literal.length() == 0)
 		{
 			error(ScannerDiagnostics.EMPTY_NUMERIC_LITERAL);
+			invalid = true;
 			literal.append('0');
+		}
+
+		StringBuilder suffix = new StringBuilder();
+
+		if(!atEnd() && here() == '$')
+		{
+			int suffixOffset = offset;
+
+			advance();
+
+			while(!atEnd() && CharClassifier.isIdentifierTail(here()))
+			{
+				suffix.appendCodePoint(here());
+				advance();
+			}
+
+			if(suffix.length() == 0)
+			{
+				int tmp = prevOffset;
+
+				prevOffset = suffixOffset;
+				error(ScannerDiagnostics.EMPTY_SUFFIX);
+				invalid = true;
+
+				prevOffset = tmp;
+			}
 		}
 
 		TokenType type;
@@ -491,8 +520,11 @@ public class Scanner
 
 		default:
 			int tmp = prevOffset;
+
 			prevOffset = offset - suffix.length();
-			error(ScannerDiagnostics.UNKNOWN_SUFFIX_IN_NUMERIC_LITERAL, suffix);
+			error(ScannerDiagnostics.INVALID_LITERAL_SUFFIX, suffix);
+			invalid = true;
+
 			prevOffset = tmp;
 
 			type = isFloatingPointLiteral ? TokenType.LIT_FLOAT_DEDUCE : TokenType.LIT_INT_DEDUCE;
@@ -503,6 +535,7 @@ public class Scanner
 		{
 			offset -= literal.length();
 			error(ScannerDiagnostics.BASE_PREFIX_ON_FLOAT_LITERAL);
+			invalid = true;
 			offset += literal.length();
 			literal = new StringBuilder("0");
 		}
@@ -512,12 +545,13 @@ public class Scanner
 			int tmp = prevOffset;
 			prevOffset = offset - suffix.length();
 			error(ScannerDiagnostics.INT_SUFFIX_ON_FLOAT_LITERAL);
+			invalid = true;
 			prevOffset = tmp;
 
 			type = TokenType.LIT_FLOAT_DEDUCE;
 		}
 
-		return Tokens.numericLiteral(type, literal.toString(), base);
+		return Tokens.numericLiteral(type, invalid ? null : literal.toString(), base);
 	}
 
 	private void skipWhitespaceAndComments()

@@ -26,14 +26,25 @@ public class CharClassifier
 		return cp == '\n';
 	}
 
-	public static boolean isDigit(int cp)
+	public static boolean isDecDigit(int cp)
 	{
 		return cp >= '0' && cp <= '9';
 	}
 
 	public static boolean isHexDigit(int cp)
 	{
-		return isDigit(cp) || (cp >= 'a' && cp <= 'f') || (cp >= 'A' && cp <= 'F');
+		return isDigit(cp, 16);
+	}
+
+	public static boolean isDigit(int cp, int base)
+	{
+		var index = "0123456789abcdefghijklmnopqrstuvwxyz".indexOf(Character.toLowerCase(cp));
+		return index != -1 && index < base;
+	}
+
+	public static boolean isAnyDigit(int cp)
+	{
+		return isDigit(cp, 36);
 	}
 
 	private static boolean isAsciiLetter(int cp)
@@ -48,7 +59,7 @@ public class CharClassifier
 
 	public static boolean isIdentifierTail(int cp)
 	{
-		return isIdentifierHead(cp) || isDigit(cp) || cp == '_';
+		return isIdentifierHead(cp) || isDecDigit(cp) || cp == '_';
 	}
 
 	public static boolean isOpChar(int cp)

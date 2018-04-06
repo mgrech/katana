@@ -47,17 +47,11 @@ public class Tokenization
 		return new Tokenization(tokens, diag);
 	}
 
-	public void expectNoErrors()
-	{
-		if(!diag.successful())
-			throw new CompileException(diag.summary());
-	}
-
 	public void expectError(int offset, DiagnosticId id, int length)
 	{
 		Diagnostic msg = diag.get(currentDiagnostic++);
-		assertEquals("wrong diagnostic type", DiagnosticType.ERROR, msg.type);
-		assertEquals("wrong diagnostic id",     id, msg.id);
+		assertEquals("wrong diagnostic type",   DiagnosticType.ERROR, msg.type);
+		assertEquals("wrong diagnostic id", id.name(), msg.id.name());
 		assertEquals("wrong diagnostic offset", offset, msg.location.offset);
 		assertEquals("wrong diagnostic length", length, msg.location.length);
 	}
@@ -83,5 +77,13 @@ public class Tokenization
 	{
 		assertEquals("wrong token data", data, tokens.get(currentToken).data);
 		expectToken(offset, category, type, value);
+	}
+
+	public void expectNoFurtherTokensOrErrors()
+	{
+		assertEquals(currentToken, tokens.size());
+
+		if(currentDiagnostic != diag.amount())
+			throw new CompileException(diag.summary());
 	}
 }
