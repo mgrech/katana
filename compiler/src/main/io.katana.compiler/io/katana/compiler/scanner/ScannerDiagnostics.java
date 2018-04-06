@@ -19,7 +19,7 @@ import io.katana.compiler.diag.DiagnosticKind;
 
 public class ScannerDiagnostics
 {
-	public static final DiagnosticId INVALID_CODEPOINT                   = new DiagnosticId(DiagnosticKind.LEXICAL, 1, "invalid codepoint encountered: %s");
+	public static final DiagnosticId INVALID_CODEPOINT                   = new DiagnosticId(DiagnosticKind.LEXICAL,  1, "invalid codepoint encountered: %s");
 	public static final DiagnosticId UNTERMINATED_STRING                 = new DiagnosticId(DiagnosticKind.LEXICAL,  2, "unterminated string literal");
 	public static final DiagnosticId INVALID_ESCAPE_SEQUENCE             = new DiagnosticId(DiagnosticKind.LEXICAL,  3, "invalid escape sequence %s");
 	public static final DiagnosticId INVALID_CHARACTER_IN_UNICODE_ESCAPE = new DiagnosticId(DiagnosticKind.LEXICAL,  4, "expected hex digits in unicode escape sequence");
