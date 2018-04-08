@@ -111,8 +111,7 @@ public class Scanner
 			builder.appendCodePoint(here());
 			advance();
 		}
-
-		while(CharClassifier.isOpChar(here()));
+		while(!eof() && CharClassifier.isOpChar(here()));
 
 		int after = eof() ? ' ' : here();
 
