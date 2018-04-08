@@ -99,6 +99,15 @@ public class OperatorTest
 	}
 
 	@Test
+	public void acceptsInfixOpsAtEndOfFile()
+	{
+		var tok = Tokenization.of("a +");
+		tok.expectToken(0, TokenCategory.IDENT, TokenType.IDENT, "a");
+		tok.expectToken(2, TokenCategory.OP, TokenType.OP_INFIX, "+");
+		tok.expectNoFurtherTokensOrErrors();
+	}
+
+	@Test
 	public void acceptsFileWithOpOnly()
 	{
 		var tok = Tokenization.of("*");
