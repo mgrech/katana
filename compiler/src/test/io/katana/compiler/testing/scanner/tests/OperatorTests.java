@@ -19,7 +19,7 @@ import io.katana.compiler.scanner.TokenType;
 import io.katana.compiler.testing.scanner.Tokenization;
 import org.junit.Test;
 
-public class OperatorTest
+public class OperatorTests
 {
 	@Test
 	public void acceptsInfixOps()

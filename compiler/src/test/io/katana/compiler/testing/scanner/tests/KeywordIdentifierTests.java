@@ -22,7 +22,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category(ScannerTests.class)
-public class KeywordIdentifierTest
+public class KeywordIdentifierTests
 {
 	@Test
 	public void recognizesKeywords()

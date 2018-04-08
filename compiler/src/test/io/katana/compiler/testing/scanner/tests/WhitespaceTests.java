@@ -22,7 +22,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category(ScannerTests.class)
-public class WhitespaceTest
+public class WhitespaceTests
 {
 	@Test
 	public void skipsWhitespaceCharacters()

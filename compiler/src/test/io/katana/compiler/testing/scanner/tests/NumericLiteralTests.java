@@ -23,7 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category(ScannerTests.class)
-public class NumericLiteralTest
+public class NumericLiteralTests
 {
 	@Test
 	public void acceptsSimpleIntegerLiterals()
