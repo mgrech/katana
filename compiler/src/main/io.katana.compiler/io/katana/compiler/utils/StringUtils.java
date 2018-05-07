@@ -14,11 +14,13 @@
 
 package io.katana.compiler.utils;
 
+import io.katana.compiler.scanner.CharClassifier;
+
 public class StringUtils
 {
 	public static String ltrim(String s)
 	{
-		while(!s.isEmpty() && Character.isWhitespace(s.charAt(0)))
+		while(!s.isEmpty() && CharClassifier.isWhitespace(s.charAt(0)))
 			s = s.substring(1);
 
 		return s;
@@ -26,7 +28,7 @@ public class StringUtils
 
 	public static String rtrim(String s)
 	{
-		while(!s.isEmpty() && Character.isWhitespace(s.charAt(s.length() - 1)))
+		while(!s.isEmpty() && CharClassifier.isWhitespace(s.charAt(s.length() - 1)))
 			s = s.substring(0, s.length() - 1);
 
 		return s;
