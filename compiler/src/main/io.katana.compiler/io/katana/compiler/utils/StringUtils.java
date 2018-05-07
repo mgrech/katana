@@ -36,6 +36,8 @@ public class StringUtils
 
 	public static String times(int count, char c)
 	{
+		assert count >= 0 : "negative count";
+
 		StringBuilder builder = new StringBuilder();
 
 		for(int i = 0; i != count; ++i)
@@ -46,6 +48,8 @@ public class StringUtils
 
 	public static String formatCodepoint(int cp)
 	{
+		assert cp >= 0 && cp <= 0x10FFFF : "invalid codepoint";
+
 		String name = String.format("{%s}", Character.getName(cp));
 
 		if(cp <= 0xFFFF)
