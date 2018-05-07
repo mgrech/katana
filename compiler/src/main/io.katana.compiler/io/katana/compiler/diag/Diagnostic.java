@@ -25,6 +25,7 @@ public class Diagnostic
 	public final DiagnosticId id;
 	public final Object[] args;
 	public final Maybe<StackTrace> trace;
+	private final String asString;
 
 	public Diagnostic(SourceLocation location, DiagnosticType type, DiagnosticId id, Object[] args, Maybe<StackTrace> trace)
 	{
@@ -33,6 +34,16 @@ public class Diagnostic
 		this.id = id;
 		this.args = args;
 		this.trace = trace;
+		this.asString = asString();
+	}
+
+	private String asString()
+	{
+		String sourceLine = location.file.line(location.line).trim();
+		String indicator = makeLocationIndicator(location);
+		String traceString = trace.map(StackTrace::toString).or("");
+		String message = id.format(type, args);
+		return String.format("%s: %s\n\t%s\n\t%s\n%s", location, message, sourceLine, indicator, traceString);
 	}
 
 	private static String makeLocationIndicator(SourceLocation location)
@@ -48,10 +59,6 @@ public class Diagnostic
 	@Override
 	public String toString()
 	{
-		String sourceLine = location.file.line(location.line).trim();
-		String indicator = makeLocationIndicator(location);
-		String traceString = trace.map(StackTrace::toString).or("");
-		String message = id.format(type, args);
-		return String.format("%s: %s\n\t%s\n\t%s\n%s", location, message, sourceLine, indicator, traceString);
+		return asString;
 	}
 }
