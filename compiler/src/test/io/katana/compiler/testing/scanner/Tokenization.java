@@ -47,7 +47,7 @@ public class Tokenization
 		return new Tokenization(tokens, diag);
 	}
 
-	public void expectError(int offset, DiagnosticId id, int length)
+	public void expectError(int offset, int length, DiagnosticId id)
 	{
 		Diagnostic msg = diag.get(currentDiagnostic++);
 		assertEquals("wrong diagnostic type",   DiagnosticType.ERROR, msg.type);

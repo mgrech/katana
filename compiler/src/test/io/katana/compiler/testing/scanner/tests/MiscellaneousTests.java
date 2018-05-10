@@ -19,8 +19,8 @@ public class MiscellaneousTests
 	public void rejectsInvalidCodepoints()
 	{
 		var tok = Tokenization.of("\fabc\u1234");
-		tok.expectError(0, ScannerDiagnostics.INVALID_CODEPOINT, 1);
-		tok.expectError(4, ScannerDiagnostics.INVALID_CODEPOINT, 1);
+		tok.expectError(0, 1, ScannerDiagnostics.INVALID_CODEPOINT);
+		tok.expectError(4, 1, ScannerDiagnostics.INVALID_CODEPOINT);
 		tok.expectToken(1, TokenCategory.IDENT, TokenType.IDENT, "abc");
 		tok.expectNoFurtherTokensOrErrors();
 	}
@@ -39,7 +39,7 @@ public class MiscellaneousTests
 	public void rejectsEmptyLabels()
 	{
 		var tok = Tokenization.of("@");
-		tok.expectError(0, ScannerDiagnostics.EMPTY_LABEL, 1);
+		tok.expectError(0, 1, ScannerDiagnostics.EMPTY_LABEL);
 		tok.expectToken(0, TokenCategory.STMT, TokenType.STMT_LABEL, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}

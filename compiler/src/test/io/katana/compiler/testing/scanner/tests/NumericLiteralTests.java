@@ -39,8 +39,8 @@ public class NumericLiteralTests
 	public void rejectsLeadingZeroesWithoutBasePrefix()
 	{
 		var tok = Tokenization.of("01 0002");
-		tok.expectError(0, ScannerDiagnostics.INVALID_START_IN_NUMERIC_LITERAL, 1);
-		tok.expectError(3, ScannerDiagnostics.INVALID_START_IN_NUMERIC_LITERAL, 3);
+		tok.expectError(0, 1, ScannerDiagnostics.INVALID_START_IN_NUMERIC_LITERAL);
+		tok.expectError(3, 3, ScannerDiagnostics.INVALID_START_IN_NUMERIC_LITERAL);
 		tok.expectToken(1, TokenCategory.LIT, TokenType.LIT_INT_DEDUCE, "1", 10);
 		tok.expectToken(6, TokenCategory.LIT, TokenType.LIT_INT_DEDUCE, "2", 10);
 		tok.expectNoFurtherTokensOrErrors();
@@ -71,8 +71,8 @@ public class NumericLiteralTests
 	public void rejectsIntegerLiteralsWithBasePrefixOnly()
 	{
 		var tok = Tokenization.of("0o 0b");
-		tok.expectError(0, ScannerDiagnostics.EMPTY_NUMERIC_LITERAL, 2);
-		tok.expectError(3, ScannerDiagnostics.EMPTY_NUMERIC_LITERAL, 2);
+		tok.expectError(0, 2, ScannerDiagnostics.EMPTY_NUMERIC_LITERAL);
+		tok.expectError(3, 2, ScannerDiagnostics.EMPTY_NUMERIC_LITERAL);
 		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_INT_DEDUCE, null, 8);
 		tok.expectToken(3, TokenCategory.LIT, TokenType.LIT_INT_DEDUCE, null, 2);
 		tok.expectNoFurtherTokensOrErrors();
@@ -82,11 +82,11 @@ public class NumericLiteralTests
 	public void rejectsIntegerLiteralWithOutOfRangeDigit()
 	{
 		var tok = Tokenization.of("0b1012 0o4585 0xghr");
-		tok.expectError(5, ScannerDiagnostics.INVALID_DIGIT_FOR_BASE, 1);
-		tok.expectError(11, ScannerDiagnostics.INVALID_DIGIT_FOR_BASE, 1);
-		tok.expectError(16, ScannerDiagnostics.INVALID_DIGIT_FOR_BASE, 1);
-		tok.expectError(17, ScannerDiagnostics.INVALID_DIGIT_FOR_BASE, 1);
-		tok.expectError(18, ScannerDiagnostics.INVALID_DIGIT_FOR_BASE, 1);
+		tok.expectError(5, 1, ScannerDiagnostics.INVALID_DIGIT_FOR_BASE);
+		tok.expectError(11, 1, ScannerDiagnostics.INVALID_DIGIT_FOR_BASE);
+		tok.expectError(16, 1, ScannerDiagnostics.INVALID_DIGIT_FOR_BASE);
+		tok.expectError(17, 1, ScannerDiagnostics.INVALID_DIGIT_FOR_BASE);
+		tok.expectError(18, 1, ScannerDiagnostics.INVALID_DIGIT_FOR_BASE);
 		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_INT_DEDUCE, null);
 		tok.expectToken(7, TokenCategory.LIT, TokenType.LIT_INT_DEDUCE, null);
 		tok.expectToken(14, TokenCategory.LIT, TokenType.LIT_INT_DEDUCE, null);
@@ -108,9 +108,9 @@ public class NumericLiteralTests
 	public void rejectsFloatingPointLiteralWithBasePrefix()
 	{
 		var tok = Tokenization.of("0b1.0 0x2.0 0o3.0");
-		tok.expectError(0, ScannerDiagnostics.BASE_PREFIX_ON_FLOAT_LITERAL, 2);
-		tok.expectError(6, ScannerDiagnostics.BASE_PREFIX_ON_FLOAT_LITERAL, 2);
-		tok.expectError(12, ScannerDiagnostics.BASE_PREFIX_ON_FLOAT_LITERAL, 2);
+		tok.expectError(0, 2, ScannerDiagnostics.BASE_PREFIX_ON_FLOAT_LITERAL);
+		tok.expectError(6, 2, ScannerDiagnostics.BASE_PREFIX_ON_FLOAT_LITERAL);
+		tok.expectError(12, 2, ScannerDiagnostics.BASE_PREFIX_ON_FLOAT_LITERAL);
 		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_FLOAT_DEDUCE, null);
 		tok.expectToken(6, TokenCategory.LIT, TokenType.LIT_FLOAT_DEDUCE, null);
 		tok.expectToken(12, TokenCategory.LIT, TokenType.LIT_FLOAT_DEDUCE, null);
@@ -131,7 +131,7 @@ public class NumericLiteralTests
 	public void rejectsInvalidSuffixes()
 	{
 		var tok = Tokenization.of("0$abc");
-		tok.expectError(2, ScannerDiagnostics.INVALID_LITERAL_SUFFIX, 3);
+		tok.expectError(2, 3, ScannerDiagnostics.INVALID_LITERAL_SUFFIX);
 		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_INT_DEDUCE, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
@@ -140,8 +140,8 @@ public class NumericLiteralTests
 	public void rejectsEmptySuffix()
 	{
 		var tok = Tokenization.of("0$ 123.4$");
-		tok.expectError(1, ScannerDiagnostics.EMPTY_SUFFIX, 1);
-		tok.expectError(8, ScannerDiagnostics.EMPTY_SUFFIX, 1);
+		tok.expectError(1, 1, ScannerDiagnostics.EMPTY_SUFFIX);
+		tok.expectError(8, 1, ScannerDiagnostics.EMPTY_SUFFIX);
 		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_INT_DEDUCE, null);
 		tok.expectToken(3, TokenCategory.LIT, TokenType.LIT_FLOAT_DEDUCE, null);
 		tok.expectNoFurtherTokensOrErrors();
@@ -151,7 +151,7 @@ public class NumericLiteralTests
 	public void rejectsIntSuffixOnFloatLiteral()
 	{
 		var tok = Tokenization.of("123.456$i64");
-		tok.expectError(8, ScannerDiagnostics.INT_SUFFIX_ON_FLOAT_LITERAL, 3);
+		tok.expectError(8, 3, ScannerDiagnostics.INT_SUFFIX_ON_FLOAT_LITERAL);
 		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_FLOAT_DEDUCE, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
