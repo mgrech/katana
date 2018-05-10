@@ -25,8 +25,9 @@ public class Scanner
 {
 	private final SourceFile file;
 	private final DiagnosticsManager diag;
-	private int prevOffset = 0;
-	private int currOffset = 0;
+	private int tokenOffset = 0;
+	private int groupOffset = 0;
+	private int charOffset = 0;
 
 	public static List<Token> tokenize(SourceFile file, DiagnosticsManager diag)
 	{
@@ -34,7 +35,7 @@ public class Scanner
 		Scanner scanner = new Scanner(file, diag);
 
 		for(Token token; (token = scanner.next()) != null;)
-			result.add(token.withOffset(scanner.prevOffset));
+			result.add(token.withOffset(scanner.tokenOffset));
 
 		return result;
 	}
@@ -54,34 +55,33 @@ public class Scanner
 			if(eof())
 				return null;
 
-			prevOffset = currOffset;
-
-			int cp = here();
+			tokenOffset = charOffset;
+			int cp = peek();
 
 			switch(cp)
 			{
-			case ',': advance(); return Tokens.PUNCT_COMMA;
-			case '$': advance(); return Tokens.PUNCT_DOLLAR;
-			case '{': advance(); return Tokens.PUNCT_LBRACE;
-			case '[': advance(); return Tokens.PUNCT_LBRACKET;
-			case '(': advance(); return Tokens.PUNCT_LPAREN;
-			case '}': advance(); return Tokens.PUNCT_RBRACE;
-			case ']': advance(); return Tokens.PUNCT_RBRACKET;
-			case ')': advance(); return Tokens.PUNCT_RPAREN;
-			case ';': advance(); return Tokens.PUNCT_SCOLON;
-			case '@': advance(); return label();
+			case ',': skip(); return Tokens.PUNCT_COMMA;
+			case '$': skip(); return Tokens.PUNCT_DOLLAR;
+			case '{': skip(); return Tokens.PUNCT_LBRACE;
+			case '[': skip(); return Tokens.PUNCT_LBRACKET;
+			case '(': skip(); return Tokens.PUNCT_LPAREN;
+			case '}': skip(); return Tokens.PUNCT_RBRACE;
+			case ']': skip(); return Tokens.PUNCT_RBRACKET;
+			case ')': skip(); return Tokens.PUNCT_RPAREN;
+			case ';': skip(); return Tokens.PUNCT_SCOLON;
+			case '@': skip(); return label();
 			default: break;
 			}
 
 			if(cp == '"')
 			{
-				advance();
+				skip();
 				return stringLiteral();
 			}
 
 			int[] cps = file.codepoints();
 
-			if(CharClassifier.isDecDigit(cp) || cp == '.' && currOffset + 1 < cps.length && CharClassifier.isDecDigit(cps[currOffset + 1]))
+			if(CharClassifier.isDecDigit(cp) || cp == '.' && charOffset + 1 < cps.length && CharClassifier.isDecDigit(cps[charOffset + 1]))
 				return numericLiteral();
 
 			if(CharClassifier.isOpChar(cp))
@@ -90,25 +90,21 @@ public class Scanner
 			if(CharClassifier.isIdentifierHead(cp))
 				return identifierOrKeyword();
 
-			advance();
-			error(ScannerDiagnostics.INVALID_CODEPOINT, StringUtils.formatCodepoint(cp));
+			skip();
+			raiseCharError(ScannerDiagnostics.INVALID_CODEPOINT, StringUtils.formatCodepoint(cp));
 		}
 	}
 
 	private Token operatorSeq()
 	{
-		int before = currOffset == 0 ? ' ' : file.codepoints()[currOffset - 1];
+		int before = charOffset == 0 ? ' ' : file.codepoints()[charOffset - 1];
 
 		StringBuilder builder = new StringBuilder();
 
-		do
-		{
-			builder.appendCodePoint(here());
-			advance();
-		}
-		while(!eof() && CharClassifier.isOpChar(here()));
+		do builder.appendCodePoint(consume());
+		while(!eof() && CharClassifier.isOpChar(peek()));
 
-		int after = eof() ? ' ' : here();
+		int after = eof() ? ' ' : peek();
 
 		boolean leftws = " \t\r\n([{;,".indexOf(before) != -1;
 		boolean rightws = " \t\r\n)]};,#".indexOf(after) != -1;
@@ -129,11 +125,8 @@ public class Scanner
 	{
 		StringBuilder builder = new StringBuilder();
 
-		while(!eof() && CharClassifier.isIdentifierTail(here()))
-		{
-			builder.appendCodePoint(here());
-			advance();
-		}
+		while(!eof() && CharClassifier.isIdentifierTail(peek()))
+			builder.appendCodePoint(consume());
 
 		return Tokens.label(builder.toString());
 	}
@@ -143,7 +136,7 @@ public class Scanner
 		boolean invalid = false;
 		StringBuilder valueBuilder = new StringBuilder();
 
-		while(!eof() && here() != '"' && here() != '\r' && here() != '\n')
+		while(!eof() && peek() != '"' && peek() != '\r' && peek() != '\n')
 		{
 			int cp = stringCodepoint();
 
@@ -153,17 +146,17 @@ public class Scanner
 				invalid = true;
 		}
 
-		if(eof() || here() == '\r' || here() == '\n')
+		if(eof() || peek() == '\r' || peek() == '\n')
 		{
-			error(ScannerDiagnostics.UNTERMINATED_STRING);
+			raiseTokenError(ScannerDiagnostics.UNTERMINATED_STRING);
 			invalid = true;
 		}
 		else
-			advance();
+			skip();
 
 		StringBuilder tokenBuilder = new StringBuilder();
 
-		for(int i = prevOffset; i != currOffset; ++i)
+		for(int i = tokenOffset; i != charOffset; ++i)
 			tokenBuilder.appendCodePoint(file.codepoints()[i]);
 
 		return Tokens.stringLiteral(tokenBuilder.toString(), invalid ? null : valueBuilder.toString());
@@ -171,61 +164,41 @@ public class Scanner
 
 	private int stringCodepoint()
 	{
-		if(here() == '\\')
+		if(peek() != '\\')
+			return consume();
+
+		markGroup();
+		skip();
+
+		if(eof())
+			return -1;
+
+		int escape = consume();
+
+		switch(escape)
 		{
-			advance();
+		case '0': return 0;    // null
+		case 'a': return 0x07; // audible bell
+		case 'b': return '\b'; // backspace
+		case 'e': return 0x1B; // escape
+		case 'f': return '\f'; // form feed
+		case 'n': return '\n'; // line feed
+		case 'r': return '\r'; // carriage return
+		case 't': return '\t'; // horizontal tabulation
+		case 'v': return 0x0B; // vertical tabulation
 
-			if(eof())
-				return -1;
+		case '"':  return '"';
+		case '\\': return '\\';
 
-			int escape = here();
-			advance();
+		case 'U': return unicodeEscape(true);
+		case 'u': return unicodeEscape(false);
+		case 'x': return hexEscape();
 
-			switch(escape)
-			{
-			case '0': return 0;    // null
-			case 'a': return 0x07; // audible bell
-			case 'b': return '\b'; // backspace
-			case 'e': return 0x1B; // escape
-			case 'f': return '\f'; // form feed
-			case 'n': return '\n'; // line feed
-			case 'r': return '\r'; // carriage return
-			case 't': return '\t'; // horizontal tabulation
-			case 'v': return 0x0B; // vertical tabulation
-
-			case '"':  return '"';
-			case '\\': return '\\';
-
-			default: break;
-			}
-
-			// for error handling, temporarily pretend the token starts at the \ character
-			int tmp = prevOffset;
-			prevOffset = currOffset - 2;
-
-			int result = -1;
-
-			switch(escape)
-			{
-			case 'U': result = unicodeEscape(true);  break;
-			case 'u': result = unicodeEscape(false); break;
-			case 'x': result = hexEscape(ScannerDiagnostics.HEX_ESCAPE_TOO_SHORT, 2); break;
-
-			default:
-				int cp = file.codepoints()[currOffset - 1];
-				error(ScannerDiagnostics.INVALID_ESCAPE, StringUtils.formatCodepoint(cp));
-				break;
-			}
-
-			// restore original token offset
-			prevOffset = tmp;
-
-			return result;
+		default: break;
 		}
 
-		int cp = here();
-		advance();
-		return cp;
+		raiseGroupError(ScannerDiagnostics.INVALID_ESCAPE, StringUtils.formatCodepoint(escape));
+		return -1;
 	}
 
 	private int unicodeEscape(boolean big)
@@ -246,17 +219,19 @@ public class Scanner
 
 		if(sum > 0x10FFFF)
 		{
-			error(ScannerDiagnostics.CODEPOINT_OUT_OF_RANGE);
+			raiseGroupError(ScannerDiagnostics.CODEPOINT_OUT_OF_RANGE);
 			return -1;
 		}
 
 		return sum;
 	}
 
-	private int hexEscape(DiagnosticId tooShortError, Object... errorArgs)
+	private int hexEscape()
 	{
-		int d1 = hexDigit(tooShortError, errorArgs);
-		int d2 = hexDigit(tooShortError, errorArgs);
+		var tooShortError = ScannerDiagnostics.HEX_ESCAPE_TOO_SHORT;
+
+		int d1 = hexDigit(tooShortError, 2);
+		int d2 = hexDigit(tooShortError, 2);
 
 		if(d1 == -1 || d2 == -1)
 			return -1;
@@ -266,31 +241,23 @@ public class Scanner
 
 	private int hexDigit(DiagnosticId tooShortError, Object... errorArgs)
 	{
-		if(eof() || here() == '\r' || here() == '\n')
+		if(eof() || peek() == '\r' || peek() == '\n')
 			return -1;
 
-		if(here() == '"')
+		if(peek() == '"')
 		{
-			error(tooShortError, errorArgs);
+			raiseGroupError(tooShortError, errorArgs);
 			return -1;
 		}
 
-		if(!CharClassifier.isHexDigit(here()))
+		if(!CharClassifier.isHexDigit(peek()))
 		{
-			int tmp = prevOffset;
-			prevOffset = currOffset;
-			++currOffset;
-			error(ScannerDiagnostics.INVALID_CHARACTER_IN_ESCAPE);
-			--currOffset;
-			prevOffset = tmp;
-
-			advance();
+			skip();
+			raiseCharError(ScannerDiagnostics.INVALID_CHARACTER_IN_ESCAPE);
 			return -1;
 		}
 
-		int digit = fromHexDigit(here());
-		advance();
-		return digit;
+		return fromHexDigit(consume());
 	}
 
 	private int fromHexDigit(int cp)
@@ -311,12 +278,8 @@ public class Scanner
 	{
 		StringBuilder builder = new StringBuilder();
 
-		do
-		{
-			builder.appendCodePoint(here());
-			advance();
-		}
-		while(!eof() && CharClassifier.isIdentifierTail(here()));
+		do builder.appendCodePoint(consume());
+		while(!eof() && CharClassifier.isIdentifierTail(peek()));
 
 		return checkForKeywords(builder.toString());
 	}
@@ -394,122 +357,106 @@ public class Scanner
 
 		int base = 10;
 
-		if(!eof() && here() == '0')
+		if(!eof() && peek() == '0')
 		{
-			advance();
+			skip();
 
 			if(eof())
 				literal.append('0');
-
-			else if(here() == 'b')
+			else if(peek() == 'b')
 			{
 				base = 2;
-				advance();
+				skip();
 			}
-
-			else if(here() == 'o')
+			else if(peek() == 'o')
 			{
 				base = 8;
-				advance();
+				skip();
 			}
-
-			else if(here() == 'x')
+			else if(peek() == 'x')
 			{
 				base = 16;
-				advance();
+				skip();
 			}
-
-			else if(CharClassifier.isDecDigit(here()))
+			else if(CharClassifier.isDecDigit(peek()))
 			{
-				while(!eof() && here() == '0')
-					advance();
+				while(!eof() && peek() == '0')
+					skip();
 
-				error(ScannerDiagnostics.INVALID_START_IN_NUMERIC_LITERAL);
-				prevOffset = currOffset;
+				raiseTokenError(ScannerDiagnostics.INVALID_START_IN_NUMERIC_LITERAL);
+				tokenOffset = charOffset;
 			}
-
 			else
 				literal.append('0');
 		}
 
-		while(!eof() && (CharClassifier.isAnyDigit(here()) || here() == '\''))
+		while(!eof() && (CharClassifier.isAnyDigit(peek()) || peek() == '\''))
 		{
-			if(here() != '\'')
+			int cp = consume();
+
+			if(cp != '\'')
 			{
-				literal.appendCodePoint(here());
+				literal.appendCodePoint(cp);
 
-				if(!(CharClassifier.isDigit(here(), base)))
+				if(!(CharClassifier.isDigit(cp, base)))
 				{
-					int tmpPrevOffset = prevOffset;
-					int tmpOffset = currOffset;
-
-					prevOffset = currOffset;
-					++currOffset;
-					error(ScannerDiagnostics.INVALID_DIGIT_FOR_BASE, base);
+					raiseCharError(ScannerDiagnostics.INVALID_DIGIT_FOR_BASE, base);
 					invalid = true;
-
-					prevOffset = tmpPrevOffset;
-					currOffset = tmpOffset;
 				}
 			}
-
-			advance();
 		}
 
 		while(literal.length() > 1 && literal.charAt(0) == '0')
 			literal.deleteCharAt(0);
 
-		boolean isFloatingPointLiteral = !eof() && here() == '.';
+		boolean isFloatingPointLiteral = !eof() && peek() == '.';
 
 		if(isFloatingPointLiteral)
 		{
 			literal.append('.');
-			advance();
+			skip();
 
-			while(!eof() && (CharClassifier.isDigit(here(), base) || here() == '\''))
+			while(!eof() && (CharClassifier.isDigit(peek(), base) || peek() == '\''))
 			{
-				if(here() != '\'')
-					literal.appendCodePoint(here());
+				int cp = consume();
 
-				advance();
+				if(cp != '\'')
+					literal.appendCodePoint(cp);
 			}
 		}
 
 		if(literal.length() == 0)
 		{
-			error(ScannerDiagnostics.EMPTY_NUMERIC_LITERAL);
+			raiseTokenError(ScannerDiagnostics.EMPTY_NUMERIC_LITERAL);
 			invalid = true;
 			literal.append('0');
 		}
 
+		if(isFloatingPointLiteral && base != 10)
+		{
+			raiseError(tokenOffset, 2, ScannerDiagnostics.BASE_PREFIX_ON_FLOAT_LITERAL);
+			invalid = true;
+			literal = new StringBuilder("0");
+		}
+
 		StringBuilder suffix = new StringBuilder();
 
-		if(!eof() && here() == '$')
+		if(!eof() && peek() == '$')
 		{
-			int suffixOffset = currOffset;
+			skip();
+			markGroup();
 
-			advance();
-
-			while(!eof() && CharClassifier.isIdentifierTail(here()))
-			{
-				suffix.appendCodePoint(here());
-				advance();
-			}
+			while(!eof() && CharClassifier.isIdentifierTail(peek()))
+				suffix.appendCodePoint(consume());
 
 			if(suffix.length() == 0)
 			{
-				int tmp = prevOffset;
-
-				prevOffset = suffixOffset;
-				error(ScannerDiagnostics.EMPTY_SUFFIX);
+				raiseCharError(ScannerDiagnostics.EMPTY_SUFFIX);
 				invalid = true;
-
-				prevOffset = tmp;
 			}
 		}
 
 		TokenType type;
-
 		boolean isFloatingPointSuffix = false;
 
 		switch(suffix.toString())
@@ -530,40 +477,21 @@ public class Scanner
 		case "u64": type = TokenType.LIT_UINT64; break;
 
 		case "":
-			type = isFloatingPointLiteral ? TokenType.LIT_FLOAT_DEDUCE  : TokenType.LIT_INT_DEDUCE;
+			type = isFloatingPointLiteral ? TokenType.LIT_FLOAT_DEDUCE : TokenType.LIT_INT_DEDUCE;
 			isFloatingPointSuffix = isFloatingPointLiteral;
 			break;
 
 		default:
-			int tmp = prevOffset;
-
-			prevOffset = currOffset - suffix.length();
-			error(ScannerDiagnostics.INVALID_LITERAL_SUFFIX, suffix);
+			raiseGroupError(ScannerDiagnostics.INVALID_LITERAL_SUFFIX, suffix);
 			invalid = true;
-
-			prevOffset = tmp;
-
 			type = isFloatingPointLiteral ? TokenType.LIT_FLOAT_DEDUCE : TokenType.LIT_INT_DEDUCE;
 			break;
 		}
 
-		if(isFloatingPointLiteral && base != 10)
-		{
-			currOffset -= literal.length();
-			error(ScannerDiagnostics.BASE_PREFIX_ON_FLOAT_LITERAL);
-			invalid = true;
-			currOffset += literal.length();
-			literal = new StringBuilder("0");
-		}
-
 		if(isFloatingPointLiteral && !isFloatingPointSuffix)
 		{
-			int tmp = prevOffset;
-			prevOffset = currOffset - suffix.length();
-			error(ScannerDiagnostics.INT_SUFFIX_ON_FLOAT_LITERAL);
+			raiseGroupError(ScannerDiagnostics.INT_SUFFIX_ON_FLOAT_LITERAL);
 			invalid = true;
-			prevOffset = tmp;
-
 			type = TokenType.LIT_FLOAT_DEDUCE;
 		}
 
@@ -576,56 +504,73 @@ public class Scanner
 		{
 			skipWhitespace();
 
-			if(!eof() && here() == '#')
+			if(!eof() && peek() == '#')
 				skipComment();
 
-			if(eof() || !CharClassifier.isLineBreak(here()))
+			if(eof() || !CharClassifier.isLineBreak(peek()))
 				break;
 
-			advance();
+			skip();
 		}
 	}
 
 	private void skipWhitespace()
 	{
-		while(!eof() && CharClassifier.isWhitespace(here()))
-			advance();
+		while(!eof() && CharClassifier.isWhitespace(peek()))
+			skip();
 	}
 
 	private void skipComment()
 	{
-		do advance();
-		while(!eof() && !CharClassifier.isLineBreak(here()));
+		do skip();
+		while(!eof() && !CharClassifier.isLineBreak(peek()));
 	}
 
 	private boolean eof()
 	{
-		return currOffset == file.codepoints().length;
+		return charOffset == file.codepoints().length;
 	}
 
-	private int here()
+	private int peek()
 	{
-		return file.codepoints()[currOffset];
+		return file.codepoints()[charOffset];
 	}
 
-	private void advance()
+	private void skip()
 	{
-		++currOffset;
+		++charOffset;
 	}
 
-	private void error(DiagnosticId id, Object... args)
+	private int consume()
 	{
-		error(0, id, args);
+		int cp = peek();
+		skip();
+		return cp;
 	}
 
-	private void error(int offset, DiagnosticId id, Object... args)
+	private void markGroup()
 	{
-		error(offset, currOffset - prevOffset, id, args);
+		groupOffset = charOffset;
 	}
 
-	private void error(int offset, int length, DiagnosticId id, Object... args)
+	private void raiseError(int fileOffset, int length, DiagnosticId id, Object... args)
 	{
-		var location = file.resolve(prevOffset - offset, length);
+		var location = file.resolve(fileOffset, length);
 		diag.error(location, id, args);
+	}
+
+	private void raiseCharError(DiagnosticId id, Object... args)
+	{
+		raiseError(charOffset - 1, 1, id, args);
+	}
+
+	private void raiseGroupError(DiagnosticId id, Object... args)
+	{
+		raiseError(groupOffset, charOffset - groupOffset, id, args);
+	}
+
+	private void raiseTokenError(DiagnosticId id, Object... args)
+	{
+		raiseError(tokenOffset, charOffset - tokenOffset, id, args);
 	}
 }
