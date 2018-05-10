@@ -506,30 +506,78 @@ public class Scanner
 
 	private void skipWhitespaceAndComments()
 	{
-		for(;;)
-		{
-			skipWhitespace();
-
-			if(!eof() && peek() == '#')
-				skipComment();
-
-			if(eof() || !CharClassifier.isLineBreak(peek()))
-				break;
-
-			skip();
-		}
+		do skipWhitespace();
+		while(skipComment());
 	}
 
 	private void skipWhitespace()
 	{
-		while(!eof() && CharClassifier.isWhitespace(peek()))
+		while(!eof() && (CharClassifier.isWhitespace(peek()) || CharClassifier.isLineBreak(peek())))
 			skip();
 	}
 
-	private void skipComment()
+	private boolean skipComment()
 	{
-		do skip();
-		while(!eof() && !CharClassifier.isLineBreak(peek()));
+		if(eof() || peek() != '#')
+			return false;
+
+		skip();
+
+		if(eof())
+			return true;
+
+		int cp = consume();
+
+		if(cp == '{')
+		{
+			skipMultiLineComment();
+		}
+		else if(!CharClassifier.isLineBreak(cp))
+		{
+			while(!eof() && !CharClassifier.isLineBreak(peek()))
+				skip();
+		}
+
+		return true;
+	}
+
+	private void skipMultiLineComment()
+	{
+		int level = 1;
+
+		for(;;)
+		{
+			while(!eof() && peek() != '#')
+				skip();
+
+			if(eof())
+			{
+				raiseTokenError(ScannerDiagnostics.UNTERMINATED_MULTILINE_COMMENT);
+				return;
+			}
+
+			skip();
+
+			if(eof())
+			{
+				raiseTokenError(ScannerDiagnostics.UNTERMINATED_MULTILINE_COMMENT);
+				return;
+			}
+
+			if(peek() == '}')
+			{
+				skip();
+				--level;
+
+				if(level == 0)
+					return;
+			}
+			else if(peek() == '{')
+			{
+				skip();
+				++level;
+			}
+		}
 	}
 
 	private boolean eof()
