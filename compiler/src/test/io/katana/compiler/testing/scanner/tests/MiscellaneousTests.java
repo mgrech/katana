@@ -24,4 +24,23 @@ public class MiscellaneousTests
 		tok.expectToken(1, TokenCategory.IDENT, TokenType.IDENT, "abc");
 		tok.expectNoFurtherTokensOrErrors();
 	}
+
+	@Test
+	public void acceptsLabels()
+	{
+		var tok = Tokenization.of("hello @foo world");
+		tok.expectToken(0, TokenCategory.IDENT, TokenType.IDENT, "hello");
+		tok.expectToken(6, TokenCategory.STMT, TokenType.STMT_LABEL, "foo");
+		tok.expectToken(11, TokenCategory.IDENT, TokenType.IDENT, "world");
+		tok.expectNoFurtherTokensOrErrors();
+	}
+
+	@Test
+	public void rejectsEmptyLabels()
+	{
+		var tok = Tokenization.of("@");
+		tok.expectError(0, ScannerDiagnostics.EMPTY_LABEL, 1);
+		tok.expectToken(0, TokenCategory.STMT, TokenType.STMT_LABEL, null);
+		tok.expectNoFurtherTokensOrErrors();
+	}
 }

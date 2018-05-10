@@ -128,6 +128,12 @@ public class Scanner
 		while(!eof() && CharClassifier.isIdentifierTail(peek()))
 			builder.appendCodePoint(consume());
 
+		if(builder.length() == 0)
+		{
+			raiseTokenError(ScannerDiagnostics.EMPTY_LABEL);
+			return Tokens.label(null);
+		}
+
 		return Tokens.label(builder.toString());
 	}
 

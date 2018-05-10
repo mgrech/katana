@@ -35,4 +35,6 @@ public class ScannerDiagnostics
 	public static final DiagnosticId INT_SUFFIX_ON_FLOAT_LITERAL      = new DiagnosticId(DiagnosticKind.LEXICAL, 12, "integer suffix used on floating point literal");
 	public static final DiagnosticId INVALID_DIGIT_FOR_BASE           = new DiagnosticId(DiagnosticKind.LEXICAL, 13, "invalid digit for numeric literal with base %s");
 	public static final DiagnosticId EMPTY_SUFFIX                     = new DiagnosticId(DiagnosticKind.LEXICAL, 14, "empty literal suffix");
+
+	public static final DiagnosticId EMPTY_LABEL                      = new DiagnosticId(DiagnosticKind.LEXICAL, 15, "label name is empty");
 }
