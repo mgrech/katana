@@ -39,34 +39,26 @@ public class Tokenization
 		this.diag = diag;
 	}
 
-	public static Tokenization of(String s)
+	public static Tokenization of(String source)
 	{
-		SourceFile file = SourceFile.fromBytes(HERE, HERE, s.getBytes(StandardCharsets.UTF_8));
-		DiagnosticsManager diag = new DiagnosticsManager(true);
-		List<Token> tokens = Scanner.tokenize(file, diag);
+		var file = SourceFile.fromBytes(HERE, HERE, source.getBytes(StandardCharsets.UTF_8));
+		var diag = new DiagnosticsManager(true);
+		var tokens = Scanner.tokenize(file, diag);
 		return new Tokenization(tokens, diag);
 	}
 
 	public void expectError(int offset, int length, DiagnosticId id)
 	{
-		Diagnostic msg = diag.get(currentDiagnostic++);
-		assertEquals("wrong diagnostic type",   DiagnosticType.ERROR, msg.type);
-		assertEquals("wrong diagnostic id", id.name(), msg.id.name());
-		assertEquals("wrong diagnostic offset", offset, msg.location.offset);
-		assertEquals("wrong diagnostic length", length, msg.location.length);
-	}
-
-	public void expectIgnoreTokens(int n)
-	{
-		for(int i = 0; i != n; ++i)
-			tokens.get(currentToken + i);
-
-		currentToken += n;
+		var error = diag.get(currentDiagnostic++);
+		assertEquals("wrong diagnostic type",   DiagnosticType.ERROR, error.type);
+		assertEquals("wrong diagnostic id",     id.name(), error.id.name());
+		assertEquals("wrong diagnostic offset", offset, error.location.offset);
+		assertEquals("wrong diagnostic length", length, error.location.length);
 	}
 
 	public void expectToken(int offset, TokenCategory category, TokenType type, String value)
 	{
-		Token token = tokens.get(currentToken++);
+		var token = tokens.get(currentToken++);
 		assertEquals("wrong token offset",   offset, token.offset);
 		assertEquals("wrong token category", category, token.category);
 		assertEquals("wrong token type",     type, token.type);
