@@ -21,7 +21,7 @@ public class MiscellaneousTests
 		var tok = Tokenization.of("\fabc\u1234");
 		tok.expectError(0, 1, ScannerDiagnostics.INVALID_CODEPOINT);
 		tok.expectError(4, 1, ScannerDiagnostics.INVALID_CODEPOINT);
-		tok.expectToken(1, TokenCategory.IDENT, TokenType.IDENT, "abc");
+		tok.expectToken(1, 3, TokenCategory.IDENT, TokenType.IDENT, "abc");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -29,9 +29,9 @@ public class MiscellaneousTests
 	public void acceptsLabels()
 	{
 		var tok = Tokenization.of("hello @foo world");
-		tok.expectToken(0, TokenCategory.IDENT, TokenType.IDENT, "hello");
-		tok.expectToken(6, TokenCategory.STMT, TokenType.STMT_LABEL, "foo");
-		tok.expectToken(11, TokenCategory.IDENT, TokenType.IDENT, "world");
+		tok.expectToken(0, 5, TokenCategory.IDENT, TokenType.IDENT, "hello");
+		tok.expectToken(6, 4, TokenCategory.STMT, TokenType.STMT_LABEL, "foo");
+		tok.expectToken(11, 5, TokenCategory.IDENT, TokenType.IDENT, "world");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -40,7 +40,7 @@ public class MiscellaneousTests
 	{
 		var tok = Tokenization.of("@");
 		tok.expectError(0, 1, ScannerDiagnostics.EMPTY_LABEL);
-		tok.expectToken(0, TokenCategory.STMT, TokenType.STMT_LABEL, null);
+		tok.expectToken(0, 1, TokenCategory.STMT, TokenType.STMT_LABEL, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 }

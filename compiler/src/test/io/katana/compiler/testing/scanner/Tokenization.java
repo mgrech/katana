@@ -56,19 +56,14 @@ public class Tokenization
 		assertEquals("wrong diagnostic length", length, error.location.length);
 	}
 
-	public void expectToken(int offset, TokenCategory category, TokenType type, String value)
+	public void expectToken(int offset, int length, TokenCategory category, TokenType type, Object value)
 	{
 		var token = tokens.get(currentToken++);
-		assertEquals("wrong token offset",   offset, token.offset);
+		assertEquals("wrong token offset", offset, token.offset);
+		assertEquals("wrong token length", length, token.length);
 		assertEquals("wrong token category", category, token.category);
-		assertEquals("wrong token type",     type, token.type);
-		assertEquals("wrong token value",    value, token.value);
-	}
-
-	public void expectToken(int offset, TokenCategory category, TokenType type, String value, Object data)
-	{
-		assertEquals("wrong token data", data, tokens.get(currentToken).data);
-		expectToken(offset, category, type, value);
+		assertEquals("wrong token type", type, token.type);
+		assertEquals("wrong token value", value, token.value);
 	}
 
 	public void expectNoFurtherTokensOrErrors()

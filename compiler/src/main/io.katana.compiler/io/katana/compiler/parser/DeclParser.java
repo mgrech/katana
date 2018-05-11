@@ -50,7 +50,7 @@ public class DeclParser
 			Maybe<String> externName = Maybe.none();
 
 			if(ParseTools.option(ctx, TokenType.LIT_STRING, false))
-				externName = Maybe.some(ParseTools.consume(ctx).value);
+				externName = Maybe.some((String)ParseTools.consume(ctx).value);
 
 			extern = Maybe.some(externName);
 		}
@@ -109,7 +109,7 @@ public class DeclParser
 	{
 		ctx.advance();
 
-		String op = ParseTools.consumeExpected(ctx, TokenCategory.OP).value;
+		var op = (String)ParseTools.consumeExpected(ctx, TokenCategory.OP).value;
 		Kind kind = parseOpKind(ctx);
 
 		if(BuiltinOps.find(op, kind).isSome())
@@ -144,18 +144,17 @@ public class DeclParser
 			throw new AssertionError("unreachable");
 		}
 
-		String precStr = ParseTools.consumeExpected(ctx, TokenType.LIT_INT_DEDUCE).value;
-		BigInteger prec = new BigInteger(precStr);
+		var precedence = (BigInteger)ParseTools.consumeExpected(ctx, TokenType.LIT_INT_DEDUCE).value;
 
 		// precedence < 0 || precedence > 1000
-		if(prec.compareTo(BigInteger.ZERO) == -1 || prec.compareTo(BigInteger.valueOf(1000)) == 1)
+		if(precedence.compareTo(BigInteger.ZERO) == -1 || precedence.compareTo(BigInteger.valueOf(1000)) == 1)
 		{
 			String fmt = "precedence for operator '%s' (%s) is out of range, valid values are from [0, 1000]";
-			throw new CompileException(String.format(fmt, op, precStr));
+			throw new CompileException(String.format(fmt, op, precedence));
 		}
 
 		ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
-		return new AstDeclOperator(exported, Operator.infix(op, assoc, prec.intValue()));
+		return new AstDeclOperator(exported, Operator.infix(op, assoc, precedence.intValue()));
 	}
 
 	private static AstDecl parseFunction(ParseContext ctx, boolean exported, boolean opaque, Maybe<Maybe<String>> extern)
@@ -168,7 +167,7 @@ public class DeclParser
 
 		if(ParseTools.option(ctx, TokenCategory.OP, false))
 		{
-			op = ParseTools.consume(ctx).value;
+			op = (String)ParseTools.consume(ctx).value;
 			kind = parseOpKind(ctx);
 
 			if(BuiltinOps.find(op, kind).isSome())
@@ -177,9 +176,8 @@ public class DeclParser
 				throw new CompileException(String.format(fmt, kind.toString().toLowerCase(), op));
 			}
 		}
-
 		else
-			name = ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
+			name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 
 		List<AstDeclFunction.Param> params = parseParameterList(ctx);
 
@@ -224,8 +222,8 @@ public class DeclParser
 
 	private static AstDeclFunction.Param parseParameter(ParseContext ctx)
 	{
-		AstType type = TypeParser.parse(ctx);
-		String name = ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
+		var type = TypeParser.parse(ctx);
+		var name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 		return new AstDeclFunction.Param(type, name);
 	}
 
@@ -247,8 +245,8 @@ public class DeclParser
 	{
 		ctx.advance();
 
-		String name = ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
-		boolean abiCompat = ParseTools.option(ctx, TokenType.DECL_ABI, true);
+		var name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
+		var abiCompat = ParseTools.option(ctx, TokenType.DECL_ABI, true);
 		ParseTools.expect(ctx, TokenType.PUNCT_LBRACE, true);
 
 		List<AstDeclStruct.Field> fields = new ArrayList<>();
@@ -263,8 +261,8 @@ public class DeclParser
 
 	private static AstDeclStruct.Field parseField(ParseContext ctx)
 	{
-		AstType type = TypeParser.parse(ctx);
-		String name = ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
+		var type = TypeParser.parse(ctx);
+		var name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 		ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 		return new AstDeclStruct.Field(type, name);
 	}
@@ -294,7 +292,7 @@ public class DeclParser
 
 		if(ParseTools.option(ctx, TokenType.IDENT, false))
 		{
-			String name = ParseTools.consume(ctx).value;
+			var name = (String)ParseTools.consume(ctx).value;
 
 			if(ParseTools.option(ctx, "=", true))
 			{
@@ -305,8 +303,8 @@ public class DeclParser
 
 		ctx.backtrack(tmp);
 
-		AstType type = TypeParser.parse(ctx);
-		String name = ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
+		var type = TypeParser.parse(ctx);
+		var name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 		ParseTools.expect(ctx, "=", true);
 
 		Maybe<AstExprLiteral> init = parseGlobalInitAndScolon(ctx);
@@ -321,7 +319,7 @@ public class DeclParser
 
 		if(ParseTools.option(ctx, TokenType.IDENT, false))
 		{
-			String rename = ParseTools.consume(ctx).value;
+			var rename = (String)ParseTools.consume(ctx).value;
 			ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 			return new AstDeclRenamedImport(path, rename);
 		}
@@ -342,9 +340,9 @@ public class DeclParser
 	private static AstDeclTypeAlias parseTypeAlias(ParseContext ctx, boolean exported)
 	{
 		ctx.advance();
-		String name = ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
+		var name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 		ParseTools.expect(ctx, "=", true);
-		AstType type = TypeParser.parse(ctx);
+		var type = TypeParser.parse(ctx);
 		ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 		return new AstDeclTypeAlias(exported, name, type);
 	}

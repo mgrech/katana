@@ -29,8 +29,8 @@ public class WhitespaceTests
 	public void acceptsWhitespaceCharacters()
 	{
 		var tok = Tokenization.of("\ta\r ( ");
-		tok.expectToken(1, TokenCategory.IDENT, TokenType.IDENT, "a");
-		tok.expectToken(4, TokenCategory.PUNCT, TokenType.PUNCT_LPAREN, "(");
+		tok.expectToken(1, 1, TokenCategory.IDENT, TokenType.IDENT, "a");
+		tok.expectToken(4, 1, TokenCategory.PUNCT, TokenType.PUNCT_LPAREN, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -38,8 +38,8 @@ public class WhitespaceTests
 	public void acceptsLineBreak()
 	{
 		var tok = Tokenization.of("a\nb");
-		tok.expectToken(0, TokenCategory.IDENT, TokenType.IDENT, "a");
-		tok.expectToken(2, TokenCategory.IDENT, TokenType.IDENT, "b");
+		tok.expectToken(0, 1, TokenCategory.IDENT, TokenType.IDENT, "a");
+		tok.expectToken(2, 1, TokenCategory.IDENT, TokenType.IDENT, "b");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -47,8 +47,8 @@ public class WhitespaceTests
 	public void acceptsSingleLineComments()
 	{
 		var tok = Tokenization.of("#foo\na #bar \n\n#baz\nb");
-		tok.expectToken(5, TokenCategory.IDENT, TokenType.IDENT, "a");
-		tok.expectToken(19, TokenCategory.IDENT, TokenType.IDENT, "b");
+		tok.expectToken(5, 1, TokenCategory.IDENT, TokenType.IDENT, "a");
+		tok.expectToken(19, 1, TokenCategory.IDENT, TokenType.IDENT, "b");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -56,8 +56,8 @@ public class WhitespaceTests
 	public void acceptsEmptySingleLineComments()
 	{
 		var tok = Tokenization.of("#\n foo #\nbar");
-		tok.expectToken(3, TokenCategory.IDENT, TokenType.IDENT, "foo");
-		tok.expectToken(9, TokenCategory.IDENT, TokenType.IDENT, "bar");
+		tok.expectToken(3, 3, TokenCategory.IDENT, TokenType.IDENT, "foo");
+		tok.expectToken(9, 3, TokenCategory.IDENT, TokenType.IDENT, "bar");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -65,8 +65,8 @@ public class WhitespaceTests
 	public void acceptsEmptyMultiLineComment()
 	{
 		var tok = Tokenization.of("#{#} foo #{#}bar");
-		tok.expectToken(5, TokenCategory.IDENT, TokenType.IDENT, "foo");
-		tok.expectToken(13, TokenCategory.IDENT, TokenType.IDENT, "bar");
+		tok.expectToken(5, 3, TokenCategory.IDENT, TokenType.IDENT, "foo");
+		tok.expectToken(13, 3, TokenCategory.IDENT, TokenType.IDENT, "bar");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -74,7 +74,7 @@ public class WhitespaceTests
 	public void acceptsMultiLineComment()
 	{
 		var tok = Tokenization.of("#{ comment #} foo");
-		tok.expectToken(14, TokenCategory.IDENT, TokenType.IDENT, "foo");
+		tok.expectToken(14, 3, TokenCategory.IDENT, TokenType.IDENT, "foo");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -82,7 +82,7 @@ public class WhitespaceTests
 	public void acceptsNestedMultiLineComments()
 	{
 		var tok = Tokenization.of("#{ hello #{ world #} ! #} foo");
-		tok.expectToken(26, TokenCategory.IDENT, TokenType.IDENT, "foo");
+		tok.expectToken(26, 3, TokenCategory.IDENT, TokenType.IDENT, "foo");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -90,7 +90,7 @@ public class WhitespaceTests
 	public void acceptsMultiLineCommentWithEmbeddedSingleLineComment()
 	{
 		var tok = Tokenization.of("#{ #foo #} foo");
-		tok.expectToken(11, TokenCategory.IDENT, TokenType.IDENT, "foo");
+		tok.expectToken(11, 3, TokenCategory.IDENT, TokenType.IDENT, "foo");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 

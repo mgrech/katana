@@ -28,8 +28,8 @@ public class KeywordIdentifierTests
 	public void recognizesKeywords()
 	{
 		var tok = Tokenization.of(" void#type\npointer_cast ");
-		tok.expectToken(1, TokenCategory.TYPE, TokenType.TYPE_VOID, "void");
-		tok.expectToken(11, TokenCategory.MISC, TokenType.MISC_POINTER_CAST, "pointer_cast");
+		tok.expectToken(1, 4, TokenCategory.TYPE, TokenType.TYPE_VOID, null);
+		tok.expectToken(11, 12, TokenCategory.MISC, TokenType.MISC_POINTER_CAST, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -37,13 +37,13 @@ public class KeywordIdentifierTests
 	public void recognizesIdentifiers()
 	{
 		var tok = Tokenization.of("foo( bar.baz )voids");
-		tok.expectToken(0, TokenCategory.IDENT, TokenType.IDENT, "foo");
-		tok.expectToken(3, TokenCategory.PUNCT, TokenType.PUNCT_LPAREN, "(");
-		tok.expectToken(5, TokenCategory.IDENT, TokenType.IDENT, "bar");
-		tok.expectToken(8, TokenCategory.OP, TokenType.OP_INFIX, ".");
-		tok.expectToken(9, TokenCategory.IDENT, TokenType.IDENT, "baz");
-		tok.expectToken(13, TokenCategory.PUNCT, TokenType.PUNCT_RPAREN, ")");
-		tok.expectToken(14, TokenCategory.IDENT, TokenType.IDENT, "voids");
+		tok.expectToken(0, 3, TokenCategory.IDENT, TokenType.IDENT, "foo");
+		tok.expectToken(3, 1, TokenCategory.PUNCT, TokenType.PUNCT_LPAREN, null);
+		tok.expectToken(5, 3, TokenCategory.IDENT, TokenType.IDENT, "bar");
+		tok.expectToken(8, 1, TokenCategory.OP, TokenType.OP_INFIX, ".");
+		tok.expectToken(9, 3, TokenCategory.IDENT, TokenType.IDENT, "baz");
+		tok.expectToken(13, 1, TokenCategory.PUNCT, TokenType.PUNCT_RPAREN, null);
+		tok.expectToken(14, 5, TokenCategory.IDENT, TokenType.IDENT, "voids");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 }

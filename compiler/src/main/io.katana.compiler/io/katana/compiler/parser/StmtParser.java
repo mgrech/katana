@@ -76,7 +76,7 @@ public class StmtParser
 
 		if(ParseTools.option(ctx, TokenType.IDENT, false))
 		{
-			String name = ParseTools.consume(ctx).value;
+			String name = (String)ParseTools.consume(ctx).value;
 
 			if(ParseTools.option(ctx, "=", true))
 			{
@@ -88,7 +88,7 @@ public class StmtParser
 		ctx.backtrack(tmp);
 
 		AstType type = TypeParser.parse(ctx);
-		String name = ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
+		String name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 		ParseTools.expect(ctx, "=", true);
 
 		Maybe<AstExpr> init = parseLocalInitAndScolon(ctx);
@@ -113,7 +113,7 @@ public class StmtParser
 
 	private static AstStmtGoto parseGoto(ParseContext ctx)
 	{
-		String label = ParseTools.consumeExpected(ctx, TokenType.STMT_LABEL).value;
+		String label = (String)ParseTools.consumeExpected(ctx, TokenType.STMT_LABEL).value;
 		ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 		return new AstStmtGoto(label);
 	}
@@ -144,7 +144,7 @@ public class StmtParser
 
 	private static AstStmtLabel parseLabel(ParseContext ctx)
 	{
-		String label = ParseTools.consume(ctx).value;
+		String label = (String)ParseTools.consume(ctx).value;
 		ParseTools.expect(ctx, ":", true);
 		return new AstStmtLabel(label);
 	}

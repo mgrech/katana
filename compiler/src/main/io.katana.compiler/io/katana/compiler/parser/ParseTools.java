@@ -29,7 +29,7 @@ public class ParseTools
 {
 	public static AstPath path(ParseContext ctx)
 	{
-		Supplier<String> parseComponent = () -> consumeExpected(ctx, TokenType.IDENT).value;
+		Supplier<String> parseComponent = () -> (String)consumeExpected(ctx, TokenType.IDENT).value;
 		List<String> components = separated(ctx, ".", parseComponent);
 		return new AstPath(components);
 	}

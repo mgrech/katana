@@ -81,7 +81,7 @@ public class TypeParser
 			AstType type = parse(ctx);
 
 			int count = 0;
-			for(char c : token.value.toCharArray())
+			for(char c : ((String)token.value).toCharArray())
 			{
 				switch(c)
 				{
@@ -98,7 +98,7 @@ public class TypeParser
 				++count;
 			}
 
-			for(char c : new StringBuilder(token.value).reverse().toString().toCharArray())
+			for(char c : new StringBuilder((String)token.value).reverse().toString().toCharArray())
 			{
 				switch(c)
 				{
@@ -116,7 +116,7 @@ public class TypeParser
 
 		if(ParseTools.option(ctx, TokenType.IDENT, false))
 		{
-			String name = ParseTools.consume(ctx).value;
+			String name = (String)ParseTools.consume(ctx).value;
 			return new AstTypeUserDefined(name);
 		}
 
@@ -170,20 +170,18 @@ public class TypeParser
 
 	private static AstTypeArray parseArray(ParseContext ctx)
 	{
-		String size = ParseTools.consumeExpected(ctx, TokenType.LIT_INT_DEDUCE).value;
+		var size = (BigInteger)ParseTools.consumeExpected(ctx, TokenType.LIT_INT_DEDUCE).value;
 		ParseTools.expect(ctx, TokenType.PUNCT_RBRACKET, true);
-		return new AstTypeArray(BigInteger.valueOf(Integer.parseInt(size)), parse(ctx));
+		return new AstTypeArray(size, parse(ctx));
 	}
 
 	private static AstTypeOpaque parseOpaque(ParseContext ctx)
 	{
 		return ParseTools.parenthesized(ctx, () ->
 		{
-			String sizeString = ParseTools.consumeExpected(ctx, TokenType.LIT_INT_DEDUCE).value;
+			var size = (BigInteger)ParseTools.consumeExpected(ctx, TokenType.LIT_INT_DEDUCE).value;
 			ParseTools.expect(ctx, TokenType.PUNCT_COMMA, true);
-			String alignmentString = ParseTools.consumeExpected(ctx, TokenType.LIT_INT_DEDUCE).value;
-			BigInteger size = BigInteger.valueOf(Integer.parseInt(sizeString));
-			BigInteger alignment = BigInteger.valueOf(Integer.parseInt(alignmentString));
+			var alignment = (BigInteger)ParseTools.consumeExpected(ctx, TokenType.LIT_INT_DEDUCE).value;
 			return new AstTypeOpaque(size, alignment);
 		});
 	}

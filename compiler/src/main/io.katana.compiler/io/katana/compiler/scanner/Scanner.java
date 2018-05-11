@@ -18,6 +18,8 @@ import io.katana.compiler.diag.DiagnosticId;
 import io.katana.compiler.diag.DiagnosticsManager;
 import io.katana.compiler.utils.StringUtils;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,7 +37,7 @@ public class Scanner
 		Scanner scanner = new Scanner(file, diag);
 
 		for(Token token; (token = scanner.next()) != null;)
-			result.add(token.withOffset(scanner.tokenOffset));
+			result.add(token.withSourceRange(scanner.tokenOffset, scanner.charOffset - scanner.tokenOffset));
 
 		return result;
 	}
@@ -160,12 +162,7 @@ public class Scanner
 		else
 			skip();
 
-		StringBuilder tokenBuilder = new StringBuilder();
-
-		for(int i = tokenOffset; i != charOffset; ++i)
-			tokenBuilder.appendCodePoint(file.codepoints()[i]);
-
-		return Tokens.stringLiteral(tokenBuilder.toString(), invalid ? null : valueBuilder.toString());
+		return Tokens.stringLiteral(invalid ? null : valueBuilder.toString());
 	}
 
 	private int stringCodepoint()
@@ -390,7 +387,7 @@ public class Scanner
 					skip();
 
 				raiseTokenError(ScannerDiagnostics.INVALID_START_IN_NUMERIC_LITERAL);
-				tokenOffset = charOffset;
+				invalid = true;
 			}
 			else
 				literal.append('0');
@@ -501,7 +498,11 @@ public class Scanner
 			type = TokenType.LIT_FLOAT_DEDUCE;
 		}
 
-		return Tokens.numericLiteral(type, invalid ? null : literal.toString(), base);
+		var value = invalid ? null : isFloatingPointLiteral
+		                             ? new BigDecimal(literal.toString())
+		                             : new BigInteger(literal.toString(), base);
+
+		return Tokens.numericLiteral(type, value);
 	}
 
 	private void skipWhitespaceAndComments()

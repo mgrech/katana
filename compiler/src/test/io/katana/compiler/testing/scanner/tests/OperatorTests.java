@@ -25,13 +25,13 @@ public class OperatorTests
 	public void acceptsInfixOps()
 	{
 		var tok = Tokenization.of("a.b*c !?*& d");
-		tok.expectToken(0, TokenCategory.IDENT, TokenType.IDENT, "a");
-		tok.expectToken(1, TokenCategory.OP, TokenType.OP_INFIX, ".");
-		tok.expectToken(2, TokenCategory.IDENT, TokenType.IDENT, "b");
-		tok.expectToken(3, TokenCategory.OP, TokenType.OP_INFIX, "*");
-		tok.expectToken(4, TokenCategory.IDENT, TokenType.IDENT, "c");
-		tok.expectToken(6, TokenCategory.OP, TokenType.OP_INFIX, "!?*&");
-		tok.expectToken(11, TokenCategory.IDENT, TokenType.IDENT, "d");
+		tok.expectToken(0, 1, TokenCategory.IDENT, TokenType.IDENT, "a");
+		tok.expectToken(1, 1, TokenCategory.OP, TokenType.OP_INFIX, ".");
+		tok.expectToken(2, 1, TokenCategory.IDENT, TokenType.IDENT, "b");
+		tok.expectToken(3, 1, TokenCategory.OP, TokenType.OP_INFIX, "*");
+		tok.expectToken(4, 1, TokenCategory.IDENT, TokenType.IDENT, "c");
+		tok.expectToken(6, 4, TokenCategory.OP, TokenType.OP_INFIX, "!?*&");
+		tok.expectToken(11, 1, TokenCategory.IDENT, TokenType.IDENT, "d");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -39,11 +39,11 @@ public class OperatorTests
 	public void acceptsPrefixOpSeqs()
 	{
 		var tok = Tokenization.of(" *(++a)");
-		tok.expectToken(1, TokenCategory.OP, TokenType.OP_PREFIX_SEQ, "*");
-		tok.expectToken(2, TokenCategory.PUNCT, TokenType.PUNCT_LPAREN, "(");
-		tok.expectToken(3, TokenCategory.OP, TokenType.OP_PREFIX_SEQ, "++");
-		tok.expectToken(5, TokenCategory.IDENT, TokenType.IDENT, "a");
-		tok.expectToken(6, TokenCategory.PUNCT, TokenType.PUNCT_RPAREN, ")");
+		tok.expectToken(1, 1, TokenCategory.OP, TokenType.OP_PREFIX_SEQ, "*");
+		tok.expectToken(2, 1, TokenCategory.PUNCT, TokenType.PUNCT_LPAREN, null);
+		tok.expectToken(3, 2, TokenCategory.OP, TokenType.OP_PREFIX_SEQ, "++");
+		tok.expectToken(5, 1, TokenCategory.IDENT, TokenType.IDENT, "a");
+		tok.expectToken(6, 1, TokenCategory.PUNCT, TokenType.PUNCT_RPAREN, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -51,11 +51,11 @@ public class OperatorTests
 	public void acceptsPostfixOpSeqs()
 	{
 		var tok = Tokenization.of("(a!!)? ");
-		tok.expectToken(0, TokenCategory.PUNCT, TokenType.PUNCT_LPAREN, "(");
-		tok.expectToken(1, TokenCategory.IDENT, TokenType.IDENT, "a");
-		tok.expectToken(2, TokenCategory.OP, TokenType.OP_POSTFIX_SEQ, "!!");
-		tok.expectToken(4, TokenCategory.PUNCT, TokenType.PUNCT_RPAREN, ")");
-		tok.expectToken(5, TokenCategory.OP, TokenType.OP_POSTFIX_SEQ, "?");
+		tok.expectToken(0, 1, TokenCategory.PUNCT, TokenType.PUNCT_LPAREN, null);
+		tok.expectToken(1, 1, TokenCategory.IDENT, TokenType.IDENT, "a");
+		tok.expectToken(2, 2, TokenCategory.OP, TokenType.OP_POSTFIX_SEQ, "!!");
+		tok.expectToken(4, 1, TokenCategory.PUNCT, TokenType.PUNCT_RPAREN, null);
+		tok.expectToken(5, 1, TokenCategory.OP, TokenType.OP_POSTFIX_SEQ, "?");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -63,11 +63,11 @@ public class OperatorTests
 	public void acceptsMixedOpExprs()
 	{
 		var tok = Tokenization.of(" a+ + +a ");
-		tok.expectToken(1, TokenCategory.IDENT, TokenType.IDENT, "a");
-		tok.expectToken(2, TokenCategory.OP, TokenType.OP_POSTFIX_SEQ, "+");
-		tok.expectToken(4, TokenCategory.OP, TokenType.OP_INFIX, "+");
-		tok.expectToken(6, TokenCategory.OP, TokenType.OP_PREFIX_SEQ, "+");
-		tok.expectToken(7, TokenCategory.IDENT, TokenType.IDENT, "a");
+		tok.expectToken(1, 1, TokenCategory.IDENT, TokenType.IDENT, "a");
+		tok.expectToken(2, 1, TokenCategory.OP, TokenType.OP_POSTFIX_SEQ, "+");
+		tok.expectToken(4, 1, TokenCategory.OP, TokenType.OP_INFIX, "+");
+		tok.expectToken(6, 1, TokenCategory.OP, TokenType.OP_PREFIX_SEQ, "+");
+		tok.expectToken(7, 1, TokenCategory.IDENT, TokenType.IDENT, "a");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -75,8 +75,8 @@ public class OperatorTests
 	public void acceptsPrefixOpAtStartOfFile()
 	{
 		var tok = Tokenization.of("*a");
-		tok.expectToken(0, TokenCategory.OP, TokenType.OP_PREFIX_SEQ, "*");
-		tok.expectToken(1, TokenCategory.IDENT, TokenType.IDENT, "a");
+		tok.expectToken(0, 1, TokenCategory.OP, TokenType.OP_PREFIX_SEQ, "*");
+		tok.expectToken(1, 1, TokenCategory.IDENT, TokenType.IDENT, "a");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -84,8 +84,8 @@ public class OperatorTests
 	public void acceptsPostfixOpAtEndOfFile()
 	{
 		var tok = Tokenization.of("a*");
-		tok.expectToken(0, TokenCategory.IDENT, TokenType.IDENT, "a");
-		tok.expectToken(1, TokenCategory.OP, TokenType.OP_POSTFIX_SEQ, "*");
+		tok.expectToken(0, 1, TokenCategory.IDENT, TokenType.IDENT, "a");
+		tok.expectToken(1, 1, TokenCategory.OP, TokenType.OP_POSTFIX_SEQ, "*");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -93,8 +93,8 @@ public class OperatorTests
 	public void acceptsInfixOpAtStartOfFile()
 	{
 		var tok = Tokenization.of("+ a");
-		tok.expectToken(0, TokenCategory.OP, TokenType.OP_INFIX, "+");
-		tok.expectToken(2, TokenCategory.IDENT, TokenType.IDENT, "a");
+		tok.expectToken(0, 1, TokenCategory.OP, TokenType.OP_INFIX, "+");
+		tok.expectToken(2, 1, TokenCategory.IDENT, TokenType.IDENT, "a");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -102,8 +102,8 @@ public class OperatorTests
 	public void acceptsInfixOpsAtEndOfFile()
 	{
 		var tok = Tokenization.of("a +");
-		tok.expectToken(0, TokenCategory.IDENT, TokenType.IDENT, "a");
-		tok.expectToken(2, TokenCategory.OP, TokenType.OP_INFIX, "+");
+		tok.expectToken(0, 1, TokenCategory.IDENT, TokenType.IDENT, "a");
+		tok.expectToken(2, 1, TokenCategory.OP, TokenType.OP_INFIX, "+");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -111,7 +111,7 @@ public class OperatorTests
 	public void acceptsFileWithOpOnly()
 	{
 		var tok = Tokenization.of("*");
-		tok.expectToken(0, TokenCategory.OP, TokenType.OP_INFIX, "*");
+		tok.expectToken(0, 1, TokenCategory.OP, TokenType.OP_INFIX, "*");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 }

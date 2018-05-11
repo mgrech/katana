@@ -16,34 +16,40 @@ package io.katana.compiler.scanner;
 
 public class Token
 {
+	public final int offset;
+	public final int length;
 	public final TokenCategory category;
 	public final TokenType type;
-	public final int offset;
-	public final String value;
-	public final Object data;
+	public final Object value;
 
-	public Token(TokenCategory category, TokenType type, String value)
+	public Token(int offset, int length, TokenCategory category, TokenType type, Object value)
 	{
-		this(category, type, -1, value, null);
-	}
-
-	public Token(TokenCategory category, TokenType type, int offset, String value, Object data)
-	{
+		this.offset = offset;
+		this.length = length;
 		this.category = category;
 		this.type = type;
 		this.value = value;
-		this.offset = offset;
-		this.data = data;
 	}
 
-	public Token withOffset(int offset)
+	public Token(TokenCategory category, TokenType type, Object value)
 	{
-		return new Token(category, type, offset, value, data);
+		this(-1, -1, category, type, value);
+	}
+
+	public Token(TokenCategory category, TokenType type)
+	{
+		this(category, type, null);
+	}
+
+	public Token withSourceRange(int offset, int length)
+	{
+		return new Token(offset, length, this.category, this.type, this.value);
 	}
 
 	@Override
 	public String toString()
 	{
-		return String.format("Token(%s, %s, %s, %s, %s)", category, type, value, offset, data);
+		return String.format("Token(offset=%s, length=%s, category=%s, type=%s, value=%s)",
+		                     offset, length, category, type, value);
 	}
 }

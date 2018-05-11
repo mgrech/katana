@@ -43,11 +43,10 @@ public class ExprParser
 
 		do
 		{
-			String op = ParseTools.consume(ctx).value;
+			var op = (String)ParseTools.consume(ctx).value;
 			list.ops.add(op);
 			list.exprs.add(parsePrefixExpr(ctx));
 		}
-
 		while(ParseTools.option(ctx, TokenType.OP_INFIX, false));
 
 		AstExprProxy proxy = new AstExprProxy(list);
@@ -59,7 +58,7 @@ public class ExprParser
 	{
 		if(ParseTools.option(ctx, TokenType.OP_PREFIX_SEQ, false))
 		{
-			String seq = ParseTools.consume(ctx).value;
+			var seq = (String)ParseTools.consume(ctx).value;
 			AstExprOpPrefixSeq prefixSeq = new AstExprOpPrefixSeq(seq, parsePrefixExpr(ctx));
 			AstExprProxy proxy = new AstExprProxy(prefixSeq);
 			ctx.lateParseExprs().prefixSeqs.put(prefixSeq, e -> proxy.expr = e);
@@ -77,7 +76,7 @@ public class ExprParser
 		{
 			if(ParseTools.option(ctx, TokenType.OP_POSTFIX_SEQ, false))
 			{
-				String seq = ParseTools.consume(ctx).value;
+				var seq = (String)ParseTools.consume(ctx).value;
 				AstExprOpPostfixSeq postfixSeq = new AstExprOpPostfixSeq(expr, seq);
 				AstExprProxy proxy = new AstExprProxy(postfixSeq);
 				ctx.lateParseExprs().postfixSeqs.put(postfixSeq, e -> proxy.expr = e);
@@ -100,7 +99,7 @@ public class ExprParser
 			else if(ParseTools.option(ctx, ".", true))
 			{
 				boolean global = ParseTools.option(ctx, TokenType.DECL_GLOBAL, true);
-				String name = ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
+				String name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 				expr = new AstExprMemberAccess(expr, name, global);
 			}
 
@@ -120,13 +119,13 @@ public class ExprParser
 
 		if(ParseTools.option(ctx, TokenType.DECL_GLOBAL, true))
 		{
-			String name = ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
+			var name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 			return new AstExprNamedGlobal(name);
 		}
 
 		if(ParseTools.option(ctx, TokenType.IDENT, false))
 		{
-			String name = ParseTools.consume(ctx).value;
+			var name = (String)ParseTools.consume(ctx).value;
 			return new AstExprNamedSymbol(name);
 		}
 
@@ -250,9 +249,9 @@ public class ExprParser
 		case MISC_OFFSETOF:
 			return ParseTools.parenthesized(ctx, () ->
 			{
-				String type = ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
+				var type = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 				ParseTools.expect(ctx, TokenType.PUNCT_COMMA, true);
-				String field = ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
+				var field = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 				return new AstExprOffsetof(type, field);
 			});
 
@@ -260,11 +259,11 @@ public class ExprParser
 			return parseBuiltinCall(ctx);
 
 		case MISC_INLINE:
-			String inline = ParseTools.parenthesized(ctx,
-				() -> ParseTools.consumeExpected(ctx, TokenType.LIT_BOOL).value);
-			String name = ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
+			var inline = ParseTools.parenthesized(ctx,
+				() -> (boolean)ParseTools.consumeExpected(ctx, TokenType.LIT_BOOL).value);
+			var name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 			ParseTools.expect(ctx, TokenType.PUNCT_LPAREN, true);
-			AstExpr call = parseFunctionCall(ctx, new AstExprNamedSymbol(name), Maybe.some(inline.equals("true")));
+			var call = parseFunctionCall(ctx, new AstExprNamedSymbol(name), Maybe.some(inline));
 			ParseTools.expect(ctx, TokenType.PUNCT_RPAREN, true);
 			return call;
 
@@ -285,27 +284,27 @@ public class ExprParser
 		switch(token.type)
 		{
 		case LIT_NULL: return new AstExprLitNull();
-		case LIT_BOOL: return new AstExprLitBool((boolean)token.data);
+		case LIT_BOOL: return new AstExprLitBool((boolean)token.value);
 
-		case LIT_INT:   return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT));
-		case LIT_INT8:  return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT8));
-		case LIT_INT16: return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT16));
-		case LIT_INT32: return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT32));
-		case LIT_INT64: return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.INT64));
+		case LIT_INT:   return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.INT));
+		case LIT_INT8:  return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.INT8));
+		case LIT_INT16: return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.INT16));
+		case LIT_INT32: return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.INT32));
+		case LIT_INT64: return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.INT64));
 
-		case LIT_UINT:   return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT));
-		case LIT_UINT8:  return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT8));
-		case LIT_UINT16: return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT16));
-		case LIT_UINT32: return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT32));
-		case LIT_UINT64: return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.some(BuiltinType.UINT64));
+		case LIT_UINT:   return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.UINT));
+		case LIT_UINT8:  return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.UINT8));
+		case LIT_UINT16: return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.UINT16));
+		case LIT_UINT32: return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.UINT32));
+		case LIT_UINT64: return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.UINT64));
 
-		case LIT_FLOAT32: return new AstExprLitFloat(new BigDecimal(token.value), Maybe.some(BuiltinType.FLOAT32));
-		case LIT_FLOAT64: return new AstExprLitFloat(new BigDecimal(token.value), Maybe.some(BuiltinType.FLOAT64));
+		case LIT_FLOAT32: return new AstExprLitFloat((BigDecimal)token.value, Maybe.some(BuiltinType.FLOAT32));
+		case LIT_FLOAT64: return new AstExprLitFloat((BigDecimal)token.value, Maybe.some(BuiltinType.FLOAT64));
 
-		case LIT_STRING: return new AstExprLitString((String)token.data);
+		case LIT_STRING: return new AstExprLitString((String)token.value);
 
-		case LIT_INT_DEDUCE:   return new AstExprLitInt(new BigInteger(token.value, (int)token.data), Maybe.none());
-		case LIT_FLOAT_DEDUCE: return new AstExprLitFloat(new BigDecimal(token.value), Maybe.none());
+		case LIT_INT_DEDUCE:   return new AstExprLitInt((BigInteger)token.value, Maybe.none());
+		case LIT_FLOAT_DEDUCE: return new AstExprLitFloat((BigDecimal)token.value, Maybe.none());
 
 		default: throw new AssertionError("unreachable");
 		}

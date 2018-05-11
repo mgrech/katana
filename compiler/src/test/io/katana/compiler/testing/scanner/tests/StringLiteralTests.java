@@ -12,7 +12,7 @@ public class StringLiteralTests
 	public void acceptsEmptyString()
 	{
 		var tok = Tokenization.of("\"\"");
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"\"", "");
+		tok.expectToken(0, 2, TokenCategory.LIT, TokenType.LIT_STRING, "");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -20,7 +20,7 @@ public class StringLiteralTests
 	public void acceptsSimpleString()
 	{
 		var tok = Tokenization.of("\"hello!\"");
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"hello!\"", "hello!");
+		tok.expectToken(0, 8, TokenCategory.LIT, TokenType.LIT_STRING, "hello!");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -29,8 +29,8 @@ public class StringLiteralTests
 	{
 		var tok = Tokenization.of("\"oops\nabc");
 		tok.expectError(0, 5, ScannerDiagnostics.UNTERMINATED_STRING);
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"oops", null);
-		tok.expectToken(6, TokenCategory.IDENT, TokenType.IDENT, "abc");
+		tok.expectToken(0, 5, TokenCategory.LIT, TokenType.LIT_STRING, null);
+		tok.expectToken(6, 3, TokenCategory.IDENT, TokenType.IDENT, "abc");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -38,7 +38,7 @@ public class StringLiteralTests
 	public void acceptsSimpleEscapeSequences()
 	{
 		var tok = Tokenization.of("\"foobar\\r\\n\"");
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"foobar\\r\\n\"", "foobar\r\n");
+		tok.expectToken(0, 12, TokenCategory.LIT, TokenType.LIT_STRING, "foobar\r\n");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -47,7 +47,7 @@ public class StringLiteralTests
 	{
 		var tok = Tokenization.of("\"\\q\"");
 		tok.expectError(1, 2, ScannerDiagnostics.INVALID_ESCAPE);
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"\\q\"", null);
+		tok.expectToken(0, 4, TokenCategory.LIT, TokenType.LIT_STRING, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -57,7 +57,7 @@ public class StringLiteralTests
 		// "\" is interpreted as an unterminated string with an embedded " character
 		var tok = Tokenization.of("\"\\\"");
 		tok.expectError(0, 3, ScannerDiagnostics.UNTERMINATED_STRING);
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"\\\"", null);
+		tok.expectToken(0, 3, TokenCategory.LIT, TokenType.LIT_STRING, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -66,7 +66,7 @@ public class StringLiteralTests
 	{
 		var tok = Tokenization.of("\"\\");
 		tok.expectError(0, 2, ScannerDiagnostics.UNTERMINATED_STRING);
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"\\", null);
+		tok.expectToken(0, 2, TokenCategory.LIT, TokenType.LIT_STRING, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -74,7 +74,7 @@ public class StringLiteralTests
 	public void acceptsHexEscapeSequence()
 	{
 		var tok = Tokenization.of("\"\\x61\"");
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"\\x61\"", "a");
+		tok.expectToken(0, 6, TokenCategory.LIT, TokenType.LIT_STRING, "a");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -84,7 +84,7 @@ public class StringLiteralTests
 		var tok = Tokenization.of("\"\\xzz\"");
 		tok.expectError(3, 1, ScannerDiagnostics.INVALID_CHARACTER_IN_ESCAPE);
 		tok.expectError(4, 1, ScannerDiagnostics.INVALID_CHARACTER_IN_ESCAPE);
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"\\xzz\"", null);
+		tok.expectToken(0, 6, TokenCategory.LIT, TokenType.LIT_STRING, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -93,7 +93,7 @@ public class StringLiteralTests
 	{
 		var tok = Tokenization.of("\"\\x0\"");
 		tok.expectError(1, 3, ScannerDiagnostics.HEX_ESCAPE_TOO_SHORT);
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"\\x0\"", null);
+		tok.expectToken(0, 5, TokenCategory.LIT, TokenType.LIT_STRING, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -102,7 +102,7 @@ public class StringLiteralTests
 	{
 		var tok = Tokenization.of("\"\\x");
 		tok.expectError(0, 3, ScannerDiagnostics.UNTERMINATED_STRING);
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"\\x", null);
+		tok.expectToken(0, 3, TokenCategory.LIT, TokenType.LIT_STRING, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -110,7 +110,7 @@ public class StringLiteralTests
 	public void acceptsSmallUnicodeEscapeSequence()
 	{
 		var tok = Tokenization.of("\"\\uA90C\"");
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"\\uA90C\"", "\uA90C");
+		tok.expectToken(0, 8, TokenCategory.LIT, TokenType.LIT_STRING, "\uA90C");
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -119,7 +119,7 @@ public class StringLiteralTests
 	{
 		var tok = Tokenization.of("\"\\u123\"");
 		tok.expectError(1, 5, ScannerDiagnostics.UNICODE_ESCAPE_TOO_SHORT);
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"\\u123\"", null);
+		tok.expectToken(0, 7, TokenCategory.LIT, TokenType.LIT_STRING, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -128,7 +128,7 @@ public class StringLiteralTests
 	{
 		var tok = Tokenization.of("\"\\u123");
 		tok.expectError(0, 6, ScannerDiagnostics.UNTERMINATED_STRING);
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"\\u123", null);
+		tok.expectToken(0, 6, TokenCategory.LIT, TokenType.LIT_STRING, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -138,7 +138,7 @@ public class StringLiteralTests
 		var tok = Tokenization.of("\"\\uz1y5\"");
 		tok.expectError(3, 1, ScannerDiagnostics.INVALID_CHARACTER_IN_ESCAPE);
 		tok.expectError(5, 1, ScannerDiagnostics.INVALID_CHARACTER_IN_ESCAPE);
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"\\uz1y5\"", null);
+		tok.expectToken(0, 8, TokenCategory.LIT, TokenType.LIT_STRING, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -147,7 +147,7 @@ public class StringLiteralTests
 	{
 		var tok = Tokenization.of("\"\\U1037AC\"");
 		var expected = new StringBuilder().appendCodePoint(0x1037AC).toString();
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"\\U1037AC\"", expected);
+		tok.expectToken(0, 10, TokenCategory.LIT, TokenType.LIT_STRING, expected);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -156,7 +156,7 @@ public class StringLiteralTests
 	{
 		var tok = Tokenization.of("\"\\U12345\"");
 		tok.expectError(1, 7, ScannerDiagnostics.UNICODE_ESCAPE_TOO_SHORT);
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"\\U12345\"", null);
+		tok.expectToken(0, 9, TokenCategory.LIT, TokenType.LIT_STRING, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -165,7 +165,7 @@ public class StringLiteralTests
 	{
 		var tok = Tokenization.of("\"\\U12345");
 		tok.expectError(0, 8, ScannerDiagnostics.UNTERMINATED_STRING);
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"\\U12345", null);
+		tok.expectToken(0, 8, TokenCategory.LIT, TokenType.LIT_STRING, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -176,7 +176,7 @@ public class StringLiteralTests
 		tok.expectError(3, 1, ScannerDiagnostics.INVALID_CHARACTER_IN_ESCAPE);
 		tok.expectError(5, 1, ScannerDiagnostics.INVALID_CHARACTER_IN_ESCAPE);
 		tok.expectError(6, 1, ScannerDiagnostics.INVALID_CHARACTER_IN_ESCAPE);
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"\\Uz1xy00\"", null);
+		tok.expectToken(0, 10, TokenCategory.LIT, TokenType.LIT_STRING, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -185,7 +185,7 @@ public class StringLiteralTests
 	{
 		var tok = Tokenization.of("\"\\U110000\"");
 		tok.expectError(1, 8, ScannerDiagnostics.CODEPOINT_OUT_OF_RANGE);
-		tok.expectToken(0, TokenCategory.LIT, TokenType.LIT_STRING, "\"\\U110000\"", null);
+		tok.expectToken(0, 10, TokenCategory.LIT, TokenType.LIT_STRING, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 }

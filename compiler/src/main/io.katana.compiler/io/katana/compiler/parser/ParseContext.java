@@ -53,8 +53,8 @@ public class ParseContext implements Cloneable
 		if(index < 0 || index >= tokens.size())
 			return null;
 
-		Token token = tokens.get(index);
-		return file.resolve(token.offset, token.value.length());
+		var token = tokens.get(index);
+		return file.resolve(token.offset, token.length);
 	}
 
 	public SourceFile file()
