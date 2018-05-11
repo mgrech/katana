@@ -34,7 +34,7 @@ public class ParseTools
 		return new AstPath(components);
 	}
 
-	public static <T> List<T> separated(ParseContext ctx, String separator, Supplier<T> parser)
+	public static <T> List<T> separated(ParseContext ctx, Predicate<Token> separator, Supplier<T> parser)
 	{
 		List<T> result = new ArrayList<>();
 
@@ -46,12 +46,12 @@ public class ParseTools
 
 	public static <T> List<T> separated(ParseContext ctx, TokenType separator, Supplier<T> parser)
 	{
-		List<T> result = new ArrayList<>();
+		return separated(ctx, t -> t.type == separator, parser);
+	}
 
-		do result.add(parser.get());
-		while(option(ctx, separator, true));
-
-		return result;
+	public static <T> List<T> separated(ParseContext ctx, String separator, Supplier<T> parser)
+	{
+		return separated(ctx, t -> separator.equals(t.value), parser);
 	}
 
 	public static <T> T parenthesized(ParseContext ctx, Supplier<T> func)
@@ -78,7 +78,7 @@ public class ParseTools
 
 	public static boolean option(ParseContext ctx, String value, boolean eat)
 	{
-		return option(ctx, t -> t.value.equals(value), eat);
+		return option(ctx, t -> value.equals(t.value), eat);
 	}
 
 	public static boolean option(ParseContext ctx, TokenCategory category, boolean eat)
