@@ -97,12 +97,20 @@ public class CmdBuild implements Runnable
 		}
 		catch(CompileException ex)
 		{
-			System.err.println(ex.getMessage());
+			if(diagnosticTraces)
+				ex.printStackTrace();
+			else
+				System.err.println(ex.getMessage());
+
 			System.exit(1);
 		}
 		catch(IOException ex)
 		{
-			System.err.println(ex.getClass().getName() + ": " + ex.getMessage());
+			if(diagnosticTraces)
+				ex.printStackTrace();
+			else
+				System.err.println(ex.getClass().getName() + ": " + ex.getMessage());
+
 			System.exit(1);
 		}
 	}
