@@ -97,11 +97,7 @@ public class CmdBuild implements Runnable
 		}
 		catch(CompileException ex)
 		{
-			if(diagnosticTraces)
-				ex.printStackTrace();
-			else
-				System.err.println(ex.getMessage());
-
+			System.err.println(ex.getMessage());
 			System.exit(1);
 		}
 		catch(IOException ex)
