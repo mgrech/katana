@@ -14,6 +14,7 @@
 
 package io.katana.compiler.testing.scanner.tests;
 
+import io.katana.compiler.scanner.Fraction;
 import io.katana.compiler.scanner.ScannerDiagnostics;
 import io.katana.compiler.scanner.TokenCategory;
 import io.katana.compiler.scanner.TokenType;
@@ -22,7 +23,6 @@ import io.katana.compiler.testing.scanner.Tokenization;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 
 @Category(ScannerTests.class)
@@ -100,10 +100,10 @@ public class NumericLiteralTests
 	public void acceptsFloatingPointLiterals()
 	{
 		var tok = Tokenization.of("0.0 123. .123 123.123");
-		tok.expectToken(0, 3, TokenCategory.LIT, TokenType.LIT_FLOAT_DEDUCE, new BigDecimal("0.0"));
-		tok.expectToken(4, 4, TokenCategory.LIT, TokenType.LIT_FLOAT_DEDUCE, BigDecimal.valueOf(123));
-		tok.expectToken(9, 4, TokenCategory.LIT, TokenType.LIT_FLOAT_DEDUCE, new BigDecimal("0.123"));
-		tok.expectToken(14, 7, TokenCategory.LIT, TokenType.LIT_FLOAT_DEDUCE, new BigDecimal("123.123"));
+		tok.expectToken(0, 3, TokenCategory.LIT, TokenType.LIT_FLOAT_DEDUCE, Fraction.of(0, 1));
+		tok.expectToken(4, 4, TokenCategory.LIT, TokenType.LIT_FLOAT_DEDUCE, Fraction.of(123, 1));
+		tok.expectToken(9, 4, TokenCategory.LIT, TokenType.LIT_FLOAT_DEDUCE, Fraction.of(123, 1000));
+		tok.expectToken(14, 7, TokenCategory.LIT, TokenType.LIT_FLOAT_DEDUCE, Fraction.of(123123, 1000));
 		tok.expectNoFurtherTokensOrErrors();
 	}
 
@@ -126,7 +126,7 @@ public class NumericLiteralTests
 		var tok = Tokenization.of("12$i 1337$u16 7.5$f64");
 		tok.expectToken(0, 4, TokenCategory.LIT, TokenType.LIT_INT, BigInteger.valueOf(12));
 		tok.expectToken(5, 8, TokenCategory.LIT, TokenType.LIT_UINT16, BigInteger.valueOf(1337));
-		tok.expectToken(14, 7, TokenCategory.LIT, TokenType.LIT_FLOAT64, new BigDecimal("7.5"));
+		tok.expectToken(14, 7, TokenCategory.LIT, TokenType.LIT_FLOAT64, Fraction.of(75, 10));
 		tok.expectNoFurtherTokensOrErrors();
 	}
 

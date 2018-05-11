@@ -18,7 +18,6 @@ import io.katana.compiler.diag.DiagnosticId;
 import io.katana.compiler.diag.DiagnosticsManager;
 import io.katana.compiler.utils.StringUtils;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -499,10 +498,34 @@ public class Scanner
 		}
 
 		var value = invalid ? null : isFloatingPointLiteral
-		                             ? new BigDecimal(literal.toString())
+		                             ? floatingPointLiteralToFraction(literal.toString(), base)
 		                             : new BigInteger(literal.toString(), base);
 
 		return Tokens.numericLiteral(type, value);
+	}
+
+	private Fraction floatingPointLiteralToFraction(String literal, int base)
+	{
+		var parts = literal.split("\\.", 2);
+		var bigbase = BigInteger.valueOf(base);
+
+		var numerator = new BigInteger(parts[0].isEmpty() ? "0" : parts[0]);
+		var denominator = BigInteger.ONE;
+
+		if(parts.length != 1)
+		{
+			while(parts[1].endsWith("0"))
+				parts[1] = parts[1].substring(0, parts[1].length() - 1);
+
+			for(var digit : parts[1].toCharArray())
+			{
+				var value = BigInteger.valueOf(digit - '0');
+				numerator = numerator.multiply(bigbase).add(value);
+				denominator = denominator.multiply(bigbase);
+			}
+		}
+
+		return Fraction.of(numerator, denominator);
 	}
 
 	private void skipWhitespaceAndComments()
