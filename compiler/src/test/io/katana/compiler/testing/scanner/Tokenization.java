@@ -14,7 +14,10 @@
 
 package io.katana.compiler.testing.scanner;
 
-import io.katana.compiler.diag.*;
+import io.katana.compiler.diag.CompileException;
+import io.katana.compiler.diag.DiagnosticId;
+import io.katana.compiler.diag.DiagnosticType;
+import io.katana.compiler.diag.DiagnosticsManager;
 import io.katana.compiler.scanner.*;
 
 import java.nio.charset.StandardCharsets;

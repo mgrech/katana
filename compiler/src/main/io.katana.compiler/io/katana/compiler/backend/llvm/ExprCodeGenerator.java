@@ -19,10 +19,10 @@ import io.katana.compiler.analysis.Types;
 import io.katana.compiler.sema.decl.SemaDeclExternFunction;
 import io.katana.compiler.sema.expr.*;
 import io.katana.compiler.sema.type.SemaType;
+import io.katana.compiler.utils.Fraction;
 import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -417,18 +417,18 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some("" + lit.value);
 	}
 
-	private String toFloatHexString(BigDecimal bd)
+	private String toFloatHexString(Fraction f)
 	{
 		// llvm requires float literals to be as wide as double literals but representable in a float
 		// hence we take the float value and widen it to double
-		double d = (double)bd.floatValue();
+		double d = f.toFloat();
 		long l = Double.doubleToLongBits(d);
 		return String.format("0x%x", l);
 	}
 
-	private String toDoubleHexString(BigDecimal bd)
+	private String toDoubleHexString(Fraction f)
 	{
-		double d = bd.doubleValue();
+		double d = f.toDouble();
 		long l = Double.doubleToRawLongBits(d);
 		return String.format("0x%x", l);
 	}

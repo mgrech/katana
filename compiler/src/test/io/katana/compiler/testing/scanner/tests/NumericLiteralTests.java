@@ -14,12 +14,12 @@
 
 package io.katana.compiler.testing.scanner.tests;
 
-import io.katana.compiler.scanner.Fraction;
 import io.katana.compiler.scanner.ScannerDiagnostics;
 import io.katana.compiler.scanner.TokenCategory;
 import io.katana.compiler.scanner.TokenType;
 import io.katana.compiler.testing.scanner.ScannerTests;
 import io.katana.compiler.testing.scanner.Tokenization;
+import io.katana.compiler.utils.Fraction;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

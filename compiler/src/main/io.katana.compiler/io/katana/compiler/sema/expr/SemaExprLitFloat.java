@@ -18,16 +18,15 @@ import io.katana.compiler.BuiltinType;
 import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.sema.type.SemaTypeBuiltin;
 import io.katana.compiler.sema.type.SemaTypeConst;
-
-import java.math.BigDecimal;
+import io.katana.compiler.utils.Fraction;
 
 public class SemaExprLitFloat extends SimpleRValueExpr
 {
-	public final BigDecimal value;
+	public final Fraction value;
 	public final BuiltinType type;
 	private final transient SemaType cachedType;
 
-	public SemaExprLitFloat(BigDecimal value, BuiltinType type)
+	public SemaExprLitFloat(Fraction value, BuiltinType type)
 	{
 		this.value = value;
 		this.type = type;

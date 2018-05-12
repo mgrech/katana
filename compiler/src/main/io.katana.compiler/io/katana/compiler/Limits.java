@@ -17,8 +17,8 @@ package io.katana.compiler;
 import io.katana.compiler.analysis.Types;
 import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.sema.type.SemaTypeBuiltin;
+import io.katana.compiler.utils.Fraction;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Map;
 import java.util.TreeMap;
@@ -27,8 +27,8 @@ public class Limits
 {
 	private static final Map<BuiltinType, BigInteger> INT_MIN_VALUES = new TreeMap<>();
 	private static final Map<BuiltinType, BigInteger> INT_MAX_VALUES = new TreeMap<>();
-	private static final Map<BuiltinType, BigDecimal> FLOAT_MIN_VALUES = new TreeMap<>();
-	private static final Map<BuiltinType, BigDecimal> FLOAT_MAX_VALUES = new TreeMap<>();
+	private static final Map<BuiltinType, Fraction> FLOAT_MIN_VALUES = new TreeMap<>();
+	private static final Map<BuiltinType, Fraction> FLOAT_MAX_VALUES = new TreeMap<>();
 
 	static
 	{
@@ -52,10 +52,10 @@ public class Limits
 		BigInteger uint64Max = BigInteger.ONE.shiftLeft(64).subtract(BigInteger.ONE);
 		INT_MAX_VALUES.put(BuiltinType.UINT64, uint64Max);
 
-		FLOAT_MIN_VALUES.put(BuiltinType.FLOAT32, BigDecimal.valueOf(-Float.MAX_VALUE));
-		FLOAT_MIN_VALUES.put(BuiltinType.FLOAT64, BigDecimal.valueOf(-Double.MAX_VALUE));
-		FLOAT_MAX_VALUES.put(BuiltinType.FLOAT32, BigDecimal.valueOf(Float.MAX_VALUE));
-		FLOAT_MAX_VALUES.put(BuiltinType.FLOAT64, BigDecimal.valueOf(Double.MAX_VALUE));
+		FLOAT_MIN_VALUES.put(BuiltinType.FLOAT32, Fraction.FLOAT_MAX.negated());
+		FLOAT_MIN_VALUES.put(BuiltinType.FLOAT64, Fraction.DOUBLE_MAX.negated());
+		FLOAT_MAX_VALUES.put(BuiltinType.FLOAT32, Fraction.FLOAT_MAX);
+		FLOAT_MAX_VALUES.put(BuiltinType.FLOAT64, Fraction.DOUBLE_MAX);
 	}
 
 	private static BuiltinType equivalentIntegerType(BuiltinType type, PlatformContext context)
@@ -110,10 +110,10 @@ public class Limits
 		return i.compareTo(min) != -1 && i.compareTo(max) != 1;
 	}
 
-	public static boolean inRange(BigDecimal d, BuiltinType type)
+	public static boolean inRange(Fraction f, BuiltinType type)
 	{
-		BigDecimal min = FLOAT_MIN_VALUES.get(type);
-		BigDecimal max = FLOAT_MAX_VALUES.get(type);
-		return d.compareTo(min) != -1 && d.compareTo(max) != 1;
+		var min = FLOAT_MIN_VALUES.get(type);
+		var max = FLOAT_MAX_VALUES.get(type);
+		return f.compareTo(min) != -1 && f.compareTo(max) != 1;
 	}
 }

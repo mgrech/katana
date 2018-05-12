@@ -15,16 +15,15 @@
 package io.katana.compiler.ast.expr;
 
 import io.katana.compiler.BuiltinType;
+import io.katana.compiler.utils.Fraction;
 import io.katana.compiler.utils.Maybe;
-
-import java.math.BigDecimal;
 
 public class AstExprLitFloat extends AstExprLiteral
 {
-	public BigDecimal value;
+	public Fraction value;
 	public Maybe<BuiltinType> type;
 
-	public AstExprLitFloat(BigDecimal value, Maybe<BuiltinType> type)
+	public AstExprLitFloat(Fraction value, Maybe<BuiltinType> type)
 	{
 		this.value = value;
 		this.type = type;

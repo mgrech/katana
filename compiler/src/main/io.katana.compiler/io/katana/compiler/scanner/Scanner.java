@@ -16,6 +16,7 @@ package io.katana.compiler.scanner;
 
 import io.katana.compiler.diag.DiagnosticId;
 import io.katana.compiler.diag.DiagnosticsManager;
+import io.katana.compiler.utils.Fraction;
 import io.katana.compiler.utils.StringUtils;
 
 import java.math.BigInteger;

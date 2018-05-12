@@ -22,9 +22,9 @@ import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.scanner.Token;
 import io.katana.compiler.scanner.TokenCategory;
 import io.katana.compiler.scanner.TokenType;
+import io.katana.compiler.utils.Fraction;
 import io.katana.compiler.utils.Maybe;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -298,13 +298,13 @@ public class ExprParser
 		case LIT_UINT32: return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.UINT32));
 		case LIT_UINT64: return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.UINT64));
 
-		case LIT_FLOAT32: return new AstExprLitFloat((BigDecimal)token.value, Maybe.some(BuiltinType.FLOAT32));
-		case LIT_FLOAT64: return new AstExprLitFloat((BigDecimal)token.value, Maybe.some(BuiltinType.FLOAT64));
+		case LIT_FLOAT32: return new AstExprLitFloat((Fraction)token.value, Maybe.some(BuiltinType.FLOAT32));
+		case LIT_FLOAT64: return new AstExprLitFloat((Fraction)token.value, Maybe.some(BuiltinType.FLOAT64));
 
 		case LIT_STRING: return new AstExprLitString((String)token.value);
 
 		case LIT_INT_DEDUCE:   return new AstExprLitInt((BigInteger)token.value, Maybe.none());
-		case LIT_FLOAT_DEDUCE: return new AstExprLitFloat((BigDecimal)token.value, Maybe.none());
+		case LIT_FLOAT_DEDUCE: return new AstExprLitFloat((Fraction)token.value, Maybe.none());
 
 		default: throw new AssertionError("unreachable");
 		}
