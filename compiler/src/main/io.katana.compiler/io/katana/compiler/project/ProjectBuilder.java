@@ -42,6 +42,8 @@ public class ProjectBuilder
 {
 	private static final Path KATANA_INCLUDE_DIR = Katana.HOME.resolve("include");
 	private static final Path KATANA_LIBRARY_DIR = Katana.HOME.resolve("lib");
+	private static final String BUILD_TMPDIR = "tmp";
+	private static final String BUILD_OUTDIR = "out";
 
 	private static void runBuildCommand(Path dir, BuildTarget build, List<String> command)
 	{
@@ -262,16 +264,26 @@ public class ProjectBuilder
 		if(!buildDir.toFile().exists())
 			Files.createDirectories(buildDir);
 
-		Maybe<Path> katanaOutput = compileKatanaSources(diag, root, build, context, buildDir);
+		var tmpDir = buildDir.resolve(BUILD_TMPDIR);
+
+		if(!tmpDir.toFile().exists())
+			Files.createDirectory(tmpDir);
+
+		var outDir = buildDir.resolve(BUILD_OUTDIR);
+
+		if(!outDir.toFile().exists())
+			Files.createDirectory(outDir);
+
+		Maybe<Path> katanaOutput = compileKatanaSources(diag, root, build, context, tmpDir);
 		List<Path> objectFiles = new ArrayList<>();
 
-		Path resourcePath = buildDir.resolve("resources.asm");
+		Path resourcePath = tmpDir.resolve("resources.asm");
 		ResourceGenerator.generate(context.target(), build.resourceFiles, resourcePath);
 
-		objectFiles.add(compileAsmFile(root, buildDir, build, resourcePath, context.target()));
+		objectFiles.add(compileAsmFile(root, tmpDir, build, resourcePath, context.target()));
 
 		if(katanaOutput.isSome())
-			objectFiles.add(compileLlvmFile(root, buildDir, build, context.target(), katanaOutput.get()));
+			objectFiles.add(compileLlvmFile(root, tmpDir, build, context.target(), katanaOutput.get()));
 
 		for(Map.Entry<FileType, Set<Path>> entry : build.sourceFiles.entrySet())
 		{
@@ -280,10 +292,10 @@ public class ProjectBuilder
 
 			if(type != FileType.KATANA)
 				for(Path path : paths)
-					objectFiles.add(compileFile(root, buildDir, build, type, path, context.target()));
+					objectFiles.add(compileFile(root, tmpDir, build, type, path, context.target()));
 		}
 
-		link(root, buildDir, build, objectFiles, context.target());
+		link(root, outDir, build, objectFiles, context.target());
 		System.out.println(String.format("[%s] build successful.", build.name));
 	}
 }
