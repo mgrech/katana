@@ -305,8 +305,6 @@ public class ProjectManager
 		else
 			result.resourceFiles = new TreeMap<>();
 
-		result.outputDirectory = buildRoot.resolve(name);
-
 		return result;
 	}
 

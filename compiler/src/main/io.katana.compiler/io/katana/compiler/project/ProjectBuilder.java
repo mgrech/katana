@@ -43,13 +43,13 @@ public class ProjectBuilder
 	private static final Path KATANA_INCLUDE_DIR = Katana.HOME.resolve("include");
 	private static final Path KATANA_LIBRARY_DIR = Katana.HOME.resolve("lib");
 
-	private static void runBuildCommand(BuildTarget build, List<String> command)
+	private static void runBuildCommand(Path dir, BuildTarget build, List<String> command)
 	{
 		System.out.println(String.format("[%s] %s", build.name, String.join(" ", command)));
 
 		ProcessBuilder builder = new ProcessBuilder(command);
 		builder.inheritIO();
-		builder.directory(build.outputDirectory.toFile());
+		builder.directory(dir.toFile());
 
 		try
 		{
@@ -85,7 +85,7 @@ public class ProjectBuilder
 		command.add("-I" + KATANA_INCLUDE_DIR);
 	}
 
-	private static Path compileAsmFile(BuildTarget build, Path path, TargetTriple target)
+	private static Path compileAsmFile(Path buildDir, BuildTarget build, Path path, TargetTriple target)
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang");
@@ -98,11 +98,11 @@ public class ProjectBuilder
 		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
-		runBuildCommand(build, command);
+		runBuildCommand(buildDir, build, command);
 		return Paths.get(filename);
 	}
 
-	private static Path compileCFile(BuildTarget build, Path path, TargetTriple target)
+	private static Path compileCFile(Path buildDir, BuildTarget build, Path path, TargetTriple target)
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang");
@@ -118,11 +118,11 @@ public class ProjectBuilder
 		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
-		runBuildCommand(build, command);
+		runBuildCommand(buildDir, build, command);
 		return Paths.get(filename);
 	}
 
-	private static Path compileCppFile(BuildTarget build, Path path, TargetTriple target)
+	private static Path compileCppFile(Path buildDir, BuildTarget build, Path path, TargetTriple target)
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang++");
@@ -138,11 +138,11 @@ public class ProjectBuilder
 		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
-		runBuildCommand(build, command);
+		runBuildCommand(buildDir, build, command);
 		return Paths.get(filename);
 	}
 
-	private static Path compileLlvmFile(BuildTarget build, TargetTriple target, Path path)
+	private static Path compileLlvmFile(Path buildDir, BuildTarget build, TargetTriple target, Path path)
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang");
@@ -157,7 +157,7 @@ public class ProjectBuilder
 		String filename = path.getFileName() + objectFileExtension(target);
 		command.add(filename);
 
-		runBuildCommand(build, command);
+		runBuildCommand(buildDir, build, command);
 		return Paths.get(filename);
 	}
 
@@ -187,7 +187,7 @@ public class ProjectBuilder
 		throw new AssertionError("unreachable");
 	}
 
-	private static void link(BuildTarget build, List<Path> filePaths, TargetTriple target)
+	private static void link(Path buildDir, BuildTarget build, List<Path> filePaths, TargetTriple target)
 	{
 		String binaryName = build.name + fileExtensionFor(build.type, target);
 
@@ -218,16 +218,16 @@ public class ProjectBuilder
 		// append all source files
 		filePaths.stream().map(Path::toString).forEach(command::add);
 
-		runBuildCommand(build, command);
+		runBuildCommand(buildDir, build, command);
 	}
 
-	private static Path compileFile(BuildTarget build, FileType fileType, Path path, TargetTriple target)
+	private static Path compileFile(Path buildDir, BuildTarget build, FileType fileType, Path path, TargetTriple target)
 	{
 		switch(fileType)
 		{
-		case ASM: return compileAsmFile(build, path, target);
-		case C:   return compileCFile(build, path, target);
-		case CPP: return compileCppFile(build, path, target);
+		case ASM: return compileAsmFile(buildDir, build, path, target);
+		case C:   return compileCFile(buildDir, build, path, target);
+		case CPP: return compileCppFile(buildDir, build, path, target);
 
 		default:
 			throw new AssertionError("unreachable");
@@ -253,21 +253,21 @@ public class ProjectBuilder
 		return Maybe.some(katanaOutputFile);
 	}
 
-	public static void build(DiagnosticsManager diag, Path root, BuildTarget build, PlatformContext context) throws IOException
+	public static void build(DiagnosticsManager diag, Path root, Path buildDir, BuildTarget build, PlatformContext context) throws IOException
 	{
-		if(!build.outputDirectory.toFile().exists())
-			Files.createDirectories(build.outputDirectory);
+		if(!buildDir.toFile().exists())
+			Files.createDirectories(buildDir);
 
-		Maybe<Path> katanaOutput = compileKatanaSources(diag, root, build, context, build.outputDirectory);
+		Maybe<Path> katanaOutput = compileKatanaSources(diag, root, build, context, buildDir);
 		List<Path> objectFiles = new ArrayList<>();
 
-		Path resourcePath = build.outputDirectory.resolve("resources.asm");
+		Path resourcePath = buildDir.resolve("resources.asm");
 		ResourceGenerator.generate(context.target(), build.resourceFiles, resourcePath);
 
-		objectFiles.add(compileAsmFile(build, resourcePath, context.target()));
+		objectFiles.add(compileAsmFile(buildDir, build, resourcePath, context.target()));
 
 		if(katanaOutput.isSome())
-			objectFiles.add(compileLlvmFile(build, context.target(), katanaOutput.get()));
+			objectFiles.add(compileLlvmFile(buildDir, build, context.target(), katanaOutput.get()));
 
 		for(Map.Entry<FileType, Set<Path>> entry : build.sourceFiles.entrySet())
 		{
@@ -276,10 +276,10 @@ public class ProjectBuilder
 
 			if(type != FileType.KATANA)
 				for(Path path : paths)
-					objectFiles.add(compileFile(build, type, path, context.target()));
+					objectFiles.add(compileFile(buildDir, build, type, path, context.target()));
 		}
 
-		link(build, objectFiles, context.target());
+		link(buildDir, build, objectFiles, context.target());
 		System.out.println(String.format("[%s] build successful.", build.name));
 	}
 }

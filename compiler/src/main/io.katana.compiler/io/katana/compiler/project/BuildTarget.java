@@ -32,5 +32,4 @@ public class BuildTarget
 	public List<String> linkOptions;
 	public List<String> systemLibraries;
 	public Map<String, Path> resourceFiles;
-	public Path outputDirectory;
 }
