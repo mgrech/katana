@@ -85,7 +85,7 @@ public class ProjectBuilder
 		command.add("-I" + KATANA_INCLUDE_DIR);
 	}
 
-	private static Path compileAsmFile(Path buildDir, BuildTarget build, Path path, TargetTriple target)
+	private static Path compileAsmFile(Path root, Path buildDir, BuildTarget build, Path path, TargetTriple target)
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang");
@@ -95,14 +95,15 @@ public class ProjectBuilder
 		command.add(path.toString());
 		command.add("-o");
 
-		String filename = path.getFileName() + objectFileExtension(target);
-		command.add(filename);
+		var filename = path.getFileName() + objectFileExtension(target);
+		var outputPath = buildDir.resolve(filename);
+		command.add(outputPath.toString());
 
-		runBuildCommand(buildDir, build, command);
-		return Paths.get(filename);
+		runBuildCommand(root, build, command);
+		return outputPath;
 	}
 
-	private static Path compileCFile(Path buildDir, BuildTarget build, Path path, TargetTriple target)
+	private static Path compileCFile(Path root, Path buildDir, BuildTarget build, Path path, TargetTriple target)
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang");
@@ -115,14 +116,15 @@ public class ProjectBuilder
 		command.add(path.toString());
 		command.add("-o");
 
-		String filename = path.getFileName() + objectFileExtension(target);
-		command.add(filename);
+		var filename = path.getFileName() + objectFileExtension(target);
+		var outputPath = buildDir.resolve(filename);
+		command.add(outputPath.toString());
 
-		runBuildCommand(buildDir, build, command);
-		return Paths.get(filename);
+		runBuildCommand(root, build, command);
+		return outputPath;
 	}
 
-	private static Path compileCppFile(Path buildDir, BuildTarget build, Path path, TargetTriple target)
+	private static Path compileCppFile(Path root, Path buildDir, BuildTarget build, Path path, TargetTriple target)
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang++");
@@ -135,14 +137,15 @@ public class ProjectBuilder
 		command.add(path.toString());
 		command.add("-o");
 
-		String filename = path.getFileName() + objectFileExtension(target);
-		command.add(filename);
+		var filename = path.getFileName() + objectFileExtension(target);
+		var outputPath = buildDir.resolve(filename);
+		command.add(outputPath.toString());
 
-		runBuildCommand(buildDir, build, command);
-		return Paths.get(filename);
+		runBuildCommand(root, build, command);
+		return outputPath;
 	}
 
-	private static Path compileLlvmFile(Path buildDir, BuildTarget build, TargetTriple target, Path path)
+	private static Path compileLlvmFile(Path root, Path buildDir, BuildTarget build, TargetTriple target, Path path)
 	{
 		List<String> command = new ArrayList<>();
 		command.add("clang");
@@ -154,11 +157,12 @@ public class ProjectBuilder
 		command.add(path.toString());
 		command.add("-o");
 
-		String filename = path.getFileName() + objectFileExtension(target);
-		command.add(filename);
+		var filename = path.getFileName() + objectFileExtension(target);
+		var outputPath = buildDir.resolve(filename);
+		command.add(outputPath.toString());
 
-		runBuildCommand(buildDir, build, command);
-		return Paths.get(filename);
+		runBuildCommand(root, build, command);
+		return outputPath;
 	}
 
 	private static String fileExtensionFor(BuildType type, TargetTriple target)
@@ -187,7 +191,7 @@ public class ProjectBuilder
 		throw new AssertionError("unreachable");
 	}
 
-	private static void link(Path buildDir, BuildTarget build, List<Path> filePaths, TargetTriple target)
+	private static void link(Path root, Path buildDir, BuildTarget build, List<Path> filePaths, TargetTriple target)
 	{
 		String binaryName = build.name + fileExtensionFor(build.type, target);
 
@@ -213,21 +217,21 @@ public class ProjectBuilder
 			command.add("-l" + lib);
 
 		command.add("-o");
-		command.add(binaryName);
+		command.add(buildDir.resolve(binaryName).toString());
 
 		// append all source files
 		filePaths.stream().map(Path::toString).forEach(command::add);
 
-		runBuildCommand(buildDir, build, command);
+		runBuildCommand(root, build, command);
 	}
 
-	private static Path compileFile(Path buildDir, BuildTarget build, FileType fileType, Path path, TargetTriple target)
+	private static Path compileFile(Path root, Path buildDir, BuildTarget build, FileType fileType, Path path, TargetTriple target)
 	{
 		switch(fileType)
 		{
-		case ASM: return compileAsmFile(buildDir, build, path, target);
-		case C:   return compileCFile(buildDir, build, path, target);
-		case CPP: return compileCppFile(buildDir, build, path, target);
+		case ASM: return compileAsmFile(root, buildDir, build, path, target);
+		case C:   return compileCFile(root, buildDir, build, path, target);
+		case CPP: return compileCppFile(root, buildDir, build, path, target);
 
 		default:
 			throw new AssertionError("unreachable");
@@ -264,10 +268,10 @@ public class ProjectBuilder
 		Path resourcePath = buildDir.resolve("resources.asm");
 		ResourceGenerator.generate(context.target(), build.resourceFiles, resourcePath);
 
-		objectFiles.add(compileAsmFile(buildDir, build, resourcePath, context.target()));
+		objectFiles.add(compileAsmFile(root, buildDir, build, resourcePath, context.target()));
 
 		if(katanaOutput.isSome())
-			objectFiles.add(compileLlvmFile(buildDir, build, context.target(), katanaOutput.get()));
+			objectFiles.add(compileLlvmFile(root, buildDir, build, context.target(), katanaOutput.get()));
 
 		for(Map.Entry<FileType, Set<Path>> entry : build.sourceFiles.entrySet())
 		{
@@ -276,10 +280,10 @@ public class ProjectBuilder
 
 			if(type != FileType.KATANA)
 				for(Path path : paths)
-					objectFiles.add(compileFile(buildDir, build, type, path, context.target()));
+					objectFiles.add(compileFile(root, buildDir, build, type, path, context.target()));
 		}
 
-		link(buildDir, build, objectFiles, context.target());
+		link(root, buildDir, build, objectFiles, context.target());
 		System.out.println(String.format("[%s] build successful.", build.name));
 	}
 }
