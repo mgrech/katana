@@ -59,9 +59,6 @@ public class TypeParser
 			return parseArray(ctx);
 		}
 
-		if(ParseTools.option(ctx, TokenType.TYPE_OPAQUE, true))
-			return parseOpaque(ctx);
-
 		if(ParseTools.option(ctx, TokenType.TYPE_CONST, true))
 		{
 			if(const_)
@@ -181,24 +178,6 @@ public class TypeParser
 		{
 			throw new CompileException("array size out of range");
 		}
-	}
-
-	private static AstTypeOpaque parseOpaque(ParseContext ctx)
-	{
-		return ParseTools.parenthesized(ctx, () ->
-		{
-			try
-			{
-				var size = ((BigInteger)ParseTools.consumeExpected(ctx, TokenType.LIT_INT_DEDUCE).value).longValueExact();
-				ParseTools.expect(ctx, TokenType.PUNCT_COMMA, true);
-				var alignment = ((BigInteger)ParseTools.consumeExpected(ctx, TokenType.LIT_INT_DEDUCE).value).longValueExact();
-				return new AstTypeOpaque(size, alignment);
-			}
-			catch(ArithmeticException ex)
-			{
-				throw new CompileException("size or alignment value out of range");
-			}
-		});
 	}
 
 	private static AstTypeTypeof parseTypeof(ParseContext ctx)

@@ -67,11 +67,6 @@ public class TypesEqualVisitor implements IVisitor
 		return apply(left.type, right.type);
 	}
 
-	private boolean visit(SemaTypeOpaque left, SemaTypeOpaque right)
-	{
-		return left.size == right.size && left.alignment == right.alignment;
-	}
-
 	private boolean visit(SemaTypeStruct left, SemaTypeStruct right)
 	{
 		return left.decl == right.decl;

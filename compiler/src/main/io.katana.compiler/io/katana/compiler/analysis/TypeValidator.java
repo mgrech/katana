@@ -78,11 +78,6 @@ public class TypeValidator implements IVisitor
 		throw new AssertionError("unreachable");
 	}
 
-	private SemaType visit(AstTypeOpaque opaque)
-	{
-		return new SemaTypeOpaque(opaque.size, opaque.alignment);
-	}
-
 	private SemaType visit(AstTypeTuple tuple)
 	{
 		StructLayoutBuilder builder = new StructLayoutBuilder(context);

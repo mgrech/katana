@@ -38,7 +38,7 @@ public class DeclParser
 	public static AstDecl parse(ParseContext ctx)
 	{
 		boolean exported = ParseTools.option(ctx, TokenType.DECL_EXPORT, true);
-		boolean opaque = ParseTools.option(ctx, TokenType.TYPE_OPAQUE, true);
+		boolean opaque = ParseTools.option(ctx, TokenType.DECL_OPAQUE, true);
 
 		if(opaque && !exported)
 			throw new CompileException("'opaque' must go after 'export'");

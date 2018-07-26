@@ -87,11 +87,6 @@ public class TypeSizeofVisitor implements IVisitor
 		return context.target().arch.pointerSize;
 	}
 
-	private long visit(SemaTypeOpaque opaqueType)
-	{
-		return opaqueType.size;
-	}
-
 	private long visit(SemaTypeNonNullablePointer pointerType)
 	{
 		return context.target().arch.pointerSize;

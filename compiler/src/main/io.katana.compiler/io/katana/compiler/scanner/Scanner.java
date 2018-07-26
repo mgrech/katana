@@ -301,6 +301,7 @@ public class Scanner
 		case "infix":    return Tokens.DECL_INFIX;
 		case "module":   return Tokens.DECL_MODULE;
 		case "operator": return Tokens.DECL_OP;
+		case "opaque":   return Tokens.DECL_OPAQUE;
 		case "postfix":  return Tokens.DECL_POSTFIX;
 		case "prefix":   return Tokens.DECL_PREFIX;
 		case "type":     return Tokens.DECL_TYPE;
@@ -345,7 +346,6 @@ public class Scanner
 		case "uint16":  return Tokens.TYPE_UINT16;
 		case "uint32":  return Tokens.TYPE_UINT32;
 		case "uint64":  return Tokens.TYPE_UINT64;
-		case "opaque":  return Tokens.TYPE_OPAQUE;
 		case "typeof":  return Tokens.TYPE_TYPEOF;
 		case "void":    return Tokens.TYPE_VOID;
 

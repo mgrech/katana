@@ -61,11 +61,6 @@ public class CheckZeroSizeVisitor implements IVisitor
 		return false;
 	}
 
-	private boolean visit(SemaTypeOpaque opaque)
-	{
-		return opaque.size == 0;
-	}
-
 	private boolean visit(SemaTypeTuple tuple)
 	{
 		return tuple.layout.sizeof() == 0;

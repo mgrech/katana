@@ -26,6 +26,7 @@ public class Tokens
 	public static final Token DECL_INFIX   = new Token(TokenCategory.DECL, TokenType.DECL_INFIX);
 	public static final Token DECL_MODULE  = new Token(TokenCategory.DECL, TokenType.DECL_MODULE);
 	public static final Token DECL_OP      = new Token(TokenCategory.DECL, TokenType.DECL_OP);
+	public static final Token DECL_OPAQUE  = new Token(TokenCategory.TYPE, TokenType.DECL_OPAQUE);
 	public static final Token DECL_POSTFIX = new Token(TokenCategory.DECL, TokenType.DECL_POSTFIX);
 	public static final Token DECL_PREFIX  = new Token(TokenCategory.DECL, TokenType.DECL_PREFIX);
 	public static final Token DECL_TYPE    = new Token(TokenCategory.DECL, TokenType.DECL_TYPE);
@@ -75,7 +76,6 @@ public class Tokens
 	public static final Token TYPE_INT16   = new Token(TokenCategory.TYPE, TokenType.TYPE_INT16);
 	public static final Token TYPE_INT32   = new Token(TokenCategory.TYPE, TokenType.TYPE_INT32);
 	public static final Token TYPE_INT64   = new Token(TokenCategory.TYPE, TokenType.TYPE_INT64);
-	public static final Token TYPE_OPAQUE  = new Token(TokenCategory.TYPE, TokenType.TYPE_OPAQUE);
 	public static final Token TYPE_TYPEOF  = new Token(TokenCategory.TYPE, TokenType.TYPE_TYPEOF);
 	public static final Token TYPE_UINT    = new Token(TokenCategory.TYPE, TokenType.TYPE_UINT);
 	public static final Token TYPE_UINT8   = new Token(TokenCategory.TYPE, TokenType.TYPE_UINT8);

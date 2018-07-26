@@ -72,11 +72,6 @@ public class TypeAlignofVisitor implements IVisitor
 		return context.target().arch.pointerAlign;
 	}
 
-	private long visit(SemaTypeOpaque opaqueType)
-	{
-		return opaqueType.alignment;
-	}
-
 	private long visit(SemaTypeNonNullablePointer pointerType)
 	{
 		return context.target().arch.pointerAlign;

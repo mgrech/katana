@@ -65,11 +65,6 @@ public class TypeCodeGenerator implements IVisitor
 		throw new AssertionError("unreachable");
 	}
 
-	private String visit(SemaTypeOpaque type)
-	{
-		return String.format("[%s x i8]", Types.sizeof(type, context));
-	}
-
 	private String visit(SemaTypeFunction type)
 	{
 		String ret = TypeCodeGenerator.generate(type.ret, context);

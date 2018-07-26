@@ -59,11 +59,6 @@ public class TypeMangler implements IVisitor
 		return String.format("npointer-%s", mangle(pointer.type));
 	}
 
-	private String visit(SemaTypeOpaque opaque)
-	{
-		return String.format("opaque-%s-%s", opaque.size, opaque.alignment);
-	}
-
 	private String visit(SemaTypeStruct user)
 	{
 		return user.decl.qualifiedName().toString();

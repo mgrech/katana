@@ -46,11 +46,6 @@ public class TypeString implements IVisitor
 		return String.format("[%s]%s", type.length, of(type.type));
 	}
 
-	private String visit(SemaTypeOpaque type)
-	{
-		return String.format("opaque(%s, %s)", type.size, type.alignment);
-	}
-
 	private String visit(SemaTypeBuiltin type)
 	{
 		if(type.which == BuiltinType.NULL)
