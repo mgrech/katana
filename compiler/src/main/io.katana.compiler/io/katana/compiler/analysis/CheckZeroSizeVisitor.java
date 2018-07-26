@@ -19,8 +19,6 @@ import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.sema.type.*;
 import io.katana.compiler.visitor.IVisitor;
 
-import java.math.BigInteger;
-
 @SuppressWarnings("unused")
 public class CheckZeroSizeVisitor implements IVisitor
 {
@@ -35,7 +33,7 @@ public class CheckZeroSizeVisitor implements IVisitor
 
 	private boolean visit(SemaTypeArray array)
 	{
-		return array.length.equals(BigInteger.ZERO) || apply(array.type);
+		return array.length == 0 || apply(array.type);
 	}
 
 	private boolean visit(SemaTypeBuiltin builtin)
@@ -65,12 +63,12 @@ public class CheckZeroSizeVisitor implements IVisitor
 
 	private boolean visit(SemaTypeOpaque opaque)
 	{
-		return opaque.size.equals(BigInteger.ZERO);
+		return opaque.size == 0;
 	}
 
 	private boolean visit(SemaTypeTuple tuple)
 	{
-		return tuple.layout.sizeof().equals(BigInteger.ZERO);
+		return tuple.layout.sizeof() == 0;
 	}
 
 	private boolean visit(SemaTypeStruct userDefined)

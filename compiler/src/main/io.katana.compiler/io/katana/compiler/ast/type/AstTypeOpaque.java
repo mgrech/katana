@@ -14,14 +14,12 @@
 
 package io.katana.compiler.ast.type;
 
-import java.math.BigInteger;
-
 public class AstTypeOpaque extends AstType
 {
-	public BigInteger size;
-	public BigInteger alignment;
+	public long size;
+	public long alignment;
 
-	public AstTypeOpaque(BigInteger size, BigInteger alignment)
+	public AstTypeOpaque(long size, long alignment)
 	{
 		this.size = size;
 		this.alignment = alignment;

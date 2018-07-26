@@ -15,6 +15,7 @@
 package io.katana.compiler.parser;
 
 import io.katana.compiler.ast.type.*;
+import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.scanner.SourceLocation;
 import io.katana.compiler.scanner.Token;
 import io.katana.compiler.scanner.TokenCategory;
@@ -170,19 +171,33 @@ public class TypeParser
 
 	private static AstTypeArray parseArray(ParseContext ctx)
 	{
-		var size = (BigInteger)ParseTools.consumeExpected(ctx, TokenType.LIT_INT_DEDUCE).value;
-		ParseTools.expect(ctx, TokenType.PUNCT_RBRACKET, true);
-		return new AstTypeArray(size, parse(ctx));
+		try
+		{
+			var size = ((BigInteger)ParseTools.consumeExpected(ctx, TokenType.LIT_INT_DEDUCE).value).longValueExact();
+			ParseTools.expect(ctx, TokenType.PUNCT_RBRACKET, true);
+			return new AstTypeArray(size, parse(ctx));
+		}
+		catch(ArithmeticException ex)
+		{
+			throw new CompileException("array size out of range");
+		}
 	}
 
 	private static AstTypeOpaque parseOpaque(ParseContext ctx)
 	{
 		return ParseTools.parenthesized(ctx, () ->
 		{
-			var size = (BigInteger)ParseTools.consumeExpected(ctx, TokenType.LIT_INT_DEDUCE).value;
-			ParseTools.expect(ctx, TokenType.PUNCT_COMMA, true);
-			var alignment = (BigInteger)ParseTools.consumeExpected(ctx, TokenType.LIT_INT_DEDUCE).value;
-			return new AstTypeOpaque(size, alignment);
+			try
+			{
+				var size = ((BigInteger)ParseTools.consumeExpected(ctx, TokenType.LIT_INT_DEDUCE).value).longValueExact();
+				ParseTools.expect(ctx, TokenType.PUNCT_COMMA, true);
+				var alignment = ((BigInteger)ParseTools.consumeExpected(ctx, TokenType.LIT_INT_DEDUCE).value).longValueExact();
+				return new AstTypeOpaque(size, alignment);
+			}
+			catch(ArithmeticException ex)
+			{
+				throw new CompileException("size or alignment value out of range");
+			}
 		});
 	}
 

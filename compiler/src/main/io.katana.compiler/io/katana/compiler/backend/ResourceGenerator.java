@@ -36,7 +36,7 @@ public class ResourceGenerator
 
 	private String intDirective()
 	{
-		switch(target.arch.pointerSize.intValue())
+		switch((int)target.arch.pointerSize)
 		{
 		case 1: return "byte";
 		case 2: return "word";

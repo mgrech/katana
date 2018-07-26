@@ -31,7 +31,6 @@ import io.katana.compiler.sema.type.*;
 import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
 
-import java.math.BigInteger;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -443,7 +442,7 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprLitArray lit, Maybe<SemaType> deduce)
 	{
-		Maybe<BigInteger> length = lit.length;
+		Maybe<Long> length = lit.length;
 		Maybe<SemaType> maybeType = lit.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
 
 		if(deduce.isSome() && deduce.unwrap() instanceof SemaTypeArray)
@@ -458,7 +457,7 @@ public class ExprValidator implements IVisitor
 		}
 
 		if(length.isNone())
-			length = Maybe.some(BigInteger.valueOf(lit.values.size()));
+			length = Maybe.some((long)lit.values.size());
 
 		if(maybeType.isNone())
 			throw new CompileException("element type of array literal could not be deduced");
@@ -482,7 +481,7 @@ public class ExprValidator implements IVisitor
 			values.add(semaExpr);
 		}
 
-		if(BigInteger.valueOf(values.size()).compareTo(length.unwrap()) != 0)
+		if(values.size() != length.unwrap())
 		{
 			String fmt = "invalid number of elements in array literal: got %s, expected %s";
 			throw new CompileException(String.format(fmt, values.size(), length.unwrap()));

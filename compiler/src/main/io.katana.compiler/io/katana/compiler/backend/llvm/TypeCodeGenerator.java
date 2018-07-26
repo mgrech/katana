@@ -19,8 +19,6 @@ import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.sema.type.*;
 import io.katana.compiler.visitor.IVisitor;
 
-import java.math.BigInteger;
-
 @SuppressWarnings("unused")
 public class TypeCodeGenerator implements IVisitor
 {
@@ -51,7 +49,7 @@ public class TypeCodeGenerator implements IVisitor
 		case UINT32:
 		case UINT64:
 		case UINT:
-			return "i" + Types.sizeof(type, context).multiply(BigInteger.valueOf(8));
+			return "i" + Types.sizeof(type, context) * 8;
 
 		case BYTE:
 			return "i8";

@@ -17,15 +17,14 @@ package io.katana.compiler.analysis;
 import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.sema.type.SemaType;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
 public class StructLayoutBuilder
 {
-	private BigInteger size = BigInteger.ZERO;
-	private BigInteger alignment = BigInteger.ONE;
-	private final List<BigInteger> fieldOffsets = new ArrayList<>();
+	private long size = 0;
+	private long alignment = 1;
+	private final List<Long> fieldOffsets = new ArrayList<>();
 	private final PlatformContext context;
 
 	public StructLayoutBuilder(PlatformContext context)
@@ -35,13 +34,13 @@ public class StructLayoutBuilder
 
 	public StructLayoutBuilder appendField(SemaType type)
 	{
-		BigInteger fieldSize = Types.sizeof(type, context);
-		BigInteger fieldAlignment = Types.alignof(type, context);
+		var fieldSize = Types.sizeof(type, context);
+		var fieldAlignment = Types.alignof(type, context);
 
 		size = align(size, fieldAlignment);
 		fieldOffsets.add(size);
-		size = size.add(fieldSize);
-		alignment = alignment.max(fieldAlignment);
+		size = size + fieldSize;
+		alignment = Math.max(alignment, fieldAlignment);
 
 		return this;
 	}
@@ -53,14 +52,13 @@ public class StructLayoutBuilder
 		return new StructLayout(size, alignment, fieldOffsets);
 	}
 
-	private static BigInteger align(BigInteger size, BigInteger alignment)
+	private static long align(long size, long alignment)
 	{
 		// (size + alignment - 1) & ~(alignment - 1)
-		BigInteger alignSubOne = alignment.subtract(BigInteger.ONE);
-		BigInteger alignedSize = size.add(alignSubOne).and(alignSubOne.not());
+		var alignSubOne = alignment - 1;
+		var alignedSize = (size + alignSubOne) & ~alignSubOne;
 
-		// alignedSize < size || alignedSize % alignment != 0
-		if(alignedSize.compareTo(size) == -1 || !alignedSize.mod(alignment).equals(BigInteger.ZERO))
+		if(alignedSize < size || alignedSize % alignment != 0)
 			throw new AssertionError("unreachable");
 
 		return alignedSize;

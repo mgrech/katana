@@ -19,15 +19,9 @@ import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.sema.type.*;
 import io.katana.compiler.visitor.IVisitor;
 
-import java.math.BigInteger;
-
 @SuppressWarnings("unused")
 public class TypeSizeofVisitor implements IVisitor
 {
-	private static final BigInteger TWO = BigInteger.valueOf(2);
-	private static final BigInteger FOUR = BigInteger.valueOf(4);
-	private static final BigInteger EIGHT = BigInteger.valueOf(8);
-
 	private final PlatformContext context;
 
 	private TypeSizeofVisitor(PlatformContext context)
@@ -35,38 +29,38 @@ public class TypeSizeofVisitor implements IVisitor
 		this.context = context;
 	}
 
-	private BigInteger visit(SemaTypeArray arrayType)
+	private long visit(SemaTypeArray arrayType)
 	{
-		return arrayType.length.multiply(apply(arrayType.type, context));
+		return arrayType.length * apply(arrayType.type, context);
 	}
 
-	private BigInteger visit(SemaTypeBuiltin builtinType)
+	private long visit(SemaTypeBuiltin builtinType)
 	{
 		switch(builtinType.which)
 		{
 		case VOID:
 		case NULL:
-			return BigInteger.ZERO;
+			return 0;
 
 		case BYTE:
 		case BOOL:
 		case INT8:
 		case UINT8:
-			return BigInteger.ONE;
+			return 1;
 
 		case INT16:
 		case UINT16:
-			return TWO;
+			return 2;
 
 		case INT32:
 		case UINT32:
 		case FLOAT32:
-			return FOUR;
+			return 4;
 
 		case INT64:
 		case UINT64:
 		case FLOAT64:
-			return EIGHT;
+			return 8;
 
 		case INT:
 		case UINT:
@@ -78,43 +72,43 @@ public class TypeSizeofVisitor implements IVisitor
 		throw new AssertionError("unreachable");
 	}
 
-	private BigInteger visit(SemaTypeConst constType)
+	private long visit(SemaTypeConst constType)
 	{
 		return apply(constType.type, context);
 	}
 
-	private BigInteger visit(SemaTypeFunction functionType)
+	private long visit(SemaTypeFunction functionType)
 	{
 		throw new CompileException("'sizeof' applied to function type");
 	}
 
-	private BigInteger visit(SemaTypeNullablePointer pointerType)
+	private long visit(SemaTypeNullablePointer pointerType)
 	{
 		return context.target().arch.pointerSize;
 	}
 
-	private BigInteger visit(SemaTypeOpaque opaqueType)
+	private long visit(SemaTypeOpaque opaqueType)
 	{
 		return opaqueType.size;
 	}
 
-	private BigInteger visit(SemaTypeNonNullablePointer pointerType)
+	private long visit(SemaTypeNonNullablePointer pointerType)
 	{
 		return context.target().arch.pointerSize;
 	}
 
-	private BigInteger visit(SemaTypeTuple tuple)
+	private long visit(SemaTypeTuple tuple)
 	{
 		return tuple.layout.sizeof();
 	}
 
-	private BigInteger visit(SemaTypeStruct userDefinedType)
+	private long visit(SemaTypeStruct userDefinedType)
 	{
 		return userDefinedType.decl.layout.sizeof();
 	}
 
-	public static BigInteger apply(SemaType type, PlatformContext context)
+	public static long apply(SemaType type, PlatformContext context)
 	{
-		return (BigInteger)type.accept(new TypeSizeofVisitor(context));
+		return (long)type.accept(new TypeSizeofVisitor(context));
 	}
 }

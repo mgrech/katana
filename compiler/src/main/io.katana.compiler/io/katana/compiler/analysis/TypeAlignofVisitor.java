@@ -20,8 +20,6 @@ import io.katana.compiler.platform.Arch;
 import io.katana.compiler.sema.type.*;
 import io.katana.compiler.visitor.IVisitor;
 
-import java.math.BigInteger;
-
 @SuppressWarnings("unused")
 public class TypeAlignofVisitor implements IVisitor
 {
@@ -32,21 +30,23 @@ public class TypeAlignofVisitor implements IVisitor
 		this.context = context;
 	}
 
-	private BigInteger visit(SemaTypeArray arrayType)
+	private long visit(SemaTypeArray arrayType)
 	{
 		return apply(arrayType.type, context);
 	}
 
-	private BigInteger visit(SemaTypeBuiltin builtinType)
+	private long visit(SemaTypeBuiltin builtinType)
 	{
 		Arch arch = context.target().arch;
 
 		switch(builtinType.which)
 		{
-		case VOID: return BigInteger.ONE;
-		case BYTE: return BigInteger.ONE;
-		case BOOL: return BigInteger.ONE;
-		case INT8:  case UINT8:  return BigInteger.ONE;
+		case VOID:
+		case BYTE:
+		case BOOL:
+		case INT8:  case UINT8:
+			return 1;
+
 		case INT16: case UINT16: return arch.int16Align;
 		case INT32: case UINT32: return arch.int32Align;
 		case INT64: case UINT64: return arch.int64Align;
@@ -57,43 +57,43 @@ public class TypeAlignofVisitor implements IVisitor
 		}
 	}
 
-	private BigInteger visit(SemaTypeConst constType)
+	private long visit(SemaTypeConst constType)
 	{
 		return apply(constType.type, context);
 	}
 
-	private BigInteger visit(SemaTypeFunction functionType)
+	private long visit(SemaTypeFunction functionType)
 	{
 		throw new CompileException("'alignof' applied to function type");
 	}
 
-	private BigInteger visit(SemaTypeNullablePointer pointerType)
+	private long visit(SemaTypeNullablePointer pointerType)
 	{
 		return context.target().arch.pointerAlign;
 	}
 
-	private BigInteger visit(SemaTypeOpaque opaqueType)
+	private long visit(SemaTypeOpaque opaqueType)
 	{
 		return opaqueType.alignment;
 	}
 
-	private BigInteger visit(SemaTypeNonNullablePointer pointerType)
+	private long visit(SemaTypeNonNullablePointer pointerType)
 	{
 		return context.target().arch.pointerAlign;
 	}
 
-	private BigInteger visit(SemaTypeTuple tuple)
+	private long visit(SemaTypeTuple tuple)
 	{
 		return tuple.layout.alignof();
 	}
 
-	private BigInteger visit(SemaTypeStruct userDefinedType)
+	private long visit(SemaTypeStruct userDefinedType)
 	{
 		return userDefinedType.decl.layout.alignof();
 	}
 
-	public static BigInteger apply(SemaType type, PlatformContext context)
+	public static long apply(SemaType type, PlatformContext context)
 	{
-		return (BigInteger)type.accept(new TypeAlignofVisitor(context));
+		return (long)type.accept(new TypeAlignofVisitor(context));
 	}
 }

@@ -14,33 +14,32 @@
 
 package io.katana.compiler.analysis;
 
-import java.math.BigInteger;
 import java.util.List;
 
 public class StructLayout
 {
-	private final BigInteger size;
-	private final BigInteger alignment;
-	private final List<BigInteger> fieldOffsets;
+	private final long size;
+	private final long alignment;
+	private final List<Long> fieldOffsets;
 
-	public StructLayout(BigInteger size, BigInteger alignment, List<BigInteger> fieldOffsets)
+	public StructLayout(long size, long alignment, List<Long> fieldOffsets)
 	{
 		this.size = size;
 		this.alignment = alignment;
 		this.fieldOffsets = fieldOffsets;
 	}
 
-	public BigInteger sizeof()
+	public long sizeof()
 	{
 		return size;
 	}
 
-	public BigInteger alignof()
+	public long alignof()
 	{
 		return alignment;
 	}
 
-	public BigInteger offsetof(int index)
+	public long offsetof(int index)
 	{
 		return fieldOffsets.get(index);
 	}

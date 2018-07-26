@@ -27,7 +27,6 @@ import io.katana.compiler.sema.type.*;
 import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -101,7 +100,7 @@ public class TypeValidator implements IVisitor
 
 	private SemaType visit(AstTypeArray array)
 	{
-		if(array.length.compareTo(BigInteger.ZERO) == -1)
+		if(array.length < 0)
 			throw new CompileException(String.format("negative array length: %s", array.length));
 
 		return new SemaTypeArray(array.length, validate(array.type, scope, context, validateDecl));

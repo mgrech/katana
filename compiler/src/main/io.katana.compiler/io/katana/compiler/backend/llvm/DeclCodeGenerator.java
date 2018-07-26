@@ -22,7 +22,6 @@ import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.sema.type.SemaTypeNonNullablePointer;
 import io.katana.compiler.visitor.IVisitor;
 
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
@@ -154,8 +153,8 @@ public class DeclCodeGenerator implements IVisitor
 			if(Types.isZeroSized(param.type))
 				continue;
 
-			String typeString = TypeCodeGenerator.generate(param.type, context.platform());
-			BigInteger alignment = Types.alignof(param.type, context.platform());
+			var typeString = TypeCodeGenerator.generate(param.type, context.platform());
+			var alignment = Types.alignof(param.type, context.platform());
 			context.writef("\t%%%s = alloca %s, align %s\n", param.name, typeString, alignment);
 			context.writef("\tstore %s %%p$%s, %s* %%%s\n", typeString, param.name, typeString, param.name);
 		}
@@ -170,8 +169,8 @@ public class DeclCodeGenerator implements IVisitor
 			if(Types.isZeroSized(type))
 				continue;
 
-			String llvmType = TypeCodeGenerator.generate(type, context.platform());
-			BigInteger align = Types.alignof(type, context.platform());
+			var llvmType = TypeCodeGenerator.generate(type, context.platform());
+			var align = Types.alignof(type, context.platform());
 			context.writef("\t%%%s = alloca %s, align %s\n", entry.getKey(), llvmType, align);
 		}
 

@@ -18,16 +18,15 @@ import io.katana.compiler.analysis.Types;
 import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.sema.type.SemaTypeArray;
 
-import java.math.BigInteger;
 import java.util.List;
 
 public class SemaExprLitArray extends SimpleRValueExpr
 {
-	public final BigInteger length;
+	public final long length;
 	public final SemaType type;
 	public final List<SemaExpr> values;
 
-	public SemaExprLitArray(BigInteger length, SemaType type, List<SemaExpr> values)
+	public SemaExprLitArray(long length, SemaType type, List<SemaExpr> values)
 	{
 		this.length = length;
 		this.type = type;

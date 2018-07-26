@@ -14,14 +14,12 @@
 
 package io.katana.compiler.sema.type;
 
-import java.math.BigInteger;
-
 public class SemaTypeOpaque extends SemaType
 {
-	public BigInteger size;
-	public BigInteger alignment;
+	public long size;
+	public long alignment;
 
-	public SemaTypeOpaque(BigInteger size, BigInteger alignment)
+	public SemaTypeOpaque(long size, long alignment)
 	{
 		this.size = size;
 		this.alignment = alignment;

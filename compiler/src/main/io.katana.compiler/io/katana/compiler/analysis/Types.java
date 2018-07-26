@@ -19,8 +19,6 @@ import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.sema.decl.SemaDeclStruct;
 import io.katana.compiler.sema.type.*;
 
-import java.math.BigInteger;
-
 public class Types
 {
 	public static boolean equal(SemaType left, SemaType right)
@@ -185,17 +183,17 @@ public class Types
 
 	public static boolean equalSizes(SemaType first, SemaType second, PlatformContext context)
 	{
-		return sizeof(first, context).equals(sizeof(second, context));
+		return sizeof(first, context) == sizeof(second, context);
 	}
 
 	public static int compareSizes(SemaType first, SemaType second, PlatformContext context)
 	{
-		return sizeof(first, context).compareTo(sizeof(second, context));
+		return Long.compare(sizeof(first, context), sizeof(second, context));
 	}
 
 	public static boolean isZeroSized(SemaDeclStruct struct)
 	{
-		return struct.layout.sizeof().equals(BigInteger.ZERO);
+		return struct.layout.sizeof() == 0;
 	}
 
 	public static boolean isZeroSized(SemaType type)
@@ -203,12 +201,12 @@ public class Types
 		return CheckZeroSizeVisitor.apply(type);
 	}
 
-	public static BigInteger sizeof(SemaType type, PlatformContext context)
+	public static long sizeof(SemaType type, PlatformContext context)
 	{
 		return TypeSizeofVisitor.apply(type, context);
 	}
 
-	public static BigInteger alignof(SemaType type, PlatformContext context)
+	public static long alignof(SemaType type, PlatformContext context)
 	{
 		return TypeAlignofVisitor.apply(type, context);
 	}

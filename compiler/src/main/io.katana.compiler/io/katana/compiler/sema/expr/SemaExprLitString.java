@@ -19,7 +19,6 @@ import io.katana.compiler.sema.type.SemaTypeArray;
 import io.katana.compiler.sema.type.SemaTypeBuiltin;
 import io.katana.compiler.sema.type.SemaTypeConst;
 
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 
 public class SemaExprLitString extends SimpleLValueExpr
@@ -33,7 +32,7 @@ public class SemaExprLitString extends SimpleLValueExpr
 	{
 		this.value = value;
 
-		BigInteger length = BigInteger.valueOf(value.getBytes(StandardCharsets.UTF_8).length);
+		var length = value.getBytes(StandardCharsets.UTF_8).length;
 		cachedType = new SemaTypeArray(length, ELEMENT_TYPE);
 	}
 

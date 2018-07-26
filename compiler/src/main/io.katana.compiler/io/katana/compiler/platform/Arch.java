@@ -14,8 +14,6 @@
 
 package io.katana.compiler.platform;
 
-import java.math.BigInteger;
-
 public enum Arch
 {
 	UNKNOWN("unknown", -1, -1, -1, -1, -1, -1, -1),
@@ -23,24 +21,24 @@ public enum Arch
 	X86    ("x86",      4,  4,  8,  4,  2,  4,  8);
 
 	private final String value;
-	public final BigInteger pointerSize;
-	public final BigInteger pointerAlign;
-	public final BigInteger int64Align;
-	public final BigInteger int32Align;
-	public final BigInteger int16Align;
-	public final BigInteger float32Align;
-	public final BigInteger float64Align;
+	public final long pointerSize;
+	public final long pointerAlign;
+	public final long int64Align;
+	public final long int32Align;
+	public final long int16Align;
+	public final long float32Align;
+	public final long float64Align;
 
-	Arch(String value, int pointerSize, int pointerAlign, int int64Align, int int32Align, int int16Align, int float32Align, int float64Align)
+	Arch(String value, long pointerSize, long pointerAlign, long int64Align, long int32Align, long int16Align, long float32Align, long float64Align)
 	{
 		this.value = value;
-		this.pointerSize = BigInteger.valueOf(pointerSize);
-		this.pointerAlign = BigInteger.valueOf(pointerAlign);
-		this.int64Align = BigInteger.valueOf(int64Align);
-		this.int32Align = BigInteger.valueOf(int32Align);
-		this.int16Align = BigInteger.valueOf(int16Align);
-		this.float32Align = BigInteger.valueOf(float32Align);
-		this.float64Align = BigInteger.valueOf(float64Align);
+		this.pointerSize = pointerSize;
+		this.pointerAlign = pointerAlign;
+		this.int64Align = int64Align;
+		this.int32Align = int32Align;
+		this.int16Align = int16Align;
+		this.float32Align = float32Align;
+		this.float64Align = float64Align;
 	}
 
 	@Override

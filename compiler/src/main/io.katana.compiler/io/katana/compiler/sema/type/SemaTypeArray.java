@@ -14,14 +14,12 @@
 
 package io.katana.compiler.sema.type;
 
-import java.math.BigInteger;
-
 public class SemaTypeArray extends SemaType
 {
-	public BigInteger length;
+	public long length;
 	public SemaType type;
 
-	public SemaTypeArray(BigInteger length, SemaType type)
+	public SemaTypeArray(long length, SemaType type)
 	{
 		this.length = length;
 		this.type = type;

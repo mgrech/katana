@@ -17,16 +17,15 @@ package io.katana.compiler.ast.expr;
 import io.katana.compiler.ast.type.AstType;
 import io.katana.compiler.utils.Maybe;
 
-import java.math.BigInteger;
 import java.util.List;
 
 public class AstExprLitArray extends AstExprLiteral
 {
-	public Maybe<BigInteger> length;
+	public Maybe<Long> length;
 	public Maybe<AstType> type;
 	public List<AstExprLiteral> values;
 
-	public AstExprLitArray(Maybe<BigInteger> length, Maybe<AstType> type, List<AstExprLiteral> values)
+	public AstExprLitArray(Maybe<Long> length, Maybe<AstType> type, List<AstExprLiteral> values)
 	{
 		this.length = length;
 		this.type = type;

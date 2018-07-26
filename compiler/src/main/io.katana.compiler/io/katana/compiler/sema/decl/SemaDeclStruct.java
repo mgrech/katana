@@ -19,7 +19,6 @@ import io.katana.compiler.sema.SemaModule;
 import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.utils.Maybe;
 
-import java.math.BigInteger;
 import java.util.*;
 
 public class SemaDeclStruct extends SemaDecl
@@ -33,7 +32,7 @@ public class SemaDeclStruct extends SemaDecl
 			this.index = index;
 		}
 
-		public BigInteger offsetof()
+		public long offsetof()
 		{
 			return struct().layout.offsetof(index);
 		}

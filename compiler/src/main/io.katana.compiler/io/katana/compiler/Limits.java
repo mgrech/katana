@@ -65,7 +65,7 @@ public class Limits
 
 		boolean isSigned = type.kind == BuiltinType.Kind.INT;
 
-		switch(Types.sizeof(new SemaTypeBuiltin(type), context).intValue())
+		switch((int)Types.sizeof(new SemaTypeBuiltin(type), context))
 		{
 		case 1: return isSigned ? BuiltinType.INT8  : BuiltinType.UINT8;
 		case 2: return isSigned ? BuiltinType.INT16 : BuiltinType.UINT16;

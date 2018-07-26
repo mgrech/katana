@@ -165,7 +165,7 @@ public class ExprParser
 
 	private static AstExpr parseArrayLiteral(ParseContext ctx)
 	{
-		Maybe<BigInteger> size = Maybe.none();
+		Maybe<Long> size = Maybe.none();
 
 		if(!ParseTools.option(ctx, ":", true))
 		{
@@ -177,7 +177,15 @@ public class ExprParser
 			if(((AstExprLitInt)sizeLit).type.isSome())
 				throw new CompileException("length in array literal cannot have a type suffix");
 
-			size = Maybe.some(((AstExprLitInt)sizeLit).value);
+			try
+			{
+				size = Maybe.some(((AstExprLitInt)sizeLit).value.longValueExact());
+			}
+			catch(ArithmeticException ex)
+			{
+				throw new CompileException("array length too large");
+			}
+
 			ParseTools.expect(ctx, ":", true);
 		}
 
