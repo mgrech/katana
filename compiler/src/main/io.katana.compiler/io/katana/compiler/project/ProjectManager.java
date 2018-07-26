@@ -283,8 +283,7 @@ public class ProjectManager
 			throw new CompileException(String.format("invalid target type '%s'", toml.type));
 		}
 
-		if(type == BuildType.EXECUTABLE)
-			validateNonNull("entry-point", toml.entryPoint);
+		// entry-point may be null for executables as well to allow entry points in other languages
 
 		if(type != BuildType.EXECUTABLE && toml.entryPoint != null)
 			configError("property 'entry-point' is only applicable to executables");
