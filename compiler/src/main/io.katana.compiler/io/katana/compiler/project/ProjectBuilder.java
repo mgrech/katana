@@ -65,10 +65,11 @@ public class ProjectBuilder
 		}
 	}
 
-	private static void addDefaultDefines(List<String> command, TargetTriple target)
+	private static void addDefaultDefines(List<String> command, BuildTarget build, TargetTriple target)
 	{
 		command.add("-DKATANA_ARCH_" + target.arch.name());
 		command.add("-DKATANA_OS_" + target.os.name());
+		command.add("-DKATANA_TYPE_" + build.type.name());
 	}
 
 	private static String objectFileExtension(TargetTriple target)
@@ -108,7 +109,7 @@ public class ProjectBuilder
 		command.add("clang");
 		command.addAll(build.cOptions);
 
-		addDefaultDefines(command, target);
+		addDefaultDefines(command, build, target);
 		addDefaultIncludes(command);
 
 		command.add("-c");
@@ -129,7 +130,7 @@ public class ProjectBuilder
 		command.add("clang++");
 		command.addAll(build.cppOptions);
 
-		addDefaultDefines(command, target);
+		addDefaultDefines(command, build, target);
 		addDefaultIncludes(command);
 
 		command.add("-c");

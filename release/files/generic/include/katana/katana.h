@@ -1,4 +1,4 @@
-// Copyright 2016-2017 Markus Grech
+// Copyright 2016-2018 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,34 +16,29 @@
 
 #define KATANA_VERSION "${project.version}"
 
-// KEXTERNC void foo();
-// KEXTERNC int bar;
-//
-// expected in C++:
-// extern "C" void foo();
-// extern "C" int bar;
-//
-// expected in C:
-// extern void foo();
-// extern int bar; -- 'extern' required here, otherwise a definition (!)
 #ifdef __cplusplus
-#define KEXTERNC extern "C"
+#define KEXTERN extern "C"
 #else
-#define KEXTERNC extern
+#define KEXTERN extern
 #endif
 
-// KEXPORT void foo()
-// KEXPORT int bar;
-//
-// expected in C++:
-// extern "C" KVISIBLE void foo()
-// extern "C" KVISIBLE int bar; -- requires separate definition (!)
-//
-// expected in C:
-// extern KVISIBLE void foo()
-// extern KVISIBLE int bar; -- for symmetry with C++
-#define KEXPORT KEXTERNC KVISIBLE
-#define KVISIBLE __attribute__((visibility("default")))
+#if defined(KATANA_OS_WINDOWS)
+#define KATANA_LIBRARY_EXPORT __declspec(dllexport)
+#define KATANA_LIBRARY_IMPORT __declspec(dllimport)
+#else
+#define KATANA_LIBRARY_EXPORT
+#define KATANA_LIBRARY_IMPORT
+#endif
+
+#ifdef KATANA_TYPE_LIBRARY
+#define KATANA_EXPORT_TYPE KATANA_LIBRARY_EXPORT
+#else
+#define KATANA_EXPORT_TYPE
+#endif
+
+#define KEXPORT         KEXTERN __attribute__((visibility("default"))) KATANA_EXPORT_TYPE
+#define KIMPORT         KEXTERN
+#define KIMPORT_LIBRARY KEXTERN KATANA_LIBRARY_IMPORT
 
 #ifdef __cplusplus
 typedef bool               kbool;
