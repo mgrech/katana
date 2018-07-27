@@ -17,7 +17,6 @@ package io.katana.compiler.project;
 import io.katana.compiler.Katana;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.platform.TargetTriple;
-import io.katana.compiler.project.conditionals.Condition;
 import io.katana.compiler.project.conditionals.ConditionParser;
 import io.katana.compiler.project.toml.ProfileToml;
 import io.katana.compiler.project.toml.ProjectToml;
@@ -26,7 +25,6 @@ import io.katana.compiler.utils.FileUtils;
 import io.katana.compiler.utils.TomlUtils;
 import io.ous.jtoml.TomlTable;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.*;
@@ -65,18 +63,18 @@ public class ProjectManager
 	// symbolic links are disallowed to prevent breaking out of the project directory
 	private static Path validatePath(Path root, String pathString) throws IOException
 	{
-		Path path = Paths.get(pathString);
+		var path = Paths.get(pathString);
 
 		if(path.isAbsolute())
-			throw new InvalidPathException(pathString, "given path is absolute");
+			configError("path is absolute: %s", pathString);
 
 		if(!path.normalize().equals(path))
-			throw new InvalidPathException(pathString, "given path is not normalized");
+			configError("path is not normalized: %s", pathString);
 
 		path = root.resolve(path).toRealPath();
 
 		if(!path.startsWith(root))
-			throw new InvalidPathException(path.toString(), "given path does not refer to a child of the project directory");
+			configError("path does not refer to a child of the project directory: %s", pathString);
 
 		return path;
 	}
@@ -100,16 +98,16 @@ public class ProjectManager
 
 	private static void addFile(Map<FileType, Set<Path>> files, FileType type, Path path)
 	{
-		Set<Path> paths = files.computeIfAbsent(type, (t) -> new TreeSet<>());
+		var paths = files.computeIfAbsent(type, (t) -> new TreeSet<>());
 		paths.add(path);
 	}
 
 	private static void discoverSourceFiles(Path path, Map<FileType, Set<Path>> files) throws IOException
 	{
-		File file = path.toFile();
+		var file = path.toFile();
 
 		if(!file.exists())
-			throw new CompileException(String.format("file or directory '%s' does not exit", path));
+			configError("file or directory '%s' does not exit", path);
 
 		if(file.isDirectory())
 		{
@@ -120,7 +118,7 @@ public class ProjectManager
 				{
 					if(attrs.isRegularFile())
 					{
-						FileType type = fileTypefromName(path.getFileName().toString());
+						var type = fileTypefromName(path.getFileName().toString());
 
 						if(type != null)
 							addFile(files, type, path);
@@ -132,10 +130,10 @@ public class ProjectManager
 		}
 		else
 		{
-			FileType type = fileTypefromName(file.getName());
+			var type = fileTypefromName(file.getName());
 
 			if(type == null)
-				throw new CompileException(String.format("source file path '%s' refers to unknown file type", path));
+				configError("source file path '%s' refers to unknown file type", path);
 
 			addFile(files, type, path);
 		}
@@ -143,13 +141,13 @@ public class ProjectManager
 
 	private static Map<FileType, Set<Path>> validateSources(Path root, List<String> sources, TargetTriple target) throws IOException
 	{
-		List<Path> paths = new ArrayList<>();
+		var paths = new ArrayList<Path>();
 
-		for(String sourcePath : sources)
+		for(var sourcePath : sources)
 		{
-			String[] parts = sourcePath.split(":");
+			var parts = sourcePath.split(":");
 
-			for(int i = 0; i != parts.length; ++i)
+			for(var i = 0; i != parts.length; ++i)
 				parts[i] = parts[i].trim();
 
 			switch(parts.length)
@@ -159,8 +157,8 @@ public class ProjectManager
 				break;
 
 			case 2:
-				Condition condition = ConditionParser.parse(parts[0]);
-				Path path = validatePath(root, parts[1]);
+				var condition = ConditionParser.parse(parts[0]);
+				var path = validatePath(root, parts[1]);
 
 				if(condition.test(target))
 					paths.add(path);
@@ -168,14 +166,13 @@ public class ProjectManager
 				break;
 
 			default:
-				String fmt = "invalid source specification '%s', expected form '[condition:]path'";
-				throw new CompileException(String.format(fmt, sourcePath));
+				configError("invalid source specification '%s', expected form '[condition:]path'", sourcePath);
 			}
 		}
 
-		Map<FileType, Set<Path>> result = new HashMap<>();
+		var result = new HashMap<FileType, Set<Path>>();
 
-		for(Path path : paths)
+		for(var path : paths)
 			discoverSourceFiles(path, result);
 
 		return result;
@@ -183,13 +180,13 @@ public class ProjectManager
 
 	private static List<String> validateLibs(List<String> libs, TargetTriple target)
 	{
-		List<String> result = new ArrayList<>();
+		var result = new ArrayList<String>();
 
-		for(String lib : libs)
+		for(var lib : libs)
 		{
-			String[] parts = lib.split(":");
+			var parts = lib.split(":");
 
-			for(int i = 0; i != parts.length; ++i)
+			for(var i = 0; i != parts.length; ++i)
 				parts[i] = parts[i].trim();
 
 			switch(parts.length)
@@ -200,7 +197,7 @@ public class ProjectManager
 				break;
 
 			case 2:
-				Condition condition = ConditionParser.parse(parts[0]);
+				var condition = ConditionParser.parse(parts[0]);
 				validatePropertyValue("system-libraries", parts[1], LIB_NAME_PATTERN);
 
 				if(condition.test(target))
@@ -209,8 +206,7 @@ public class ProjectManager
 				break;
 
 			default:
-				String fmt = "invalid library dependency specification '%s', expected form '[condition:]lib'";
-				throw new CompileException(String.format(fmt, lib));
+				configError("invalid library dependency specification '%s', expected form '[condition:]lib'", lib);
 			}
 		}
 
@@ -219,18 +215,18 @@ public class ProjectManager
 
 	private static Map<String, Path> loadResourceList(Path projectRoot, Path path) throws IOException
 	{
-		File resourceConfig = projectRoot.resolve(path).toFile();
-		Properties properties = new Properties();
+		var resourceConfig = projectRoot.resolve(path).toFile();
+		var properties = new Properties();
 
 		if(resourceConfig.exists())
 			properties.load(new FileInputStream(resourceConfig));
 
-		Map<String, Path> resources = new TreeMap<>();
+		var resources = new TreeMap<String, Path>();
 
-		for(Map.Entry<?, ?> entry : properties.entrySet())
+		for(var entry : properties.entrySet())
 		{
-			String key = (String)entry.getKey();
-			String resourcePath = (String)entry.getValue();
+			var key = (String)entry.getKey();
+			var resourcePath = (String)entry.getValue();
 			resources.put(key, validatePath(projectRoot, projectRoot.relativize(path.getParent().resolve(resourcePath)).toString()));
 		}
 
@@ -239,11 +235,11 @@ public class ProjectManager
 
 	private static List<String> validateOptions(List<String> options, TargetTriple target)
 	{
-		List<String> result = new ArrayList<>();
+		var result = new ArrayList<String>();
 
 		for(String option : options)
 		{
-			String[] parts = option.split(":");
+			var parts = option.split(":");
 
 			switch(parts.length)
 			{
@@ -252,7 +248,7 @@ public class ProjectManager
 				break;
 
 			case 2:
-				Condition condition = ConditionParser.parse(parts[0]);
+				var condition = ConditionParser.parse(parts[0]);
 
 				if(condition.test(target))
 					result.add(parts[1]);
@@ -260,19 +256,19 @@ public class ProjectManager
 				break;
 
 			default:
-				throw new CompileException(String.format("invalid option specification '%s', expected form [condition:]option", option));
+				configError("invalid option specification '%s', expected form [condition:]option", option);
 			}
 		}
 
 		return result;
 	}
 
-	private static BuildTarget validateTarget(Path root, Path buildRoot, String name, TargetToml toml, TargetTriple target) throws IOException
+	private static BuildTarget validateTarget(Path root, String name, TargetToml toml, TargetTriple target) throws IOException
 	{
 		validateNonNull("type", toml.type);
 		validateNonNull("sources", toml.sources);
 
-		BuildType type;
+		BuildType type = null;
 
 		try
 		{
@@ -280,7 +276,7 @@ public class ProjectManager
 		}
 		catch(IllegalArgumentException ex)
 		{
-			throw new CompileException(String.format("invalid target type '%s'", toml.type));
+			configError("invalid target type '%s'", toml.type);
 		}
 
 		// entry-point may be null for executables as well to allow entry points in other languages
@@ -288,7 +284,7 @@ public class ProjectManager
 		if(type != BuildType.EXECUTABLE && toml.entryPoint != null)
 			configError("property 'entry-point' is only applicable to executables");
 
-		BuildTarget result = new BuildTarget();
+		var result = new BuildTarget();
 		result.name = name;
 		result.type = type;
 		result.entryPoint = toml.entryPoint;
@@ -311,10 +307,9 @@ public class ProjectManager
 
 	private static List<String> mergeUnique(List<String> first, List<String> second)
 	{
-		List<String> result = new ArrayList<>();
-		result.addAll(first);
+		var result = new ArrayList<>(first);
 
-		for(String s : second)
+		for(var s : second)
 			if(!result.contains(s))
 				result.add(s);
 
@@ -337,9 +332,9 @@ public class ProjectManager
 
 		flattened.add(profile);
 
-		for(String inheritedName : profile.inherit)
+		for(var inheritedName : profile.inherit)
 		{
-			ProfileToml inherited = profiles.get(inheritedName);
+			var inherited = profiles.get(inheritedName);
 			flattenProfileHierarchy(inherited, profiles, flattened);
 			copyOptions(inherited, profile);
 		}
@@ -347,9 +342,9 @@ public class ProjectManager
 
 	private static void flattenProfileHierarchy(Map<String, ProfileToml> profiles)
 	{
-		Set<ProfileToml> flattened = Collections.newSetFromMap(new IdentityHashMap<>());
+		var flattened = Collections.newSetFromMap(new IdentityHashMap<ProfileToml, Boolean>());
 
-		for(ProfileToml profile : profiles.values())
+		for(var profile : profiles.values())
 			flattenProfileHierarchy(profile, profiles, flattened);
 	}
 
@@ -359,20 +354,20 @@ public class ProjectManager
 	                                  Set<String> buildProfiles,
 	                                  TargetTriple target)
 	{
-		for(BuildTarget build : buildTargets.values())
+		for(var build : buildTargets.values())
 		{
-			TargetToml targetToml = targetTomls.get(build.name);
+			var targetToml = targetTomls.get(build.name);
 
-			for(String buildProfile : buildProfiles)
+			for(var buildProfile : buildProfiles)
 				if(!targetToml.profiles.contains(buildProfile))
 					targetToml.profiles.add(buildProfile);
 
-			for(String profileName : targetToml.profiles)
+			for(var profileName : targetToml.profiles)
 			{
-				ProfileToml profileToml = profileTomls.get(profileName);
+				var profileToml = profileTomls.get(profileName);
 
 				if(profileToml == null)
-					throw new CompileException(String.format("unknown profile '%s'", profileName));
+					configError("unknown profile '%s'", profileName);
 
 				build.asmOptions .addAll(validateOptions(profileToml.asmOptions,  target));
 				build.cOptions   .addAll(validateOptions(profileToml.cOptions,    target));
@@ -396,10 +391,10 @@ public class ProjectManager
 				var dependency = targets.get(dependencyName);
 
 				if(dependency == null)
-					throw new CompileException(String.format("unknown dependency '%s'", dependencyName));
+					configError("unknown dependency '%s'", dependencyName);
 
 				if(dependency.type != BuildType.LIBRARY)
-					throw new CompileException(String.format("dependency '%s' is not a library", dependencyName));
+					configError("dependency '%s' is not a library", dependencyName);
 
 				target.dependencies.add(dependency);
 			}
@@ -408,7 +403,7 @@ public class ProjectManager
 		// TODO: check for cycles
 	}
 
-	private static Project validateConfig(Path root, Path buildRoot, Set<String> buildProfiles, ProjectToml toml, TargetTriple target) throws IOException
+	private static Project validateConfig(Path root, Set<String> buildProfiles, ProjectToml toml, TargetTriple target) throws IOException
 	{
 		validateNonNull("katana-version", toml.katanaVersion);
 		validateNonNull("name", toml.name);
@@ -416,27 +411,27 @@ public class ProjectManager
 		validateNonNull("version", toml.version);
 		validatePropertyValue("version", toml.version, PROJECT_VERSION_PATTERN);
 
-		Map<String, BuildTarget> targets = new HashMap<>();
+		var targets = new HashMap<String, BuildTarget>();
 
-		for(Map.Entry<String, TargetToml> entry : toml.targets.entrySet())
+		for(var entry : toml.targets.entrySet())
 		{
 			String name = entry.getKey();
-			targets.put(name, validateTarget(root, buildRoot, name, entry.getValue(), target));
+			targets.put(name, validateTarget(root, name, entry.getValue(), target));
 		}
 
 		flattenProfileHierarchy(toml.profiles);
 		applyProfiles(targets, toml.targets, toml.profiles, buildProfiles, target);
 		validateDependencies(targets, toml.targets);
 
-		return new Project(root, toml.name, toml.version, targets, buildRoot);
+		return new Project(toml.name, toml.version, targets);
 	}
 
 	private static Map<String, ProfileToml> loadDefaultProfiles() throws IOException
 	{
-		TomlTable toml = TomlUtils.loadToml(DEFAULT_PROFILE_PATH);
-		Map<String, ProfileToml> profiles = new HashMap<>();
+		var toml = TomlUtils.loadToml(DEFAULT_PROFILE_PATH);
+		var profiles = new HashMap<String, ProfileToml>();
 
-		for(Map.Entry<String, Object> entry : toml.entrySet())
+		for(var entry : toml.entrySet())
 			profiles.put(entry.getKey(), ((TomlTable)entry.getValue()).asObject(ProfileToml.class));
 
 		return profiles;
@@ -444,24 +439,24 @@ public class ProjectManager
 
 	private static ProjectToml loadConfig(Path path) throws IOException
 	{
-		TomlTable toml = TomlUtils.loadToml(path);
-		ProjectToml config = toml.asObject(ProjectToml.class);
+		var toml = TomlUtils.loadToml(path);
+		var config = toml.asObject(ProjectToml.class);
 
-		TomlTable targetsToml = toml.getTomlTable("targets");
+		var targetsToml = toml.getTomlTable("targets");
 
 		if(targetsToml != null)
 		{
-			for(Map.Entry<String, Object> entry : targetsToml.toMap().entrySet())
+			for(var entry : targetsToml.toMap().entrySet())
 			{
 				config.targets.put(entry.getKey(), ((TomlTable)entry.getValue()).asObject(TargetToml.class));
 			}
 		}
 
-		TomlTable profilesToml = toml.getTomlTable("profiles");
+		var profilesToml = toml.getTomlTable("profiles");
 
 		if(profilesToml != null)
 		{
-			for(Map.Entry<String, Object> entry : profilesToml.toMap().entrySet())
+			for(var entry : profilesToml.toMap().entrySet())
 			{
 				config.profiles.put(entry.getKey(), ((TomlTable)entry.getValue()).asObject(ProfileToml.class));
 			}
@@ -470,11 +465,11 @@ public class ProjectManager
 		return config;
 	}
 
-	public static Project load(Path root, Path buildRoot, Set<String> buildProfiles, TargetTriple target) throws IOException
+	public static Project load(Path root, Set<String> buildProfiles, TargetTriple target) throws IOException
 	{
-		ProjectToml config = loadConfig(root.resolve(PROJECT_CONFIG_NAME));
+		var config = loadConfig(root.resolve(PROJECT_CONFIG_NAME));
 		config.profiles.putAll(loadDefaultProfiles());
-		return validateConfig(root, buildRoot, buildProfiles, config, target);
+		return validateConfig(root, buildProfiles, config, target);
 	}
 
 	public static void createDefaultProject(Path path) throws IOException
@@ -484,7 +479,7 @@ public class ProjectManager
 
 	public static Path locateProjectRoot() throws IOException
 	{
-		Path current = Paths.get("").toRealPath();
+		var current = Paths.get("").toRealPath();
 
 		for(; current != null; current = current.getParent())
 			if(current.resolve(PROJECT_CONFIG_NAME).toFile().exists())

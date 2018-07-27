@@ -16,7 +16,6 @@ package io.katana.compiler.project;
 
 import io.katana.compiler.Katana;
 import io.katana.compiler.analysis.ProgramValidator;
-import io.katana.compiler.ast.AstProgram;
 import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.backend.ResourceGenerator;
 import io.katana.compiler.backend.llvm.ProgramCodeGenerator;
@@ -26,13 +25,15 @@ import io.katana.compiler.parser.ProgramParser;
 import io.katana.compiler.platform.Os;
 import io.katana.compiler.platform.TargetTriple;
 import io.katana.compiler.scanner.SourceManager;
-import io.katana.compiler.sema.SemaProgram;
 import io.katana.compiler.utils.Maybe;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.List;
 
 public class ProjectBuilder
 {
@@ -40,24 +41,24 @@ public class ProjectBuilder
 	private static final Path KATANA_LIBRARY_DIR = Katana.HOME.resolve("lib");
 	private static final String BUILD_TMPDIR = "tmp";
 	private static final String BUILD_OUTDIR = "out";
+	private static final String RESOURCES_FILE = "kt_resources.asm";
 
 	private static void runBuildCommand(Path dir, BuildTarget build, List<String> command)
 	{
 		System.out.println(String.format("[%s] %s", build.name, String.join(" ", command)));
 
-		ProcessBuilder builder = new ProcessBuilder(command);
+		var builder = new ProcessBuilder(command);
 		builder.inheritIO();
 		builder.directory(dir.toFile());
 
 		try
 		{
-			Process process = builder.start();
-			int exitCode = process.waitFor();
+			var process = builder.start();
+			var exitCode = process.waitFor();
 
 			if(exitCode != 0)
 				throw new CompileException(String.format("process '%s' exited with code %s.", command.get(0), exitCode));
 		}
-
 		catch(IOException | InterruptedException ex)
 		{
 			throw new RuntimeException(ex);
@@ -85,7 +86,7 @@ public class ProjectBuilder
 
 	private static Path compileAsmFile(Path root, Path buildDir, BuildTarget build, Path path, TargetTriple target)
 	{
-		List<String> command = new ArrayList<>();
+		var command = new ArrayList<String>();
 		command.add("clang");
 		command.addAll(build.asmOptions);
 
@@ -103,7 +104,7 @@ public class ProjectBuilder
 
 	private static Path compileCFile(Path root, Path buildDir, BuildTarget build, Path path, TargetTriple target)
 	{
-		List<String> command = new ArrayList<>();
+		var command = new ArrayList<String>();
 		command.add("clang");
 		command.addAll(build.cOptions);
 
@@ -124,7 +125,7 @@ public class ProjectBuilder
 
 	private static Path compileCppFile(Path root, Path buildDir, BuildTarget build, Path path, TargetTriple target)
 	{
-		List<String> command = new ArrayList<>();
+		var command = new ArrayList<String>();
 		command.add("clang++");
 		command.addAll(build.cppOptions);
 
@@ -145,7 +146,7 @@ public class ProjectBuilder
 
 	private static Path compileLlvmFile(Path root, Path buildDir, BuildTarget build, TargetTriple target, Path path)
 	{
-		List<String> command = new ArrayList<>();
+		var command = new ArrayList<String>();
 		command.add("clang");
 
 		command.add("-Wno-override-module");
@@ -216,7 +217,7 @@ public class ProjectBuilder
 		for(var dependency : build.dependencies)
 			command.add("-l" + dependency.name);
 
-		for(String lib : build.systemLibraries)
+		for(var lib : build.systemLibraries)
 			command.add("-l" + lib);
 
 		command.add("-o");
@@ -233,7 +234,7 @@ public class ProjectBuilder
 		switch(fileType)
 		{
 		case ASM: return compileAsmFile(root, buildDir, build, path, target);
-		case C:   return compileCFile(root, buildDir, build, path, target);
+		case C:   return compileCFile  (root, buildDir, build, path, target);
 		case CPP: return compileCppFile(root, buildDir, build, path, target);
 
 		default:
@@ -243,19 +244,19 @@ public class ProjectBuilder
 
 	private static Maybe<Path> compileKatanaSources(DiagnosticsManager diag, Path root, BuildTarget build, PlatformContext context, Path buildDir) throws IOException
 	{
-		Set<Path> katanaFiles = build.sourceFiles.get(FileType.KATANA);
+		var katanaFiles = build.sourceFiles.get(FileType.KATANA);
 
 		if(katanaFiles == null)
 			return Maybe.none();
 
-		SourceManager sourceManager = SourceManager.loadFiles(root, build.sourceFiles.get(FileType.KATANA));
-		AstProgram ast = ProgramParser.parse(sourceManager, diag);
-		SemaProgram program = ProgramValidator.validate(ast, context);
+		var sourceManager = SourceManager.loadFiles(root, build.sourceFiles.get(FileType.KATANA));
+		var ast = ProgramParser.parse(sourceManager, diag);
+		var program = ProgramValidator.validate(ast, context);
 
 		if(!diag.successful())
 			throw new CompileException(diag.summary());
 
-		Path katanaOutputFile = buildDir.resolve(build.name + ".ll");
+		var katanaOutputFile = buildDir.resolve(build.name + ".ll");
 		ProgramCodeGenerator.generate(build, program, context, katanaOutputFile);
 		return Maybe.some(katanaOutputFile);
 	}
@@ -278,7 +279,7 @@ public class ProjectBuilder
 		var katanaOutput = compileKatanaSources(diag, root, build, context, tmpDir);
 		var objectFiles = new ArrayList<Path>();
 
-		var resourcePath = tmpDir.resolve("resources.asm");
+		var resourcePath = tmpDir.resolve(RESOURCES_FILE);
 		ResourceGenerator.generate(context.target(), build.resourceFiles, resourcePath);
 
 		objectFiles.add(compileAsmFile(root, tmpDir, build, resourcePath, context.target()));
@@ -286,13 +287,13 @@ public class ProjectBuilder
 		if(katanaOutput.isSome())
 			objectFiles.add(compileLlvmFile(root, tmpDir, build, context.target(), katanaOutput.get()));
 
-		for(Map.Entry<FileType, Set<Path>> entry : build.sourceFiles.entrySet())
+		for(var entry : build.sourceFiles.entrySet())
 		{
-			FileType type = entry.getKey();
-			Set<Path> paths = entry.getValue();
+			var type = entry.getKey();
+			var paths = entry.getValue();
 
 			if(type != FileType.KATANA)
-				for(Path path : paths)
+				for(var path : paths)
 					objectFiles.add(compileFile(root, tmpDir, build, type, path, context.target()));
 		}
 

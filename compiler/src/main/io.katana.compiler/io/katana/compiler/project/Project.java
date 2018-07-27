@@ -14,23 +14,18 @@
 
 package io.katana.compiler.project;
 
-import java.nio.file.Path;
 import java.util.Map;
 
 public class Project
 {
-	public Path root;
 	public String name;
 	public String version;
 	public Map<String, BuildTarget> targets;
-	public Path buildRoot;
 
-	public Project(Path root, String name, String version, Map<String, BuildTarget> targets, Path buildRoot)
+	public Project(String name, String version, Map<String, BuildTarget> targets)
 	{
-		this.root = root;
 		this.name = name;
 		this.version = version;
 		this.targets = targets;
-		this.buildRoot = buildRoot;
 	}
 }

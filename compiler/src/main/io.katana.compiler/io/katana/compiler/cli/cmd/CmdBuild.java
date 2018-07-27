@@ -71,7 +71,7 @@ public class CmdBuild implements Runnable
 			var diag = new DiagnosticsManager(diagnosticTraces);
 
 			var buildProfiles = profiles == null ? new ArrayList<String>() : profiles;
-			var project = ProjectManager.load(projectRoot, buildRoot, new HashSet<>(buildProfiles), context.target());
+			var project = ProjectManager.load(projectRoot, new HashSet<>(buildProfiles), context.target());
 
 			var targets = new ArrayList<BuildTarget>();
 
@@ -90,7 +90,7 @@ public class CmdBuild implements Runnable
 			else
 				targets.addAll(project.targets.values());
 
-			ProjectBuilder.buildTargets(diag, project.root, buildRoot, targets, context);
+			ProjectBuilder.buildTargets(diag, projectRoot, buildRoot, targets, context);
 		}
 		catch(CompileException ex)
 		{
