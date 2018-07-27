@@ -31,6 +31,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class ProjectManager
 {
@@ -378,6 +379,33 @@ public class ProjectManager
 		}
 	}
 
+	private static void walkDependencyGraph(BuildTarget target, List<BuildTarget> seen)
+	{
+		if(seen.contains(target))
+		{
+			while(seen.get(0) != target)
+				seen.remove(0);
+
+			seen.add(target);
+			var cycle = seen.stream().map(t -> t.name).collect(Collectors.joining(" -> "));
+			configError("cyclic dependency detected: %s", cycle);
+		}
+
+		seen.add(target);
+
+		for(var dependency : target.dependencies)
+			walkDependencyGraph(dependency, seen);
+	}
+
+	private static void ensureDependencyCycleFree(Collection<BuildTarget> targets)
+	{
+		for(var target : targets)
+		{
+			var seen = new ArrayList<BuildTarget>();
+			walkDependencyGraph(target, seen);
+		}
+	}
+
 	private static void validateDependencies(Map<String, BuildTarget> targets, Map<String, TargetToml> targetTomls)
 	{
 		for(var targetEntry : targets.entrySet())
@@ -391,16 +419,19 @@ public class ProjectManager
 				var dependency = targets.get(dependencyName);
 
 				if(dependency == null)
-					configError("unknown dependency '%s'", dependencyName);
+					configError("target '%s': unknown dependency '%s'", name, dependencyName);
+
+				if(dependency.name.equals(name))
+					configError("target '%s': target cannot depend on itself", name);
 
 				if(dependency.type != BuildType.LIBRARY)
-					configError("dependency '%s' is not a library", dependencyName);
+					configError("target '%s': dependency '%s' is not a library", name, dependencyName);
 
 				target.dependencies.add(dependency);
 			}
 		}
 
-		// TODO: check for cycles
+		ensureDependencyCycleFree(targets.values());
 	}
 
 	private static Project validateConfig(Path root, Set<String> buildProfiles, ProjectToml toml, TargetTriple target) throws IOException
