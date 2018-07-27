@@ -90,8 +90,7 @@ public class CmdBuild implements Runnable
 			else
 				targets.addAll(project.targets.values());
 
-			for(var target : targets)
-				ProjectBuilder.build(diag, project.root, buildRoot.resolve(target.name), target, context);
+			ProjectBuilder.buildTargets(diag, project.root, buildRoot, targets, context);
 		}
 		catch(CompileException ex)
 		{

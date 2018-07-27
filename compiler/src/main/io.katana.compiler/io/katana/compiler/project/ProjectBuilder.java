@@ -32,11 +32,7 @@ import io.katana.compiler.utils.Maybe;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ProjectBuilder
 {
@@ -195,9 +191,8 @@ public class ProjectBuilder
 
 	private static void link(Path root, Path buildDir, BuildTarget build, List<Path> filePaths, TargetTriple target)
 	{
-		String binaryName = build.name + fileExtensionFor(build.type, target);
-
-		List<String> command = new ArrayList<>();
+		var binaryName = build.name + fileExtensionFor(build.type, target);
+		var command = new ArrayList<String>();
 
 		if(build.sourceFiles.get(FileType.CPP) == null)
 			command.add("clang");
@@ -214,6 +209,12 @@ public class ProjectBuilder
 
 		if(KATANA_LIBRARY_DIR.toFile().exists())
 			command.add("-L" + KATANA_LIBRARY_DIR);
+
+		for(var dependency : build.dependencies)
+			command.add("-L" + buildDir.getParent().getParent().resolve(dependency.name).resolve(BUILD_OUTDIR));
+
+		for(var dependency : build.dependencies)
+			command.add("-l" + dependency.name);
 
 		for(String lib : build.systemLibraries)
 			command.add("-l" + lib);
@@ -259,7 +260,7 @@ public class ProjectBuilder
 		return Maybe.some(katanaOutputFile);
 	}
 
-	public static void build(DiagnosticsManager diag, Path root, Path buildDir, BuildTarget build, PlatformContext context) throws IOException
+	private static void buildTarget(DiagnosticsManager diag, Path root, Path buildDir, BuildTarget build, PlatformContext context) throws IOException
 	{
 		if(!buildDir.toFile().exists())
 			Files.createDirectories(buildDir);
@@ -274,10 +275,10 @@ public class ProjectBuilder
 		if(!outDir.toFile().exists())
 			Files.createDirectory(outDir);
 
-		Maybe<Path> katanaOutput = compileKatanaSources(diag, root, build, context, tmpDir);
-		List<Path> objectFiles = new ArrayList<>();
+		var katanaOutput = compileKatanaSources(diag, root, build, context, tmpDir);
+		var objectFiles = new ArrayList<Path>();
 
-		Path resourcePath = tmpDir.resolve("resources.asm");
+		var resourcePath = tmpDir.resolve("resources.asm");
 		ResourceGenerator.generate(context.target(), build.resourceFiles, resourcePath);
 
 		objectFiles.add(compileAsmFile(root, tmpDir, build, resourcePath, context.target()));
@@ -296,6 +297,51 @@ public class ProjectBuilder
 		}
 
 		link(root, outDir, build, objectFiles, context.target());
-		System.out.println(String.format("[%s] build successful.", build.name));
+		System.out.println(String.format("[%s] target built successfully.", build.name));
+	}
+
+	private static void addTargetsRecursively(List<BuildTarget> order, BuildTarget target)
+	{
+		for(var dependency : target.dependencies)
+			addTargetsRecursively(order, dependency);
+
+		order.add(target);
+	}
+
+	private static List<BuildTarget> removeDuplicates(List<BuildTarget> targets)
+	{
+		var result = new ArrayList<BuildTarget>();
+		var seen = Collections.newSetFromMap(new IdentityHashMap<BuildTarget, Boolean>());
+
+		for(var target : targets)
+		{
+			if(seen.contains(target))
+				continue;
+
+			seen.add(target);
+			result.add(target);
+		}
+
+		return result;
+	}
+
+	private static List<BuildTarget> determineBuildOrder(List<BuildTarget> targets)
+	{
+		var order = new ArrayList<BuildTarget>();
+
+		for(var target : targets)
+			addTargetsRecursively(order, target);
+
+		return removeDuplicates(order);
+	}
+
+	public static void buildTargets(DiagnosticsManager diag, Path root, Path buildDir, List<BuildTarget> targets, PlatformContext context) throws IOException
+	{
+		var targetsInBuildOrder = determineBuildOrder(targets);
+
+		for(var target : targetsInBuildOrder)
+			ProjectBuilder.buildTarget(diag, root, buildDir.resolve(target.name), target, context);
+
+		System.out.println("build successful.");
 	}
 }

@@ -30,6 +30,7 @@ public class BuildTarget
 	public List<String> cppOptions;
 	public List<String> llvmOptions;
 	public List<String> linkOptions;
+	public List<BuildTarget> dependencies;
 	public List<String> systemLibraries;
 	public Map<String, Path> resourceFiles;
 }

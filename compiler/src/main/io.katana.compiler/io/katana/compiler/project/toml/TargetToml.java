@@ -23,6 +23,7 @@ public class TargetToml
 	public String entryPoint;
 	public List<String> sources;
 	public String resourceList;
+	public List<String> dependencies = new ArrayList<>();
 	public List<String> systemLibraries = new ArrayList<>();
 	public List<String> asmOptions = new ArrayList<>();
 	public List<String> cOptions = new ArrayList<>();

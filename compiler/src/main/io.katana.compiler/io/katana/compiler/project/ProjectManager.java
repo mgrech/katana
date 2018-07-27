@@ -298,6 +298,7 @@ public class ProjectManager
 		result.cppOptions = validateOptions(toml.cppOptions, target);
 		result.llvmOptions = validateOptions(toml.llvmOptions, target);
 		result.linkOptions = validateOptions(toml.linkOptions, target);
+		result.dependencies = new ArrayList<>();
 		result.systemLibraries = validateLibs(toml.systemLibraries, target);
 
 		if(toml.resourceList != null && !toml.resourceList.isEmpty())
@@ -382,6 +383,31 @@ public class ProjectManager
 		}
 	}
 
+	private static void validateDependencies(Map<String, BuildTarget> targets, Map<String, TargetToml> targetTomls)
+	{
+		for(var targetEntry : targets.entrySet())
+		{
+			var name = targetEntry.getKey();
+			var target = targetEntry.getValue();
+			var toml = targetTomls.get(name);
+
+			for(var dependencyName : toml.dependencies)
+			{
+				var dependency = targets.get(dependencyName);
+
+				if(dependency == null)
+					throw new CompileException(String.format("unknown dependency '%s'", dependencyName));
+
+				if(dependency.type != BuildType.LIBRARY)
+					throw new CompileException(String.format("dependency '%s' is not a library", dependencyName));
+
+				target.dependencies.add(dependency);
+			}
+		}
+
+		// TODO: check for cycles
+	}
+
 	private static Project validateConfig(Path root, Path buildRoot, Set<String> buildProfiles, ProjectToml toml, TargetTriple target) throws IOException
 	{
 		validateNonNull("katana-version", toml.katanaVersion);
@@ -400,6 +426,7 @@ public class ProjectManager
 
 		flattenProfileHierarchy(toml.profiles);
 		applyProfiles(targets, toml.targets, toml.profiles, buildProfiles, target);
+		validateDependencies(targets, toml.targets);
 
 		return new Project(root, toml.name, toml.version, targets, buildRoot);
 	}
