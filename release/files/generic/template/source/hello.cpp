@@ -1,4 +1,4 @@
-#include <katana.h>
+#include <katana/katana.h>
 
 #include <iostream>
 
