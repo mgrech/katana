@@ -77,7 +77,7 @@ public class ProjectManager
 		if(!path.startsWith(root))
 			configError("path does not refer to a child of the project directory: %s", pathString);
 
-		return path;
+		return root.relativize(path);
 	}
 
 	private static FileType fileTypefromName(String name)

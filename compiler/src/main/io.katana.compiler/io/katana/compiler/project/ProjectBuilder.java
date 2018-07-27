@@ -339,6 +339,9 @@ public class ProjectBuilder
 
 	public static void buildTargets(DiagnosticsManager diag, Path root, Path buildDir, List<BuildTarget> targets, PlatformContext context) throws IOException
 	{
+		if(buildDir.startsWith(root))
+			buildDir = root.relativize(buildDir);
+
 		var targetsInBuildOrder = determineBuildOrder(targets);
 
 		for(var target : targetsInBuildOrder)
