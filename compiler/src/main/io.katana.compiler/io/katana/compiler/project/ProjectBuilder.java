@@ -296,10 +296,12 @@ public class ProjectBuilder
 		var katanaOutput = compileKatanaSources(diag, root, build, context, tmpDir);
 		var objectFiles = new ArrayList<Path>();
 
-		var resourcePath = tmpDir.resolve(RESOURCES_FILE);
-		ResourceGenerator.generate(context.target(), build.resourceFiles, resourcePath);
-
-		objectFiles.add(compileAsmFile(root, tmpDir, build, resourcePath, context.target()));
+		if(!build.resourceFiles.isEmpty())
+		{
+			var resourcePath = tmpDir.resolve(RESOURCES_FILE);
+			ResourceGenerator.generate(context.target(), build.resourceFiles, resourcePath);
+			objectFiles.add(compileAsmFile(root, tmpDir, build, resourcePath, context.target()));
+		}
 
 		if(katanaOutput.isSome())
 			objectFiles.add(compileLlvmFile(root, tmpDir, build, context.target(), katanaOutput.get()));
