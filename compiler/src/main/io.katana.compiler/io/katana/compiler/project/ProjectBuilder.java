@@ -201,6 +201,19 @@ public class ProjectBuilder
 		throw new AssertionError("unreachable");
 	}
 
+	private static void findDependenciesRecursively(BuildTarget build, List<BuildTarget> result)
+	{
+		for(var dependency : build.dependencies)
+		{
+			if(!result.contains(dependency))
+				result.add(dependency);
+		}
+
+		for(var dependency : build.dependencies)
+			if(dependency.type == BuildType.LIBRARY_STATIC)
+				findDependenciesRecursively(dependency, result);
+	}
+
 	private static void link(Path root, Path buildDir, BuildTarget build, List<Path> filePaths, TargetTriple target)
 	{
 		var binaryName = build.name + fileExtensionFor(build.type, target);
@@ -233,10 +246,15 @@ public class ProjectBuilder
 			if(KATANA_LIBRARY_DIR.toFile().exists())
 				command.add("-L" + KATANA_LIBRARY_DIR);
 
-			for(var dependency : build.dependencies)
-				command.add("-L" + buildDir.getParent().getParent().resolve(dependency.name).resolve(BUILD_OUTDIR));
+			var dependencies = new ArrayList<BuildTarget>();
+			findDependenciesRecursively(build, dependencies);
 
-			for(var dependency : build.dependencies)
+			var buildRoot = buildDir.getParent().getParent();
+
+			for(var dependency : dependencies)
+				command.add("-L" + buildRoot.resolve(dependency.name).resolve(BUILD_OUTDIR));
+
+			for(var dependency : dependencies)
 				command.add("-l" + dependency.name);
 
 			for(var lib : build.systemLibraries)
