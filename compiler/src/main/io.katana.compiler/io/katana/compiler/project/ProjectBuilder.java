@@ -286,18 +286,12 @@ public class ProjectBuilder
 
 	private static void buildTarget(DiagnosticsManager diag, Path root, Path buildDir, BuildTarget build, PlatformContext context) throws IOException
 	{
-		if(!buildDir.toFile().exists())
-			Files.createDirectories(buildDir);
-
 		var tmpDir = buildDir.resolve(BUILD_TMPDIR);
-
-		if(!tmpDir.toFile().exists())
-			Files.createDirectory(tmpDir);
-
 		var outDir = buildDir.resolve(BUILD_OUTDIR);
 
-		if(!outDir.toFile().exists())
-			Files.createDirectory(outDir);
+		Files.createDirectories(buildDir);
+		Files.createDirectories(tmpDir);
+		Files.createDirectories(outDir);
 
 		var katanaOutput = compileKatanaSources(diag, root, build, context, tmpDir);
 		var objectFiles = new ArrayList<Path>();
