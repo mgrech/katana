@@ -17,5 +17,6 @@ package io.katana.compiler.project;
 public enum BuildType
 {
 	EXECUTABLE,
-	LIBRARY,
+	LIBRARY_STATIC,
+	LIBRARY_SHARED,
 }

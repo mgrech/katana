@@ -273,7 +273,7 @@ public class ProjectManager
 
 		try
 		{
-			type = BuildType.valueOf(toml.type.toUpperCase());
+			type = BuildType.valueOf(toml.type.toUpperCase().replaceAll("-", "_"));
 		}
 		catch(IllegalArgumentException ex)
 		{
@@ -424,7 +424,7 @@ public class ProjectManager
 				if(dependency.name.equals(name))
 					configError("target '%s': target cannot depend on itself", name);
 
-				if(dependency.type != BuildType.LIBRARY)
+				if(dependency.type != BuildType.LIBRARY_STATIC && dependency.type != BuildType.LIBRARY_SHARED)
 					configError("target '%s': dependency '%s' is not a library", name, dependencyName);
 
 				target.dependencies.add(dependency);

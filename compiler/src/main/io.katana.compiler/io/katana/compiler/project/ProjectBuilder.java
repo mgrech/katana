@@ -176,7 +176,16 @@ public class ProjectBuilder
 			default:      return "";
 			}
 
-		case LIBRARY:
+		case LIBRARY_STATIC:
+			switch(target.os)
+			{
+			case WINDOWS: return ".lib";
+			case LINUX:
+			case MACOS:   return ".a";
+			default: throw new AssertionError("unreachable");
+			}
+
+		case LIBRARY_SHARED:
 			switch(target.os)
 			{
 			case WINDOWS: return ".dll";
@@ -196,32 +205,45 @@ public class ProjectBuilder
 		var binaryName = build.name + fileExtensionFor(build.type, target);
 		var command = new ArrayList<String>();
 
-		if(build.sourceFiles.get(FileType.CPP) == null)
-			command.add("clang");
+		if(build.type == BuildType.LIBRARY_STATIC)
+		{
+			if(target.os == Os.WINDOWS)
+				command.add("llvm-ar");
+			else
+				command.add("ar");
+
+			command.add("rcs");
+		}
 		else
-			command.add("clang++");
+		{
+			if(build.sourceFiles.get(FileType.CPP) == null)
+				command.add("clang");
+			else
+				command.add("clang++");
 
-		if(target.os != Os.MACOS)
-			command.add("-fuse-ld=lld");
+			if(target.os != Os.MACOS)
+				command.add("-fuse-ld=lld");
 
-		command.addAll(build.linkOptions);
+			command.addAll(build.linkOptions);
 
-		if(build.type == BuildType.LIBRARY)
-			command.add("-shared");
+			if(build.type == BuildType.LIBRARY_SHARED)
+				command.add("-shared");
 
-		if(KATANA_LIBRARY_DIR.toFile().exists())
-			command.add("-L" + KATANA_LIBRARY_DIR);
+			if(KATANA_LIBRARY_DIR.toFile().exists())
+				command.add("-L" + KATANA_LIBRARY_DIR);
 
-		for(var dependency : build.dependencies)
-			command.add("-L" + buildDir.getParent().getParent().resolve(dependency.name).resolve(BUILD_OUTDIR));
+			for(var dependency : build.dependencies)
+				command.add("-L" + buildDir.getParent().getParent().resolve(dependency.name).resolve(BUILD_OUTDIR));
 
-		for(var dependency : build.dependencies)
-			command.add("-l" + dependency.name);
+			for(var dependency : build.dependencies)
+				command.add("-l" + dependency.name);
 
-		for(var lib : build.systemLibraries)
-			command.add("-l" + lib);
+			for(var lib : build.systemLibraries)
+				command.add("-l" + lib);
 
-		command.add("-o");
+			command.add("-o");
+		}
+
 		command.add(buildDir.resolve(binaryName).toString());
 
 		// append all source files

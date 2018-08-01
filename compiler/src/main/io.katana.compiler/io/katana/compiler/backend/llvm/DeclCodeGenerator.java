@@ -107,7 +107,8 @@ public class DeclCodeGenerator implements IVisitor
 			{
 				switch(context.build().type)
 				{
-				case LIBRARY: context.write("dllexport "); break;
+				case LIBRARY_SHARED: context.write("dllexport "); break;
+				case LIBRARY_STATIC: break;
 				case EXECUTABLE: break;
 				default: throw new AssertionError("unreachable");
 				}

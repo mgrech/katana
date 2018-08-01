@@ -23,22 +23,22 @@
 #endif
 
 #if defined(KATANA_OS_WINDOWS)
-#define KATANA_LIBRARY_EXPORT __declspec(dllexport)
-#define KATANA_LIBRARY_IMPORT __declspec(dllimport)
+#define KATANA_LIBRARY_SHARED_EXPORT __declspec(dllexport)
+#define KATANA_LIBRARY_SHARED_IMPORT __declspec(dllimport)
 #else
-#define KATANA_LIBRARY_EXPORT
-#define KATANA_LIBRARY_IMPORT
+#define KATANA_LIBRARY_SHARED_EXPORT
+#define KATANA_LIBRARY_SHARED_IMPORT
 #endif
 
-#ifdef KATANA_TYPE_LIBRARY
-#define KATANA_EXPORT_TYPE KATANA_LIBRARY_EXPORT
+#ifdef KATANA_TYPE_LIBRARY_SHARED
+#define KATANA_EXPORT_TYPE KATANA_LIBRARY_SHARED_EXPORT
 #else
 #define KATANA_EXPORT_TYPE
 #endif
 
-#define KEXPORT         KEXTERN __attribute__((visibility("default"))) KATANA_EXPORT_TYPE
-#define KIMPORT         KEXTERN
-#define KIMPORT_LIBRARY KEXTERN KATANA_LIBRARY_IMPORT
+#define KEXPORT        KEXTERN __attribute__((visibility("default"))) KATANA_EXPORT_TYPE
+#define KIMPORT        KEXTERN
+#define KIMPORT_SHARED KEXTERN KATANA_LIBRARY_SHARED_IMPORT
 
 #ifdef __cplusplus
 typedef bool               kbool;
