@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ProjectBuilder
 {
@@ -43,9 +44,9 @@ public class ProjectBuilder
 	private static final String BUILD_OUTDIR = "out";
 	private static final String RESOURCES_FILE = "kt_resources.asm";
 
-	private static void runBuildCommand(Path dir, BuildTarget build, List<String> command)
+	private static void runBuildCommand(Path dir, BuildTarget build, String description, List<String> command)
 	{
-		System.out.println(String.format("[%s] %s", build.name, String.join(" ", command)));
+		System.out.printf("[%s] %s: %s\n", build.name, description, String.join(" ", command));
 
 		var builder = new ProcessBuilder(command);
 		builder.inheritIO();
@@ -57,7 +58,7 @@ public class ProjectBuilder
 			var exitCode = process.waitFor();
 
 			if(exitCode != 0)
-				throw new CompileException(String.format("process '%s' exited with code %s.", command.get(0), exitCode));
+				throw new CompileException(String.format("[%s] Error: Process '%s' exited with code %s.", build.name, command.get(0), exitCode));
 		}
 		catch(IOException | InterruptedException ex)
 		{
@@ -99,7 +100,7 @@ public class ProjectBuilder
 		var outputPath = buildDir.resolve(filename);
 		command.add(outputPath.toString());
 
-		runBuildCommand(root, build, command);
+		runBuildCommand(root, build, "Compiling", command);
 		return outputPath;
 	}
 
@@ -120,7 +121,7 @@ public class ProjectBuilder
 		var outputPath = buildDir.resolve(filename);
 		command.add(outputPath.toString());
 
-		runBuildCommand(root, build, command);
+		runBuildCommand(root, build, "Compiling", command);
 		return outputPath;
 	}
 
@@ -141,7 +142,7 @@ public class ProjectBuilder
 		var outputPath = buildDir.resolve(filename);
 		command.add(outputPath.toString());
 
-		runBuildCommand(root, build, command);
+		runBuildCommand(root, build, "Compiling", command);
 		return outputPath;
 	}
 
@@ -161,7 +162,7 @@ public class ProjectBuilder
 		var outputPath = buildDir.resolve(filename);
 		command.add(outputPath.toString());
 
-		runBuildCommand(root, build, command);
+		runBuildCommand(root, build, "Compiling", command);
 		return outputPath;
 	}
 
@@ -249,7 +250,7 @@ public class ProjectBuilder
 		// append all source files
 		filePaths.stream().map(Path::toString).forEach(command::add);
 
-		runBuildCommand(root, build, command);
+		runBuildCommand(root, build, "Linking", command);
 	}
 
 	private static Path compileFile(Path root, Path buildDir, BuildTarget build, FileType fileType, Path path, TargetTriple target)
@@ -272,6 +273,9 @@ public class ProjectBuilder
 		if(katanaFiles == null)
 			return Maybe.none();
 
+		var katanaOutputFile = buildDir.resolve(build.name + ".ll");
+		System.out.printf("[%s] Compiling Katana sources: %s\n", build.name, katanaOutputFile);
+
 		var sourceManager = SourceManager.loadFiles(root, build.sourceFiles.get(FileType.KATANA));
 		var ast = ProgramParser.parse(sourceManager, diag);
 		var program = ProgramValidator.validate(ast, context);
@@ -279,7 +283,6 @@ public class ProjectBuilder
 		if(!diag.successful())
 			throw new CompileException(diag.summary());
 
-		var katanaOutputFile = buildDir.resolve(build.name + ".ll");
 		ProgramCodeGenerator.generate(build, program, context, katanaOutputFile);
 		return Maybe.some(katanaOutputFile);
 	}
@@ -299,6 +302,7 @@ public class ProjectBuilder
 		if(!build.resourceFiles.isEmpty())
 		{
 			var resourcePath = tmpDir.resolve(RESOURCES_FILE);
+			System.out.printf("[%s] Generating resource file: %s\n", build.name, resourcePath);
 			ResourceGenerator.generate(context.target(), build.resourceFiles, resourcePath);
 			objectFiles.add(compileAsmFile(root, tmpDir, build, resourcePath, context.target()));
 		}
@@ -317,7 +321,7 @@ public class ProjectBuilder
 		}
 
 		link(root, outDir, build, objectFiles, context.target());
-		System.out.println(String.format("[%s] target built successfully.", build.name));
+		System.out.println(String.format("[%s] Target built successfully.", build.name));
 	}
 
 	private static void addTargetsRecursively(List<BuildTarget> order, BuildTarget target)
@@ -361,10 +365,13 @@ public class ProjectBuilder
 			buildDir = root.relativize(buildDir);
 
 		var targetsInBuildOrder = determineBuildOrder(targets);
+		var targetListing = targetsInBuildOrder.stream().map(t -> t.name).collect(Collectors.joining(", "));
+
+		System.out.printf("[*] Building the following targets in order: %s\n", targetListing);
 
 		for(var target : targetsInBuildOrder)
 			ProjectBuilder.buildTarget(diag, root, buildDir.resolve(target.name), target, context);
 
-		System.out.println("build successful.");
+		System.out.println("[*] All targets built successfully.");
 	}
 }
