@@ -97,7 +97,7 @@ public class SourceFile
 			lines.add(new String(lineBytes, StandardCharsets.UTF_8));
 		}
 
-		return new SourceFile(root.relativize(path), codepoints, linesByOffset, lines);
+		return new SourceFile(path, codepoints, linesByOffset, lines);
 	}
 
 	public Path path()
