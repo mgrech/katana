@@ -32,12 +32,12 @@ public class SourceManager
 		this.files = files;
 	}
 
-	public static SourceManager loadFiles(Path root, Set<Path> paths) throws IOException
+	public static SourceManager loadFiles(Set<Path> paths) throws IOException
 	{
 		Map<Path, SourceFile> files = new TreeMap<>();
 
 		for(Path path : paths)
-			files.put(path, SourceFile.load(root, path));
+			files.put(path, SourceFile.load(path));
 
 		return new SourceManager(files);
 	}

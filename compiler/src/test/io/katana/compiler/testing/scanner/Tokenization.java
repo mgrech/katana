@@ -44,7 +44,7 @@ public class Tokenization
 
 	public static Tokenization of(String source)
 	{
-		var file = SourceFile.fromBytes(HERE, HERE, source.getBytes(StandardCharsets.UTF_8));
+		var file = SourceFile.fromBytes(HERE, source.getBytes(StandardCharsets.UTF_8));
 		var diag = new DiagnosticsManager(true);
 		var tokens = Scanner.tokenize(file, diag);
 		return new Tokenization(tokens, diag);

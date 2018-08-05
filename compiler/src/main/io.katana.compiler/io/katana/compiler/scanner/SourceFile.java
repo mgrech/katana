@@ -50,13 +50,13 @@ public class SourceFile
 		this.lines = lines;
 	}
 
-	public static SourceFile load(Path root, Path path) throws IOException
+	public static SourceFile load(Path path) throws IOException
 	{
 		byte[] bytes = Files.readAllBytes(path);
-		return fromBytes(root, path, bytes);
+		return fromBytes(path, bytes);
 	}
 
-	public static SourceFile fromBytes(Path root, Path path, byte[] bytes)
+	public static SourceFile fromBytes(Path path, byte[] bytes)
 	{
 		int[] codepoints = new String(bytes, StandardCharsets.UTF_8).codePoints().toArray();
 
@@ -121,10 +121,5 @@ public class SourceFile
 		int lineOffset = lineEntry.getKey();
 		Line line = lineEntry.getValue();
 		return new SourceLocation(this, line.number, offset - lineOffset, length, offset);
-	}
-
-	public String slice(int offset, int length)
-	{
-		return new String(codepoints, offset, length);
 	}
 }

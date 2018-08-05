@@ -284,7 +284,7 @@ public class ProjectBuilder
 		}
 	}
 
-	private static Maybe<Path> compileKatanaSources(DiagnosticsManager diag, Path root, BuildTarget build, PlatformContext context, Path buildDir) throws IOException
+	private static Maybe<Path> compileKatanaSources(DiagnosticsManager diag, BuildTarget build, PlatformContext context, Path buildDir) throws IOException
 	{
 		var katanaFiles = build.sourceFiles.get(FileType.KATANA);
 
@@ -294,7 +294,7 @@ public class ProjectBuilder
 		var katanaOutputFile = buildDir.resolve(build.name + ".ll");
 		System.out.printf("[%s] Compiling Katana sources: %s\n", build.name, katanaOutputFile);
 
-		var sourceManager = SourceManager.loadFiles(root, build.sourceFiles.get(FileType.KATANA));
+		var sourceManager = SourceManager.loadFiles(build.sourceFiles.get(FileType.KATANA));
 		var ast = ProgramParser.parse(sourceManager, diag);
 		var program = ProgramValidator.validate(ast, context);
 
@@ -314,7 +314,7 @@ public class ProjectBuilder
 		Files.createDirectories(tmpDir);
 		Files.createDirectories(outDir);
 
-		var katanaOutput = compileKatanaSources(diag, root, build, context, tmpDir);
+		var katanaOutput = compileKatanaSources(diag, build, context, tmpDir);
 		var objectFiles = new ArrayList<Path>();
 
 		if(!build.resourceFiles.isEmpty())
