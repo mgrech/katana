@@ -35,7 +35,7 @@ public class SemaExprLitArray extends SimpleRValueExpr
 	@Override
 	public SemaType type()
 	{
-		return Types.addArray(length, Types.addConst(type));
+		return Types.addArray(length, type);
 	}
 
 	@Override

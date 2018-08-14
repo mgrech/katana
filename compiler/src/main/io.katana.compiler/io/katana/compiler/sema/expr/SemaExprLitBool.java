@@ -14,14 +14,11 @@
 
 package io.katana.compiler.sema.expr;
 
-import io.katana.compiler.analysis.Types;
 import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.sema.type.SemaTypeBuiltin;
 
 public class SemaExprLitBool extends SimpleRValueExpr
 {
-	private static final SemaType TYPE = Types.addConst(SemaTypeBuiltin.BOOL);
-
 	public boolean value;
 
 	public SemaExprLitBool(boolean value)
@@ -32,7 +29,7 @@ public class SemaExprLitBool extends SimpleRValueExpr
 	@Override
 	public SemaType type()
 	{
-		return TYPE;
+		return SemaTypeBuiltin.BOOL;
 	}
 
 	@Override

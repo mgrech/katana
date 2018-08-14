@@ -14,18 +14,15 @@
 
 package io.katana.compiler.sema.expr;
 
-import io.katana.compiler.analysis.Types;
 import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.sema.type.SemaTypeBuiltin;
 
 public class SemaExprLitNull extends SimpleRValueExpr
 {
-	private static final SemaType TYPE = Types.addConst(SemaTypeBuiltin.NULL);
-
 	@Override
 	public SemaType type()
 	{
-		return TYPE;
+		return SemaTypeBuiltin.NULL;
 	}
 
 	@Override

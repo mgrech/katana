@@ -15,7 +15,6 @@
 package io.katana.compiler.sema.expr;
 
 import io.katana.compiler.BuiltinType;
-import io.katana.compiler.analysis.Types;
 import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.sema.type.SemaTypeBuiltin;
 import io.katana.compiler.utils.Fraction;
@@ -24,19 +23,17 @@ public class SemaExprLitFloat extends SimpleRValueExpr
 {
 	public final Fraction value;
 	public final BuiltinType type;
-	private final transient SemaType cachedType;
 
 	public SemaExprLitFloat(Fraction value, BuiltinType type)
 	{
 		this.value = value;
 		this.type = type;
-		this.cachedType = Types.addConst(SemaTypeBuiltin.of(type));
 	}
 
 	@Override
 	public SemaType type()
 	{
-		return cachedType;
+		return SemaTypeBuiltin.of(type);
 	}
 
 	@Override
