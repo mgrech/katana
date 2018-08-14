@@ -20,7 +20,7 @@ import io.katana.compiler.sema.type.SemaTypeBuiltin;
 
 import java.nio.charset.StandardCharsets;
 
-public class SemaExprLitString extends SimpleLValueExpr
+public class SemaExprLitString extends SimpleRValueExpr
 {
 	private static final SemaType ELEMENT_TYPE = Types.addConst(SemaTypeBuiltin.UINT8);
 
@@ -32,7 +32,7 @@ public class SemaExprLitString extends SimpleLValueExpr
 		this.value = value;
 
 		var length = value.getBytes(StandardCharsets.UTF_8).length;
-		cachedType = Types.addArray(length, ELEMENT_TYPE);
+		cachedType = Types.addNonNullablePointer(Types.addArray(length, ELEMENT_TYPE));
 	}
 
 	@Override
