@@ -19,10 +19,12 @@ import io.katana.compiler.analysis.Types;
 import io.katana.compiler.sema.decl.SemaDeclExternFunction;
 import io.katana.compiler.sema.expr.*;
 import io.katana.compiler.sema.type.SemaType;
+import io.katana.compiler.sema.type.SemaTypeBuiltin;
 import io.katana.compiler.utils.Fraction;
 import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +32,10 @@ import java.util.List;
 public class ExprCodeGenerator implements IVisitor
 {
 	private static final String ZEROSIZE_VALUE_ADDRESS = "inttoptr (i8 1 to i8*)";
+	private static final String UNDEF = "undef";
+
+	private static final SemaExpr INDEX_ZERO_EXPR = new SemaExprLitInt(BigInteger.ZERO, BuiltinType.INT32);
+	private static final SemaExpr INDEX_ONE_EXPR = new SemaExprLitInt(BigInteger.ONE, BuiltinType.INT32);
 
 	private FileCodegenContext context;
 	private FunctionCodegenContext fcontext;
@@ -80,33 +86,69 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some("" + Types.alignof(alignof.type, context.platform()));
 	}
 
+	private String generateGetElementPtr(SemaExpr compound, SemaExpr index)
+	{
+		var compoundSsa = generate(compound, context, fcontext).unwrap();
+
+		var baseType = Types.removePointer(compound.type());
+		var baseTypeString = TypeCodeGenerator.generate(baseType, context.platform());
+
+		var indexTypeString = TypeCodeGenerator.generate(index.type(), context.platform());
+		var indexSsa = generate(index, context, fcontext).unwrap();
+
+		var resultSsa = fcontext.allocateSsa();
+		context.writef("\t%s = getelementptr %s, %s* %s, i64 0, %s %s\n", resultSsa, baseTypeString, baseTypeString, compoundSsa, indexTypeString, indexSsa);
+		return resultSsa;
+	}
+
 	private Maybe<String> visit(SemaExprArrayAccess arrayAccess)
 	{
 		if(Types.isZeroSized(arrayAccess.type()))
 			return Maybe.none();
 
-		boolean isRValue = arrayAccess.expr.kind() == ExprKind.RVALUE;
+		var isRValue = arrayAccess.expr.kind() == ExprKind.RVALUE;
 
 		if(isRValue)
 			arrayAccess.expr = new RValueToLValueConversion(arrayAccess.expr);
 
-		String arraySsa = generate(arrayAccess.expr, context, fcontext).unwrap();
-		SemaType arrayType = arrayAccess.expr.type();
-		String arrayTypeString = TypeCodeGenerator.generate(arrayType, context.platform());
-
-		SemaType fieldType = arrayAccess.type();
-		String fieldTypeString = TypeCodeGenerator.generate(fieldType, context.platform());
-		SemaType indexType = arrayAccess.index.type();
-		String indexTypeString = TypeCodeGenerator.generate(indexType, context.platform());
-
-		String indexSsa = generate(arrayAccess.index, context, fcontext).unwrap();
-		String fieldPtrSsa = fcontext.allocateSsa();
-		context.writef("\t%s = getelementptr %s, %s* %s, i64 0, %s %s\n", fieldPtrSsa, arrayTypeString, arrayTypeString, arraySsa, indexTypeString, indexSsa);
+		var resultSsa = generateGetElementPtr(arrayAccess.expr, arrayAccess.index);
 
 		if(isRValue)
-			return Maybe.some(generateLoad(fieldPtrSsa, fieldTypeString));
+		{
+			var resultTypeString = TypeCodeGenerator.generate(arrayAccess.type(), context.platform());
+			return Maybe.some(generateLoad(resultSsa, resultTypeString));
+		}
 
-		return Maybe.some(fieldPtrSsa);
+		return Maybe.some(resultSsa);
+	}
+
+	private Maybe<String> visit(SemaExprArrayGetLength arrayGetLength)
+	{
+		return Maybe.some("" + Types.arrayLength(arrayGetLength.expr.type()));
+	}
+
+	private Maybe<String> visit(SemaExprArrayGetPointer arrayGetPointer)
+	{
+		return Maybe.some(generateGetElementPtr(arrayGetPointer.expr, INDEX_ZERO_EXPR));
+	}
+
+	private String generateSliceConstruction(SemaType elementType, String pointerSsa, long length)
+	{
+		var pointerType = Types.addNullablePointer(elementType);
+		var pointerTypeString = TypeCodeGenerator.generate(pointerType, context.platform());
+		var lengthTypeString = TypeCodeGenerator.generate(SemaTypeBuiltin.INT, context.platform());
+		var structTypeString = String.format("{%s, %s}", pointerTypeString, lengthTypeString);
+
+		var intermediateSsa = generateInsertValue(structTypeString, UNDEF, pointerTypeString, pointerSsa, 0);
+		return generateInsertValue(structTypeString, intermediateSsa, lengthTypeString, "" + length, 1);
+	}
+
+	private Maybe<String> visit(SemaExprArrayGetSlice arrayGetSlice)
+	{
+		var elementType = Types.removeSlice(arrayGetSlice.type());
+		var pointerSsa = generateGetElementPtr(arrayGetSlice.expr, INDEX_ZERO_EXPR);
+		var length = Types.arrayLength(Types.removePointer(arrayGetSlice.expr.type()));
+		return Maybe.some(generateSliceConstruction(elementType, pointerSsa, length));
 	}
 
 	private Maybe<String> visit(SemaExprAssign assign)
@@ -308,6 +350,26 @@ public class ExprCodeGenerator implements IVisitor
 		return generateFunctionCall(functionSsa, functionCall.args, functionCall.function.ret, functionCall.inline);
 	}
 
+	private Maybe<String> visit(SemaExprImplicitConversionArrayPointerToPointer conversion)
+	{
+		return Maybe.some(generateGetElementPtr(conversion.expr, INDEX_ZERO_EXPR));
+	}
+
+	private String generateInsertValue(String compoundTypeString, String compoundSsa, String elementTypeString, String elementSsa, int index)
+	{
+		var ssa = fcontext.allocateSsa();
+		context.writef("\t%s = insertvalue %s %s, %s %s, %s\n", ssa, compoundTypeString, compoundSsa, elementTypeString, elementSsa, index);
+		return ssa;
+	}
+
+	private Maybe<String> visit(SemaExprImplicitConversionArrayPointerToSlice conversion)
+	{
+		var pointerSsa = generateGetElementPtr(conversion.expr, INDEX_ZERO_EXPR);
+		var elementType = Types.removeSlice(conversion.type());
+		var length = Types.arrayLength(Types.removePointer(conversion.expr.type()));
+		return Maybe.some(generateSliceConstruction(elementType, pointerSsa, length));
+	}
+
 	private Maybe<String> visit(SemaExprImplicitConversionLValueToRValue conversion)
 	{
 		if(Types.isZeroSized(conversion.type()))
@@ -342,6 +404,11 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some(resultSsa);
 	}
 
+	private Maybe<String> visit(SemaExprImplicitConversionSliceToSliceOfConst conversion)
+	{
+		return generate(conversion.expr, context, fcontext);
+	}
+
 	private Maybe<String> visit(SemaExprImplicitConversionWiden conversion)
 	{
 		String valueSsa = generate(conversion.expr, context, fcontext).unwrap();
@@ -361,25 +428,21 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprFieldAccess fieldAccess)
 	{
-		String objectSsa = generate(fieldAccess.expr, context, fcontext).unwrap();
-
-		boolean isRValue = fieldAccess.expr.kind() == ExprKind.RVALUE;
+		var isRValue = fieldAccess.expr.kind() == ExprKind.RVALUE;
 
 		if(isRValue)
 			fieldAccess.expr = new RValueToLValueConversion(fieldAccess.expr);
 
-		SemaType objectType = fieldAccess.expr.type();
-		String objectTypeString = TypeCodeGenerator.generate(objectType, context.platform());
-		int fieldIndex = fieldAccess.field.index;
-		SemaType fieldType = fieldAccess.type();
-		String fieldTypeString = TypeCodeGenerator.generate(fieldType, context.platform());
-		String fieldPtrSsa = fcontext.allocateSsa();
-		context.writef("\t%s = getelementptr %s, %s* %s, i32 0, i32 %s\n", fieldPtrSsa, objectTypeString, objectTypeString, objectSsa, fieldIndex);
+		var indexExpr = new SemaExprLitInt(BigInteger.valueOf(fieldAccess.field.index), BuiltinType.INT32);
+		var resultSsa = generateGetElementPtr(fieldAccess.expr, indexExpr);
 
 		if(isRValue)
-			return Maybe.some(generateLoad(fieldPtrSsa, fieldTypeString));
+		{
+			var fieldTypeString = TypeCodeGenerator.generate(indexExpr.type(), context.platform());
+			return Maybe.some(generateLoad(resultSsa, fieldTypeString));
+		}
 
-		return Maybe.some(fieldPtrSsa);
+		return Maybe.some(resultSsa);
 	}
 
 	private Maybe<String> visit(SemaExprLitArray lit)
@@ -488,6 +551,32 @@ public class ExprCodeGenerator implements IVisitor
 	private Maybe<String> visit(SemaExprSizeof sizeof)
 	{
 		return Maybe.some("" + Types.sizeof(sizeof.type, context.platform()));
+	}
+
+	private String generateExtractValue(SemaExpr compound, int index)
+	{
+		var compoundSsa = generate(compound, context, fcontext).unwrap();
+		var compoundTypeString = TypeCodeGenerator.generate(compound.type(), context.platform());
+
+		var fieldSsa = fcontext.allocateSsa();
+		context.writef("\t%s = extractvalue %s %s, %s\n", fieldSsa, compoundTypeString, compoundSsa, index);
+		return fieldSsa;
+	}
+
+	private Maybe<String> visit(SemaExprSliceGetLength sliceGetLength)
+	{
+		if(sliceGetLength.expr.kind() == ExprKind.RVALUE)
+			return Maybe.some(generateExtractValue(sliceGetLength.expr, 1));
+
+		return Maybe.some(generateGetElementPtr(sliceGetLength.expr, INDEX_ONE_EXPR));
+	}
+
+	private Maybe<String> visit(SemaExprSliceGetPointer sliceGetPointer)
+	{
+		if(sliceGetPointer.expr.kind() == ExprKind.RVALUE)
+			return Maybe.some(generateExtractValue(sliceGetPointer.expr, 0));
+
+		return Maybe.some(generateGetElementPtr(sliceGetPointer.expr, INDEX_ZERO_EXPR));
 	}
 
 	private Maybe<String> visit(SsaExpr ssa)

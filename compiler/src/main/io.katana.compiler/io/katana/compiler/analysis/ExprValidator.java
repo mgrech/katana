@@ -616,6 +616,39 @@ public class ExprValidator implements IVisitor
 		SemaType type = expr.type();
 		SemaType typeNoConst = Types.removeConst(type);
 
+		if(typeNoConst instanceof SemaTypeSlice)
+		{
+			switch(memberAccess.name)
+			{
+			case "pointer": return new SemaExprSliceGetPointer(expr);
+			case "length":  return new SemaExprSliceGetLength(expr);
+			case "sliceof": return expr;
+			default: errorNoSuchField(type, memberAccess.name);
+			}
+		}
+
+		if(typeNoConst instanceof SemaTypeArray)
+		{
+			switch(memberAccess.name)
+			{
+			case "pointer":
+				if(expr.kind() != ExprKind.LVALUE)
+					throw new CompileException("cannot take pointer of array rvalue");
+
+				return new SemaExprArrayGetPointer(expr);
+
+			case "length": return new SemaExprArrayGetLength(expr);
+
+			case "sliceof":
+				if(expr.kind() != ExprKind.LVALUE)
+					throw new CompileException("cannot take slice of array rvalue");
+
+				return new SemaExprArrayGetSlice(expr);
+
+			default: errorNoSuchField(type, memberAccess.name);
+			}
+		}
+
 		if(!(typeNoConst instanceof SemaTypeStruct))
 			errorNoSuchField(type, memberAccess.name);
 

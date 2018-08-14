@@ -31,6 +31,11 @@ public class CheckZeroSizeVisitor implements IVisitor
 		return (boolean)type.accept(INSTANCE);
 	}
 
+	private boolean visit(SemaTypeSlice slice)
+	{
+		return false;
+	}
+
 	private boolean visit(SemaTypeArray array)
 	{
 		return array.length == 0 || apply(array.type);

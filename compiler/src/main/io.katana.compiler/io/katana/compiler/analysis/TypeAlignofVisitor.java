@@ -30,6 +30,11 @@ public class TypeAlignofVisitor implements IVisitor
 		this.context = context;
 	}
 
+	private long visit(SemaTypeSlice sliceType)
+	{
+		return Types.sliceLayout(context).alignof();
+	}
+
 	private long visit(SemaTypeArray arrayType)
 	{
 		return apply(arrayType.type, context);

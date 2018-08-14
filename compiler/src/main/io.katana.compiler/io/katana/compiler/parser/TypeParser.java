@@ -56,7 +56,7 @@ public class TypeParser
 			if(const_)
 				ctx.error(-2, ParserDiagnostics.FORMING_CONST_ARRAY_TYPE);
 
-			return parseArray(ctx);
+			return parseArrayOrSlice(ctx);
 		}
 
 		if(ParseTools.option(ctx, TokenType.TYPE_CONST, true))
@@ -166,8 +166,11 @@ public class TypeParser
 		return new AstTypeTuple(types);
 	}
 
-	private static AstTypeArray parseArray(ParseContext ctx)
+	private static AstType parseArrayOrSlice(ParseContext ctx)
 	{
+		if(ParseTools.option(ctx, TokenType.PUNCT_RBRACKET, true))
+			return new AstTypeSlice(parse(ctx));
+
 		try
 		{
 			var size = ((BigInteger)ParseTools.consumeExpected(ctx, TokenType.LIT_INT_DEDUCE).value).longValueExact();

@@ -55,6 +55,11 @@ public class Types
 		throw new AssertionError("unreachable");
 	}
 
+	public static long arrayLength(SemaType type)
+	{
+		return ((SemaTypeArray)type).length;
+	}
+
 	public static SemaType addConst(SemaType type)
 	{
 		if(type instanceof SemaTypeFunction)
@@ -70,6 +75,27 @@ public class Types
 		}
 
 		return new SemaTypeConst(type);
+	}
+
+	public static SemaType addSlice(SemaType type)
+	{
+		return new SemaTypeSlice(type);
+	}
+
+	public static SemaType removeSlice(SemaType type)
+	{
+		if(type instanceof SemaTypeSlice)
+			return ((SemaTypeSlice)type).type;
+
+		return type;
+	}
+
+	public static SemaType removeArray(SemaType type)
+	{
+		if(type instanceof SemaTypeArray)
+			return ((SemaTypeArray)type).type;
+
+		return type;
 	}
 
 	public static SemaType removePointer(SemaType type)
@@ -154,6 +180,11 @@ public class Types
 		return isBuiltinKind(type, BuiltinType.Kind.FLOAT);
 	}
 
+	public static boolean isSlice(SemaType type)
+	{
+		return type instanceof SemaTypeSlice;
+	}
+
 	public static boolean isArray(SemaType type)
 	{
 		return type instanceof SemaTypeArray;
@@ -209,5 +240,14 @@ public class Types
 	public static long alignof(SemaType type, PlatformContext context)
 	{
 		return TypeAlignofVisitor.apply(type, context);
+	}
+
+	public static StructLayout sliceLayout(PlatformContext context)
+	{
+		var voidptr = new SemaTypeNullablePointer(SemaTypeBuiltin.VOID);
+
+		return new StructLayoutBuilder(context).appendField(voidptr)
+		                                       .appendField(SemaTypeBuiltin.INT)
+		                                       .build();
 	}
 }

@@ -67,6 +67,24 @@ typedef kuint32 kuint;
 #error "unsupported arch"
 #endif
 
+#define KSLICE(...) struct { __VA_ARGS__* pointer; kint length; }
+
+typedef KSLICE(void)     kslice;
+typedef KSLICE(kbool)    kslice_bool;
+typedef KSLICE(kbyte)    kslice_byte;
+typedef KSLICE(kint8)    kslice_int8;
+typedef KSLICE(kuint8)   kslice_uint8;
+typedef KSLICE(kint16)   kslice_int16;
+typedef KSLICE(kuint16)  kslice_uint16;
+typedef KSLICE(kint32)   kslice_int32;
+typedef KSLICE(kuint32)  kslice_uint32;
+typedef KSLICE(kint64)   kslice_int64;
+typedef KSLICE(kuint64)  kslice_uint64;
+typedef KSLICE(kint)     kslice_int;
+typedef KSLICE(kuint)    kslice_uint;
+typedef KSLICE(kfloat32) kslice_float32;
+typedef KSLICE(kfloat64) kslice_float64;
+
 #ifdef __cplusplus
 #define KSTATIC_ASSERT(expr) static_assert(expr, #expr);
 #else

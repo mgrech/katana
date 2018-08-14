@@ -29,6 +29,11 @@ public class TypeMangler implements IVisitor
 		return (String)type.accept(INSTANCE);
 	}
 
+	private String visit(SemaTypeSlice slice)
+	{
+		return String.format("slice-%s", mangle(slice.type));
+	}
+
 	private String visit(SemaTypeArray array)
 	{
 		return String.format("array-%s-%s", array.length, mangle(array.type));

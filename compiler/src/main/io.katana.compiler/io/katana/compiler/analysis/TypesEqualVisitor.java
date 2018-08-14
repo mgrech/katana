@@ -34,6 +34,11 @@ public class TypesEqualVisitor implements IVisitor
 		return (boolean)left.accept(INSTANCE, right);
 	}
 
+	private boolean visit(SemaTypeSlice left, SemaTypeSlice right)
+	{
+		return apply(left.type, right.type);
+	}
+
 	private boolean visit(SemaTypeArray left, SemaTypeArray right)
 	{
 		return left.length == right.length && apply(left.type, right.type);

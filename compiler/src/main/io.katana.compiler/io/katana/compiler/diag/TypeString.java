@@ -41,6 +41,11 @@ public class TypeString implements IVisitor
 		return String.format("const %s", of(type.type));
 	}
 
+	private String visit(SemaTypeSlice type)
+	{
+		return String.format("[]%s", of(type.type));
+	}
+
 	private String visit(SemaTypeArray type)
 	{
 		return String.format("[%s]%s", type.length, of(type.type));

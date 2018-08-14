@@ -29,6 +29,11 @@ public class TypeSizeofVisitor implements IVisitor
 		this.context = context;
 	}
 
+	private long visit(SemaTypeSlice sliceType)
+	{
+		return Types.sliceLayout(context).sizeof();
+	}
+
 	private long visit(SemaTypeArray arrayType)
 	{
 		return arrayType.length * apply(arrayType.type, context);

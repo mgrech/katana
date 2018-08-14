@@ -90,6 +90,13 @@ public class TypeCodeGenerator implements IVisitor
 		return '%' + type.decl.qualifiedName().toString();
 	}
 
+	private String visit(SemaTypeSlice type)
+	{
+		var baseTypeString = TypeCodeGenerator.generate(type.type, context);
+		var intString = TypeCodeGenerator.generate(SemaTypeBuiltin.INT, context);
+		return String.format("{%s*, %s}", baseTypeString, intString);
+	}
+
 	private String visit(SemaTypeArray type)
 	{
 		return String.format("[%s x %s]", type.length, TypeCodeGenerator.generate(type.type, context));

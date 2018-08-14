@@ -93,6 +93,11 @@ public class TypeValidator implements IVisitor
 		return new SemaTypeTuple(types, builder.build());
 	}
 
+	private SemaType visit(AstTypeSlice slice)
+	{
+		return new SemaTypeSlice(validate(slice.type, scope, context, validateDecl));
+	}
+
 	private SemaType visit(AstTypeArray array)
 	{
 		if(array.length < 0)

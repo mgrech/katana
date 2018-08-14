@@ -17,15 +17,16 @@ package io.katana.compiler.analysis;
 import io.katana.compiler.BuiltinType;
 import io.katana.compiler.sema.expr.*;
 import io.katana.compiler.sema.type.SemaType;
+import io.katana.compiler.sema.type.SemaTypeArray;
 import io.katana.compiler.sema.type.SemaTypeNullablePointer;
 
 public class ImplicitConversions
 {
 	private static SemaExpr performPointerConversions(SemaExpr expr, SemaType targetType)
 	{
-		SemaType sourceType = expr.type();
-		SemaType sourcePointeeType = Types.removePointer(sourceType);
-		SemaType targetPointeeType = Types.removePointer(targetType);
+		var sourceType = expr.type();
+		var sourcePointeeType = Types.removePointer(sourceType);
+		var targetPointeeType = Types.removePointer(targetType);
 
 		// !T -> ?T
 		if(Types.isNonNullablePointer(sourceType) && Types.isNullablePointer(targetType))
@@ -40,6 +41,19 @@ public class ImplicitConversions
 			sourcePointeeType = Types.addConst(sourcePointeeType);
 			sourceType = Types.copyPointerKind(sourceType, sourcePointeeType);
 			expr = new SemaExprImplicitConversionPointerToNonConstToPointerToConst(expr, sourceType);
+		}
+
+		// ![N]T -> !T, ?[N]T -> ?T
+		if(Types.isArray(sourcePointeeType))
+		{
+			var sourceElementType = ((SemaTypeArray)sourcePointeeType).type;
+
+			if(Types.equal(sourceElementType, targetPointeeType))
+			{
+				expr = new SemaExprImplicitConversionArrayPointerToPointer(expr);
+				sourceType = expr.type();
+				sourcePointeeType = Types.removePointer(sourceType);
+			}
 		}
 
 		// !T -> !byte, ?T -> ?byte
@@ -63,8 +77,8 @@ public class ImplicitConversions
 
 	public static SemaExpr perform(SemaExpr expr, SemaType targetType)
 	{
-		SemaType sourceType = expr.type();
-		SemaExpr rvalueExpr = ensureRValue(expr);
+		var sourceType = expr.type();
+		var rvalueExpr = ensureRValue(expr);
 
 		// float32 -> float64
 		if(Types.isBuiltin(sourceType, BuiltinType.FLOAT32) && Types.isBuiltin(targetType, BuiltinType.FLOAT64))
@@ -83,6 +97,28 @@ public class ImplicitConversions
 		// pointer conversions
 		if(Types.isPointer(sourceType) && Types.isPointer(targetType))
 			return performPointerConversions(rvalueExpr, targetType);
+
+		// []T -> []const T
+		if(Types.isSlice(sourceType) && !Types.isConst(Types.removeSlice(sourceType))
+		&& Types.isSlice(targetType) && Types.isConst(Types.removeSlice(targetType)))
+			return new SemaExprImplicitConversionSliceToSliceOfConst(rvalueExpr);
+
+		// ![N]T -> []      T, ?[N]T -> []      T
+		// ![N]T -> []const T, ?[N]T -> []const T
+		if(Types.isPointer(sourceType) && Types.isSlice(targetType))
+		{
+			var sourcePointeeType = Types.removePointer(sourceType);
+
+			if(Types.isArray(sourcePointeeType))
+			{
+				var sourceElementType = Types.removeArray(sourcePointeeType);
+				var targetElementType = Types.removeSlice(targetType);
+				var targetElementTypeNoConst = Types.removeConst(targetElementType);
+
+				if(Types.equal(sourceElementType, targetElementTypeNoConst))
+					return new SemaExprImplicitConversionArrayPointerToSlice(rvalueExpr, targetType);
+			}
+		}
 
 		return expr;
 	}
