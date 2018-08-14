@@ -57,7 +57,8 @@ public class ImplicitConversions
 		}
 
 		// !T -> !byte, ?T -> ?byte
-		if(Types.isPointer(sourceType) && Types.isPointer(targetType) && Types.isByte(Types.removePointer(targetType)))
+		if(Types.isPointer(sourceType) && Types.isPointer(targetType)
+		&& !Types.isByte(Types.removePointer(sourceType)) && Types.isByte(Types.removePointer(targetType)))
 			expr = new SemaExprImplicitConversionPointerToBytePointer(expr, targetType);
 
 		return expr;
