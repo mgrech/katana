@@ -51,7 +51,7 @@ public class AstPath
 	@Override
 	public boolean equals(Object obj)
 	{
-		AstPath other = (AstPath)obj;
+		var other = (AstPath)obj;
 		return components.equals(other.components);
 	}
 

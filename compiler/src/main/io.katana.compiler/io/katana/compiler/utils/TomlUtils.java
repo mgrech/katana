@@ -19,18 +19,17 @@ import io.ous.jtoml.TomlTable;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 
 public class TomlUtils
 {
 	private static String renameKey(String key)
 	{
-		String[] parts = key.split("-");
-		StringBuilder result = new StringBuilder();
+		var parts = key.split("-");
+		var result = new StringBuilder();
 
 		result.append(parts[0]);
 
-		for(int i = 1; i != parts.length; ++i)
+		for(var i = 1; i != parts.length; ++i)
 		{
 			result.append(Character.toUpperCase(parts[i].charAt(0)));
 			result.append(parts[i].substring(1));
@@ -41,12 +40,12 @@ public class TomlUtils
 
 	private static TomlTable renameFields(TomlTable toml)
 	{
-		TomlTable result = new TomlTable();
+		var result = new TomlTable();
 
-		for(Map.Entry<String, Object> entry : toml.entrySet())
+		for(var entry : toml.entrySet())
 		{
-			String key = entry.getKey();
-			Object value = entry.getValue();
+			var key = entry.getKey();
+			var value = entry.getValue();
 
 			if(value instanceof TomlTable)
 				result.put(key, renameFields((TomlTable)value));

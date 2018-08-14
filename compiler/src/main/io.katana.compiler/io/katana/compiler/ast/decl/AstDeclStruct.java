@@ -53,9 +53,9 @@ public class AstDeclStruct extends AstDecl
 	@Override
 	public String toString()
 	{
-		StringBuilder builder = new StringBuilder();
+		var builder = new StringBuilder();
 
-		for(Field field : fields)
+		for(var field : fields)
 			builder.append("\t" + field.toString());
 
 		return String.format("%s\tname: %s\n%s", super.toString(), name, builder);

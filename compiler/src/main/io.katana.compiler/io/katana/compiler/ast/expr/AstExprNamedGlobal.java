@@ -16,10 +16,10 @@ package io.katana.compiler.ast.expr;
 
 public class AstExprNamedGlobal extends AstExpr
 {
+	public String name;
+
 	public AstExprNamedGlobal(String name)
 	{
 		this.name = name;
 	}
-
-	public String name;
 }

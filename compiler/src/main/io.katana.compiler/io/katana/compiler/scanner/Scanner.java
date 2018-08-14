@@ -33,8 +33,8 @@ public class Scanner
 
 	public static List<Token> tokenize(SourceFile file, DiagnosticsManager diag)
 	{
-		List<Token> result = new ArrayList<>();
-		Scanner scanner = new Scanner(file, diag);
+		var result = new ArrayList<Token>();
+		var scanner = new Scanner(file, diag);
 
 		for(Token token; (token = scanner.next()) != null;)
 			result.add(token.withSourceRange(scanner.tokenOffset, scanner.charOffset - scanner.tokenOffset));
@@ -58,7 +58,7 @@ public class Scanner
 				return null;
 
 			tokenOffset = charOffset;
-			int cp = peek();
+			var cp = peek();
 
 			switch(cp)
 			{
@@ -81,7 +81,7 @@ public class Scanner
 				return stringLiteral();
 			}
 
-			int[] cps = file.codepoints();
+			var cps = file.codepoints();
 
 			if(CharClassifier.isDecDigit(cp) || cp == '.' && charOffset + 1 < cps.length && CharClassifier.isDecDigit(cps[charOffset + 1]))
 				return numericLiteral();
@@ -99,17 +99,17 @@ public class Scanner
 
 	private Token operatorSeq()
 	{
-		int before = charOffset == 0 ? ' ' : file.codepoints()[charOffset - 1];
+		var before = charOffset == 0 ? ' ' : file.codepoints()[charOffset - 1];
 
-		StringBuilder builder = new StringBuilder();
+		var builder = new StringBuilder();
 
 		do builder.appendCodePoint(consume());
 		while(!eof() && CharClassifier.isOpChar(peek()));
 
-		int after = eof() ? ' ' : peek();
+		var after = eof() ? ' ' : peek();
 
-		boolean leftws = " \t\r\n([{;,".indexOf(before) != -1;
-		boolean rightws = " \t\r\n)]};,#".indexOf(after) != -1;
+		var leftws  = " \t\r\n([{;,".indexOf(before) != -1;
+		var rightws = " \t\r\n)]};,#".indexOf(after) != -1;
 
 		TokenType type;
 
@@ -125,7 +125,7 @@ public class Scanner
 
 	private Token label()
 	{
-		StringBuilder builder = new StringBuilder();
+		var builder = new StringBuilder();
 
 		while(!eof() && CharClassifier.isIdentifierTail(peek()))
 			builder.appendCodePoint(consume());
@@ -141,12 +141,12 @@ public class Scanner
 
 	private Token stringLiteral()
 	{
-		boolean invalid = false;
-		StringBuilder valueBuilder = new StringBuilder();
+		var invalid = false;
+		var valueBuilder = new StringBuilder();
 
 		while(!eof() && peek() != '"' && peek() != '\r' && peek() != '\n')
 		{
-			int cp = stringCodepoint();
+			var cp = stringCodepoint();
 
 			if(cp != -1)
 				valueBuilder.appendCodePoint(cp);
@@ -176,7 +176,7 @@ public class Scanner
 		if(eof())
 			return -1;
 
-		int escape = consume();
+		var escape = consume();
 
 		switch(escape)
 		{
@@ -209,13 +209,13 @@ public class Scanner
 		var tooShortError = ScannerDiagnostics.UNICODE_ESCAPE_TOO_SHORT;
 		var expectedLength = big ? 6 : 4;
 
-		int d1 = (big ? hexDigit(tooShortError, expectedLength) : 0) << 20;
-		int d2 = (big ? hexDigit(tooShortError, expectedLength) : 0) << 16;
-		int d3 = hexDigit(tooShortError, expectedLength) << 12;
-		int d4 = hexDigit(tooShortError, expectedLength) <<  8;
-		int d5 = hexDigit(tooShortError, expectedLength) <<  4;
-		int d6 = hexDigit(tooShortError, expectedLength);
-		int sum =  d1 | d2 | d3 | d4 | d5 | d6;
+		var d1 = (big ? hexDigit(tooShortError, expectedLength) : 0) << 20;
+		var d2 = (big ? hexDigit(tooShortError, expectedLength) : 0) << 16;
+		var d3 = hexDigit(tooShortError, expectedLength) << 12;
+		var d4 = hexDigit(tooShortError, expectedLength) <<  8;
+		var d5 = hexDigit(tooShortError, expectedLength) <<  4;
+		var d6 = hexDigit(tooShortError, expectedLength);
+		var sum =  d1 | d2 | d3 | d4 | d5 | d6;
 
 		if(sum < 0)
 			return -1;
@@ -233,8 +233,8 @@ public class Scanner
 	{
 		var tooShortError = ScannerDiagnostics.HEX_ESCAPE_TOO_SHORT;
 
-		int d1 = hexDigit(tooShortError, 2);
-		int d2 = hexDigit(tooShortError, 2);
+		var d1 = hexDigit(tooShortError, 2);
+		var d2 = hexDigit(tooShortError, 2);
 
 		if(d1 == -1 || d2 == -1)
 			return -1;
@@ -279,7 +279,7 @@ public class Scanner
 
 	private Token identifierOrKeyword()
 	{
-		StringBuilder builder = new StringBuilder();
+		var builder = new StringBuilder();
 
 		do builder.appendCodePoint(consume());
 		while(!eof() && CharClassifier.isIdentifierTail(peek()));
@@ -355,10 +355,10 @@ public class Scanner
 
 	private Token numericLiteral()
 	{
-		boolean invalid = false;
-		StringBuilder literal = new StringBuilder();
+		var invalid = false;
+		var literal = new StringBuilder();
 
-		int base = 10;
+		var base = 10;
 
 		if(!eof() && peek() == '0')
 		{
@@ -395,7 +395,7 @@ public class Scanner
 
 		while(!eof() && (CharClassifier.isAnyDigit(peek()) || peek() == '\''))
 		{
-			int cp = consume();
+			var cp = consume();
 
 			if(cp != '\'')
 			{
@@ -412,7 +412,7 @@ public class Scanner
 		while(literal.length() > 1 && literal.charAt(0) == '0')
 			literal.deleteCharAt(0);
 
-		boolean isFloatingPointLiteral = !eof() && peek() == '.';
+		var isFloatingPointLiteral = !eof() && peek() == '.';
 
 		if(isFloatingPointLiteral)
 		{
@@ -442,7 +442,7 @@ public class Scanner
 			literal = new StringBuilder("0");
 		}
 
-		StringBuilder suffix = new StringBuilder();
+		var suffix = new StringBuilder();
 
 		if(!eof() && peek() == '$')
 		{
@@ -460,7 +460,7 @@ public class Scanner
 		}
 
 		TokenType type;
-		boolean isFloatingPointSuffix = false;
+		var isFloatingPointSuffix = false;
 
 		switch(suffix.toString())
 		{
@@ -551,7 +551,7 @@ public class Scanner
 		if(eof())
 			return true;
 
-		int cp = consume();
+		var cp = consume();
 
 		if(cp == '{')
 		{
@@ -568,7 +568,7 @@ public class Scanner
 
 	private void skipMultiLineComment()
 	{
-		int level = 1;
+		var level = 1;
 
 		for(;;)
 		{
@@ -622,7 +622,7 @@ public class Scanner
 
 	private int consume()
 	{
-		int cp = peek();
+		var cp = peek();
 		skip();
 		return cp;
 	}

@@ -16,8 +16,6 @@ package io.katana.compiler.parser;
 
 import io.katana.compiler.ast.type.*;
 import io.katana.compiler.diag.CompileException;
-import io.katana.compiler.scanner.SourceLocation;
-import io.katana.compiler.scanner.Token;
 import io.katana.compiler.scanner.TokenCategory;
 import io.katana.compiler.scanner.TokenType;
 import io.katana.compiler.utils.Maybe;
@@ -75,11 +73,11 @@ public class TypeParser
 
 		if(ParseTools.option(ctx, TokenCategory.OP, false))
 		{
-			Token token = ParseTools.consume(ctx);
-			AstType type = parse(ctx);
+			var token = ParseTools.consume(ctx);
+			var type = parse(ctx);
 
-			int count = 0;
-			for(char c : ((String)token.value).toCharArray())
+			var count = 0;
+			for(var c : ((String)token.value).toCharArray())
 			{
 				switch(c)
 				{
@@ -88,7 +86,7 @@ public class TypeParser
 					break;
 
 				default:
-					SourceLocation location = ctx.file().resolve(token.offset + count, 1);
+					var location = ctx.file().resolve(token.offset + count, 1);
 					ctx.error(location, ParserDiagnostics.UNEXPECTED_CHARACTER_IN_TYPE_QUALIFIERS, c);
 					break;
 				}
@@ -96,7 +94,7 @@ public class TypeParser
 				++count;
 			}
 
-			for(char c : new StringBuilder((String)token.value).reverse().toString().toCharArray())
+			for(var c : new StringBuilder((String)token.value).reverse().toString().toCharArray())
 			{
 				switch(c)
 				{
@@ -114,7 +112,7 @@ public class TypeParser
 
 		if(ParseTools.option(ctx, TokenType.IDENT, false))
 		{
-			String name = (String)ParseTools.consume(ctx).value;
+			var name = (String)ParseTools.consume(ctx).value;
 			return new AstTypeUserDefined(name);
 		}
 
@@ -124,7 +122,7 @@ public class TypeParser
 
 	private static AstTypeFunction parseFunction(ParseContext ctx)
 	{
-		List<AstType> params = parseParameters(ctx);
+		var params = parseParameters(ctx);
 		Maybe<AstType> ret = Maybe.none();
 
 		if(ParseTools.option(ctx, "=>", true))
@@ -137,7 +135,7 @@ public class TypeParser
 	{
 		return ParseTools.parenthesized(ctx, () ->
 		{
-			List<AstType> params = new ArrayList<>();
+			var params = new ArrayList<AstType>();
 
 			if(!ParseTools.option(ctx, TokenType.PUNCT_RPAREN, false))
 			{
@@ -156,7 +154,7 @@ public class TypeParser
 		if(ParseTools.option(ctx, TokenType.PUNCT_RBRACE, true))
 			return new AstTypeTuple(new ArrayList<>());
 
-		List<AstType> types = new ArrayList<>();
+		var types = new ArrayList<AstType>();
 		types.add(parse(ctx));
 
 		while(ParseTools.option(ctx, TokenType.PUNCT_COMMA, true))
@@ -190,7 +188,7 @@ public class TypeParser
 
 	private static AstTypeBuiltin parseBuiltin(ParseContext ctx)
 	{
-		TokenType type = ParseTools.consumeExpected(ctx, TokenCategory.TYPE).type;
+		var type = ParseTools.consumeExpected(ctx, TokenCategory.TYPE).type;
 
 		switch(type)
 		{

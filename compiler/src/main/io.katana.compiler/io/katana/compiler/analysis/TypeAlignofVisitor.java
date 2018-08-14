@@ -16,7 +16,6 @@ package io.katana.compiler.analysis;
 
 import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.diag.CompileException;
-import io.katana.compiler.platform.Arch;
 import io.katana.compiler.sema.type.*;
 import io.katana.compiler.visitor.IVisitor;
 
@@ -42,7 +41,7 @@ public class TypeAlignofVisitor implements IVisitor
 
 	private long visit(SemaTypeBuiltin builtinType)
 	{
-		Arch arch = context.target().arch;
+		var arch = context.target().arch;
 
 		switch(builtinType.which)
 		{

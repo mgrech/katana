@@ -26,7 +26,6 @@ import io.katana.compiler.sema.SemaProgram;
 import io.katana.compiler.sema.decl.SemaDecl;
 import io.katana.compiler.sema.decl.SemaDeclFunction;
 import io.katana.compiler.sema.decl.SemaDeclOverloadSet;
-import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.utils.FileUtils;
 import io.katana.compiler.utils.Maybe;
 
@@ -37,7 +36,7 @@ public class ProgramCodeGenerator
 {
 	private static void generateDecls(DeclCodeGenerator generator, SemaModule module)
 	{
-		for(SemaModule child : module.children().values())
+		for(var child : module.children().values())
 			generateDecls(generator, child);
 
 		module.decls().values().forEach(generator::generate);
@@ -45,7 +44,7 @@ public class ProgramCodeGenerator
 
 	private static void generateEntryPointWrapper(StringBuilder builder, SemaDecl func)
 	{
-		SemaType ret = ((SemaDeclFunction)func).ret;
+		var ret = ((SemaDeclFunction)func).ret;
 
 		builder.append("define i32 @main()\n{\n");
 
@@ -54,7 +53,6 @@ public class ProgramCodeGenerator
 			builder.append(String.format("\tcall void @%s()\n", func.qualifiedName()));
 			builder.append("\tret i32 0\n");
 		}
-
 		else
 		{
 			builder.append(String.format("\t%%1 = call i32 @%s()\n", func.qualifiedName()));
@@ -66,12 +64,12 @@ public class ProgramCodeGenerator
 
 	private static Maybe<SemaDecl> findDeclByPath(SemaProgram program, String pathString)
 	{
-		AstPath path = AstPath.fromString(pathString);
-		int last = path.components.size() - 1;
-		String symbol = path.components.get(last);
+		var path = AstPath.fromString(pathString);
+		var last = path.components.size() - 1;
+		var symbol = path.components.get(last);
 		path.components.remove(last);
 
-		Maybe<SemaModule> module = program.findModule(path);
+		var module = program.findModule(path);
 
 		if(module.isNone())
 			return Maybe.none();
@@ -81,22 +79,22 @@ public class ProgramCodeGenerator
 
 	private static SemaDecl findEntryPointFunction(SemaProgram program, String name)
 	{
-		Maybe<SemaDecl> entry = findDeclByPath(program, name);
+		var entry = findDeclByPath(program, name);
 
 		if(entry.isNone())
 			throw new CompileException(String.format("entry point '%s' could not found", name));
 
-		SemaDecl decl = entry.unwrap();
+		var decl = entry.unwrap();
 
 		if(!(decl instanceof SemaDeclOverloadSet))
 			throw new CompileException("the specified entry point symbol does not refer to function");
 
-		SemaDeclOverloadSet set = (SemaDeclOverloadSet)decl;
+		var set = (SemaDeclOverloadSet)decl;
 
 		if(set.overloads.size() != 1)
 			throw new CompileException("entry point function may not be overloaded");
 
-		SemaDeclFunction func = set.overloads.get(0);
+		var func = set.overloads.get(0);
 
 		if(Types.isVoid(func.ret) || Types.isBuiltin(func.ret, BuiltinType.INT32))
 			return func;
@@ -106,11 +104,11 @@ public class ProgramCodeGenerator
 
 	public static void generate(BuildTarget build, SemaProgram program, PlatformContext platform, Path outputFile) throws IOException
 	{
-		StringBuilder builder = new StringBuilder();
+		var builder = new StringBuilder();
 		builder.append(String.format("target triple = \"%s\"\n\n", platform.target()));
 
-		StringPool stringPool = new StringPool();
-		FileCodegenContext context = new FileCodegenContext(build, platform, builder, stringPool);
+		var stringPool = new StringPool();
+		var context = new FileCodegenContext(build, platform, builder, stringPool);
 		generateDecls(new DeclCodeGenerator(context), program.root);
 		stringPool.generate(builder);
 

@@ -19,7 +19,6 @@ import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.sema.type.SemaTypeFunction;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class SemaExprNamedFunc extends SimpleLValueExpr
 {
@@ -33,9 +32,9 @@ public class SemaExprNamedFunc extends SimpleLValueExpr
 	@Override
 	public SemaType type()
 	{
-		List<SemaType> params = new ArrayList<>();
+		var params = new ArrayList<SemaType>();
 
-		for(SemaDeclFunction.Param param : func.params)
+		for(var param : func.params)
 			params.add(param.type);
 
 		return new SemaTypeFunction(func.ret, params);

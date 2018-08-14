@@ -60,7 +60,7 @@ public class ResourceGenerator
 
 	private String escape(String s)
 	{
-		StringBuilder builder = new StringBuilder();
+		var builder = new StringBuilder();
 
 		s.chars().forEach(c -> {
 			if(c == '"')
@@ -108,8 +108,8 @@ public class ResourceGenerator
 
 	private void generateMetadata()
 	{
-		int i = 0;
-		for(Map.Entry<String, Path> entry : resources.entrySet())
+		var i = 0;
+		for(var entry : resources.entrySet())
 		{
 			generateInt("%s", entry.getKey().length());
 			generateInt("key%s", i);
@@ -124,12 +124,12 @@ public class ResourceGenerator
 
 	private void generateData()
 	{
-		int i = 0;
-		for(String key : resources.keySet())
+		var i = 0;
+		for(var key : resources.keySet())
 			append("key%s: .ascii %s\n", i++, escape(key));
 
-		int j = 0;
-		for(Path resourcePath : resources.values())
+		var j = 0;
+		for(var resourcePath : resources.values())
 			append("res%s: .incbin %s\n", j++, escape(resourcePath.toString()));
 	}
 
@@ -143,7 +143,7 @@ public class ResourceGenerator
 
 	public static void generate(TargetTriple target, Map<String, Path> resources, Path outputPath) throws IOException
 	{
-		ResourceGenerator generator = new ResourceGenerator(target, resources);
+		var generator = new ResourceGenerator(target, resources);
 		FileUtils.writeFile(generator.generate(), outputPath);
 	}
 }

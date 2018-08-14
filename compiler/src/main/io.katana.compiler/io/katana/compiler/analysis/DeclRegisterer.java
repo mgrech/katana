@@ -15,37 +15,34 @@
 package io.katana.compiler.analysis;
 
 import io.katana.compiler.ast.AstFile;
-import io.katana.compiler.ast.AstModule;
 import io.katana.compiler.ast.decl.*;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.op.Operator;
 import io.katana.compiler.sema.SemaModule;
 import io.katana.compiler.sema.SemaProgram;
-import io.katana.compiler.sema.SemaSymbol;
 import io.katana.compiler.sema.decl.*;
 import io.katana.compiler.sema.scope.SemaScopeFile;
 import io.katana.compiler.visitor.IVisitor;
 
 import java.util.IdentityHashMap;
-import java.util.List;
 
 @SuppressWarnings("unused")
 public class DeclRegisterer implements IVisitor
 {
 	public static IdentityHashMap<SemaDecl, AstDecl> process(SemaProgram semaProgram, AstFile file, SemaScopeFile scope)
 	{
-		DeclRegisterer registerer = new DeclRegisterer();
-		IdentityHashMap<SemaDecl, AstDecl> decls = new IdentityHashMap<>();
+		var registerer = new DeclRegisterer();
+		var decls = new IdentityHashMap<SemaDecl, AstDecl>();
 
-		for(AstModule module : file.modules.values())
+		for(var module : file.modules.values())
 		{
-			SemaModule semaModule = semaProgram.findOrCreateModule(module.path);
+			var semaModule = semaProgram.findOrCreateModule(module.path);
 
-			for(AstDecl decl : module.decls.values())
+			for(var decl : module.decls.values())
 			{
 				if(!(decl instanceof AstDeclOperator))
 				{
-					SemaDecl semaDecl = (SemaDecl)decl.accept(registerer, scope, semaModule);
+					var semaDecl = (SemaDecl)decl.accept(registerer, scope, semaModule);
 					decls.put(semaDecl, decl);
 				}
 			}
@@ -64,17 +61,17 @@ public class DeclRegisterer implements IVisitor
 
 	public SemaDecl visit(AstDeclGlobal decl, SemaScopeFile scope, SemaModule module)
 	{
-		SemaDeclGlobal semaDecl = new SemaDeclGlobal(module, decl.exported, decl.opaque, decl.name);
+		var semaDecl = new SemaDeclGlobal(module, decl.exported, decl.opaque, decl.name);
 		handleDecl(semaDecl, scope, module);
 		return semaDecl;
 	}
 
 	public SemaDecl visit(AstDeclOverloadSet decl, SemaScopeFile scope, SemaModule module)
 	{
-		SemaDeclOverloadSet semaDecl = new SemaDeclOverloadSet(module, decl.name);
+		var semaDecl = new SemaDeclOverloadSet(module, decl.name);
 		handleDecl(semaDecl, scope, module);
 
-		for(AstDeclFunction overload : decl.overloads)
+		for(var overload : decl.overloads)
 		{
 			SemaDeclFunction semaOverload;
 
@@ -83,35 +80,32 @@ public class DeclRegisterer implements IVisitor
 				AstDeclExternFunction extOverload = (AstDeclExternFunction)overload;
 				semaOverload = new SemaDeclExternFunction(module, overload.exported, overload.opaque, extOverload.externName, extOverload.name);
 			}
-
 			else if(overload instanceof AstDeclDefinedOperator)
 			{
-				AstDeclDefinedOperator defOverload = (AstDeclDefinedOperator)overload;
-				List<SemaSymbol> opCandidates = scope.find(Operator.declName(defOverload.op, defOverload.kind));
+				var defOverload = (AstDeclDefinedOperator)overload;
+				var opCandidates = scope.find(Operator.declName(defOverload.op, defOverload.kind));
 
 				if(opCandidates.isEmpty())
 				{
-					String kind = defOverload.kind.toString().toLowerCase();
-					String op = defOverload.op;
+					var kind = defOverload.kind.toString().toLowerCase();
+					var op = defOverload.op;
 					throw new CompileException(String.format("no operator declaration found for '%s %s'", kind, op));
 				}
 
 				if(opCandidates.size() > 1)
 				{
-					String kind = defOverload.kind.toString().toLowerCase();
-					String op = defOverload.op;
+					var kind = defOverload.kind.toString().toLowerCase();
+					var op = defOverload.op;
 					throw new CompileException(String.format("multiple operator declarations found for '%s %s'", kind, op));
 				}
 
 				semaOverload = new SemaDeclDefinedOperator(module, overload.exported, overload.opaque, (SemaDeclOperator)opCandidates.get(0));
 			}
-
 			else if(overload instanceof AstDeclDefinedFunction)
 			{
-				AstDeclDefinedFunction defOverload = (AstDeclDefinedFunction)overload;
+				var defOverload = (AstDeclDefinedFunction)overload;
 				semaOverload = new SemaDeclDefinedFunction(module, overload.exported, overload.opaque, defOverload.name);
 			}
-
 			else
 				throw new AssertionError("unreachable");
 
@@ -123,14 +117,14 @@ public class DeclRegisterer implements IVisitor
 
 	public SemaDecl visit(AstDeclStruct decl, SemaScopeFile scope, SemaModule module)
 	{
-		SemaDeclStruct semaDecl = new SemaDeclStruct(module, decl.exported, decl.opaque, decl.name, decl.abiCompat);
+		var semaDecl = new SemaDeclStruct(module, decl.exported, decl.opaque, decl.name, decl.abiCompat);
 		handleDecl(semaDecl, scope, module);
 		return semaDecl;
 	}
 
 	public SemaDecl visit(AstDeclTypeAlias decl, SemaScopeFile scope, SemaModule module)
 	{
-		SemaDeclTypeAlias semaDecl = new SemaDeclTypeAlias(module, decl.exported, decl.name);
+		var semaDecl = new SemaDeclTypeAlias(module, decl.exported, decl.name);
 		handleDecl(semaDecl, scope, module);
 		return semaDecl;
 	}

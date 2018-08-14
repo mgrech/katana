@@ -49,7 +49,7 @@ public class Limits
 		INT_MAX_VALUES.put(BuiltinType.UINT16, BigInteger.valueOf((1L << 16) - 1));
 		INT_MAX_VALUES.put(BuiltinType.UINT32, BigInteger.valueOf((1L << 32) - 1));
 
-		BigInteger uint64Max = BigInteger.ONE.shiftLeft(64).subtract(BigInteger.ONE);
+		var uint64Max = BigInteger.ONE.shiftLeft(64).subtract(BigInteger.ONE);
 		INT_MAX_VALUES.put(BuiltinType.UINT64, uint64Max);
 
 		FLOAT_MIN_VALUES.put(BuiltinType.FLOAT32, Fraction.FLOAT_MAX.negated());
@@ -63,7 +63,7 @@ public class Limits
 		if(type.kind != BuiltinType.Kind.INT && type.kind != BuiltinType.Kind.UINT)
 			throw new AssertionError("unreachable");
 
-		boolean isSigned = type.kind == BuiltinType.Kind.INT;
+		var isSigned = type.kind == BuiltinType.Kind.INT;
 
 		switch((int)Types.sizeof(new SemaTypeBuiltin(type), context))
 		{
@@ -82,7 +82,7 @@ public class Limits
 		if(type.kind != BuiltinType.Kind.INT && type.kind != BuiltinType.Kind.UINT)
 			throw new AssertionError("unreachable");
 
-		BigInteger min = INT_MIN_VALUES.get(type);
+		var min = INT_MIN_VALUES.get(type);
 
 		if(min != null)
 			return min;
@@ -95,7 +95,7 @@ public class Limits
 		if(type.kind != BuiltinType.Kind.INT && type.kind != BuiltinType.Kind.UINT)
 			throw new AssertionError("unreachable");
 
-		BigInteger max = INT_MAX_VALUES.get(type);
+		var max = INT_MAX_VALUES.get(type);
 
 		if(max != null)
 			return max;
@@ -105,8 +105,8 @@ public class Limits
 
 	public static boolean inRange(BigInteger i, BuiltinType type, PlatformContext context)
 	{
-		BigInteger min = intMinValue(type, context);
-		BigInteger max = intMaxValue(type, context);
+		var min = intMinValue(type, context);
+		var max = intMaxValue(type, context);
 		return i.compareTo(min) != -1 && i.compareTo(max) != 1;
 	}
 

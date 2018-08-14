@@ -17,12 +17,9 @@ package io.katana.compiler.backend.llvm;
 import io.katana.compiler.analysis.Types;
 import io.katana.compiler.sema.decl.SemaDeclDefinedFunction;
 import io.katana.compiler.sema.stmt.*;
-import io.katana.compiler.sema.type.SemaType;
-import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
 
 import java.util.ArrayList;
-import java.util.List;
 
 @SuppressWarnings("unused")
 public class StmtCodeGenerator implements IVisitor
@@ -58,7 +55,7 @@ public class StmtCodeGenerator implements IVisitor
 	{
 		preceededByTerminator = false;
 
-		for(SemaStmt stmt : compound.body)
+		for(var stmt : compound.body)
 			generate(stmt);
 	}
 
@@ -86,13 +83,13 @@ public class StmtCodeGenerator implements IVisitor
 
 	private void visit(SemaStmtIf if_)
 	{
-		String condSsa = ExprCodeGenerator.generate(if_.condition, context, fcontext).unwrap();
+		var condSsa = ExprCodeGenerator.generate(if_.condition, context, fcontext).unwrap();
 
-		GeneratedLabel thenLabel = fcontext.allocateLabel("if.then");
-		GeneratedLabel afterLabel = fcontext.allocateLabel("if.after");
+		var thenLabel = fcontext.allocateLabel("if.then");
+		var afterLabel = fcontext.allocateLabel("if.after");
 
-		GeneratedLabel firstLabel = if_.negated ? afterLabel : thenLabel;
-		GeneratedLabel secondLabel = if_.negated ? thenLabel : afterLabel;
+		var firstLabel = if_.negated ? afterLabel : thenLabel;
+		var secondLabel = if_.negated ? thenLabel : afterLabel;
 
 		context.writef("\tbr i1 %s, label %%%s, label %%%s\n\n", condSsa, firstLabel.name, secondLabel.name);
 		preceededByTerminator = true;
@@ -106,9 +103,9 @@ public class StmtCodeGenerator implements IVisitor
 
 	private void visit(SemaStmtIfElse ifelse)
 	{
-		GeneratedLabel after = fcontext.allocateLabel("ifelse.after");
+		var after = fcontext.allocateLabel("ifelse.after");
 
-		List<SemaStmt> then = new ArrayList<>();
+		var then = new ArrayList<SemaStmt>();
 		then.add(ifelse.then);
 		then.add(new GeneratedGoto(after));
 
@@ -119,7 +116,7 @@ public class StmtCodeGenerator implements IVisitor
 
 	private void visit(SemaStmtLoop loop)
 	{
-		GeneratedLabel label = fcontext.allocateLabel("loop");
+		var label = fcontext.allocateLabel("loop");
 
 		visit(label);
 		generate(loop.body);
@@ -128,9 +125,9 @@ public class StmtCodeGenerator implements IVisitor
 
 	private void visit(SemaStmtWhile while_)
 	{
-		GeneratedLabel afterLabel = fcontext.allocateLabel("while.after");
+		var afterLabel = fcontext.allocateLabel("while.after");
 
-		List<SemaStmt> body = new ArrayList<>();
+		var body = new ArrayList<SemaStmt>();
 		body.add(new SemaStmtIf(!while_.negated, while_.condition, new GeneratedGoto(afterLabel)));
 		body.add(while_.body);
 
@@ -161,7 +158,7 @@ public class StmtCodeGenerator implements IVisitor
 	{
 		preceededByTerminator = true;
 
-		Maybe<String> returnSsa = ExprCodeGenerator.generate(ret.ret, context, fcontext);
+		var returnSsa = ExprCodeGenerator.generate(ret.ret, context, fcontext);
 
 		if(returnSsa.isNone())
 		{
@@ -169,8 +166,8 @@ public class StmtCodeGenerator implements IVisitor
 			return;
 		}
 
-		SemaType type = ret.ret.type();
-		String llvmType = TypeCodeGenerator.generate(type, context.platform());
+		var type = ret.ret.type();
+		var llvmType = TypeCodeGenerator.generate(type, context.platform());
 		context.writef("\tret %s %s\n\n", llvmType, returnSsa.unwrap());
 	}
 

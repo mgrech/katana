@@ -30,13 +30,13 @@ public class ParseTools
 	public static AstPath path(ParseContext ctx)
 	{
 		Supplier<String> parseComponent = () -> (String)consumeExpected(ctx, TokenType.IDENT).value;
-		List<String> components = separated(ctx, ".", parseComponent);
+		var components = separated(ctx, ".", parseComponent);
 		return new AstPath(components);
 	}
 
 	public static <T> List<T> separated(ParseContext ctx, Predicate<Token> separator, Supplier<T> parser)
 	{
-		List<T> result = new ArrayList<>();
+		var result = new ArrayList<T>();
 
 		do result.add(parser.get());
 		while(option(ctx, separator, true));
@@ -57,7 +57,7 @@ public class ParseTools
 	public static <T> T parenthesized(ParseContext ctx, Supplier<T> func)
 	{
 		ParseTools.expect(ctx, TokenType.PUNCT_LPAREN, true);
-		T result = func.get();
+		var result = func.get();
 		ParseTools.expect(ctx, TokenType.PUNCT_RPAREN, true);
 		return result;
 	}
@@ -111,7 +111,7 @@ public class ParseTools
 
 	public static Token consume(ParseContext ctx)
 	{
-		Token token = ctx.token();
+		var token = ctx.token();
 		ctx.advance();
 		return token;
 	}

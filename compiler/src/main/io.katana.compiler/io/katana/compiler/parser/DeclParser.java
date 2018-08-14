@@ -14,9 +14,7 @@
 
 package io.katana.compiler.parser;
 
-import io.katana.compiler.ast.AstPath;
 import io.katana.compiler.ast.decl.*;
-import io.katana.compiler.ast.expr.AstExpr;
 import io.katana.compiler.ast.expr.AstExprLiteral;
 import io.katana.compiler.ast.stmt.AstStmt;
 import io.katana.compiler.ast.type.AstType;
@@ -37,8 +35,8 @@ public class DeclParser
 {
 	public static AstDecl parse(ParseContext ctx)
 	{
-		boolean exported = ParseTools.option(ctx, TokenType.DECL_EXPORT, true);
-		boolean opaque = ParseTools.option(ctx, TokenType.DECL_OPAQUE, true);
+		var exported = ParseTools.option(ctx, TokenType.DECL_EXPORT, true);
+		var opaque = ParseTools.option(ctx, TokenType.DECL_OPAQUE, true);
 
 		if(opaque && !exported)
 			throw new CompileException("'opaque' must go after 'export'");
@@ -110,11 +108,11 @@ public class DeclParser
 		ctx.advance();
 
 		var op = (String)ParseTools.consumeExpected(ctx, TokenCategory.OP).value;
-		Kind kind = parseOpKind(ctx);
+		var kind = parseOpKind(ctx);
 
 		if(BuiltinOps.find(op, kind).isSome())
 		{
-			String fmt = "redefinition of built-in operator '%s %s'";
+			var fmt = "redefinition of built-in operator '%s %s'";
 			throw new CompileException(String.format(fmt, kind.toString().toLowerCase(), op));
 		}
 
@@ -149,7 +147,7 @@ public class DeclParser
 		// precedence < 0 || precedence > 1000
 		if(precedence.compareTo(BigInteger.ZERO) == -1 || precedence.compareTo(BigInteger.valueOf(1000)) == 1)
 		{
-			String fmt = "precedence for operator '%s' (%s) is out of range, valid values are from [0, 1000]";
+			var fmt = "precedence for operator '%s' (%s) is out of range, valid values are from [0, 1000]";
 			throw new CompileException(String.format(fmt, op, precedence));
 		}
 
@@ -179,7 +177,7 @@ public class DeclParser
 		else
 			name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 
-		List<AstDeclFunction.Param> params = parseParameterList(ctx);
+		var params = parseParameterList(ctx);
 
 		if((kind == Kind.PREFIX || kind == Kind.POSTFIX) && params.size() != 1)
 			throw new CompileException("unary operator requires exactly one parameter");
@@ -198,7 +196,7 @@ public class DeclParser
 			return new AstDeclExternFunction(exported, opaque, extern.unwrap(), name, params, ret);
 		}
 
-		List<AstStmt> body = parseBody(ctx);
+		var body = parseBody(ctx);
 
 		return name == null
 			? new AstDeclDefinedOperator(exported, opaque, op, kind, params, ret, body)
@@ -231,7 +229,7 @@ public class DeclParser
 	{
 		ParseTools.expect(ctx, TokenType.PUNCT_LBRACE, true);
 
-		List<AstStmt> body = new ArrayList<>();
+		var body = new ArrayList<AstStmt>();
 
 		while(!ParseTools.option(ctx, TokenType.PUNCT_RBRACE, false))
 			body.add(StmtParser.parse(ctx));
@@ -249,7 +247,7 @@ public class DeclParser
 		var abiCompat = ParseTools.option(ctx, TokenType.DECL_ABI, true);
 		ParseTools.expect(ctx, TokenType.PUNCT_LBRACE, true);
 
-		List<AstDeclStruct.Field> fields = new ArrayList<>();
+		var fields = new ArrayList<AstDeclStruct.Field>();
 
 		while(!ParseTools.option(ctx, TokenType.PUNCT_RBRACE, false))
 			fields.add(parseField(ctx));
@@ -275,7 +273,7 @@ public class DeclParser
 			return Maybe.none();
 		}
 
-		AstExpr init = ExprParser.parse(ctx);
+		var init = ExprParser.parse(ctx);
 
 		if(!(init instanceof AstExprLiteral))
 			throw new CompileException("global initializer must be literal");
@@ -288,7 +286,7 @@ public class DeclParser
 	{
 		ctx.advance();
 
-		ParseContext tmp = ctx.clone();
+		var tmp = ctx.clone();
 
 		if(ParseTools.option(ctx, TokenType.IDENT, false))
 		{
@@ -296,7 +294,7 @@ public class DeclParser
 
 			if(ParseTools.option(ctx, "=", true))
 			{
-				Maybe<AstExprLiteral> init = parseGlobalInitAndScolon(ctx);
+				var init = parseGlobalInitAndScolon(ctx);
 				return new AstDeclGlobal(exported, opaque, Maybe.none(), name, init);
 			}
 		}
@@ -307,7 +305,7 @@ public class DeclParser
 		var name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 		ParseTools.expect(ctx, "=", true);
 
-		Maybe<AstExprLiteral> init = parseGlobalInitAndScolon(ctx);
+		var init = parseGlobalInitAndScolon(ctx);
 		return new AstDeclGlobal(exported, opaque, Maybe.some(type), name, init);
 	}
 
@@ -315,7 +313,7 @@ public class DeclParser
 	{
 		ctx.advance();
 
-		AstPath path = ParseTools.path(ctx);
+		var path = ParseTools.path(ctx);
 
 		if(ParseTools.option(ctx, TokenType.IDENT, false))
 		{
@@ -332,7 +330,7 @@ public class DeclParser
 	{
 		ctx.advance();
 
-		AstPath path = ParseTools.path(ctx);
+		var path = ParseTools.path(ctx);
 		ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 		return new AstDeclModule(path);
 	}

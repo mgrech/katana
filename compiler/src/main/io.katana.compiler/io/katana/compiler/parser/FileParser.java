@@ -23,10 +23,7 @@ import io.katana.compiler.diag.DiagnosticsManager;
 import io.katana.compiler.op.Operator;
 import io.katana.compiler.scanner.Scanner;
 import io.katana.compiler.scanner.SourceFile;
-import io.katana.compiler.scanner.Token;
 import io.katana.compiler.visitor.IVisitor;
-
-import java.util.List;
 
 @SuppressWarnings("unused")
 public class FileParser implements IVisitor
@@ -41,15 +38,15 @@ public class FileParser implements IVisitor
 
 	public static AstFile parse(SourceFile file, DiagnosticsManager diag)
 	{
-		List<Token> tokens = Scanner.tokenize(file, diag);
-		ParseContext ctx = new ParseContext(file, tokens, diag);
+		var tokens = Scanner.tokenize(file, diag);
+		var ctx = new ParseContext(file, tokens, diag);
 
-		AstFile ast = new AstFile();
-		FileParser parser = new FileParser(ast);
+		var ast = new AstFile();
+		var parser = new FileParser(ast);
 
 		while(ctx.token() != null)
 		{
-			AstDecl decl = DeclParser.parse(ctx);
+			var decl = DeclParser.parse(ctx);
 			decl.accept(parser);
 		}
 
@@ -60,7 +57,7 @@ public class FileParser implements IVisitor
 
 	private AstModule findOrCreateModule(AstPath path)
 	{
-		AstModule module = file.modules.get(path);
+		var module = file.modules.get(path);
 
 		if(module != null)
 			return module;
@@ -137,7 +134,7 @@ public class FileParser implements IVisitor
 	{
 		requireModule();
 
-		AstDecl decl = module.decls.get(name);
+		var decl = module.decls.get(name);
 
 		if(decl != null)
 		{
@@ -147,7 +144,7 @@ public class FileParser implements IVisitor
 			redefinitionError(name);
 		}
 
-		AstDeclOverloadSet set = new AstDeclOverloadSet(name);
+		var set = new AstDeclOverloadSet(name);
 		module.decls.put(name, set);
 		return set;
 	}
@@ -155,14 +152,14 @@ public class FileParser implements IVisitor
 	private void visit(AstDeclDefinedFunction decl)
 	{
 		requireModule();
-		AstDeclOverloadSet set = findOrCreateOverloadSet(decl.name);
+		var set = findOrCreateOverloadSet(decl.name);
 		set.overloads.add(decl);
 	}
 
 	private void visit(AstDeclExternFunction decl)
 	{
 		requireModule();
-		AstDeclOverloadSet set = findOrCreateOverloadSet(decl.name);
+		var set = findOrCreateOverloadSet(decl.name);
 		set.overloads.add(decl);
 	}
 

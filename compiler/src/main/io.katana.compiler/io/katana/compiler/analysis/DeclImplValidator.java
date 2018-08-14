@@ -16,30 +16,26 @@ package io.katana.compiler.analysis;
 
 import io.katana.compiler.ast.decl.AstDeclDefinedFunction;
 import io.katana.compiler.ast.decl.AstDeclOverloadSet;
-import io.katana.compiler.ast.stmt.AstStmt;
 import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.sema.decl.SemaDecl;
 import io.katana.compiler.sema.decl.SemaDeclDefinedFunction;
-import io.katana.compiler.sema.decl.SemaDeclFunction;
 import io.katana.compiler.sema.decl.SemaDeclOverloadSet;
-import io.katana.compiler.sema.stmt.SemaStmt;
 import io.katana.compiler.visitor.IVisitor;
 
 import java.util.IdentityHashMap;
-import java.util.Map;
 
 public class DeclImplValidator implements IVisitor
 {
 	public static void validate(IdentityHashMap<SemaDecl, DeclInfo> decls, PlatformContext context)
 	{
-		for(Map.Entry<SemaDecl, DeclInfo> entry : decls.entrySet())
+		for(var entry : decls.entrySet())
 		{
-			SemaDecl decl = entry.getKey();
+			var decl = entry.getKey();
 
 			if(decl instanceof SemaDeclOverloadSet)
 			{
-				SemaDeclOverloadSet set = (SemaDeclOverloadSet)decl;
-				DeclInfo info = entry.getValue();
+				var set = (SemaDeclOverloadSet)decl;
+				var info = entry.getValue();
 				validateOverloadSet(set, (AstDeclOverloadSet)info.astDecl, context);
 			}
 		}
@@ -47,26 +43,26 @@ public class DeclImplValidator implements IVisitor
 
 	private static void validateOverloadSet(SemaDeclOverloadSet semaSet, AstDeclOverloadSet set, PlatformContext context)
 	{
-		for(int i = 0; i != semaSet.overloads.size(); ++i)
+		for(var i = 0; i != semaSet.overloads.size(); ++i)
 		{
-			SemaDeclFunction overload = semaSet.overloads.get(i);
+			var overload = semaSet.overloads.get(i);
 
 			if(!(overload instanceof SemaDeclDefinedFunction))
 				continue;
 
-			SemaDeclDefinedFunction semaFunction = (SemaDeclDefinedFunction)overload;
-			AstDeclDefinedFunction function = (AstDeclDefinedFunction)set.overloads.get(i);
+			var semaFunction = (SemaDeclDefinedFunction)overload;
+			var function = (AstDeclDefinedFunction)set.overloads.get(i);
 			validateDefinedFunction(semaFunction, function, context);
 		}
 	}
 
 	private static void validateDefinedFunction(SemaDeclDefinedFunction semaDecl, AstDeclDefinedFunction decl, PlatformContext context)
 	{
-		StmtValidator validator = new StmtValidator(semaDecl, semaDecl.scope, context, (ign) -> {});
+		var validator = new StmtValidator(semaDecl, semaDecl.scope, context, (ign) -> {});
 
-		for(AstStmt stmt : decl.body)
+		for(var stmt : decl.body)
 		{
-			SemaStmt semaStmt = validator.validate(stmt);
+			var semaStmt = validator.validate(stmt);
 			semaDecl.add(semaStmt);
 		}
 

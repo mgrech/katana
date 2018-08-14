@@ -34,7 +34,7 @@ public abstract class SemaDecl implements SemaSymbol, IVisitable
 
 	public AstPath qualifiedName()
 	{
-		AstPath path = new AstPath();
+		var path = new AstPath();
 		path.components.addAll(module.path().components);
 		path.components.add(name());
 		return path;

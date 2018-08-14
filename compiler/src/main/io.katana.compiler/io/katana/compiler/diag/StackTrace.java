@@ -30,7 +30,7 @@ public class StackTrace
 	public static StackTrace get()
 	{
 		// http://bugs.java.com/bugdatabase/view_bug.do?bug_id=6375302
-		StackTrace trace = new StackTrace(new Exception().getStackTrace());
+		var trace = new StackTrace(new Exception().getStackTrace());
 
 		// trim this stack frame
 		trace.trimInnermostFrame();
@@ -48,9 +48,9 @@ public class StackTrace
 	@Override
 	public String toString()
 	{
-		StringBuilder builder = new StringBuilder();
+		var builder = new StringBuilder();
 
-		for(StackTraceElement element : trace)
+		for(var element : trace)
 		{
 			builder.append(String.format("\tat %s.%s", element.getClassName(), element.getMethodName()));
 

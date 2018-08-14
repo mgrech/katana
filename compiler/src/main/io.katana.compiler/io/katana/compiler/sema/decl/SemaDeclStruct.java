@@ -65,7 +65,7 @@ public class SemaDeclStruct extends SemaDecl
 		if(fieldsByName.containsKey(name))
 			return false;
 
-		Field field = new Field(name, type, fields.size());
+		var field = new Field(name, type, fields.size());
 		fields.add(field);
 		fieldsByName.put(name, field);
 		return true;
@@ -73,18 +73,13 @@ public class SemaDeclStruct extends SemaDecl
 
 	public Maybe<Field> findField(String name)
 	{
-		Field field = fieldsByName.get(name);
+		var field = fieldsByName.get(name);
 		return Maybe.wrap(field);
 	}
 
 	public List<Field> fieldsByIndex()
 	{
 		return Collections.unmodifiableList(fields);
-	}
-
-	public Map<String, Field> fieldsByName()
-	{
-		return Collections.unmodifiableMap(fieldsByName);
 	}
 
 	@Override

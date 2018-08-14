@@ -20,7 +20,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 
 public class SourceFile
@@ -52,20 +51,20 @@ public class SourceFile
 
 	public static SourceFile load(Path path) throws IOException
 	{
-		byte[] bytes = Files.readAllBytes(path);
+		var bytes = Files.readAllBytes(path);
 		return fromBytes(path, bytes);
 	}
 
 	public static SourceFile fromBytes(Path path, byte[] bytes)
 	{
-		int[] codepoints = new String(bytes, StandardCharsets.UTF_8).codePoints().toArray();
+		var codepoints = new String(bytes, StandardCharsets.UTF_8).codePoints().toArray();
 
-		TreeMap<Integer, Line> linesByOffset = new TreeMap<>();
+		var linesByOffset = new TreeMap<Integer, Line>();
 
-		int lineOffset = 0;
-		int lineNumber = 0;
+		var lineOffset = 0;
+		var lineNumber = 0;
 
-		for(int i = 0; i != codepoints.length; ++i)
+		for(var i = 0; i != codepoints.length; ++i)
 			if(codepoints[i] == '\n')
 			{
 				linesByOffset.put(lineOffset, new Line(lineNumber, i - lineOffset));
@@ -77,14 +76,14 @@ public class SourceFile
 		if(lineOffset != codepoints.length)
 			linesByOffset.put(lineNumber, new Line(lineNumber, codepoints.length - lineOffset));
 
-		List<String> lines = new ArrayList<>();
+		var lines = new ArrayList<String>();
 
-		int lineStart = 0;
+		var lineStart = 0;
 
-		for(int i = 0; i != bytes.length; ++i)
+		for(var i = 0; i != bytes.length; ++i)
 			if(bytes[i] == '\n')
 			{
-				byte[] lineBytes = new byte[i - lineStart];
+				var lineBytes = new byte[i - lineStart];
 				System.arraycopy(bytes, lineStart, lineBytes, 0, lineBytes.length);
 				lines.add(new String(lineBytes, StandardCharsets.UTF_8));
 				lineStart = i + 1;
@@ -92,7 +91,7 @@ public class SourceFile
 
 		if(lineStart != bytes.length)
 		{
-			byte[] lineBytes = new byte[bytes.length - lineStart];
+			var lineBytes = new byte[bytes.length - lineStart];
 			System.arraycopy(bytes, lineStart, lineBytes, 0, lineBytes.length);
 			lines.add(new String(lineBytes, StandardCharsets.UTF_8));
 		}
@@ -117,9 +116,9 @@ public class SourceFile
 
 	public SourceLocation resolve(int offset, int length)
 	{
-		Map.Entry<Integer, Line> lineEntry = linesByOffset.floorEntry(offset);
-		int lineOffset = lineEntry.getKey();
-		Line line = lineEntry.getValue();
+		var lineEntry = linesByOffset.floorEntry(offset);
+		var lineOffset = lineEntry.getKey();
+		var line = lineEntry.getValue();
 		return new SourceLocation(this, line.number, offset - lineOffset, length, offset);
 	}
 }

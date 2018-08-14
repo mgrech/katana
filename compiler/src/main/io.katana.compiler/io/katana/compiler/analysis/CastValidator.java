@@ -31,7 +31,7 @@ public class CastValidator
 
 	private static boolean isOneOf(SemaType type, BuiltinType... builtinTypes)
 	{
-		for(BuiltinType builtinType : builtinTypes)
+		for(var builtinType : builtinTypes)
 			if(Types.isBuiltin(type, builtinType))
 				return true;
 
@@ -67,10 +67,10 @@ public class CastValidator
 
 	private static boolean isValidPointerCast(SemaType sourceType, SemaType targetType)
 	{
-		boolean sourceIsPointer = Types.isPointer(sourceType);
-		boolean sourceIsPointerInteger = isOneOf(sourceType, BuiltinType.INT, BuiltinType.UINT);
-		boolean targetIsPointer = Types.isPointer(targetType);
-		boolean targetIsPointerInteger = isOneOf(targetType, BuiltinType.INT, BuiltinType.UINT);
+		var sourceIsPointer = Types.isPointer(sourceType);
+		var sourceIsPointerInteger = isOneOf(sourceType, BuiltinType.INT, BuiltinType.UINT);
+		var targetIsPointer = Types.isPointer(targetType);
+		var targetIsPointerInteger = isOneOf(targetType, BuiltinType.INT, BuiltinType.UINT);
 
 		if(!sourceIsPointer && !sourceIsPointerInteger || !targetIsPointer && !targetIsPointerInteger)
 			return false;

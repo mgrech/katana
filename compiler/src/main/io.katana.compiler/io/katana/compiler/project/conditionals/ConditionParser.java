@@ -28,17 +28,17 @@ public class ConditionParser
 {
 	public static Condition parse(String input)
 	{
-		ParseContext context = new ParseContext(input.replace(" ", ""));
+		var context = new ParseContext(input.replace(" ", ""));
 		return parseCondition(context);
 	}
 
 	private static Condition parseCondition(ParseContext context)
 	{
-		Condition result = parsePrimary(context);
+		var result = parsePrimary(context);
 
 		while(!context.end())
 		{
-			int junction = context.current();
+			var junction = context.current();
 			context.advance();
 
 			switch(junction)
@@ -63,7 +63,7 @@ public class ConditionParser
 		if(context.current() == '(')
 			return parseParens(context);
 
-		boolean negated = false;
+		var negated = false;
 
 		if(context.current() == '!')
 		{
@@ -71,7 +71,7 @@ public class ConditionParser
 			context.advance();
 		}
 
-		Condition result = parseAtom(context);
+		var result = parseAtom(context);
 
 		if(negated)
 			return new NotCondition(result);
@@ -83,7 +83,7 @@ public class ConditionParser
 	{
 		context.advance();
 
-		Condition condition = parseCondition(context);
+		var condition = parseCondition(context);
 
 		if(context.current() != ')')
 			throw new CompileException("expected closing ')'");
@@ -94,7 +94,7 @@ public class ConditionParser
 
 	private static Condition parseAtom(ParseContext context)
 	{
-		StringBuilder builder = new StringBuilder();
+		var builder = new StringBuilder();
 
 		while(!context.end() && (Character.isLetter(context.current()) || Character.isDigit(context.current())))
 		{
@@ -102,14 +102,13 @@ public class ConditionParser
 			context.advance();
 		}
 
-		String keyword = builder.toString();
-		String value = keyword.toUpperCase();
+		var keyword = builder.toString();
+		var value = keyword.toUpperCase();
 
 		try
 		{
 			return new ArchCondition(Arch.valueOf(value));
 		}
-
 		catch(IllegalArgumentException e)
 		{}
 
@@ -117,7 +116,6 @@ public class ConditionParser
 		{
 			return new OsCondition(Os.valueOf(value));
 		}
-
 		catch(IllegalArgumentException e)
 		{}
 

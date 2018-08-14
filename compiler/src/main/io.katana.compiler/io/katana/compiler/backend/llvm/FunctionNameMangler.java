@@ -14,7 +14,6 @@
 
 package io.katana.compiler.backend.llvm;
 
-import io.katana.compiler.op.Kind;
 import io.katana.compiler.sema.decl.SemaDeclDefinedOperator;
 import io.katana.compiler.sema.decl.SemaDeclFunction;
 
@@ -48,11 +47,11 @@ public class FunctionNameMangler
 
 	private static String mangleOperatorSymbol(String op)
 	{
-		StringBuilder builder = new StringBuilder();
+		var builder = new StringBuilder();
 
-		for(char c : op.toCharArray())
+		for(var c : op.toCharArray())
 		{
-			String mangled = OP_MANGLING.get(c);
+			var mangled = OP_MANGLING.get(c);
 
 			if(mangled == null)
 				throw new AssertionError("unreachable");
@@ -65,9 +64,9 @@ public class FunctionNameMangler
 
 	private static String mangleOperatorName(SemaDeclDefinedOperator operator)
 	{
-		String op = operator.decl.operator.symbol;
-		Kind kind = operator.decl.operator.kind;
-		String path = operator.decl.module().name();
+		var op = operator.decl.operator.symbol;
+		var kind = operator.decl.operator.kind;
+		var path = operator.decl.module().name();
 		return String.format("op-%s-%s.%s", kind.toString().toLowerCase(), path, mangleOperatorSymbol(op));
 	}
 
@@ -81,9 +80,9 @@ public class FunctionNameMangler
 
 	public static String mangle(SemaDeclFunction function)
 	{
-		StringBuilder builder = new StringBuilder();
+		var builder = new StringBuilder();
 
-		for(SemaDeclFunction.Param param : function.params)
+		for(var param : function.params)
 		{
 			builder.append('$');
 			builder.append(TypeMangler.mangle(param.type));

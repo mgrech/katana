@@ -34,7 +34,7 @@ public class SemaScopeFunction implements SemaScope
 	@Override
 	public List<SemaSymbol> find(String name)
 	{
-		SemaDeclFunction.Param param = function.paramsByName.get(name);
+		var param = function.paramsByName.get(name);
 
 		if(param != null)
 			return Collections.singletonList(param);

@@ -42,13 +42,13 @@ public class TargetTriple
 
 	private static TargetTriple detectNativeTarget()
 	{
-		Arch arch = Arch.UNKNOWN;
-		Vendor vendor = Vendor.UNKNOWN;
-		Os os = Os.UNKNOWN;
-		Environment env = Environment.UNKNOWN;
+		var arch = Arch.UNKNOWN;
+		var vendor = Vendor.UNKNOWN;
+		var os = Os.UNKNOWN;
+		var env = Environment.UNKNOWN;
 
-		String osArch = System.getProperty("os.arch").toLowerCase().replaceAll("[-_\\s]", "");
-		String osName = System.getProperty("os.name").toLowerCase().replaceAll("[-_\\s]", "");
+		var osArch = System.getProperty("os.arch").toLowerCase().replaceAll("[-_\\s]", "");
+		var osName = System.getProperty("os.name").toLowerCase().replaceAll("[-_\\s]", "");
 
 		if(osArch.equals("x86"))
 			arch = Arch.X86;
@@ -61,13 +61,11 @@ public class TargetTriple
 			os = Os.WINDOWS;
 			env = Environment.MSVC;
 		}
-
 		else if(osName.startsWith("mac"))
 		{
 			vendor = Vendor.APPLE;
 			os = Os.MACOS;
 		}
-
 		else if(osName.startsWith("linux"))
 		{
 			os = Os.LINUX;

@@ -33,7 +33,7 @@ public class SemaScopeDefinedFunction extends SemaScopeFunction
 	@Override
 	public List<SemaSymbol> find(String name)
 	{
-		SemaSymbol local = function.localsByName.get(name);
+		var local = function.localsByName.get(name);
 
 		if(local != null)
 			return Collections.singletonList(local);

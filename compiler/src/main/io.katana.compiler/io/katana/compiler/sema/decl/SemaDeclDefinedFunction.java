@@ -47,6 +47,11 @@ public class SemaDeclDefinedFunction extends SemaDeclFunction
 		public int index;
 	}
 
+	public List<Local> locals = new ArrayList<>();
+	public Map<String, Local> localsByName = new TreeMap<>();
+	public List<SemaStmt> body = new ArrayList<>();
+	public Map<String, SemaStmtLabel> labels = new TreeMap<>();
+
 	public SemaDeclDefinedFunction(SemaModule module, boolean exported, boolean opaque, String name)
 	{
 		super(module, exported, opaque, name);
@@ -57,7 +62,7 @@ public class SemaDeclDefinedFunction extends SemaDeclFunction
 		if(localsByName.containsKey(name))
 			return false;
 
-		Local local = new Local(name, type, locals.size());
+		var local = new Local(name, type, locals.size());
 		locals.add(local);
 		localsByName.put(name, local);
 		return true;
@@ -76,9 +81,4 @@ public class SemaDeclDefinedFunction extends SemaDeclFunction
 	{
 		body.add(stmt);
 	}
-
-	public List<Local> locals = new ArrayList<>();
-	public Map<String, Local> localsByName = new TreeMap<>();
-	public List<SemaStmt> body = new ArrayList<>();
-	public Map<String, SemaStmtLabel> labels = new TreeMap<>();
 }

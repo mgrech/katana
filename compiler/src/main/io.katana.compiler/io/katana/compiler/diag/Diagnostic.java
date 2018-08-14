@@ -39,20 +39,20 @@ public class Diagnostic
 
 	private String asString()
 	{
-		String sourceLine = location.file.line(location.line).trim();
-		String indicator = makeLocationIndicator(location);
-		String traceString = trace.map(StackTrace::toString).or("");
-		String message = id.format(type, args);
+		var sourceLine = location.file.line(location.line).trim();
+		var indicator = makeLocationIndicator(location);
+		var traceString = trace.map(StackTrace::toString).or("");
+		var message = id.format(type, args);
 		return String.format("%s: %s\n\t%s\n\t%s\n%s", location, message, sourceLine, indicator, traceString);
 	}
 
 	private static String makeLocationIndicator(SourceLocation location)
 	{
-		String line = StringUtils.rtrim(location.file.line(location.line));
-		int lengthPreLTrim = line.length();
+		var line = StringUtils.rtrim(location.file.line(location.line));
+		var lengthPreLTrim = line.length();
 		line = StringUtils.ltrim(line);
-		int ltrimmedColumns = lengthPreLTrim - line.length();
-		int spaces = location.column - ltrimmedColumns;
+		var ltrimmedColumns = lengthPreLTrim - line.length();
+		var spaces = location.column - ltrimmedColumns;
 		return StringUtils.times(spaces, ' ') + StringUtils.times(location.length, '^');
 	}
 

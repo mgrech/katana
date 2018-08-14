@@ -30,7 +30,7 @@ public class StringPool
 
 	public String get(String value)
 	{
-		String name = namesByValue.get(value);
+		var name = namesByValue.get(value);
 
 		if(name != null)
 			return name;
@@ -42,16 +42,16 @@ public class StringPool
 
 	private byte[] utf8Encode(int cp)
 	{
-		StringBuilder builder = new StringBuilder();
+		var builder = new StringBuilder();
 		builder.appendCodePoint(cp);
 		return builder.toString().getBytes(StandardCharsets.UTF_8);
 	}
 
 	private String escapeCharacter(int cp)
 	{
-		StringBuilder result = new StringBuilder();
+		var result = new StringBuilder();
 
-		for(byte b : utf8Encode(cp))
+		for(var b : utf8Encode(cp))
 			result.append(String.format("\\%02X", b));
 
 		return result.toString();
@@ -59,9 +59,9 @@ public class StringPool
 
 	private String escape(String s)
 	{
-		StringBuilder result = new StringBuilder();
+		var result = new StringBuilder();
 
-		for(int cp : s.codePoints().toArray())
+		for(var cp : s.codePoints().toArray())
 			if(cp == '"' || cp == '\\' || Character.isISOControl(cp))
 				result.append(escapeCharacter(cp));
 			else
@@ -72,11 +72,11 @@ public class StringPool
 
 	public void generate(StringBuilder builder)
 	{
-		for(Map.Entry<String, String> entry : namesByValue.entrySet())
+		for(var entry : namesByValue.entrySet())
 		{
-			String name = entry.getValue();
-			String value = entry.getKey();
-			String strfmt = "%s = private unnamed_addr constant [%s x i8] c\"%s\"\n";
+			var name = entry.getValue();
+			var value = entry.getKey();
+			var strfmt = "%s = private unnamed_addr constant [%s x i8] c\"%s\"\n";
 			builder.append(String.format(strfmt, name, value.length(), escape(value)));
 		}
 	}

@@ -22,28 +22,28 @@ public class ReflectionUtils
 {
 	public static Method findMatchingMethod(Class clazz, String name, Class[] args)
 	{
-		Method[] allMethods = clazz.getDeclaredMethods();
+		var allMethods = clazz.getDeclaredMethods();
 
-		List<Method> sameNameAndParamCountMethods = new ArrayList<>();
+		var sameNameAndParamCountMethods = new ArrayList<Method>();
 
-		for(Method method : allMethods)
+		for(var method : allMethods)
 			if(method.getParameterCount() == args.length && method.getName().equals(name))
 				sameNameAndParamCountMethods.add(method);
 
-		List<Method> matches = new ArrayList<>();
+		var matches = new ArrayList<Method>();
 
-		for(Method method : sameNameAndParamCountMethods)
+		for(var method : sameNameAndParamCountMethods)
 			if(isCallable(method, args))
 				matches.add(method);
 
 		if(matches.isEmpty())
 		{
-			List<String> argsDesc = new ArrayList<>();
+			var argsDesc = new ArrayList<String>();
 
-			for(Class arg : args)
+			for(var arg : args)
 				argsDesc.add(arg == null ? "null" : "'" + arg.getName() + "'");
 
-			String fmt = "no matching method found in class '%s' for argument(s) %s";
+			var fmt = "no matching method found in class '%s' for argument(s) %s";
 			throw new RuntimeException(String.format(fmt, clazz.getName(), String.join(", ", argsDesc)));
 		}
 
@@ -55,9 +55,9 @@ public class ReflectionUtils
 
 	private static boolean isCallable(Method method, Class[] args)
 	{
-		Class<?>[] params = method.getParameterTypes();
+		var params = method.getParameterTypes();
 
-		for(int i = 0; i != args.length; ++i)
+		for(var i = 0; i != args.length; ++i)
 			if(args[i] != null && !params[i].isAssignableFrom(args[i]))
 				return false;
 
@@ -66,13 +66,13 @@ public class ReflectionUtils
 
 	private static Method tryFindExactMatch(Class clazz, List<Method> matches, Class[] args)
 	{
-		for(Method method : matches)
+		for(var method : matches)
 		{
-			Class<?>[] params = method.getParameterTypes();
+			var params = method.getParameterTypes();
 
-			boolean exact = true;
+			var exact = true;
 
-			for(int i = 0; i != args.length; ++i)
+			for(var i = 0; i != args.length; ++i)
 			{
 				if(args[i] == null)
 					continue;

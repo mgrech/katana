@@ -47,7 +47,7 @@ public class SemaModule implements SemaSymbol
 
 	public Maybe<SemaDecl> findDecl(String name)
 	{
-		SemaModule current = this;
+		var current = this;
 		SemaDecl decl;
 
 		do
@@ -55,7 +55,6 @@ public class SemaModule implements SemaSymbol
 			decl = decls.get(name);
 			current = current.parent;
 		}
-
 		while(decl == null && current != null);
 
 		return Maybe.wrap(decl);
@@ -63,22 +62,22 @@ public class SemaModule implements SemaSymbol
 
 	public Maybe<SemaModule> findChild(String name)
 	{
-		SemaModule module = children.get(name);
+		var module = children.get(name);
 		return Maybe.wrap(module);
 	}
 
 	public SemaModule findOrCreateChild(String name)
 	{
-		Maybe<SemaModule> child = findChild(name);
+		var child = findChild(name);
 
 		if(child.isSome())
 			return child.get();
 
-		AstPath path = new AstPath();
+		var path = new AstPath();
 		path.components.addAll(this.path.components);
 		path.components.add(name);
 
-		SemaModule module = new SemaModule(name, path, this);
+		var module = new SemaModule(name, path, this);
 		children.put(name, module);
 
 		return module;

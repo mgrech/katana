@@ -16,7 +16,6 @@ package io.katana.compiler.utils;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -51,7 +50,7 @@ public class FileUtils
 
 	public static void writeFile(String content, Path destination) throws IOException
 	{
-		try(OutputStream stream = new FileOutputStream(destination.toFile()))
+		try(var stream = new FileOutputStream(destination.toFile()))
 		{
 			stream.write(content.getBytes(StandardCharsets.UTF_8));
 		}

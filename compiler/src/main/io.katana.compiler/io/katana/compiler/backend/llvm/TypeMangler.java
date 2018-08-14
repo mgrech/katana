@@ -71,12 +71,12 @@ public class TypeMangler implements IVisitor
 
 	private String visit(SemaTypeTuple tuple)
 	{
-		StringBuilder builder = new StringBuilder();
+		var builder = new StringBuilder();
 		builder.append("tuple-");
 
 		builder.append(tuple.types.size());
 
-		for(SemaType type : tuple.types)
+		for(var type : tuple.types)
 		{
 			builder.append('-');
 			builder.append(mangle(type));

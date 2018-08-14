@@ -38,9 +38,9 @@ public class StringUtils
 	{
 		assert count >= 0 : "negative count";
 
-		StringBuilder builder = new StringBuilder();
+		var builder = new StringBuilder();
 
-		for(int i = 0; i != count; ++i)
+		for(var i = 0; i != count; ++i)
 			builder.append(c);
 
 		return builder.toString();
@@ -50,7 +50,7 @@ public class StringUtils
 	{
 		assert cp >= 0 && cp <= 0x10FFFF : "invalid codepoint";
 
-		String name = String.format("{%s}", Character.getName(cp));
+		var name = String.format("{%s}", Character.getName(cp));
 
 		if(cp <= 0xFFFF)
 			return String.format("U+%04X %s", cp, name);

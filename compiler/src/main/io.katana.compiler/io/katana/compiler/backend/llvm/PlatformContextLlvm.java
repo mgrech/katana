@@ -62,7 +62,7 @@ public class PlatformContextLlvm extends PlatformContext
 	@Override
 	public Maybe<BuiltinFunc> findBuiltin(String name)
 	{
-		BuiltinFunc func = BUILTINS.get(name);
+		var func = BUILTINS.get(name);
 		return Maybe.wrap(func);
 	}
 }

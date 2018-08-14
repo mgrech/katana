@@ -61,20 +61,20 @@ public class TypeString implements IVisitor
 
 	private String visit(SemaTypeFunction type)
 	{
-		StringBuilder params = new StringBuilder();
+		var params = new StringBuilder();
 
 		if(!type.params.isEmpty())
 		{
 			params.append(of(type.params.get(0)));
 
-			for(int i = 1; i != type.params.size(); ++i)
+			for(var i = 1; i != type.params.size(); ++i)
 			{
 				params.append(", ");
 				params.append(of(type.params.get(i)));
 			}
 		}
 
-		String ret = Types.isVoid(type.ret) ? "" : " => " + of(type.ret);
+		var ret = Types.isVoid(type.ret) ? "" : " => " + of(type.ret);
 		return String.format("fn(%s)%s", params, ret);
 	}
 

@@ -20,7 +20,6 @@ import io.katana.compiler.sema.decl.SemaDecl;
 import io.katana.compiler.sema.decl.SemaDeclImportedOverloadSet;
 
 import java.util.IdentityHashMap;
-import java.util.Map;
 
 public class DeclDepResolver
 {
@@ -38,7 +37,7 @@ public class DeclDepResolver
 		if(decl instanceof SemaDeclImportedOverloadSet)
 			decl = ((SemaDeclImportedOverloadSet)decl).set;
 
-		DepResolveState state = states.get(decl);
+		var state = states.get(decl);
 
 		if(state == null)
 		{
@@ -64,12 +63,12 @@ public class DeclDepResolver
 
 	public static void process(IdentityHashMap<SemaDecl, DeclInfo> decls, PlatformContext context)
 	{
-		DeclDepResolver resolver = new DeclDepResolver(context);
+		var resolver = new DeclDepResolver(context);
 
-		for(Map.Entry<SemaDecl, DeclInfo> entry : decls.entrySet())
+		for(var entry : decls.entrySet())
 			resolver.infos.put(entry.getKey(), entry.getValue());
 
-		for(SemaDecl decl : decls.keySet())
+		for(var decl : decls.keySet())
 			resolver.process(decl);
 	}
 }

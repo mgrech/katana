@@ -14,10 +14,8 @@
 
 package io.katana.compiler.parser;
 
-import io.katana.compiler.ast.AstFile;
 import io.katana.compiler.ast.AstProgram;
 import io.katana.compiler.diag.DiagnosticsManager;
-import io.katana.compiler.scanner.SourceFile;
 import io.katana.compiler.scanner.SourceManager;
 
 import java.io.IOException;
@@ -26,11 +24,11 @@ public class ProgramParser
 {
 	public static AstProgram parse(SourceManager sourceManager, DiagnosticsManager diag) throws IOException
 	{
-		AstProgram program = new AstProgram();
+		var program = new AstProgram();
 
-		for(SourceFile file : sourceManager.files())
+		for(var file : sourceManager.files())
 		{
-			AstFile ast = FileParser.parse(file, diag);
+			var ast = FileParser.parse(file, diag);
 			program.files.put(file, ast);
 		}
 

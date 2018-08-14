@@ -15,10 +15,8 @@
 package io.katana.compiler.analysis;
 
 import io.katana.compiler.ast.AstFile;
-import io.katana.compiler.ast.AstModule;
 import io.katana.compiler.ast.AstPath;
 import io.katana.compiler.ast.AstProgram;
-import io.katana.compiler.ast.decl.AstDecl;
 import io.katana.compiler.ast.decl.AstDeclImport;
 import io.katana.compiler.ast.decl.AstDeclOperator;
 import io.katana.compiler.ast.decl.AstDeclRenamedImport;
@@ -30,7 +28,6 @@ import io.katana.compiler.sema.SemaModule;
 import io.katana.compiler.sema.SemaProgram;
 import io.katana.compiler.sema.decl.*;
 import io.katana.compiler.sema.scope.SemaScopeFile;
-import io.katana.compiler.utils.Maybe;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -41,17 +38,17 @@ public class ProgramValidator
 {
 	private static Map<AstPath, Map<String, SemaDeclOperator>> registerOperatorDecls(SemaProgram program, Map<AstFile, SemaScopeFile> scopesByFile)
 	{
-		Map<AstPath, Map<String, SemaDeclOperator>> result = new HashMap<>();
+		var result = new HashMap<AstPath, Map<String, SemaDeclOperator>>();
 
-		for(Map.Entry<AstFile, SemaScopeFile> file : scopesByFile.entrySet())
-			for(Map.Entry<AstPath, AstModule> module : file.getKey().modules.entrySet())
-				for(AstDecl decl : module.getValue().decls.values())
+		for(var file : scopesByFile.entrySet())
+			for(var module : file.getKey().modules.entrySet())
+				for(var decl : module.getValue().decls.values())
 					if(decl instanceof AstDeclOperator)
 					{
-						AstPath path = module.getKey();
-						AstDeclOperator opDecl = (AstDeclOperator)decl;
+						var path = module.getKey();
+						var opDecl = (AstDeclOperator)decl;
 
-						Map<String, SemaDeclOperator> map = result.get(path);
+						var map = result.get(path);
 
 						if(map == null)
 						{
@@ -59,14 +56,14 @@ public class ProgramValidator
 							result.put(path, map);
 						}
 
-						SemaModule semaModule = program.findOrCreateModule(path);
-						SemaDeclOperator semaDecl = new SemaDeclOperator(semaModule, opDecl.exported, opDecl.operator);
+						var semaModule = program.findOrCreateModule(path);
+						var semaDecl = new SemaDeclOperator(semaModule, opDecl.exported, opDecl.operator);
 
 						if(!semaModule.declare(semaDecl))
 						{
-							String op = semaDecl.operator.symbol;
-							String kind = semaDecl.operator.kind.toString().toLowerCase();
-							String fmt = "redefinition of operator '%s %s'";
+							var op = semaDecl.operator.symbol;
+							var kind = semaDecl.operator.kind.toString().toLowerCase();
+							var fmt = "redefinition of operator '%s %s'";
 							throw new CompileException(String.format(fmt, op, kind));
 						}
 
@@ -81,17 +78,17 @@ public class ProgramValidator
 
 	private static void propagateOperatorDecls(Map<AstFile, SemaScopeFile> files, Map<AstPath, Map<String, SemaDeclOperator>> operators)
 	{
-		for(Map.Entry<AstFile, SemaScopeFile> entry : files.entrySet())
+		for(var entry : files.entrySet())
 		{
-			AstFile file = entry.getKey();
-			SemaScopeFile scope = entry.getValue();
+			var file = entry.getKey();
+			var scope = entry.getValue();
 
-			for(AstPath path : file.imports.keySet())
+			for(var path : file.imports.keySet())
 			{
-				Map<String, SemaDeclOperator> importedOps = operators.get(path);
+				var importedOps = operators.get(path);
 
 				if(importedOps != null)
-					for(SemaDeclOperator operator : importedOps.values())
+					for(var operator : importedOps.values())
 						scope.defineSymbol(operator);
 			}
 		}
@@ -99,9 +96,9 @@ public class ProgramValidator
 
 	private static IdentityHashMap<AstFile, SemaScopeFile> createScopes(Collection<AstFile> files)
 	{
-		IdentityHashMap<AstFile, SemaScopeFile> result = new IdentityHashMap<>();
+		var result = new IdentityHashMap<AstFile, SemaScopeFile>();
 
-		for(AstFile file : files)
+		for(var file : files)
 			result.put(file, new SemaScopeFile());
 
 		return result;
@@ -109,10 +106,10 @@ public class ProgramValidator
 
 	private static IdentityHashMap<SemaDecl, DeclInfo> registerDecls(SemaProgram program, IdentityHashMap<AstFile, SemaScopeFile> scopes)
 	{
-		IdentityHashMap<SemaDecl, DeclInfo> result = new IdentityHashMap<>();
+		var result = new IdentityHashMap<SemaDecl, DeclInfo>();
 
-		for(Map.Entry<AstFile, SemaScopeFile> scope : scopes.entrySet())
-			for(Map.Entry<SemaDecl, AstDecl> decl : DeclRegisterer.process(program, scope.getKey(), scope.getValue()).entrySet())
+		for(var scope : scopes.entrySet())
+			for(var decl : DeclRegisterer.process(program, scope.getKey(), scope.getValue()).entrySet())
 				result.put(decl.getKey(), new DeclInfo(decl.getValue(), scope.getValue()));
 
 		return result;
@@ -120,7 +117,7 @@ public class ProgramValidator
 
 	private static SemaModule checkImportedPath(AstDeclImport import_, SemaProgram program)
 	{
-		Maybe<SemaModule> module = program.findModule(import_.path);
+		var module = program.findModule(import_.path);
 
 		if(module.isNone())
 			throw new CompileException(String.format("import of unknown module '%s'", import_.path));
@@ -130,11 +127,11 @@ public class ProgramValidator
 
 	private static void validateFileImports(AstFile file, SemaScopeFile scope, SemaProgram program)
 	{
-		for(AstDeclImport import_ : file.imports.values())
+		for(var import_ : file.imports.values())
 		{
-			SemaModule module = checkImportedPath(import_, program);
+			var module = checkImportedPath(import_, program);
 
-			for(SemaDecl decl : module.decls().values())
+			for(var decl : module.decls().values())
 				if(decl instanceof SemaDeclOverloadSet)
 					scope.defineSymbol(new SemaDeclImportedOverloadSet((SemaDeclOverloadSet)decl));
 				else if(decl.exported && !(decl instanceof SemaDeclOperator))
@@ -143,10 +140,10 @@ public class ProgramValidator
 
 		for(AstDeclRenamedImport import_ : file.renamedImports.values())
 		{
-			SemaModule module = checkImportedPath(import_, program);
-			SemaDeclRenamedImport semaImport = new SemaDeclRenamedImport(module, import_.rename);
+			var module = checkImportedPath(import_, program);
+			var semaImport = new SemaDeclRenamedImport(module, import_.rename);
 
-			for(SemaDecl decl : module.decls().values())
+			for(var decl : module.decls().values())
 				if(decl instanceof SemaDeclOverloadSet)
 					semaImport.decls.put(decl.name(), new SemaDeclImportedOverloadSet((SemaDeclOverloadSet)decl));
 				else if(decl.exported)
@@ -158,40 +155,40 @@ public class ProgramValidator
 
 	private static void validateImports(SemaProgram program, IdentityHashMap<AstFile, SemaScopeFile> scopes)
 	{
-		for(Map.Entry<AstFile, SemaScopeFile> scope : scopes.entrySet())
+		for(var scope : scopes.entrySet())
 			validateFileImports(scope.getKey(), scope.getValue(), program);
 	}
 
 	private static void parseOperators(IdentityHashMap<AstFile, SemaScopeFile> scopes)
 	{
-		for(Map.Entry<AstFile, SemaScopeFile> scope : scopes.entrySet())
+		for(var scope : scopes.entrySet())
 			OperatorParser.replace(scope.getKey().lateParseExprs, scope.getValue());
 	}
 
 	private static void registerBuiltinOps(Collection<SemaScopeFile> scopes)
 	{
-		for(SemaScopeFile scope : scopes)
+		for(var scope : scopes)
 		{
-			for(SemaDeclOperator decl : BuiltinOps.PREFIX_OPS.values())
+			for(var decl : BuiltinOps.PREFIX_OPS.values())
 				scope.defineSymbol(decl);
 
-			for(SemaDeclOperator decl : BuiltinOps.INFIX_OPS.values())
+			for(var decl : BuiltinOps.INFIX_OPS.values())
 				scope.defineSymbol(decl);
 
-			for(SemaDeclOperator decl : BuiltinOps.POSTFIX_OPS.values())
+			for(var decl : BuiltinOps.POSTFIX_OPS.values())
 				scope.defineSymbol(decl);
 		}
 	}
 
 	public static SemaProgram validate(AstProgram program, PlatformContext context)
 	{
-		SemaProgram semaProgram = new SemaProgram();
+		var semaProgram = new SemaProgram();
 
-		IdentityHashMap<AstFile, SemaScopeFile> scopes = createScopes(program.files.values());
-		Map<AstPath, Map<String, SemaDeclOperator>> operators = registerOperatorDecls(semaProgram, scopes);
+		var scopes = createScopes(program.files.values());
+		var operators = registerOperatorDecls(semaProgram, scopes);
 		propagateOperatorDecls(scopes, operators);
 
-		IdentityHashMap<SemaDecl, DeclInfo> decls = registerDecls(semaProgram, scopes);
+		var decls = registerDecls(semaProgram, scopes);
 		validateImports(semaProgram, scopes);
 		registerBuiltinOps(scopes.values());
 		parseOperators(scopes);

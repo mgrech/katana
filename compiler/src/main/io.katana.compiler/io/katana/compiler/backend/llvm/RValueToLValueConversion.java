@@ -14,11 +14,11 @@
 
 package io.katana.compiler.backend.llvm;
 
-import io.katana.compiler.sema.expr.ExprKind;
 import io.katana.compiler.sema.expr.SemaExpr;
+import io.katana.compiler.sema.expr.SimpleLValueExpr;
 import io.katana.compiler.sema.type.SemaType;
 
-public class RValueToLValueConversion extends SemaExpr
+public class RValueToLValueConversion extends SimpleLValueExpr
 {
 	public final SemaExpr expr;
 
@@ -31,11 +31,5 @@ public class RValueToLValueConversion extends SemaExpr
 	public SemaType type()
 	{
 		return expr.type();
-	}
-
-	@Override
-	public ExprKind kind()
-	{
-		return ExprKind.LVALUE;
 	}
 }

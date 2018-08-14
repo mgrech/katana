@@ -48,13 +48,13 @@ public class ExprCodeGenerator implements IVisitor
 
 	public static Maybe<String> generate(SemaExpr expr, FileCodegenContext context, FunctionCodegenContext fcontext)
 	{
-		ExprCodeGenerator visitor = new ExprCodeGenerator(context, fcontext);
+		var visitor = new ExprCodeGenerator(context, fcontext);
 		return (Maybe<String>)expr.accept(visitor);
 	}
 
 	private String generateLoad(String where, String type)
 	{
-		String ssa = fcontext.allocateSsa();
+		var ssa = fcontext.allocateSsa();
 		context.writef("\t%s = load %s, %s* %s\n", ssa, type, type, where);
 		return ssa;
 	}
@@ -66,9 +66,9 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(RValueToLValueConversion conversion)
 	{
-		String exprSsa = generate(conversion.expr, context, fcontext).unwrap();
-		String exprType = TypeCodeGenerator.generate(conversion.expr.type(), context.platform());
-		String resultSsa = fcontext.allocateSsa();
+		var exprSsa = generate(conversion.expr, context, fcontext).unwrap();
+		var exprType = TypeCodeGenerator.generate(conversion.expr.type(), context.platform());
+		var resultSsa = fcontext.allocateSsa();
 		generateStore(resultSsa, exprSsa, exprType);
 		return Maybe.some(resultSsa);
 	}
@@ -156,10 +156,9 @@ public class ExprCodeGenerator implements IVisitor
 		if(Types.isZeroSized(assign.type()))
 			return Maybe.none();
 
-		SemaType type = assign.right.type();
-		String typeString = TypeCodeGenerator.generate(assign.right.type(), context.platform());
-		String right = generate(assign.right, context, fcontext).unwrap();
-		String left = generate(assign.left, context, fcontext).unwrap();
+		var typeString = TypeCodeGenerator.generate(assign.right.type(), context.platform());
+		var right = generate(assign.right, context, fcontext).unwrap();
+		var left = generate(assign.left, context, fcontext).unwrap();
 		generateStore(left, right, typeString);
 		return Maybe.some(left);
 	}
@@ -208,22 +207,22 @@ public class ExprCodeGenerator implements IVisitor
 
 	private String generateCast(String valueSsa, SemaType sourceType, SemaType targetType, SemaExprCast.Kind kind)
 	{
-		String resultSsa = fcontext.allocateSsa();
-		String sourceTypeString = TypeCodeGenerator.generate(sourceType, context.platform());
-		String targetTypeString = TypeCodeGenerator.generate(targetType, context.platform());
+		var resultSsa = fcontext.allocateSsa();
+		var sourceTypeString = TypeCodeGenerator.generate(sourceType, context.platform());
+		var targetTypeString = TypeCodeGenerator.generate(targetType, context.platform());
 
-		String instr = instrForCast(targetType, kind);
+		var instr = instrForCast(targetType, kind);
 		context.writef("\t%s = %s %s %s to %s\n", resultSsa, instr, sourceTypeString, valueSsa, targetTypeString);
 		return resultSsa;
 	}
 
 	private Maybe<String> visit(SemaExprCast cast)
 	{
-		String valueSsa = generate(cast.expr, context, fcontext).unwrap();
+		var valueSsa = generate(cast.expr, context, fcontext).unwrap();
 		String resultSsa;
 
-		SemaType sourceType = cast.expr.type();
-		SemaType targetType = cast.type;
+		var sourceType = cast.expr.type();
+		var targetType = cast.type;
 
 		switch(cast.kind)
 		{
@@ -282,9 +281,9 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> generateFunctionCall(String functionSsa, List<SemaExpr> args, SemaType ret, Maybe<Boolean> inline)
 	{
-		List<String> argsSsa = new ArrayList<>();
+		var argsSsa = new ArrayList<String>();
 
-		for(SemaExpr arg : args)
+		for(var arg : args)
 			argsSsa.add(generate(arg, context, fcontext).unwrap());
 
 		context.write('\t');
@@ -297,7 +296,7 @@ public class ExprCodeGenerator implements IVisitor
 			context.writef("%s = ", retSsa.unwrap());
 		}
 
-		String retTypeString = TypeCodeGenerator.generate(ret, context.platform());
+		var retTypeString = TypeCodeGenerator.generate(ret, context.platform());
 
 		context.writef("call %s %s(", retTypeString, functionSsa);
 
@@ -310,11 +309,11 @@ public class ExprCodeGenerator implements IVisitor
 				context.write(argsSsa.get(0));
 			}
 
-			for(int i = 1; i != argsSsa.size(); ++i)
+			for(var i = 1; i != argsSsa.size(); ++i)
 			{
 				if(!Types.isZeroSized(args.get(i).type()))
 				{
-					String argTypeString = TypeCodeGenerator.generate(args.get(i).type(), context.platform());
+					var argTypeString = TypeCodeGenerator.generate(args.get(i).type(), context.platform());
 					context.writef(", %s %s", argTypeString, argsSsa.get(i));
 				}
 			}
@@ -342,11 +341,10 @@ public class ExprCodeGenerator implements IVisitor
 			SemaDeclExternFunction extfn = (SemaDeclExternFunction)functionCall.function;
 			name = extfn.externName.or(extfn.name());
 		}
-
 		else
 			name = FunctionNameMangler.mangle(functionCall.function);
 
-		String functionSsa = '@' + name;
+		var functionSsa = '@' + name;
 		return generateFunctionCall(functionSsa, functionCall.args, functionCall.function.ret, functionCall.inline);
 	}
 
@@ -375,8 +373,8 @@ public class ExprCodeGenerator implements IVisitor
 		if(Types.isZeroSized(conversion.type()))
 			return Maybe.none();
 
-		String lvalueSsa = generate(conversion.expr, context, fcontext).unwrap();
-		String lvalueTypeString = TypeCodeGenerator.generate(conversion.type(), context.platform());
+		var lvalueSsa = generate(conversion.expr, context, fcontext).unwrap();
+		var lvalueTypeString = TypeCodeGenerator.generate(conversion.type(), context.platform());
 		return Maybe.some(generateLoad(lvalueSsa, lvalueTypeString));
 	}
 
@@ -397,9 +395,9 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprImplicitConversionPointerToBytePointer conversion)
 	{
-		String exprTypeString = TypeCodeGenerator.generate(conversion.expr.type(), context.platform());
-		String exprSsa = generate(conversion.expr, context, fcontext).unwrap();
-		String resultSsa = fcontext.allocateSsa();
+		var exprTypeString = TypeCodeGenerator.generate(conversion.expr.type(), context.platform());
+		var exprSsa = generate(conversion.expr, context, fcontext).unwrap();
+		var resultSsa = fcontext.allocateSsa();
 		context.writef("\t%s = bitcast %s %s to i8*\n", resultSsa, exprTypeString, exprSsa);
 		return Maybe.some(resultSsa);
 	}
@@ -411,7 +409,7 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprImplicitConversionWiden conversion)
 	{
-		String valueSsa = generate(conversion.expr, context, fcontext).unwrap();
+		var valueSsa = generate(conversion.expr, context, fcontext).unwrap();
 		return Maybe.some(generateCast(valueSsa, conversion.expr.type(), conversion.type(), SemaExprCast.Kind.WIDEN_CAST));
 	}
 
@@ -422,7 +420,7 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprIndirectFunctionCall functionCall)
 	{
-		String functionSsa = generate(functionCall.expr, context, fcontext).unwrap();
+		var functionSsa = generate(functionCall.expr, context, fcontext).unwrap();
 		return generateFunctionCall(functionSsa, functionCall.args, functionCall.type(), Maybe.none());
 	}
 
@@ -449,8 +447,8 @@ public class ExprCodeGenerator implements IVisitor
 	{
 		// array literals should not generate any temporary variables as they are required to be literals
 		// hence we do not pass a builder to this context (null)
-		FileCodegenContext tmpContext = new FileCodegenContext(context.build(), context.platform(), null, context.stringPool());
-		StringBuilder builder = new StringBuilder();
+		var tmpContext = new FileCodegenContext(context.build(), context.platform(), null, context.stringPool());
+		var builder = new StringBuilder();
 
 		builder.append('[');
 
@@ -460,7 +458,7 @@ public class ExprCodeGenerator implements IVisitor
 			builder.append(' ');
 			builder.append(generate(lit.values.get(0), tmpContext, null).unwrap());
 
-			for(int i = 1; i != lit.values.size(); ++i)
+			for(var i = 1; i != lit.values.size(); ++i)
 			{
 				SemaExpr expr = lit.values.get(i);
 				builder.append(", ");
@@ -484,23 +482,23 @@ public class ExprCodeGenerator implements IVisitor
 	{
 		// llvm requires float literals to be as wide as double literals but representable in a float
 		// hence we take the float value and widen it to double
-		double d = f.toFloat();
-		long l = Double.doubleToLongBits(d);
+		var d = f.toFloat();
+		var l = Double.doubleToLongBits(d);
 		return String.format("0x%x", l);
 	}
 
 	private String toDoubleHexString(Fraction f)
 	{
-		double d = f.toDouble();
-		long l = Double.doubleToRawLongBits(d);
+		var d = f.toDouble();
+		var l = Double.doubleToRawLongBits(d);
 		return String.format("0x%x", l);
 	}
 
 	private Maybe<String> visit(SemaExprLitFloat lit)
 	{
-		String s = lit.type == BuiltinType.FLOAT32
-			? toFloatHexString(lit.value)
-			: toDoubleHexString(lit.value);
+		var s = lit.type == BuiltinType.FLOAT32
+		        ? toFloatHexString(lit.value)
+		        : toDoubleHexString(lit.value);
 
 		return Maybe.some(s);
 	}

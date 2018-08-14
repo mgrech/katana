@@ -29,14 +29,14 @@ public class DiagnosticId
 
 	public String name()
 	{
-		String kindString = kind.toString().substring(0, 3);
+		var kindString = kind.toString().substring(0, 3);
 		return String.format("%s%03d", kindString, number);
 	}
 
 	public String format(DiagnosticType type, Object... args)
 	{
-		String typeString = type.toString().toLowerCase();
-		String message = String.format(fmt, args);
+		var typeString = type.toString().toLowerCase();
+		var message = String.format(fmt, args);
 		return String.format("%s %s: %s", typeString, name(), message);
 	}
 }

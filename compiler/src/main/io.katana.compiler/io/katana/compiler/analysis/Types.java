@@ -70,7 +70,7 @@ public class Types
 
 		if(type instanceof SemaTypeArray)
 		{
-			SemaTypeArray array = (SemaTypeArray)type;
+			var array = (SemaTypeArray)type;
 			return new SemaTypeArray(array.length, addConst(array.type));
 		}
 
@@ -118,7 +118,7 @@ public class Types
 
 		if(type instanceof SemaTypeArray)
 		{
-			SemaTypeArray array = (SemaTypeArray)type;
+			var array = (SemaTypeArray)type;
 			return new SemaTypeArray(array.length, removeConst(array.type));
 		}
 

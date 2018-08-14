@@ -18,12 +18,12 @@ import io.katana.compiler.visitor.IVisitable;
 
 public abstract class AstDecl implements IVisitable
 {
+	public boolean exported;
+	public boolean opaque;
+
 	protected AstDecl(boolean exported, boolean opaque)
 	{
 		this.exported = exported;
 		this.opaque = opaque;
 	}
-
-	public boolean exported;
-	public boolean opaque;
 }

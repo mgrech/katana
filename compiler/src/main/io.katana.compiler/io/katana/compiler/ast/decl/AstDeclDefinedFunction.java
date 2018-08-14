@@ -22,11 +22,11 @@ import java.util.List;
 
 public class AstDeclDefinedFunction extends AstDeclFunction
 {
+	public List<AstStmt> body;
+
 	public AstDeclDefinedFunction(boolean exported, boolean opaque, String name, List<Param> params, Maybe<AstType> ret, List<AstStmt> body)
 	{
 		super(exported, opaque, name, params, ret);
 		this.body = body;
 	}
-
-	public List<AstStmt> body;
 }

@@ -16,7 +16,6 @@ package io.katana.compiler.parser;
 
 import io.katana.compiler.ast.expr.AstExpr;
 import io.katana.compiler.ast.stmt.*;
-import io.katana.compiler.ast.type.AstType;
 import io.katana.compiler.scanner.TokenType;
 import io.katana.compiler.utils.Maybe;
 
@@ -65,40 +64,40 @@ public class StmtParser
 			return Maybe.none();
 		}
 
-		AstExpr init = ExprParser.parse(ctx);
+		var init = ExprParser.parse(ctx);
 		ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 		return Maybe.some(init);
 	}
 
 	private static AstStmt parseLocal(ParseContext ctx)
 	{
-		ParseContext tmp = ctx.clone();
+		var tmp = ctx.clone();
 
 		if(ParseTools.option(ctx, TokenType.IDENT, false))
 		{
-			String name = (String)ParseTools.consume(ctx).value;
+			var name = (String)ParseTools.consume(ctx).value;
 
 			if(ParseTools.option(ctx, "=", true))
 			{
-				Maybe<AstExpr> init = parseLocalInitAndScolon(ctx);
+				var init = parseLocalInitAndScolon(ctx);
 				return new AstStmtLocal(Maybe.none(), name, init);
 			}
 		}
 
 		ctx.backtrack(tmp);
 
-		AstType type = TypeParser.parse(ctx);
-		String name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
+		var type = TypeParser.parse(ctx);
+		var name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 		ParseTools.expect(ctx, "=", true);
 
-		Maybe<AstExpr> init = parseLocalInitAndScolon(ctx);
+		var init = parseLocalInitAndScolon(ctx);
 		return new AstStmtLocal(Maybe.some(type), name, init);
 	}
 
 	private static AstStmt parseIf(ParseContext ctx, boolean negated)
 	{
-		AstExpr condition = ParseTools.parenthesized(ctx, () -> ExprParser.parse(ctx));
-		AstStmt then = parse(ctx);
+		var condition = ParseTools.parenthesized(ctx, () -> ExprParser.parse(ctx));
+		var then = parse(ctx);
 
 		Maybe<AstStmt> else_ = Maybe.none();
 
@@ -113,7 +112,7 @@ public class StmtParser
 
 	private static AstStmtGoto parseGoto(ParseContext ctx)
 	{
-		String label = (String)ParseTools.consumeExpected(ctx, TokenType.STMT_LABEL).value;
+		var label = (String)ParseTools.consumeExpected(ctx, TokenType.STMT_LABEL).value;
 		ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 		return new AstStmtGoto(label);
 	}
@@ -123,7 +122,7 @@ public class StmtParser
 		if(ParseTools.option(ctx, TokenType.PUNCT_SCOLON, true))
 			return new AstStmtReturn(Maybe.none());
 
-		AstExpr expr = ExprParser.parse(ctx);
+		var expr = ExprParser.parse(ctx);
 		ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 		return new AstStmtReturn(Maybe.some(expr));
 	}
@@ -136,22 +135,22 @@ public class StmtParser
 	private static AstStmtWhile parseWhile(ParseContext ctx, boolean negated)
 	{
 		ParseTools.expect(ctx, TokenType.PUNCT_LPAREN, true);
-		AstExpr condition = ExprParser.parse(ctx);
+		var condition = ExprParser.parse(ctx);
 		ParseTools.expect(ctx, TokenType.PUNCT_RPAREN, true);
-		AstStmt body = StmtParser.parse(ctx);
+		var body = StmtParser.parse(ctx);
 		return new AstStmtWhile(negated, condition, body);
 	}
 
 	private static AstStmtLabel parseLabel(ParseContext ctx)
 	{
-		String label = (String)ParseTools.consume(ctx).value;
+		var label = (String)ParseTools.consume(ctx).value;
 		ParseTools.expect(ctx, ":", true);
 		return new AstStmtLabel(label);
 	}
 
 	private static AstStmtCompound parseCompound(ParseContext ctx)
 	{
-		AstStmtCompound comp = new AstStmtCompound();
+		var comp = new AstStmtCompound();
 
 		while(!ParseTools.option(ctx, TokenType.PUNCT_RBRACE, true))
 			comp.body.add(parse(ctx));
@@ -161,7 +160,7 @@ public class StmtParser
 
 	private static AstStmtExprStmt parseExprStmt(ParseContext ctx)
 	{
-		AstExpr expr = ExprParser.parse(ctx);
+		var expr = ExprParser.parse(ctx);
 		ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 		return new AstStmtExprStmt(expr);
 	}

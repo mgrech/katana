@@ -90,7 +90,7 @@ public class TypesEqualVisitor implements IVisitor
 		if(left.size() != right.size())
 			return false;
 
-		for(int i = 0; i != left.size(); ++i)
+		for(var i = 0; i != left.size(); ++i)
 			if(!apply(left.get(i), right.get(i)))
 				return false;
 

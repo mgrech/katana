@@ -48,7 +48,7 @@ public class ParseContext implements Cloneable
 
 	private SourceLocation location(int relative)
 	{
-		int index = current + relative;
+		var index = current + relative;
 
 		if(index < 0 || index >= tokens.size())
 			return null;

@@ -92,7 +92,7 @@ public class ImplicitConversions
 			return new SemaExprImplicitConversionWiden(rvalueExpr, targetType);
 
 		// null -> ?T
-		if(Types.isNullablePointer(targetType) && Types.isBuiltin(sourceType, BuiltinType.NULL))
+		if(Types.isBuiltin(sourceType, BuiltinType.NULL) && Types.isNullablePointer(targetType))
 			return new SemaExprImplicitConversionNullToNullablePointer(targetType);
 
 		// pointer conversions

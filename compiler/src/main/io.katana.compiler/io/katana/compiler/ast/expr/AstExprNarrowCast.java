@@ -18,12 +18,12 @@ import io.katana.compiler.ast.type.AstType;
 
 public class AstExprNarrowCast extends AstExpr
 {
+	public AstType type;
+	public AstExpr expr;
+
 	public AstExprNarrowCast(AstType type, AstExpr expr)
 	{
 		this.type = type;
 		this.expr = expr;
 	}
-
-	public AstType type;
-	public AstExpr expr;
 }

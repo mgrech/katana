@@ -82,7 +82,7 @@ public class BinaryOp extends BuiltinFunc
 		if(args.size() != 2)
 			throw new CompileException(String.format("builtin %s expects 2 arguments", name));
 
-		SemaType argType = Types.removeConst(args.get(0));
+		var argType = Types.removeConst(args.get(0));
 
 		if(!Types.equal(argType, Types.removeConst(args.get(1))))
 			throw new CompileException(String.format("arguments to builtin %s must be of same type", name));
@@ -111,12 +111,12 @@ public class BinaryOp extends BuiltinFunc
 	@Override
 	public Maybe<String> generateCall(SemaExprBuiltinCall call, FileCodegenContext context, FunctionCodegenContext fcontext)
 	{
-		SemaTypeBuiltin type = (SemaTypeBuiltin)call.args.get(0).type();
-		String typeString = TypeCodeGenerator.generate(type, context.platform());
-		String leftSsa = ExprCodeGenerator.generate(call.args.get(0), context, fcontext).unwrap();
-		String rightSsa = ExprCodeGenerator.generate(call.args.get(1), context, fcontext).unwrap();
-		String instr = instrForType(type);
-		String resultSsa = fcontext.allocateSsa();
+		var type = (SemaTypeBuiltin)call.args.get(0).type();
+		var typeString = TypeCodeGenerator.generate(type, context.platform());
+		var leftSsa = ExprCodeGenerator.generate(call.args.get(0), context, fcontext).unwrap();
+		var rightSsa = ExprCodeGenerator.generate(call.args.get(1), context, fcontext).unwrap();
+		var instr = instrForType(type);
+		var resultSsa = fcontext.allocateSsa();
 		context.writef("\t%s = %s %s %s, %s\n", resultSsa, instr, typeString, leftSsa, rightSsa);
 		return Maybe.some(resultSsa);
 	}

@@ -34,8 +34,8 @@ public class SourceLocation
 	@Override
 	public String toString()
 	{
-		int beginColumn = column + 1;
-		int endColumn = beginColumn + length;
+		var beginColumn = column + 1;
+		var endColumn = beginColumn + length;
 		return String.format("%s:%s:%s-%s", file.path(), line + 1, beginColumn, endColumn);
 	}
 }

@@ -14,7 +14,6 @@
 
 package io.katana.compiler.analysis;
 
-import io.katana.compiler.BuiltinFunc;
 import io.katana.compiler.BuiltinType;
 import io.katana.compiler.Limits;
 import io.katana.compiler.ast.expr.*;
@@ -23,7 +22,6 @@ import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.diag.TypeString;
 import io.katana.compiler.op.*;
-import io.katana.compiler.sema.SemaSymbol;
 import io.katana.compiler.sema.decl.*;
 import io.katana.compiler.sema.expr.*;
 import io.katana.compiler.sema.scope.SemaScope;
@@ -51,8 +49,8 @@ public class ExprValidator implements IVisitor
 
 	public static SemaExpr validate(AstExpr expr, SemaScope scope, PlatformContext context, Consumer<SemaDecl> validateDecl, Maybe<SemaType> deduce)
 	{
-		ExprValidator validator = new ExprValidator(scope, context, validateDecl);
-		SemaExpr result = (SemaExpr)expr.accept(validator, deduce);
+		var validator = new ExprValidator(scope, context, validateDecl);
+		var result = (SemaExpr)expr.accept(validator, deduce);
 
 		if(deduce.isNone())
 			return result;
@@ -67,28 +65,28 @@ public class ExprValidator implements IVisitor
 
 	private void checkArguments(List<SemaType> params, List<SemaExpr> args)
 	{
-		int expected = params.size();
-		int actual = args.size();
+		var expected = params.size();
+		var actual = args.size();
 
 		if(actual != expected)
 		{
-			String fmt = "invalid number of arguments: expected %s, %s given";
+			var fmt = "invalid number of arguments: expected %s, %s given";
 			throw new CompileException(String.format(fmt, expected, actual));
 		}
 
-		Iterator<SemaType> it1 = params.iterator();
-		Iterator<SemaExpr> it2 = args.iterator();
+		var it1 = params.iterator();
+		var it2 = args.iterator();
 
-		for(int argCount = 1; it1.hasNext(); ++argCount)
+		for(var argCount = 1; it1.hasNext(); ++argCount)
 		{
-			SemaType paramType = it1.next();
-			SemaType paramTypeNoConst = Types.removeConst(paramType);
-			SemaType argType = it2.next().type();
-			SemaType argTypeNoConst = Types.removeConst(argType);
+			var paramType = it1.next();
+			var paramTypeNoConst = Types.removeConst(paramType);
+			var argType = it2.next().type();
+			var argTypeNoConst = Types.removeConst(argType);
 
 			if(!Types.equal(paramTypeNoConst, argTypeNoConst))
 			{
-				String fmt = "type mismatch in argument %s: expected '%s', got '%s'";
+				var fmt = "type mismatch in argument %s: expected '%s', got '%s'";
 				throw new CompileException(String.format(fmt, argCount, TypeString.of(paramTypeNoConst), TypeString.of(argTypeNoConst)));
 			}
 		}
@@ -96,11 +94,11 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprAddressof addressof, Maybe<SemaType> deduce)
 	{
-		SemaExpr expr = validate(addressof.expr, scope, context, validateDecl, Maybe.none());
+		var expr = validate(addressof.expr, scope, context, validateDecl, Maybe.none());
 
 		if(expr instanceof SemaExprNamedOverloadSet)
 		{
-			SemaDeclOverloadSet set = ((SemaExprNamedOverloadSet)expr).set;
+			var set = ((SemaExprNamedOverloadSet)expr).set;
 
 			if(set.overloads.size() > 1)
 				throw new CompileException(String.format("cannot take address of function '%s': function is overloaded", set.qualifiedName()));
@@ -121,9 +119,9 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprArrayAccess arrayAccess, Maybe<SemaType> deduce)
 	{
-		SemaExpr value = validate(arrayAccess.value, scope, context, validateDecl, Maybe.none());
-		SemaExpr index = validate(arrayAccess.index, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.INT));
-		SemaType indexType = index.type();
+		var value = validate(arrayAccess.value, scope, context, validateDecl, Maybe.none());
+		var index = validate(arrayAccess.index, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.INT));
+		var indexType = index.type();
 
 		if(!Types.isBuiltin(indexType, BuiltinType.INT))
 			throw new CompileException(String.format("array access requires index of type 'int', got '%s'", TypeString.of(indexType)));
@@ -139,12 +137,12 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprAssign assign, Maybe<SemaType> deduce)
 	{
-		SemaExpr left = validate(assign.left, scope, context, validateDecl, Maybe.none());
+		var left = validate(assign.left, scope, context, validateDecl, Maybe.none());
 
-		SemaType leftType = left.type();
-		SemaType leftTypeNoConst = Types.removeConst(leftType);
+		var leftType = left.type();
+		var leftTypeNoConst = Types.removeConst(leftType);
 
-		SemaExpr right = validate(assign.right, scope, context, validateDecl, Maybe.some(leftTypeNoConst));
+		var right = validate(assign.right, scope, context, validateDecl, Maybe.some(leftTypeNoConst));
 
 		if(Types.isConst(leftType) || left.kind() != ExprKind.LVALUE)
 			throw new CompileException("non-const lvalue required on left side of assignment");
@@ -152,11 +150,11 @@ public class ExprValidator implements IVisitor
 		if(leftType instanceof SemaTypeFunction)
 			throw new CompileException("cannot assign to value of function type");
 
-		SemaType rightTypeNoConst = Types.removeConst(right.type());
+		var rightTypeNoConst = Types.removeConst(right.type());
 
 		if(!Types.equal(leftTypeNoConst, rightTypeNoConst))
 		{
-			String fmt = "compatible types expected in assignment, got '%s' and '%s'";
+			var fmt = "compatible types expected in assignment, got '%s' and '%s'";
 			throw new CompileException(String.format(fmt, TypeString.of(leftTypeNoConst), TypeString.of(rightTypeNoConst)));
 		}
 
@@ -168,22 +166,22 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprBuiltinCall builtinCall, Maybe<SemaType> deduce)
 	{
-		Maybe<BuiltinFunc> maybeFunc = context.findBuiltin(builtinCall.name);
+		var maybeFunc = context.findBuiltin(builtinCall.name);
 
 		if(maybeFunc.isNone())
 			throw new CompileException(String.format("builtin '%s' not found", builtinCall.name));
 
-		List<SemaExpr> args = new ArrayList<>();
-		List<SemaType> types = new ArrayList<>();
+		var args = new ArrayList<SemaExpr>();
+		var types = new ArrayList<SemaType>();
 
-		for(int i = 0; i != builtinCall.args.size(); ++i)
+		for(var i = 0; i != builtinCall.args.size(); ++i)
 		{
-			SemaExpr semaExpr = validate(builtinCall.args.get(i), scope, context, validateDecl, Maybe.none());
-			SemaType type = semaExpr.type();
+			var semaExpr = validate(builtinCall.args.get(i), scope, context, validateDecl, Maybe.none());
+			var type = semaExpr.type();
 
 			if(Types.isVoid(type))
 			{
-				String fmt = "expression passed to builtin '%s' as argument %s yields 'void'";
+				var fmt = "expression passed to builtin '%s' as argument %s yields 'void'";
 				throw new CompileException(String.format(fmt, builtinCall.name, i + 1));
 			}
 
@@ -194,14 +192,14 @@ public class ExprValidator implements IVisitor
 			types.add(type);
 		}
 
-		BuiltinFunc func = maybeFunc.unwrap();
-		SemaType ret = func.validateCall(types);
+		var func = maybeFunc.unwrap();
+		var ret = func.validateCall(types);
 		return new SemaExprBuiltinCall(func, args, ret);
 	}
 
 	private SemaExpr visit(AstExprConst const_, Maybe<SemaType> deduce)
 	{
-		SemaExpr expr = validate(const_.expr, scope, context, validateDecl, deduce);
+		var expr = validate(const_.expr, scope, context, validateDecl, deduce);
 
 		if(Types.isFunction(expr.type()))
 			throw new CompileException("const symbol applied to value of function type");
@@ -211,11 +209,11 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprDeref deref, Maybe<SemaType> deduce)
 	{
-		SemaExpr expr = validate(deref.expr, scope, context, validateDecl, deduce.map(SemaTypeNonNullablePointer::new));
+		var expr = validate(deref.expr, scope, context, validateDecl, deduce.map(SemaTypeNonNullablePointer::new));
 
 		if(!Types.isPointer(expr.type()))
 		{
-			String fmt = "expected expression of pointer type in dereference operator ('prefix *'), got '%s'";
+			var fmt = "expected expression of pointer type in dereference operator ('prefix *'), got '%s'";
 			throw new CompileException(String.format(fmt, TypeString.of(expr.type())));
 		}
 
@@ -227,24 +225,23 @@ public class ExprValidator implements IVisitor
 
 	private boolean match(SemaDeclFunction function, List<AstExpr> args, List<Maybe<SemaExpr>> result)
 	{
-		boolean failed = false;
+		var failed = false;
 
-		for(int i = 0; i != function.params.size(); ++i)
+		for(var i = 0; i != function.params.size(); ++i)
 		{
-			SemaType paramType = function.params.get(i).type;
-			SemaType paramTypeNoConst = Types.removeConst(paramType);
+			var paramType = function.params.get(i).type;
+			var paramTypeNoConst = Types.removeConst(paramType);
 
 			try
 			{
-				SemaExpr arg = ExprValidator.validate(args.get(i), scope, context, validateDecl, Maybe.some(paramTypeNoConst));
-				SemaType argTypeNoConst = Types.removeConst(arg.type());
+				var arg = ExprValidator.validate(args.get(i), scope, context, validateDecl, Maybe.some(paramTypeNoConst));
+				var argTypeNoConst = Types.removeConst(arg.type());
 
 				if(!Types.equal(paramTypeNoConst, argTypeNoConst))
 					failed = true;
 
 				result.add(Maybe.some(arg));
 			}
-
 			catch(CompileException e)
 			{
 				failed = true;
@@ -264,7 +261,7 @@ public class ExprValidator implements IVisitor
 		{
 			builder.append(TypeString.of(overload.params.get(0).type));
 
-			for(int i = 1; i != overload.params.size(); ++i)
+			for(var i = 1; i != overload.params.size(); ++i)
 			{
 				builder.append(", ");
 				builder.append(TypeString.of(overload.params.get(i).type));
@@ -290,7 +287,7 @@ public class ExprValidator implements IVisitor
 		{
 			appendArg(builder, args.get(0));
 
-			for(int i = 1; i != args.size(); ++i)
+			for(var i = 1; i != args.size(); ++i)
 			{
 				builder.append(", ");
 				appendArg(builder, args.get(i));
@@ -302,7 +299,7 @@ public class ExprValidator implements IVisitor
 
 	private static void appendDeducedOverloads(StringBuilder builder, IdentityHashMap<SemaDeclFunction, List<Maybe<SemaExpr>>> overloads)
 	{
-		for(Map.Entry<SemaDeclFunction, List<Maybe<SemaExpr>>> entry : overloads.entrySet())
+		for(var entry : overloads.entrySet())
 		{
 			builder.append("\t\t");
 			appendSignature(builder, entry.getKey());
@@ -324,7 +321,7 @@ public class ExprValidator implements IVisitor
 		{
 			builder.append("\tthe following overloads have a non-matching number of parameters:\n");
 
-			for(SemaDeclFunction overload : invalidNumArgs)
+			for(var overload : invalidNumArgs)
 			{
 				builder.append("\t\t");
 				appendSignature(builder, overload);
@@ -335,11 +332,11 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr resolveOverloadedCall(List<SemaDeclFunction> set, String name, List<AstExpr> args, Maybe<Boolean> inline)
 	{
-		IdentityHashMap<SemaDeclFunction, List<Maybe<SemaExpr>>> candidates = new IdentityHashMap<>();
-		IdentityHashMap<SemaDeclFunction, List<Maybe<SemaExpr>>> failed = new IdentityHashMap<>();
-		Set<SemaDeclFunction> other = Collections.newSetFromMap(new IdentityHashMap<>());
+		var candidates = new IdentityHashMap<SemaDeclFunction, List<Maybe<SemaExpr>>>();
+		var failed = new IdentityHashMap<SemaDeclFunction, List<Maybe<SemaExpr>>>();
+		var other = Collections.newSetFromMap(new IdentityHashMap<SemaDeclFunction, Boolean>());
 
-		for(SemaDeclFunction overload : set)
+		for(var overload : set)
 		{
 			if(overload.params.size() != args.size())
 			{
@@ -347,7 +344,7 @@ public class ExprValidator implements IVisitor
 				continue;
 			}
 
-			List<Maybe<SemaExpr>> semaArgs = new ArrayList<>();
+			var semaArgs = new ArrayList<Maybe<SemaExpr>>();
 
 			if(match(overload, args, semaArgs))
 				candidates.put(overload, semaArgs);
@@ -357,7 +354,7 @@ public class ExprValidator implements IVisitor
 
 		if(candidates.isEmpty())
 		{
-			StringBuilder builder = new StringBuilder();
+			var builder = new StringBuilder();
 			builder.append(String.format("no matching function for call to '%s' out of %s overloads:\n", name, set.size()));
 			appendOverloadInfo(builder, failed, other);
 			throw new CompileException(builder.toString());
@@ -365,7 +362,7 @@ public class ExprValidator implements IVisitor
 
 		if(candidates.size() > 1)
 		{
-			StringBuilder builder = new StringBuilder();
+			var builder = new StringBuilder();
 			builder.append(String.format("ambiguous call to function '%s', %s candidates:\n", candidates.size(), name));
 
 			builder.append("\tmatching succeeded for the following overloads:\n");
@@ -376,13 +373,13 @@ public class ExprValidator implements IVisitor
 			throw new CompileException(builder.toString());
 		}
 
-		Map.Entry<SemaDeclFunction, List<Maybe<SemaExpr>>> first = candidates.entrySet().iterator().next();
+		var first = candidates.entrySet().iterator().next();
 
-		List<SemaExpr> semaArgs = new ArrayList<>();
+		var semaArgs = new ArrayList<SemaExpr>();
 
-		for(Maybe<SemaExpr> maybeArg : first.getValue())
+		for(var maybeArg : first.getValue())
 		{
-			SemaExpr arg = maybeArg.unwrap();
+			var arg = maybeArg.unwrap();
 
 			if(arg.kind() == ExprKind.LVALUE)
 				arg = new SemaExprImplicitConversionLValueToRValue(arg);
@@ -395,15 +392,15 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprFunctionCall call, Maybe<SemaType> deduce)
 	{
-		SemaExpr expr = validate(call.expr, scope, context, validateDecl, Maybe.none());
+		var expr = validate(call.expr, scope, context, validateDecl, Maybe.none());
 
 		if(expr instanceof SemaExprNamedImportedOverloadSet)
 		{
-			SemaDeclOverloadSet set = ((SemaExprNamedImportedOverloadSet)expr).set.set;
+			var set = ((SemaExprNamedImportedOverloadSet)expr).set.set;
 
-			List<SemaDeclFunction> candidates = new ArrayList<>();
+			var candidates = new ArrayList<SemaDeclFunction>();
 
-			for(SemaDeclFunction function : set.overloads)
+			for(var function : set.overloads)
 				if(function.exported)
 					candidates.add(function);
 
@@ -412,22 +409,22 @@ public class ExprValidator implements IVisitor
 
 		if(expr instanceof SemaExprNamedOverloadSet)
 		{
-			SemaDeclOverloadSet set = ((SemaExprNamedOverloadSet)expr).set;
+			var set = ((SemaExprNamedOverloadSet)expr).set;
 			return resolveOverloadedCall(set.overloads, set.name(), call.args, call.inline);
 		}
 
 		if(!Types.isFunction(expr.type()))
 			throw new CompileException("left side of function call does not yield a function type");
 
-		SemaTypeFunction ftype = (SemaTypeFunction)expr.type();
-		List<SemaExpr> args = new ArrayList<>();
+		var ftype = (SemaTypeFunction)expr.type();
+		var args = new ArrayList<SemaExpr>();
 
-		for(int i = 0; i != call.args.size(); ++i)
+		for(var i = 0; i != call.args.size(); ++i)
 		{
-			AstExpr arg = call.args.get(i);
-			SemaType type = ftype.params.get(i);
+			var arg = call.args.get(i);
+			var type = ftype.params.get(i);
 
-			SemaExpr semaArg = validate(call.args.get(i), scope, context, validateDecl, Maybe.some(type));
+			var semaArg = validate(call.args.get(i), scope, context, validateDecl, Maybe.some(type));
 
 			if(semaArg.kind() == ExprKind.LVALUE)
 				semaArg = new SemaExprImplicitConversionLValueToRValue(semaArg);
@@ -442,12 +439,12 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprLitArray lit, Maybe<SemaType> deduce)
 	{
-		Maybe<Long> length = lit.length;
-		Maybe<SemaType> maybeType = lit.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
+		var length = lit.length;
+		var maybeType = lit.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
 
 		if(deduce.isSome() && deduce.unwrap() instanceof SemaTypeArray)
 		{
-			SemaTypeArray array = (SemaTypeArray)deduce.unwrap();
+			var array = (SemaTypeArray)deduce.unwrap();
 
 			if(length.isNone())
 				length = Maybe.some(array.length);
@@ -462,19 +459,19 @@ public class ExprValidator implements IVisitor
 		if(maybeType.isNone())
 			throw new CompileException("element type of array literal could not be deduced");
 
-		SemaType type = maybeType.unwrap();
-		SemaType typeNoConst = Types.removeConst(type);
+		var type = maybeType.unwrap();
+		var typeNoConst = Types.removeConst(type);
 
-		List<SemaExpr> values = new ArrayList<>();
+		var values = new ArrayList<SemaExpr>();
 
-		for(int i = 0; i != lit.values.size(); ++i)
+		for(var i = 0; i != lit.values.size(); ++i)
 		{
-			SemaExpr semaExpr = validate(lit.values.get(i), scope, context, validateDecl, maybeType);
-			SemaType elemTypeNoConst = Types.removeConst(semaExpr.type());
+			var semaExpr = validate(lit.values.get(i), scope, context, validateDecl, maybeType);
+			var elemTypeNoConst = Types.removeConst(semaExpr.type());
 
 			if(!Types.equal(elemTypeNoConst, typeNoConst))
 			{
-				String fmt = "element in array literal at index %s has type '%s', expected '%s'";
+				var fmt = "element in array literal at index %s has type '%s', expected '%s'";
 				throw new CompileException(String.format(fmt, i, TypeString.of(elemTypeNoConst), TypeString.of(typeNoConst)));
 			}
 
@@ -483,7 +480,7 @@ public class ExprValidator implements IVisitor
 
 		if(values.size() != length.unwrap())
 		{
-			String fmt = "invalid number of elements in array literal: got %s, expected %s";
+			var fmt = "invalid number of elements in array literal: got %s, expected %s";
 			throw new CompileException(String.format(fmt, values.size(), length.unwrap()));
 		}
 
@@ -505,19 +502,18 @@ public class ExprValidator implements IVisitor
 		if(maybeType.isNone())
 			errorLiteralTypeDeduction();
 
-		SemaType type = Types.removeConst(maybeType.unwrap());
+		var type = Types.removeConst(maybeType.unwrap());
 
 		if(!(type instanceof SemaTypeBuiltin))
 			errorLiteralTypeDeduction();
 
-		SemaTypeBuiltin builtin = (SemaTypeBuiltin)type;
+		var builtin = (SemaTypeBuiltin)type;
 
 		if(floatingPoint)
 		{
 			if(builtin.which.kind != BuiltinType.Kind.FLOAT)
 				errorLiteralTypeDeduction();
 		}
-
 		else
 		{
 			if(builtin.which.kind != BuiltinType.Kind.INT && builtin.which.kind != BuiltinType.Kind.UINT)
@@ -529,7 +525,7 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprLitFloat lit, Maybe<SemaType> deduce)
 	{
-		Maybe<BuiltinType> type = lit.type;
+		var type = lit.type;
 
 		if(type.isNone())
 			type = Maybe.some(deduceLiteralType(deduce, true));
@@ -545,7 +541,7 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprLitInt lit, Maybe<SemaType> deduce)
 	{
-		Maybe<BuiltinType> type = lit.type;
+		var type = lit.type;
 
 		if(type.isNone())
 			type = Maybe.some(deduceLiteralType(deduce, false));
@@ -600,12 +596,12 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprMemberAccess memberAccess, Maybe<SemaType> deduce)
 	{
-		SemaExpr expr = validate(memberAccess.expr, scope, context, validateDecl, Maybe.none());
+		var expr = validate(memberAccess.expr, scope, context, validateDecl, Maybe.none());
 
 		if(expr instanceof SemaExprNamedRenamedImport)
 		{
-			SemaDeclRenamedImport import_ = ((SemaExprNamedRenamedImport)expr).import_;
-			SemaDecl decl = import_.decls.get(memberAccess.name);
+			var import_ = ((SemaExprNamedRenamedImport)expr).import_;
+			var decl = import_.decls.get(memberAccess.name);
 
 			if(decl == null)
 				throw new CompileException(String.format("reference to unknown symbol '%s.%s'", import_.module.path(), memberAccess.name));
@@ -613,8 +609,8 @@ public class ExprValidator implements IVisitor
 			return namedDeclExpr(decl, memberAccess.global);
 		}
 
-		SemaType type = expr.type();
-		SemaType typeNoConst = Types.removeConst(type);
+		var type = expr.type();
+		var typeNoConst = Types.removeConst(type);
 
 		if(typeNoConst instanceof SemaTypeSlice)
 		{
@@ -652,8 +648,8 @@ public class ExprValidator implements IVisitor
 		if(!(typeNoConst instanceof SemaTypeStruct))
 			errorNoSuchField(type, memberAccess.name);
 
-		SemaDeclStruct struct = ((SemaTypeStruct)typeNoConst).decl;
-		Maybe<SemaDeclStruct.Field> field = struct.findField(memberAccess.name);
+		var struct = ((SemaTypeStruct)typeNoConst).decl;
+		var field = struct.findField(memberAccess.name);
 
 		if(field.isNone())
 			errorNoSuchField(type, memberAccess.name);
@@ -663,7 +659,7 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprNamedGlobal namedGlobal, Maybe<SemaType> deduce)
 	{
-		List<SemaSymbol> candidates = scope.find(namedGlobal.name);
+		var candidates = scope.find(namedGlobal.name);
 
 		if(candidates.isEmpty())
 			throw new CompileException(String.format("reference to unknown symbol '%s'", namedGlobal.name));
@@ -671,7 +667,7 @@ public class ExprValidator implements IVisitor
 		if(candidates.size() > 1)
 			throw new CompileException(String.format("ambiguos reference to symbol '%s'", namedGlobal.name));
 
-		SemaSymbol symbol = candidates.get(0);
+		var symbol = candidates.get(0);
 
 		if(!(symbol instanceof SemaDeclGlobal))
 			throw new CompileException(String.format("symbol '%s' does not refer to a global", namedGlobal.name));
@@ -681,7 +677,7 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprNamedSymbol namedSymbol, Maybe<SemaType> deduce)
 	{
-		List<SemaSymbol> candidates = scope.find(namedSymbol.name);
+		var candidates = scope.find(namedSymbol.name);
 
 		if(candidates.isEmpty())
 			throw new CompileException(String.format("reference to unknown symbol '%s'", namedSymbol.name));
@@ -689,7 +685,7 @@ public class ExprValidator implements IVisitor
 		if(candidates.size() > 1)
 			throw new CompileException(String.format("ambiguous reference to symbol '%s'", namedSymbol.name));
 
-		SemaSymbol symbol = candidates.get(0);
+		var symbol = candidates.get(0);
 
 		if(symbol instanceof SemaDeclRenamedImport)
 			return new SemaExprNamedRenamedImport((SemaDeclRenamedImport)symbol);
@@ -708,13 +704,13 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr validateCast(AstType type, AstExpr expr, SemaExprCast.Kind kind)
 	{
-		SemaType targetType = TypeValidator.validate(type, scope, context, validateDecl);
-		SemaExpr semaExpr = validate(expr, scope, context, validateDecl, Maybe.none());
-		SemaType sourceType = semaExpr.type();
+		var targetType = TypeValidator.validate(type, scope, context, validateDecl);
+		var semaExpr = validate(expr, scope, context, validateDecl, Maybe.none());
+		var sourceType = semaExpr.type();
 
 		if(!CastValidator.isValidCast(sourceType, targetType, kind, context))
 		{
-			String fmt = "%s from expression of type '%s' to type '%s' is not valid";
+			var fmt = "%s from expression of type '%s' to type '%s' is not valid";
 			throw new CompileException(String.format(fmt, kind.toString().toLowerCase(), TypeString.of(sourceType), TypeString.of(targetType)));
 		}
 
@@ -731,7 +727,7 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprOffsetof offsetof, Maybe<SemaType> deduce)
 	{
-		List<SemaSymbol> candidates = scope.find(offsetof.type);
+		var candidates = scope.find(offsetof.type);
 
 		if(candidates.isEmpty())
 			throw new CompileException(String.format("use of unknown type '%s'", offsetof.type));
@@ -739,12 +735,12 @@ public class ExprValidator implements IVisitor
 		if(candidates.size() > 1)
 			throw new CompileException(String.format("ambiguous reference to symbol '%s'", offsetof.type));
 
-		SemaSymbol symbol = candidates.get(0);
+		var symbol = candidates.get(0);
 
 		if(!(symbol instanceof SemaDeclStruct))
 			throw new CompileException(String.format("symbol '%s' does not refer to a type", offsetof.type));
 
-		Maybe<SemaDeclStruct.Field> field = ((SemaDeclStruct)symbol).findField(offsetof.field);
+		var field = ((SemaDeclStruct)symbol).findField(offsetof.field);
 
 		if(field.isNone())
 			errorNoSuchField(new SemaTypeStruct((SemaDeclStruct)symbol), offsetof.field);
@@ -754,7 +750,7 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr handleOperatorCall(String op, Kind kind, List<AstExpr> args, Maybe<SemaType> deduce)
 	{
-		List<SemaSymbol> candidates = scope.find(Operator.implName(op, kind));
+		var candidates = scope.find(Operator.implName(op, kind));
 
 		if(candidates.isEmpty())
 			throw new CompileException(String.format("no implementation of operator '%s' found", op));
@@ -762,14 +758,14 @@ public class ExprValidator implements IVisitor
 		if(candidates.size() > 1)
 			throw new CompileException("nyi");
 
-		SemaSymbol symbol = candidates.get(0);
-		SemaDeclOverloadSet set = symbol instanceof SemaDeclOverloadSet
-			? (SemaDeclOverloadSet)symbol
-			: ((SemaDeclImportedOverloadSet)symbol).set;
+		var symbol = candidates.get(0);
+		var set = symbol instanceof SemaDeclOverloadSet
+		          ? (SemaDeclOverloadSet)symbol
+		          : ((SemaDeclImportedOverloadSet)symbol).set;
 
-		List<SemaDeclFunction> overloads = set.overloads.stream()
-		                                                .filter(o -> o.exported)
-		                                                .collect(Collectors.toList());
+		var overloads = set.overloads.stream()
+		                             .filter(o -> o.exported)
+		                             .collect(Collectors.toList());
 
 		return resolveOverloadedCall(overloads, set.name(), args, Maybe.none());
 	}

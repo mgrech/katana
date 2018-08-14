@@ -69,7 +69,7 @@ public abstract class SemaDeclFunction extends SemaDecl
 		if(paramsByName.containsKey(name))
 			return false;
 
-		Param param = new Param(type, name, params.size());
+		var param = new Param(type, name, params.size());
 		params.add(param);
 		paramsByName.put(name, param);
 		return true;

@@ -15,11 +15,9 @@
 package io.katana.compiler.parser;
 
 import io.katana.compiler.BuiltinType;
-import io.katana.compiler.ast.AstPath;
 import io.katana.compiler.ast.expr.*;
 import io.katana.compiler.ast.type.AstType;
 import io.katana.compiler.diag.CompileException;
-import io.katana.compiler.scanner.Token;
 import io.katana.compiler.scanner.TokenCategory;
 import io.katana.compiler.scanner.TokenType;
 import io.katana.compiler.utils.Fraction;
@@ -33,12 +31,12 @@ public class ExprParser
 {
 	public static AstExpr parse(ParseContext ctx)
 	{
-		AstExpr expr = parsePrefixExpr(ctx);
+		var expr = parsePrefixExpr(ctx);
 
 		if(!ParseTools.option(ctx, TokenType.OP_INFIX, false))
 			return expr;
 
-		AstExprOpInfixList list = new AstExprOpInfixList();
+		var list = new AstExprOpInfixList();
 		list.exprs.add(expr);
 
 		do
@@ -49,7 +47,7 @@ public class ExprParser
 		}
 		while(ParseTools.option(ctx, TokenType.OP_INFIX, false));
 
-		AstExprProxy proxy = new AstExprProxy(list);
+		var proxy = new AstExprProxy(list);
 		ctx.lateParseExprs().infixLists.put(list, e -> proxy.expr = e);
 		return proxy;
 	}
@@ -59,8 +57,8 @@ public class ExprParser
 		if(ParseTools.option(ctx, TokenType.OP_PREFIX_SEQ, false))
 		{
 			var seq = (String)ParseTools.consume(ctx).value;
-			AstExprOpPrefixSeq prefixSeq = new AstExprOpPrefixSeq(seq, parsePrefixExpr(ctx));
-			AstExprProxy proxy = new AstExprProxy(prefixSeq);
+			var prefixSeq = new AstExprOpPrefixSeq(seq, parsePrefixExpr(ctx));
+			var proxy = new AstExprProxy(prefixSeq);
 			ctx.lateParseExprs().prefixSeqs.put(prefixSeq, e -> proxy.expr = e);
 			return proxy;
 		}
@@ -70,39 +68,35 @@ public class ExprParser
 
 	private static AstExpr parsePostfixExpr(ParseContext ctx)
 	{
-		AstExpr expr = parsePrimaryExpr(ctx);
+		var expr = parsePrimaryExpr(ctx);
 
 		for(;;)
 		{
 			if(ParseTools.option(ctx, TokenType.OP_POSTFIX_SEQ, false))
 			{
 				var seq = (String)ParseTools.consume(ctx).value;
-				AstExprOpPostfixSeq postfixSeq = new AstExprOpPostfixSeq(expr, seq);
-				AstExprProxy proxy = new AstExprProxy(postfixSeq);
+				var postfixSeq = new AstExprOpPostfixSeq(expr, seq);
+				var proxy = new AstExprProxy(postfixSeq);
 				ctx.lateParseExprs().postfixSeqs.put(postfixSeq, e -> proxy.expr = e);
 				expr = proxy;
 			}
-
 			else if(ParseTools.option(ctx, TokenType.PUNCT_LPAREN, true))
 			{
 				expr = parseFunctionCall(ctx, expr, Maybe.none());
 				ParseTools.expect(ctx, TokenType.PUNCT_RPAREN, true);
 			}
-
 			else if(ParseTools.option(ctx, TokenType.PUNCT_LBRACKET, true))
 			{
-				AstExpr index = parse(ctx);
+				var index = parse(ctx);
 				expr = new AstExprArrayAccess(expr, index);
 				ParseTools.expect(ctx, TokenType.PUNCT_RBRACKET, true);
 			}
-
 			else if(ParseTools.option(ctx, ".", true))
 			{
-				boolean global = ParseTools.option(ctx, TokenType.DECL_GLOBAL, true);
-				String name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
+				var global = ParseTools.option(ctx, TokenType.DECL_GLOBAL, true);
+				var name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 				expr = new AstExprMemberAccess(expr, name, global);
 			}
-
 			else
 				return expr;
 		}
@@ -112,7 +106,7 @@ public class ExprParser
 	{
 		if(ParseTools.option(ctx, TokenType.PUNCT_LPAREN, true))
 		{
-			AstExpr expr = parse(ctx);
+			var expr = parse(ctx);
 			ParseTools.expect(ctx, TokenType.PUNCT_RPAREN, true);
 			return new AstExprParens(expr);
 		}
@@ -158,7 +152,7 @@ public class ExprParser
 	private static AstExpr parseConst(ParseContext ctx)
 	{
 		ParseTools.expect(ctx, TokenType.PUNCT_LPAREN, true);
-		AstExpr expr = parse(ctx);
+		var expr = parse(ctx);
 		ParseTools.expect(ctx, TokenType.PUNCT_RPAREN, true);
 		return new AstExprConst(expr);
 	}
@@ -169,7 +163,7 @@ public class ExprParser
 
 		if(!ParseTools.option(ctx, ":", true))
 		{
-			AstExpr sizeLit = parseLiteral(ctx);
+			var sizeLit = parseLiteral(ctx);
 
 			if(!(sizeLit instanceof AstExprLitInt))
 				throw new CompileException("expected integer literal as length in array literal");
@@ -197,11 +191,11 @@ public class ExprParser
 			ParseTools.expect(ctx, ":", true);
 		}
 
-		List<AstExprLiteral> values = new ArrayList<>();
+		var values = new ArrayList<AstExprLiteral>();
 
 		if(!ParseTools.option(ctx, TokenType.PUNCT_RBRACKET, true))
 		{
-			AstExpr first = parse(ctx);
+			var first = parse(ctx);
 
 			if(!(first instanceof AstExprLiteral))
 				throw new CompileException("array literal elements must be literals themselves");
@@ -210,7 +204,7 @@ public class ExprParser
 
 			while(ParseTools.option(ctx, TokenType.PUNCT_COMMA, true))
 			{
-				AstExpr next = parse(ctx);
+				var next = parse(ctx);
 
 				if(!(next instanceof AstExprLiteral))
 					throw new CompileException("array literal elements must be literals themselves");
@@ -227,14 +221,14 @@ public class ExprParser
 	private static AstExpr parseCast(ParseContext ctx, TokenType castType)
 	{
 		ParseTools.expect(ctx, TokenType.PUNCT_DOLLAR, true);
-		AstType type = TypeParser.parse(ctx);
-		AstExpr expr = ParseTools.parenthesized(ctx, () -> parse(ctx));
+		var type = TypeParser.parse(ctx);
+		var expr = ParseTools.parenthesized(ctx, () -> parse(ctx));
 
 		switch(castType)
 		{
-		case MISC_WIDEN_CAST:   return new AstExprWidenCast    (type, expr);
-		case MISC_NARROW_CAST:  return new AstExprNarrowCast   (type, expr);
-		case MISC_SIGN_CAST:    return new AstExprSignCast     (type, expr);
+		case MISC_WIDEN_CAST:   return new AstExprWidenCast  (type, expr);
+		case MISC_NARROW_CAST:  return new AstExprNarrowCast (type, expr);
+		case MISC_SIGN_CAST:    return new AstExprSignCast   (type, expr);
 		case MISC_POINTER_CAST: return new AstExprPointerCast(type, expr);
 		default: break;
 		}
@@ -244,7 +238,7 @@ public class ExprParser
 
 	private static AstExpr parseMisc(ParseContext ctx)
 	{
-		Token token = ParseTools.consume(ctx);
+		var token = ParseTools.consume(ctx);
 
 		switch(token.type)
 		{
@@ -287,7 +281,7 @@ public class ExprParser
 
 	private static AstExpr parseLiteral(ParseContext ctx)
 	{
-		Token token = ParseTools.consume(ctx);
+		var token = ParseTools.consume(ctx);
 
 		switch(token.type)
 		{
@@ -320,14 +314,14 @@ public class ExprParser
 
 	private static AstExprBuiltinCall parseBuiltinCall(ParseContext ctx)
 	{
-		AstPath path = ParseTools.path(ctx);
-		List<AstExpr> args = ParseTools.parenthesized(ctx, () -> parseArguments(ctx));
+		var path = ParseTools.path(ctx);
+		var args = ParseTools.parenthesized(ctx, () -> parseArguments(ctx));
 		return new AstExprBuiltinCall(path.toString(), args);
 	}
 
 	private static AstExprFunctionCall parseFunctionCall(ParseContext ctx, AstExpr expr, Maybe<Boolean> inline)
 	{
-		List<AstExpr> args = parseArguments(ctx);
+		var args = parseArguments(ctx);
 		return new AstExprFunctionCall(expr, args, inline);
 	}
 

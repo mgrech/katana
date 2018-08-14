@@ -17,18 +17,15 @@ package io.katana.compiler.analysis;
 import io.katana.compiler.ast.type.*;
 import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.diag.CompileException;
-import io.katana.compiler.sema.SemaSymbol;
 import io.katana.compiler.sema.decl.SemaDecl;
 import io.katana.compiler.sema.decl.SemaDeclStruct;
 import io.katana.compiler.sema.decl.SemaDeclTypeAlias;
-import io.katana.compiler.sema.expr.SemaExpr;
 import io.katana.compiler.sema.scope.SemaScope;
 import io.katana.compiler.sema.type.*;
 import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
@@ -47,8 +44,8 @@ public class TypeValidator implements IVisitor
 
 	public static SemaType validate(AstType type, SemaScope scope, PlatformContext context, Consumer<SemaDecl> validateDecl)
 	{
-		TypeValidator translator = new TypeValidator(scope, context, validateDecl);
-		return (SemaType)type.accept(translator);
+		var validator = new TypeValidator(scope, context, validateDecl);
+		return (SemaType)type.accept(validator);
 	}
 
 	private SemaType visit(AstTypeBuiltin builtin)
@@ -80,12 +77,12 @@ public class TypeValidator implements IVisitor
 
 	private SemaType visit(AstTypeTuple tuple)
 	{
-		StructLayoutBuilder builder = new StructLayoutBuilder(context);
-		List<SemaType> types = new ArrayList<>();
+		var builder = new StructLayoutBuilder(context);
+		var types = new ArrayList<SemaType>();
 
-		for(AstType type : tuple.types)
+		for(var type : tuple.types)
 		{
-			SemaType semaType = validate(type, scope, context, validateDecl);
+			var semaType = validate(type, scope, context, validateDecl);
 			types.add(semaType);
 			builder.appendField(semaType);
 		}
@@ -108,18 +105,18 @@ public class TypeValidator implements IVisitor
 
 	private SemaType visit(AstTypeFunction functionType)
 	{
-		List<SemaType> params = new ArrayList<>();
+		var params = new ArrayList<SemaType>();
 
-		for(AstType param : functionType.params)
+		for(var param : functionType.params)
 			params.add(validate(param, scope, context, validateDecl));
 
-		Maybe<SemaType> ret = functionType.ret.map(type -> validate(type, scope, context, validateDecl));
+		var ret = functionType.ret.map(type -> validate(type, scope, context, validateDecl));
 		return new SemaTypeFunction(ret.or(SemaTypeBuiltin.VOID), params);
 	}
 
 	private SemaType visit(AstTypeUserDefined user)
 	{
-		List<SemaSymbol> candidates = scope.find(user.name);
+		var candidates = scope.find(user.name);
 
 		if(candidates.isEmpty())
 			throw new CompileException(String.format("use of unknown type '%s'", user.name));
@@ -127,7 +124,7 @@ public class TypeValidator implements IVisitor
 		if(candidates.size() > 1)
 			throw new CompileException(String.format("ambiguous reference to symbol '%s'", user.name));
 
-		SemaSymbol symbol = candidates.get(0);
+		var symbol = candidates.get(0);
 
 		if(symbol instanceof SemaDecl)
 			validateDecl.accept((SemaDecl)symbol);
@@ -143,7 +140,7 @@ public class TypeValidator implements IVisitor
 
 	private SemaType visit(AstTypeConst const_)
 	{
-		SemaType type = validate(const_.type, scope, context, validateDecl);
+		var type = validate(const_.type, scope, context, validateDecl);
 
 		if(type instanceof SemaTypeFunction)
 			throw new CompileException("forming const function type");
@@ -156,7 +153,7 @@ public class TypeValidator implements IVisitor
 		if(scope == null)
 			throw new CompileException("'typeof' is not valid in this context");
 
-		SemaExpr expr = ExprValidator.validate(typeof.expr, scope, context, validateDecl, Maybe.none());
+		var expr = ExprValidator.validate(typeof.expr, scope, context, validateDecl, Maybe.none());
 		return expr.type();
 	}
 

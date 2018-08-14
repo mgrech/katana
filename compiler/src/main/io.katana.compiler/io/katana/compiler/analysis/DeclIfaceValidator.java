@@ -20,11 +20,9 @@ import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.diag.TypeString;
 import io.katana.compiler.sema.decl.*;
-import io.katana.compiler.sema.expr.SemaExpr;
 import io.katana.compiler.sema.scope.SemaScopeDefinedFunction;
 import io.katana.compiler.sema.scope.SemaScopeFile;
 import io.katana.compiler.sema.scope.SemaScopeFunction;
-import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
 
@@ -44,23 +42,23 @@ public class DeclIfaceValidator implements IVisitor
 
 	public static void validate(SemaDecl semaDecl, DeclInfo info, PlatformContext context, Consumer<SemaDecl> validateDecl)
 	{
-		DeclIfaceValidator validator = new DeclIfaceValidator(context, validateDecl);
+		var validator = new DeclIfaceValidator(context, validateDecl);
 		semaDecl.accept(validator, info.astDecl, info.scope);
 	}
 
 	private void visit(SemaDeclStruct semaStruct, AstDeclStruct struct, SemaScopeFile scope)
 	{
-		for(AstDeclStruct.Field field : struct.fields)
+		for(var field : struct.fields)
 		{
-			SemaType type = TypeValidator.validate(field.type, scope, context, validateDecl);
+			var type = TypeValidator.validate(field.type, scope, context, validateDecl);
 
 			if(!semaStruct.defineField(field.name, type))
 				throw new CompileException(String.format("duplicate field '%s' in type '%s'", field.name, semaStruct.name()));
 		}
 
-		StructLayoutBuilder builder = new StructLayoutBuilder(context);
+		var builder = new StructLayoutBuilder(context);
 
-		for(SemaDeclStruct.Field field : semaStruct.fieldsByIndex())
+		for(var field : semaStruct.fieldsByIndex())
 			builder.appendField(field.type);
 
 		semaStruct.layout = builder.build();
@@ -73,9 +71,9 @@ public class DeclIfaceValidator implements IVisitor
 		else
 			semaFunction.scope = new SemaScopeFunction(scope, semaFunction);
 
-		for(AstDeclFunction.Param param : function.params)
+		for(var param : function.params)
 		{
-			SemaType type = TypeValidator.validate(param.type, semaFunction.scope, context, validateDecl);
+			var type = TypeValidator.validate(param.type, semaFunction.scope, context, validateDecl);
 
 			if(!semaFunction.defineParam(param.name, type))
 				throw new CompileException(String.format("duplicate parameter name '%s' in function '%s'", param.name, function.name));
@@ -89,10 +87,10 @@ public class DeclIfaceValidator implements IVisitor
 		if(a.params.size() != b.params.size())
 			return false;
 
-		for(int i = 0; i != a.params.size(); ++i)
+		for(var i = 0; i != a.params.size(); ++i)
 		{
-			SemaType paramTypeA = Types.removeConst(a.params.get(i).type);
-			SemaType paramTypeB = Types.removeConst(b.params.get(i).type);
+			var paramTypeA = Types.removeConst(a.params.get(i).type);
+			var paramTypeB = Types.removeConst(b.params.get(i).type);
 
 			if(!Types.equal(paramTypeA, paramTypeB))
 				return false;
@@ -103,11 +101,11 @@ public class DeclIfaceValidator implements IVisitor
 
 	private void checkForDuplicates(SemaDeclOverloadSet set)
 	{
-		for(int i = 0; i != set.overloads.size(); ++i)
-			for(int j = 0; j != i; ++j)
+		for(var i = 0; i != set.overloads.size(); ++i)
+			for(var j = 0; j != i; ++j)
 			{
-				SemaDeclFunction a = set.overloads.get(i);
-				SemaDeclFunction b = set.overloads.get(j);
+				var a = set.overloads.get(i);
+				var b = set.overloads.get(j);
 
 				if(sameSignatures(a, b))
 					throw new CompileException(String.format("duplicate overloads in overload set '%s'", set.qualifiedName()));
@@ -116,10 +114,10 @@ public class DeclIfaceValidator implements IVisitor
 
 	private void visit(SemaDeclOverloadSet semaSet, AstDeclOverloadSet set, SemaScopeFile scope)
 	{
-		for(int i = 0; i != semaSet.overloads.size(); ++i)
+		for(var i = 0; i != semaSet.overloads.size(); ++i)
 		{
-			SemaDeclFunction semaFunction = semaSet.overloads.get(i);
-			AstDeclFunction function = set.overloads.get(i);
+			var semaFunction = semaSet.overloads.get(i);
+			var function = set.overloads.get(i);
 			validateFunction(semaFunction, function, scope);
 		}
 
@@ -128,8 +126,8 @@ public class DeclIfaceValidator implements IVisitor
 
 	private void visit(SemaDeclGlobal semaGlobal, AstDeclGlobal global, SemaScopeFile scope)
 	{
-		Maybe<SemaType> maybeDeclaredType = global.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
-		Maybe<SemaType> maybeDeclaredTypeNoConst = maybeDeclaredType.map(Types::removeConst);
+		var maybeDeclaredType = global.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
+		var maybeDeclaredTypeNoConst = maybeDeclaredType.map(Types::removeConst);
 
 		if(global.init.isNone())
 		{
@@ -141,14 +139,14 @@ public class DeclIfaceValidator implements IVisitor
 			return;
 		}
 
-		SemaExpr init = ExprValidator.validate(global.init.unwrap(), scope, context, validateDecl, maybeDeclaredTypeNoConst);
+		var init = ExprValidator.validate(global.init.unwrap(), scope, context, validateDecl, maybeDeclaredTypeNoConst);
 
 		if(Types.isVoid(init.type()))
 			throw new CompileException(String.format("initializer for global '%s' yields 'void'", global.name));
 
-		SemaType initTypeNoConst = Types.removeConst(init.type());
-		SemaType globalType = maybeDeclaredType.or(initTypeNoConst);
-		SemaType globalTypeNoConst = Types.removeConst(globalType);
+		var initTypeNoConst = Types.removeConst(init.type());
+		var globalType = maybeDeclaredType.or(initTypeNoConst);
+		var globalTypeNoConst = Types.removeConst(globalType);
 
 		if(!Types.equal(globalTypeNoConst, initTypeNoConst))
 		{

@@ -36,11 +36,11 @@ public class DiagnosticsManager
 		if(!stackTraces)
 			return Maybe.none();
 
-		StackTrace trace = StackTrace.get();
+		var trace = StackTrace.get();
 
 		// trim stack frames from this class:
 		// error/warning/note -> diagnose -> buildStackTrace
-		for(int i = 0; i != 3; ++i)
+		for(var i = 0; i != 3; ++i)
 			trace.trimInnermostFrame();
 
 		return Maybe.some(trace);
@@ -69,9 +69,9 @@ public class DiagnosticsManager
 
 	public String summary()
 	{
-		StringBuilder builder = new StringBuilder();
+		var builder = new StringBuilder();
 
-		for(Diagnostic diagnostic : diagnostics)
+		for(var diagnostic : diagnostics)
 		{
 			builder.append(diagnostic);
 			builder.append('\n');

@@ -15,15 +15,9 @@
 package io.katana.compiler.backend.llvm;
 
 import io.katana.compiler.analysis.Types;
-import io.katana.compiler.ast.AstPath;
 import io.katana.compiler.sema.decl.*;
-import io.katana.compiler.sema.stmt.SemaStmt;
-import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.sema.type.SemaTypeNonNullablePointer;
 import io.katana.compiler.visitor.IVisitor;
-
-import java.util.List;
-import java.util.Map;
 
 @SuppressWarnings("unused")
 public class DeclCodeGenerator implements IVisitor
@@ -42,7 +36,7 @@ public class DeclCodeGenerator implements IVisitor
 
 	private static String qualifiedName(SemaDecl decl)
 	{
-		AstPath modulePath = decl.module().path();
+		var modulePath = decl.module().path();
 		return modulePath.toString() + "." + decl.name();
 	}
 
@@ -55,14 +49,14 @@ public class DeclCodeGenerator implements IVisitor
 		context.write(qualifiedName(struct));
 		context.write(" = type { ");
 
-		List<SemaDeclStruct.Field> fields = struct.fieldsByIndex();
+		var fields = struct.fieldsByIndex();
 
 		if(!fields.isEmpty())
 		{
 			if(!Types.isZeroSized(fields.get(0).type))
 				context.write(TypeCodeGenerator.generate(fields.get(0).type, context.platform()));
 
-			for(int i = 1; i != fields.size(); ++i)
+			for(var i = 1; i != fields.size(); ++i)
 			{
 				if(!Types.isZeroSized(fields.get(i).type))
 				{
@@ -94,11 +88,10 @@ public class DeclCodeGenerator implements IVisitor
 
 	private void generateSignature(SemaDeclFunction function)
 	{
-		boolean isExternal = function instanceof SemaDeclExternFunction;
+		var isExternal = function instanceof SemaDeclExternFunction;
 
 		if(isExternal)
 			context.write("declare ");
-
 		else
 		{
 			context.write("define ");
@@ -113,7 +106,6 @@ public class DeclCodeGenerator implements IVisitor
 				default: throw new AssertionError("unreachable");
 				}
 			}
-
 			else
 				context.write("private ");
 		}
@@ -130,14 +122,14 @@ public class DeclCodeGenerator implements IVisitor
 
 		if(!function.params.isEmpty())
 		{
-			SemaDeclFunction.Param first = function.params.get(0);
+			var first = function.params.get(0);
 			generateParam(first, isExternal);
 
-			for(int i = 1; i != function.params.size(); ++i)
+			for(var i = 1; i != function.params.size(); ++i)
 			{
 				context.write(", ");
 
-				SemaDeclFunction.Param param = function.params.get(i);
+				var param = function.params.get(i);
 				generateParam(param, isExternal);
 			}
 		}
@@ -149,7 +141,7 @@ public class DeclCodeGenerator implements IVisitor
 	{
 		context.write("{\n");
 
-		for(SemaDeclFunction.Param param : function.params)
+		for(var param : function.params)
 		{
 			if(Types.isZeroSized(param.type))
 				continue;
@@ -163,9 +155,9 @@ public class DeclCodeGenerator implements IVisitor
 		if(!function.params.isEmpty())
 			context.write('\n');
 
-		for(Map.Entry<String, SemaDeclDefinedFunction.Local> entry : function.localsByName.entrySet())
+		for(var entry : function.localsByName.entrySet())
 		{
-			SemaType type = entry.getValue().type;
+			var type = entry.getValue().type;
 
 			if(Types.isZeroSized(type))
 				continue;
@@ -178,10 +170,10 @@ public class DeclCodeGenerator implements IVisitor
 		if(!function.locals.isEmpty())
 			context.write('\n');
 
-		FunctionCodegenContext fcontext = new FunctionCodegenContext();
-		StmtCodeGenerator stmtCodeGen = new StmtCodeGenerator(context, fcontext);
+		var fcontext = new FunctionCodegenContext();
+		var stmtCodeGen = new StmtCodeGenerator(context, fcontext);
 
-		for(SemaStmt stmt : function.body)
+		for(var stmt : function.body)
 			stmtCodeGen.generate(stmt);
 
 		stmtCodeGen.finish(function);
@@ -191,17 +183,15 @@ public class DeclCodeGenerator implements IVisitor
 
 	private void visit(SemaDeclOverloadSet set)
 	{
-		for(SemaDeclFunction overload : set.overloads)
+		for(var overload : set.overloads)
 		{
 			if(overload instanceof SemaDeclDefinedFunction)
 			{
 				generateSignature(overload);
 				generateFunctionBody((SemaDeclDefinedFunction)overload);
 			}
-
 			else if(overload instanceof SemaDeclExternFunction)
 				generateSignature(overload);
-
 			else
 				throw new AssertionError("unreachable");
 		}
@@ -212,10 +202,10 @@ public class DeclCodeGenerator implements IVisitor
 		if(Types.isZeroSized(global.type))
 			return;
 
-		String qualifiedName = qualifiedName(global);
-		String typeString = TypeCodeGenerator.generate(global.type, context.platform());
-		String initializerString = global.init.map(i -> ExprCodeGenerator.generate(i, context, null).unwrap()).or("zeroinitializer");
-		String kind = Types.isConst(global.type) ? "constant" : "global";
+		var qualifiedName = qualifiedName(global);
+		var typeString = TypeCodeGenerator.generate(global.type, context.platform());
+		var initializerString = global.init.map(i -> ExprCodeGenerator.generate(i, context, null).unwrap()).or("zeroinitializer");
+		var kind = Types.isConst(global.type) ? "constant" : "global";
 		context.writef("@%s = private %s %s %s\n", qualifiedName, kind, typeString, initializerString);
 	}
 

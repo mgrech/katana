@@ -23,9 +23,9 @@ public class SemaProgram
 
 	public SemaModule findOrCreateModule(AstPath path)
 	{
-		SemaModule parent = root;
+		var parent = root;
 
-		for(String component : path.components)
+		for(var component : path.components)
 			parent = parent.findOrCreateChild(component);
 
 		return parent;
@@ -33,11 +33,11 @@ public class SemaProgram
 
 	public Maybe<SemaModule> findModule(AstPath path)
 	{
-		SemaModule current = root;
+		var current = root;
 
-		for(String component : path.components)
+		for(var component : path.components)
 		{
-			Maybe<SemaModule> child = current.findChild(component);
+			var child = current.findChild(component);
 
 			if(child.isNone())
 				return child;

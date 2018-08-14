@@ -30,7 +30,7 @@ public class Main
 {
 	public static void main(String[] args)
 	{
-		Cli<Runnable> cli = new Cli<>(Main.class);
+		var cli = new Cli<Runnable>(Main.class);
 
 		try
 		{

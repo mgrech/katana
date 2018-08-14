@@ -24,7 +24,7 @@ public class SemaScopeFile implements SemaScope
 
 	public void defineSymbol(SemaSymbol symbol)
 	{
-		String name = symbol.name();
+		var name = symbol.name();
 
 		if(!symbols.containsKey(name))
 			symbols.put(name, new ArrayList<>());
@@ -35,7 +35,7 @@ public class SemaScopeFile implements SemaScope
 	@Override
 	public List<SemaSymbol> find(String name)
 	{
-		List<SemaSymbol> symbolList = symbols.get(name);
+		var symbolList = symbols.get(name);
 		return symbolList == null ? Collections.emptyList() : symbolList;
 	}
 }

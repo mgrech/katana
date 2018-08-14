@@ -16,10 +16,10 @@ package io.katana.compiler.ast.expr;
 
 public class AstExprNamedSymbol extends AstExpr
 {
+	public String name;
+
 	public AstExprNamedSymbol(String name)
 	{
 		this.name = name;
 	}
-
-	public String name;
 }

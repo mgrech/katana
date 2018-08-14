@@ -34,9 +34,9 @@ public class SourceManager
 
 	public static SourceManager loadFiles(Set<Path> paths) throws IOException
 	{
-		Map<Path, SourceFile> files = new TreeMap<>();
+		var files = new TreeMap<Path, SourceFile>();
 
-		for(Path path : paths)
+		for(var path : paths)
 			files.put(path, SourceFile.load(path));
 
 		return new SourceManager(files);

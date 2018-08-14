@@ -17,13 +17,11 @@ package io.katana.compiler.op;
 import io.katana.compiler.ast.LateParseExprs;
 import io.katana.compiler.ast.expr.*;
 import io.katana.compiler.diag.CompileException;
-import io.katana.compiler.sema.SemaSymbol;
 import io.katana.compiler.sema.decl.SemaDeclOperator;
 import io.katana.compiler.sema.scope.SemaScopeFile;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -31,17 +29,17 @@ public class OperatorParser
 {
 	private static List<SemaDeclOperator> parseOpSeq(SemaScopeFile scope, String seq, Kind kind)
 	{
-		List<SemaDeclOperator> result = new ArrayList<>();
+		var result = new ArrayList<SemaDeclOperator>();
 
 		while(!seq.isEmpty())
 		{
-			StringBuilder builder = new StringBuilder();
+			var builder = new StringBuilder();
 			builder.append(seq);
 
 			while(builder.length() != 0)
 			{
-				String op = builder.toString();
-				List<SemaSymbol> symbols = scope.find(Operator.declName(op, kind));
+				var op = builder.toString();
+				var symbols = scope.find(Operator.declName(op, kind));
 
 				if(symbols.size() == 1)
 				{
@@ -49,7 +47,6 @@ public class OperatorParser
 					seq = seq.substring(op.length());
 					break;
 				}
-
 				else if(symbols.size() > 1)
 					throw new CompileException(String.format("multiple definitions for operator '%s %s'", kind.toString().toLowerCase(), op));
 
@@ -79,9 +76,9 @@ public class OperatorParser
 
 	private static void replacePrefixOpSeq(AstExprOpPrefixSeq seq, Consumer<AstExpr> replace, SemaScopeFile scope)
 	{
-		List<SemaDeclOperator> ops = parseOpSeq(scope, seq.seq, Kind.PREFIX);
+		var ops = parseOpSeq(scope, seq.seq, Kind.PREFIX);
 
-		for(int i = ops.size() - 1; i != -1; --i)
+		for(var i = ops.size() - 1; i != -1; --i)
 			seq.expr = createPrefixOp(seq.expr, ops.get(i));
 
 		replace.accept(seq.expr);
@@ -94,9 +91,9 @@ public class OperatorParser
 
 	private static void replacePostfixOpSeq(AstExprOpPostfixSeq seq, Consumer<AstExpr> replace, SemaScopeFile scope)
 	{
-		List<SemaDeclOperator> ops = parseOpSeq(scope, seq.seq, Kind.POSTFIX);
+		var ops = parseOpSeq(scope, seq.seq, Kind.POSTFIX);
 
-		for(int i = 0; i != ops.size(); ++i)
+		for(var i = 0; i != ops.size(); ++i)
 			seq.expr = createPostfixOp(seq.expr, ops.get(i));
 
 		replace.accept(seq.expr);
@@ -104,11 +101,11 @@ public class OperatorParser
 
 	private static List<SemaDeclOperator> findInfixOperators(SemaScopeFile scope, List<String> symbols)
 	{
-		List<SemaDeclOperator> operators = new ArrayList<>();
+		var operators = new ArrayList<SemaDeclOperator>();
 
-		for(String symbol : symbols)
+		for(var symbol : symbols)
 		{
-			List<SemaSymbol> candidates = scope.find(Operator.declName(symbol, Kind.INFIX));
+			var candidates = scope.find(Operator.declName(symbol, Kind.INFIX));
 
 			if(candidates.isEmpty())
 				throw new CompileException(String.format("operator 'infix %s' could not be found", symbol));
@@ -132,9 +129,9 @@ public class OperatorParser
 
 	private static boolean sameAssociativity(List<SemaDeclOperator> ops)
 	{
-		Associativity assoc = ops.get(0).operator.associativity;
+		var assoc = ops.get(0).operator.associativity;
 
-		for(int i = 1; i != ops.size(); ++i)
+		for(var i = 1; i != ops.size(); ++i)
 			if(ops.get(i).operator.associativity != assoc)
 				return false;
 
@@ -143,11 +140,11 @@ public class OperatorParser
 
 	private static List<List<Object>> split(List<Object> list, List<Integer> splitPoints)
 	{
-		List<List<Object>> result = new ArrayList<>();
+		var result = new ArrayList<List<Object>>();
 
-		int previousSplitPoint = -1;
+		var previousSplitPoint = -1;
 
-		for(int splitPoint : splitPoints)
+		for(var splitPoint : splitPoints)
 		{
 			result.add(list.subList(previousSplitPoint + 1, splitPoint));
 			previousSplitPoint = splitPoint;
@@ -159,18 +156,17 @@ public class OperatorParser
 
 	private static List<Integer> lowestPrecedenceIndices(List<Object> expr)
 	{
-		List<Integer> result = new ArrayList<>();
+		var result = new ArrayList<Integer>();
 
-		int precedence = ((SemaDeclOperator)expr.get(1)).operator.precedence;
+		var precedence = ((SemaDeclOperator)expr.get(1)).operator.precedence;
 		result.add(1);
 
-		for(int i = 3; i != expr.size(); i += 2)
+		for(var i = 3; i != expr.size(); i += 2)
 		{
-			SemaDeclOperator op = (SemaDeclOperator)expr.get(i);
+			var op = (SemaDeclOperator)expr.get(i);
 
 			if(op.operator.precedence == precedence)
 				result.add(i);
-
 			else if(op.operator.precedence < precedence)
 			{
 				result.clear();
@@ -190,7 +186,7 @@ public class OperatorParser
 		if(ops.size() == 1)
 			return ops.get(0).operator.associativity;
 
-		for(SemaDeclOperator op : ops)
+		for(var op : ops)
 			if(op.operator.associativity == Associativity.NONE)
 				throw new CompileException(String.format("operator 'infix %s' is non-associative", op.operator.symbol));
 
@@ -211,32 +207,32 @@ public class OperatorParser
 		if(expr.size() == 3)
 			return createInfixOp((AstExpr)expr.get(0), (AstExpr)expr.get(2), (SemaDeclOperator)expr.get(1));
 
-		List<Integer> opIndices = lowestPrecedenceIndices(expr);
+		var opIndices = lowestPrecedenceIndices(expr);
 
-		List<SemaDeclOperator> ops = opIndices.stream()
-		                                      .map(expr::get)
-		                                      .map(o -> (SemaDeclOperator)o)
-		                                      .collect(Collectors.toList());
+		var ops = opIndices.stream()
+		                   .map(expr::get)
+		                   .map(o -> (SemaDeclOperator)o)
+		                   .collect(Collectors.toList());
 
-		Associativity associativity = checkAssoc(ops);
+		var associativity = checkAssoc(ops);
 
-		List<AstExpr> children = split(expr, opIndices).stream()
-		                                               .map(OperatorParser::parse)
-		                                               .collect(Collectors.toList());
+		var children = split(expr, opIndices).stream()
+		                                     .map(OperatorParser::parse)
+		                                     .collect(Collectors.toList());
 
 		if(associativity == Associativity.RIGHT)
 		{
-			AstExpr result = children.get(children.size() - 1);
+			var result = children.get(children.size() - 1);
 
-			for(int i = children.size() - 2; i != -1; --i)
+			for(var i = children.size() - 2; i != -1; --i)
 				result = createInfixOp(children.get(i), result, ops.get(i));
 
 			return result;
 		}
 
-		AstExpr result = children.get(0);
+		var result = children.get(0);
 
-		for(int i = 1; i != children.size(); ++i)
+		for(var i = 1; i != children.size(); ++i)
 			result = createInfixOp(result, children.get(i), ops.get(i - 1));
 
 		return result;
@@ -244,10 +240,10 @@ public class OperatorParser
 
 	private static void replaceInfixOpList(AstExprOpInfixList list, Consumer<AstExpr> replace, SemaScopeFile scope)
 	{
-		List<SemaDeclOperator> ops = findInfixOperators(scope, list.ops);
-		List<Object> expr = new ArrayList<>();
+		var ops = findInfixOperators(scope, list.ops);
+		var expr = new ArrayList<>();
 
-		for(int i = 0; i != ops.size(); ++i)
+		for(var i = 0; i != ops.size(); ++i)
 		{
 			expr.add(list.exprs.get(i));
 			expr.add(ops.get(i));
@@ -255,19 +251,19 @@ public class OperatorParser
 
 		expr.add(list.exprs.get(list.exprs.size() - 1));
 
-		AstExpr replacement = parse(expr);
+		var replacement = parse(expr);
 		replace.accept(replacement);
 	}
 
 	public static void replace(LateParseExprs list, SemaScopeFile scope)
 	{
-		for(Map.Entry<AstExprOpPrefixSeq, Consumer<AstExpr>> entry : list.prefixSeqs.entrySet())
+		for(var entry : list.prefixSeqs.entrySet())
 			replacePrefixOpSeq(entry.getKey(), entry.getValue(), scope);
 
-		for(Map.Entry<AstExprOpPostfixSeq, Consumer<AstExpr>> entry : list.postfixSeqs.entrySet())
+		for(var entry : list.postfixSeqs.entrySet())
 			replacePostfixOpSeq(entry.getKey(), entry.getValue(), scope);
 
-		for(Map.Entry<AstExprOpInfixList, Consumer<AstExpr>> entry : list.infixLists.entrySet())
+		for(var entry : list.infixLists.entrySet())
 			replaceInfixOpList(entry.getKey(), entry.getValue(), scope);
 	}
 }

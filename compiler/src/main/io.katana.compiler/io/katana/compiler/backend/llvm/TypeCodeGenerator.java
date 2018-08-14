@@ -31,7 +31,7 @@ public class TypeCodeGenerator implements IVisitor
 
 	public static String generate(SemaType type, PlatformContext context)
 	{
-		TypeCodeGenerator visitor = new TypeCodeGenerator(context);
+		var visitor = new TypeCodeGenerator(context);
 		return (String)type.accept(visitor);
 	}
 
@@ -67,15 +67,15 @@ public class TypeCodeGenerator implements IVisitor
 
 	private String visit(SemaTypeFunction type)
 	{
-		String ret = TypeCodeGenerator.generate(type.ret, context);
+		var ret = TypeCodeGenerator.generate(type.ret, context);
 
-		StringBuilder params = new StringBuilder();
+		var params = new StringBuilder();
 
 		if(!type.params.isEmpty())
 		{
 			params.append(TypeCodeGenerator.generate(type.params.get(0), context));
 
-			for(int i = 1; i != type.params.size(); ++i)
+			for(var i = 1; i != type.params.size(); ++i)
 			{
 				params.append(", ");
 				params.append(TypeCodeGenerator.generate(type.params.get(i), context));
@@ -125,14 +125,14 @@ public class TypeCodeGenerator implements IVisitor
 
 	private String visit(SemaTypeTuple tuple)
 	{
-		StringBuilder builder = new StringBuilder();
+		var builder = new StringBuilder();
 		builder.append('{');
 
 		if(!tuple.types.isEmpty())
 		{
 			builder.append(generate(tuple.types.get(0), context));
 
-			for(int i = 1; i != tuple.types.size(); ++i)
+			for(var i = 1; i != tuple.types.size(); ++i)
 			{
 				builder.append(", ");
 				builder.append(generate(tuple.types.get(i), context));

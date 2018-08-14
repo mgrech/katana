@@ -29,7 +29,7 @@ public class Katana
 
 	private static Path locateHome()
 	{
-		String homePath = System.getenv("KATANA_HOME");
+		var homePath = System.getenv("KATANA_HOME");
 
 		if(homePath == null)
 			throw new RuntimeException("KATANA_HOME not found");
@@ -48,8 +48,8 @@ public class Katana
 	{
 		try
 		{
-			byte[] version = Files.readAllBytes(HOME.resolve("build.txt"));
-			Properties properties = new Properties();
+			var version = Files.readAllBytes(HOME.resolve("build.txt"));
+			var properties = new Properties();
 			properties.load(new ByteArrayInputStream(version));
 			return properties.getProperty("version");
 		}
