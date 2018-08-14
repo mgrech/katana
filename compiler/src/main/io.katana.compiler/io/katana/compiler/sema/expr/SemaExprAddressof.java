@@ -14,8 +14,8 @@
 
 package io.katana.compiler.sema.expr;
 
+import io.katana.compiler.analysis.Types;
 import io.katana.compiler.sema.type.SemaType;
-import io.katana.compiler.sema.type.SemaTypeNonNullablePointer;
 
 public class SemaExprAddressof extends SimpleRValueExpr
 {
@@ -29,6 +29,6 @@ public class SemaExprAddressof extends SimpleRValueExpr
 	@Override
 	public SemaType type()
 	{
-		return new SemaTypeNonNullablePointer(expr.type());
+		return Types.addNonNullablePointer(expr.type());
 	}
 }

@@ -14,8 +14,8 @@
 
 package io.katana.compiler.sema.expr;
 
+import io.katana.compiler.analysis.Types;
 import io.katana.compiler.sema.type.SemaType;
-import io.katana.compiler.sema.type.SemaTypeArray;
 
 public class SemaExprArrayAccess extends SemaExpr
 {
@@ -31,7 +31,7 @@ public class SemaExprArrayAccess extends SemaExpr
 	@Override
 	public SemaType type()
 	{
-		return ((SemaTypeArray)(expr.type())).type;
+		return Types.removeArray(expr.type());
 	}
 
 	@Override

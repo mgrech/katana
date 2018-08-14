@@ -64,8 +64,9 @@ public class Limits
 			throw new AssertionError("unreachable");
 
 		var isSigned = type.kind == BuiltinType.Kind.INT;
+		var size = Types.sizeof(SemaTypeBuiltin.of(type), context);
 
-		switch((int)Types.sizeof(new SemaTypeBuiltin(type), context))
+		switch((int)size)
 		{
 		case 1: return isSigned ? BuiltinType.INT8  : BuiltinType.UINT8;
 		case 2: return isSigned ? BuiltinType.INT16 : BuiltinType.UINT16;

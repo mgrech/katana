@@ -1,8 +1,7 @@
 package io.katana.compiler.sema.expr;
 
+import io.katana.compiler.analysis.Types;
 import io.katana.compiler.sema.type.SemaType;
-import io.katana.compiler.sema.type.SemaTypeArray;
-import io.katana.compiler.sema.type.SemaTypeNonNullablePointer;
 
 public class SemaExprArrayGetPointer extends SimpleRValueExpr
 {
@@ -12,7 +11,7 @@ public class SemaExprArrayGetPointer extends SimpleRValueExpr
 	public SemaExprArrayGetPointer(SemaExpr expr)
 	{
 		this.expr = expr;
-		this.cachedType = new SemaTypeNonNullablePointer(((SemaTypeArray)expr.type()).type);
+		this.cachedType = Types.addNonNullablePointer(Types.removeArray(expr.type()));
 	}
 
 	@Override

@@ -14,16 +14,15 @@
 
 package io.katana.compiler.sema.expr;
 
+import io.katana.compiler.analysis.Types;
 import io.katana.compiler.sema.type.SemaType;
-import io.katana.compiler.sema.type.SemaTypeArray;
 import io.katana.compiler.sema.type.SemaTypeBuiltin;
-import io.katana.compiler.sema.type.SemaTypeConst;
 
 import java.nio.charset.StandardCharsets;
 
 public class SemaExprLitString extends SimpleLValueExpr
 {
-	private static final SemaType ELEMENT_TYPE = new SemaTypeConst(SemaTypeBuiltin.UINT8);
+	private static final SemaType ELEMENT_TYPE = Types.addConst(SemaTypeBuiltin.UINT8);
 
 	public final String value;
 	private final transient SemaType cachedType;
@@ -33,7 +32,7 @@ public class SemaExprLitString extends SimpleLValueExpr
 		this.value = value;
 
 		var length = value.getBytes(StandardCharsets.UTF_8).length;
-		cachedType = new SemaTypeArray(length, ELEMENT_TYPE);
+		cachedType = Types.addArray(length, ELEMENT_TYPE);
 	}
 
 	@Override

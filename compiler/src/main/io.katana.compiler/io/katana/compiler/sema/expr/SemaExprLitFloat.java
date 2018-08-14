@@ -15,9 +15,9 @@
 package io.katana.compiler.sema.expr;
 
 import io.katana.compiler.BuiltinType;
+import io.katana.compiler.analysis.Types;
 import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.sema.type.SemaTypeBuiltin;
-import io.katana.compiler.sema.type.SemaTypeConst;
 import io.katana.compiler.utils.Fraction;
 
 public class SemaExprLitFloat extends SimpleRValueExpr
@@ -30,18 +30,7 @@ public class SemaExprLitFloat extends SimpleRValueExpr
 	{
 		this.value = value;
 		this.type = type;
-
-		SemaType semaType;
-
-		switch(type)
-		{
-		case FLOAT32: semaType = SemaTypeBuiltin.FLOAT32; break;
-		case FLOAT64: semaType = SemaTypeBuiltin.FLOAT64; break;
-
-		default: throw new AssertionError("unreachable");
-		}
-
-		cachedType = new SemaTypeConst(semaType);
+		this.cachedType = Types.addConst(SemaTypeBuiltin.of(type));
 	}
 
 	@Override

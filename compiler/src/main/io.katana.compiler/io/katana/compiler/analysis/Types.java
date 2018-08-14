@@ -28,8 +28,8 @@ public class Types
 
 	public static boolean isConst(SemaType type)
 	{
-		if(type instanceof SemaTypeArray)
-			return isConst(((SemaTypeArray)type).type);
+		while(isArray(type))
+			return isConst(removeArray(type));
 
 		return type instanceof SemaTypeConst;
 	}
@@ -71,7 +71,7 @@ public class Types
 		if(type instanceof SemaTypeArray)
 		{
 			var array = (SemaTypeArray)type;
-			return new SemaTypeArray(array.length, addConst(array.type));
+			return addArray(array.length, addConst(array.type));
 		}
 
 		return new SemaTypeConst(type);
@@ -84,10 +84,17 @@ public class Types
 
 	public static SemaType removeSlice(SemaType type)
 	{
-		if(type instanceof SemaTypeSlice)
-			return ((SemaTypeSlice)type).type;
+		var typeNoConst = removeConst(type);
+
+		if(typeNoConst instanceof SemaTypeSlice)
+			return ((SemaTypeSlice)typeNoConst).type;
 
 		return type;
+	}
+
+	public static SemaType addArray(long length, SemaType type)
+	{
+		return new SemaTypeArray(length, type);
 	}
 
 	public static SemaType removeArray(SemaType type)
@@ -119,7 +126,7 @@ public class Types
 		if(type instanceof SemaTypeArray)
 		{
 			var array = (SemaTypeArray)type;
-			return new SemaTypeArray(array.length, removeConst(array.type));
+			return addArray(array.length, removeConst(array.type));
 		}
 
 		return type;
@@ -133,6 +140,12 @@ public class Types
 	public static boolean isByte(SemaType type)
 	{
 		return isBuiltin(type, BuiltinType.BYTE);
+	}
+
+	public static boolean isBuiltin(SemaType type)
+	{
+		type = removeConst(type);
+		return type instanceof SemaTypeBuiltin;
 	}
 
 	public static boolean isBuiltin(SemaType type, BuiltinType which)
@@ -182,6 +195,7 @@ public class Types
 
 	public static boolean isSlice(SemaType type)
 	{
+		type = removeConst(type);
 		return type instanceof SemaTypeSlice;
 	}
 
@@ -244,7 +258,7 @@ public class Types
 
 	public static StructLayout sliceLayout(PlatformContext context)
 	{
-		var voidptr = new SemaTypeNullablePointer(SemaTypeBuiltin.VOID);
+		var voidptr = addNullablePointer(SemaTypeBuiltin.VOID);
 
 		return new StructLayoutBuilder(context).appendField(voidptr)
 		                                       .appendField(SemaTypeBuiltin.INT)

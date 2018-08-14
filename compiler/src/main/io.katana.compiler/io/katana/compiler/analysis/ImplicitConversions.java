@@ -17,8 +17,6 @@ package io.katana.compiler.analysis;
 import io.katana.compiler.BuiltinType;
 import io.katana.compiler.sema.expr.*;
 import io.katana.compiler.sema.type.SemaType;
-import io.katana.compiler.sema.type.SemaTypeArray;
-import io.katana.compiler.sema.type.SemaTypeNullablePointer;
 
 public class ImplicitConversions
 {
@@ -31,7 +29,7 @@ public class ImplicitConversions
 		// !T -> ?T
 		if(Types.isNonNullablePointer(sourceType) && Types.isNullablePointer(targetType))
 		{
-			sourceType = new SemaTypeNullablePointer(sourcePointeeType);
+			sourceType = Types.addNullablePointer(sourcePointeeType);
 			expr = new SemaExprImplicitConversionNonNullablePointerToNullablePointer(expr, sourceType);
 		}
 
@@ -46,7 +44,7 @@ public class ImplicitConversions
 		// ![N]T -> !T, ?[N]T -> ?T
 		if(Types.isArray(sourcePointeeType))
 		{
-			var sourceElementType = ((SemaTypeArray)sourcePointeeType).type;
+			var sourceElementType = Types.removeArray(sourcePointeeType);
 
 			if(Types.equal(sourceElementType, targetPointeeType))
 			{

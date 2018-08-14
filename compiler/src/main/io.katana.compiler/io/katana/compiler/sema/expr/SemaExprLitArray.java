@@ -16,7 +16,6 @@ package io.katana.compiler.sema.expr;
 
 import io.katana.compiler.analysis.Types;
 import io.katana.compiler.sema.type.SemaType;
-import io.katana.compiler.sema.type.SemaTypeArray;
 
 import java.util.List;
 
@@ -36,7 +35,7 @@ public class SemaExprLitArray extends SimpleRValueExpr
 	@Override
 	public SemaType type()
 	{
-		return new SemaTypeArray(length, Types.addConst(type));
+		return Types.addArray(length, Types.addConst(type));
 	}
 
 	@Override

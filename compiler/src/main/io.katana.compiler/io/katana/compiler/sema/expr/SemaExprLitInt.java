@@ -15,9 +15,9 @@
 package io.katana.compiler.sema.expr;
 
 import io.katana.compiler.BuiltinType;
+import io.katana.compiler.analysis.Types;
 import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.sema.type.SemaTypeBuiltin;
-import io.katana.compiler.sema.type.SemaTypeConst;
 
 import java.math.BigInteger;
 
@@ -31,27 +31,7 @@ public class SemaExprLitInt extends SimpleRValueExpr
 	{
 		this.value = value;
 		this.type = type;
-
-		SemaType semaType;
-
-		switch(type)
-		{
-		case INT:   semaType = SemaTypeBuiltin.INT;   break;
-		case INT8:  semaType = SemaTypeBuiltin.INT8;  break;
-		case INT16: semaType = SemaTypeBuiltin.INT16; break;
-		case INT32: semaType = SemaTypeBuiltin.INT32; break;
-		case INT64: semaType = SemaTypeBuiltin.INT64; break;
-
-		case UINT:   semaType = SemaTypeBuiltin.UINT;   break;
-		case UINT8:  semaType = SemaTypeBuiltin.UINT8;  break;
-		case UINT16: semaType = SemaTypeBuiltin.UINT16; break;
-		case UINT32: semaType = SemaTypeBuiltin.UINT32; break;
-		case UINT64: semaType = SemaTypeBuiltin.UINT64; break;
-
-		default: throw new AssertionError("unreachable");
-		}
-
-		cachedType = new SemaTypeConst(semaType);
+		this.cachedType = Types.addConst(SemaTypeBuiltin.of(type));
 	}
 
 	@Override

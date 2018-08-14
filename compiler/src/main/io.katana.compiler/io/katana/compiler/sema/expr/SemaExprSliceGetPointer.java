@@ -2,7 +2,6 @@ package io.katana.compiler.sema.expr;
 
 import io.katana.compiler.analysis.Types;
 import io.katana.compiler.sema.type.SemaType;
-import io.katana.compiler.sema.type.SemaTypeNonNullablePointer;
 
 public class SemaExprSliceGetPointer extends SemaExpr
 {
@@ -12,7 +11,7 @@ public class SemaExprSliceGetPointer extends SemaExpr
 	public SemaExprSliceGetPointer(SemaExpr expr)
 	{
 		this.expr = expr;
-		this.cachedType = new SemaTypeNonNullablePointer(Types.removeSlice(expr.type()));
+		this.cachedType = Types.addNonNullablePointer(Types.removeSlice(expr.type()));
 	}
 
 	@Override

@@ -1,8 +1,7 @@
 package io.katana.compiler.sema.expr;
 
+import io.katana.compiler.analysis.Types;
 import io.katana.compiler.sema.type.SemaType;
-import io.katana.compiler.sema.type.SemaTypeArray;
-import io.katana.compiler.sema.type.SemaTypeSlice;
 
 public class SemaExprArrayGetSlice extends SimpleRValueExpr
 {
@@ -12,7 +11,7 @@ public class SemaExprArrayGetSlice extends SimpleRValueExpr
 	public SemaExprArrayGetSlice(SemaExpr expr)
 	{
 		this.expr = expr;
-		this.cachedType = new SemaTypeSlice(((SemaTypeArray)expr.type()).type);
+		this.cachedType = Types.addSlice(Types.removeArray(expr.type()));
 	}
 
 	@Override

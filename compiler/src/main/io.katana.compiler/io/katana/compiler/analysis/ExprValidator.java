@@ -504,7 +504,7 @@ public class ExprValidator implements IVisitor
 
 		var type = Types.removeConst(maybeType.unwrap());
 
-		if(!(type instanceof SemaTypeBuiltin))
+		if(!Types.isBuiltin(type))
 			errorLiteralTypeDeduction();
 
 		var builtin = (SemaTypeBuiltin)type;

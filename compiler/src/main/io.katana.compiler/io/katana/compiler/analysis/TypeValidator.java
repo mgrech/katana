@@ -50,29 +50,7 @@ public class TypeValidator implements IVisitor
 
 	private SemaType visit(AstTypeBuiltin builtin)
 	{
-		switch(builtin.which)
-		{
-		case VOID:    return SemaTypeBuiltin.VOID;
-		case BYTE:    return SemaTypeBuiltin.BYTE;
-		case BOOL:    return SemaTypeBuiltin.BOOL;
-		case INT8:    return SemaTypeBuiltin.INT8;
-		case INT16:   return SemaTypeBuiltin.INT16;
-		case INT32:   return SemaTypeBuiltin.INT32;
-		case INT64:   return SemaTypeBuiltin.INT64;
-		case INT:     return SemaTypeBuiltin.INT;
-		case UINT8:   return SemaTypeBuiltin.UINT8;
-		case UINT16:  return SemaTypeBuiltin.UINT16;
-		case UINT32:  return SemaTypeBuiltin.UINT32;
-		case UINT64:  return SemaTypeBuiltin.UINT64;
-		case UINT:    return SemaTypeBuiltin.UINT;
-		case FLOAT32: return SemaTypeBuiltin.FLOAT32;
-		case FLOAT64: return SemaTypeBuiltin.FLOAT64;
-		case NULL:    return SemaTypeBuiltin.NULL;
-
-		default: break;
-		}
-
-		throw new AssertionError("unreachable");
+		return SemaTypeBuiltin.of(builtin.which);
 	}
 
 	private SemaType visit(AstTypeTuple tuple)
@@ -92,7 +70,7 @@ public class TypeValidator implements IVisitor
 
 	private SemaType visit(AstTypeSlice slice)
 	{
-		return new SemaTypeSlice(validate(slice.type, scope, context, validateDecl));
+		return Types.addSlice(validate(slice.type, scope, context, validateDecl));
 	}
 
 	private SemaType visit(AstTypeArray array)
@@ -100,7 +78,7 @@ public class TypeValidator implements IVisitor
 		if(array.length < 0)
 			throw new CompileException(String.format("negative array length: %s", array.length));
 
-		return new SemaTypeArray(array.length, validate(array.type, scope, context, validateDecl));
+		return Types.addArray(array.length, validate(array.type, scope, context, validateDecl));
 	}
 
 	private SemaType visit(AstTypeFunction functionType)
@@ -159,11 +137,11 @@ public class TypeValidator implements IVisitor
 
 	private SemaType visit(AstTypeNullablePointer pointer)
 	{
-		return new SemaTypeNullablePointer(validate(pointer.type, scope, context, validateDecl));
+		return Types.addNullablePointer(validate(pointer.type, scope, context, validateDecl));
 	}
 
 	private SemaType visit(AstTypeNonNullablePointer pointer)
 	{
-		return new SemaTypeNonNullablePointer(validate(pointer.type, scope, context, validateDecl));
+		return Types.addNonNullablePointer(validate(pointer.type, scope, context, validateDecl));
 	}
 }
