@@ -576,9 +576,4 @@ public class ExprCodeGenerator implements IVisitor
 
 		return Maybe.some(generateGetElementPtr(sliceGetPointer.expr, INDEX_ZERO_EXPR));
 	}
-
-	private Maybe<String> visit(SsaExpr ssa)
-	{
-		return Maybe.some(ssa.name);
-	}
 }
