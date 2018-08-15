@@ -14,6 +14,9 @@
 
 package io.katana.compiler.backend.llvm;
 
+import io.katana.compiler.backend.llvm.ir.IrValueSsa;
+import io.katana.compiler.backend.llvm.ir.IrValues;
+
 public class FunctionCodegenContext extends FileCodegenContext
 {
 	private int ssaCounter = 1;
@@ -24,9 +27,9 @@ public class FunctionCodegenContext extends FileCodegenContext
 		super(context);
 	}
 
-	public String allocateSsa()
+	public IrValueSsa allocateSsa()
 	{
-		return "%" + ssaCounter++;
+		return IrValues.ofSsa("" + ssaCounter++);
 	}
 
 	public GeneratedLabel allocateLabel(String name)

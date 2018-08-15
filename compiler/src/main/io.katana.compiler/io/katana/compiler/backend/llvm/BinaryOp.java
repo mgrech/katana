@@ -17,6 +17,7 @@ package io.katana.compiler.backend.llvm;
 import io.katana.compiler.BuiltinFunc;
 import io.katana.compiler.BuiltinType;
 import io.katana.compiler.analysis.Types;
+import io.katana.compiler.backend.llvm.ir.IrValueSsa;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.sema.expr.SemaExprBuiltinCall;
 import io.katana.compiler.sema.type.SemaType;
@@ -109,7 +110,7 @@ public class BinaryOp extends BuiltinFunc
 	}
 
 	@Override
-	public Maybe<String> generateCall(SemaExprBuiltinCall call, FunctionCodegenContext context)
+	public Maybe<IrValueSsa> generateCall(SemaExprBuiltinCall call, FunctionCodegenContext context)
 	{
 		var type = (SemaTypeBuiltin)call.args.get(0).type();
 		var typeString = TypeCodeGenerator.generate(type, context.platform());

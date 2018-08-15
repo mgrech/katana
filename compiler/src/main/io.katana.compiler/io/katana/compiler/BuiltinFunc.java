@@ -14,8 +14,8 @@
 
 package io.katana.compiler;
 
-import io.katana.compiler.backend.llvm.FileCodegenContext;
 import io.katana.compiler.backend.llvm.FunctionCodegenContext;
+import io.katana.compiler.backend.llvm.ir.IrValueSsa;
 import io.katana.compiler.sema.expr.SemaExprBuiltinCall;
 import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.utils.Maybe;
@@ -32,5 +32,5 @@ public abstract class BuiltinFunc
 	}
 
 	public abstract SemaType validateCall(List<SemaType> args);
-	public abstract Maybe<String> generateCall(SemaExprBuiltinCall call, FunctionCodegenContext context);
+	public abstract Maybe<IrValueSsa> generateCall(SemaExprBuiltinCall call, FunctionCodegenContext context);
 }

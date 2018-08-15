@@ -14,6 +14,9 @@
 
 package io.katana.compiler.backend.llvm;
 
+import io.katana.compiler.backend.llvm.ir.IrValue;
+import io.katana.compiler.backend.llvm.ir.IrValues;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.TreeMap;
@@ -25,19 +28,19 @@ public class StringPool
 
 	private String generateName()
 	{
-		return String.format("@.strpool.%s", counter++);
+		return String.format(".strpool.%s", counter++);
 	}
 
-	public String get(String value)
+	public IrValue get(String value)
 	{
 		var name = namesByValue.get(value);
 
 		if(name != null)
-			return name;
+			return IrValues.ofSymbol(name);
 
 		name = generateName();
 		namesByValue.put(value, name);
-		return name;
+		return IrValues.ofSymbol(name);
 	}
 
 	private byte[] utf8Encode(int cp)
@@ -76,7 +79,7 @@ public class StringPool
 		{
 			var name = entry.getValue();
 			var value = entry.getKey();
-			var strfmt = "%s = private unnamed_addr constant [%s x i8] c\"%s\"\n";
+			var strfmt = "@%s = private unnamed_addr constant [%s x i8] c\"%s\"\n";
 			builder.append(String.format(strfmt, name, value.length(), escape(value)));
 		}
 	}

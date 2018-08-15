@@ -15,6 +15,7 @@
 package io.katana.compiler.backend.llvm;
 
 import io.katana.compiler.analysis.Types;
+import io.katana.compiler.backend.llvm.ir.IrValueConstant;
 import io.katana.compiler.sema.decl.*;
 import io.katana.compiler.sema.type.SemaTypeNonNullablePointer;
 import io.katana.compiler.visitor.IVisitor;
@@ -204,7 +205,7 @@ public class DeclCodeGenerator implements IVisitor
 
 		var qualifiedName = qualifiedName(global);
 		var typeString = TypeCodeGenerator.generate(global.type, context.platform());
-		var initializerString = global.init.map(i -> ExprCodeGenerator.generate(i, null).unwrap()).or("zeroinitializer");
+		var initializerString = global.init.map(i -> ExprCodeGenerator.generate(i, null).unwrap()).or(new IrValueConstant("zeroinitializer"));
 		var kind = Types.isConst(global.type) ? "constant" : "global";
 		context.writef("@%s = private %s %s %s\n", qualifiedName, kind, typeString, initializerString);
 	}

@@ -16,24 +16,22 @@ package io.katana.compiler.backend.llvm;
 
 import io.katana.compiler.BuiltinType;
 import io.katana.compiler.analysis.Types;
+import io.katana.compiler.backend.llvm.ir.*;
 import io.katana.compiler.sema.decl.SemaDeclExternFunction;
 import io.katana.compiler.sema.expr.*;
 import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.sema.type.SemaTypeBuiltin;
-import io.katana.compiler.utils.Fraction;
 import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 public class ExprCodeGenerator implements IVisitor
 {
-	private static final String ZEROSIZE_VALUE_ADDRESS = "inttoptr (i8 1 to i8*)";
-	private static final String UNDEF = "undef";
-
 	private static final SemaExpr INDEX_ZERO_EXPR = new SemaExprLitInt(BigInteger.ZERO, BuiltinType.INT32);
 	private static final SemaExpr INDEX_ONE_EXPR = new SemaExprLitInt(BigInteger.ONE, BuiltinType.INT32);
 
@@ -44,25 +42,25 @@ public class ExprCodeGenerator implements IVisitor
 		this.context = context;
 	}
 
-	public static Maybe<String> generate(SemaExpr expr, FunctionCodegenContext context)
+	public static Maybe<IrValue> generate(SemaExpr expr, FunctionCodegenContext context)
 	{
 		var visitor = new ExprCodeGenerator(context);
-		return (Maybe<String>)expr.accept(visitor);
+		return (Maybe<IrValue>)expr.accept(visitor);
 	}
 
-	private String generateLoad(String where, String type)
+	private IrValueSsa generateLoad(IrValue where, String type)
 	{
 		var ssa = context.allocateSsa();
 		context.writef("\t%s = load %s, %s* %s\n", ssa, type, type, where);
 		return ssa;
 	}
 
-	private void generateStore(String where, String what, String type)
+	private void generateStore(IrValue where, IrValue what, String type)
 	{
 		context.writef("\tstore %s %s, %s* %s\n", type, what, type, where);
 	}
 
-	private Maybe<String> visit(RValueToLValueConversion conversion)
+	private Maybe<IrValue> visit(RValueToLValueConversion conversion)
 	{
 		var exprSsa = generate(conversion.expr, context).unwrap();
 		var exprType = TypeCodeGenerator.generate(conversion.expr.type(), context.platform());
@@ -71,20 +69,20 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some(resultSsa);
 	}
 
-	private Maybe<String> visit(SemaExprAddressof addressof)
+	private Maybe<IrValue> visit(SemaExprAddressof addressof)
 	{
 		if(Types.isZeroSized(addressof.expr.type()))
-			return Maybe.some(ZEROSIZE_VALUE_ADDRESS);
+			return Maybe.some(IrValues.ADDRESS_ONE);
 
 		return generate(addressof.expr, context);
 	}
 
-	private Maybe<String> visit(SemaExprAlignof alignof)
+	private Maybe<IrValue> visit(SemaExprAlignof alignof)
 	{
-		return Maybe.some("" + Types.alignof(alignof.type, context.platform()));
+		return Maybe.some(IrValues.ofConstant(Types.alignof(alignof.type, context.platform())));
 	}
 
-	private String generateGetElementPtr(SemaExpr compound, SemaExpr index)
+	private IrValueSsa generateGetElementPtr(SemaExpr compound, SemaExpr index)
 	{
 		var compoundSsa = generate(compound, context).unwrap();
 
@@ -99,7 +97,7 @@ public class ExprCodeGenerator implements IVisitor
 		return resultSsa;
 	}
 
-	private Maybe<String> visit(SemaExprArrayAccess arrayAccess)
+	private Maybe<IrValue> visit(SemaExprArrayAccess arrayAccess)
 	{
 		if(Types.isZeroSized(arrayAccess.type()))
 			return Maybe.none();
@@ -120,28 +118,28 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some(resultSsa);
 	}
 
-	private Maybe<String> visit(SemaExprArrayGetLength arrayGetLength)
+	private Maybe<IrValue> visit(SemaExprArrayGetLength arrayGetLength)
 	{
-		return Maybe.some("" + Types.arrayLength(arrayGetLength.expr.type()));
+		return Maybe.some(IrValues.ofConstant(Types.arrayLength(arrayGetLength.expr.type())));
 	}
 
-	private Maybe<String> visit(SemaExprArrayGetPointer arrayGetPointer)
+	private Maybe<IrValue> visit(SemaExprArrayGetPointer arrayGetPointer)
 	{
 		return Maybe.some(generateGetElementPtr(arrayGetPointer.expr, INDEX_ZERO_EXPR));
 	}
 
-	private String generateSliceConstruction(SemaType elementType, String pointerSsa, long length)
+	private IrValueSsa generateSliceConstruction(SemaType elementType, IrValue pointerSsa, long length)
 	{
 		var pointerType = Types.addNullablePointer(elementType);
 		var pointerTypeString = TypeCodeGenerator.generate(pointerType, context.platform());
 		var lengthTypeString = TypeCodeGenerator.generate(SemaTypeBuiltin.INT, context.platform());
 		var structTypeString = String.format("{%s, %s}", pointerTypeString, lengthTypeString);
 
-		var intermediateSsa = generateInsertValue(structTypeString, UNDEF, pointerTypeString, pointerSsa, 0);
-		return generateInsertValue(structTypeString, intermediateSsa, lengthTypeString, "" + length, 1);
+		var intermediateSsa = generateInsertValue(structTypeString, IrValues.UNDEF, pointerTypeString, pointerSsa, 0);
+		return generateInsertValue(structTypeString, intermediateSsa, lengthTypeString, IrValues.ofConstant(length), 1);
 	}
 
-	private Maybe<String> visit(SemaExprArrayGetSlice arrayGetSlice)
+	private Maybe<IrValue> visit(SemaExprArrayGetSlice arrayGetSlice)
 	{
 		var elementType = Types.removeSlice(arrayGetSlice.type());
 		var pointerSsa = generateGetElementPtr(arrayGetSlice.expr, INDEX_ZERO_EXPR);
@@ -149,7 +147,7 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some(generateSliceConstruction(elementType, pointerSsa, length));
 	}
 
-	private Maybe<String> visit(SemaExprAssign assign)
+	private Maybe<IrValue> visit(SemaExprAssign assign)
 	{
 		if(Types.isZeroSized(assign.type()))
 			return Maybe.none();
@@ -161,9 +159,9 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some(left);
 	}
 
-	private Maybe<String> visit(SemaExprBuiltinCall builtinCall)
+	private Maybe<IrValue> visit(SemaExprBuiltinCall builtinCall)
 	{
-		return builtinCall.func.generateCall(builtinCall, context);
+		return builtinCall.func.generateCall(builtinCall, context).map(v -> v);
 	}
 
 	private String instrForCast(SemaType targetType, SemaExprCast.Kind kind)
@@ -203,7 +201,7 @@ public class ExprCodeGenerator implements IVisitor
 		throw new AssertionError("unreachable");
 	}
 
-	private String generateCast(String valueSsa, SemaType sourceType, SemaType targetType, SemaExprCast.Kind kind)
+	private IrValueSsa generateCast(IrValue valueSsa, SemaType sourceType, SemaType targetType, SemaExprCast.Kind kind)
 	{
 		var resultSsa = context.allocateSsa();
 		var sourceTypeString = TypeCodeGenerator.generate(sourceType, context.platform());
@@ -214,10 +212,10 @@ public class ExprCodeGenerator implements IVisitor
 		return resultSsa;
 	}
 
-	private Maybe<String> visit(SemaExprCast cast)
+	private Maybe<IrValue> visit(SemaExprCast cast)
 	{
 		var valueSsa = generate(cast.expr, context).unwrap();
-		String resultSsa;
+		IrValue resultSsa;
 
 		var sourceType = cast.expr.type();
 		var targetType = cast.type;
@@ -264,12 +262,12 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some(resultSsa);
 	}
 
-	private Maybe<String> visit(SemaExprConst const_)
+	private Maybe<IrValue> visit(SemaExprConst const_)
 	{
 		return generate(const_.expr, context);
 	}
 
-	private Maybe<String> visit(SemaExprDeref deref)
+	private Maybe<IrValue> visit(SemaExprDeref deref)
 	{
 		if(Types.isZeroSized(deref.type()))
 			return Maybe.none();
@@ -277,16 +275,16 @@ public class ExprCodeGenerator implements IVisitor
 		return generate(deref.expr, context);
 	}
 
-	private Maybe<String> generateFunctionCall(String functionSsa, List<SemaExpr> args, SemaType ret, Maybe<Boolean> inline)
+	private Maybe<IrValue> generateFunctionCall(IrValue functionSsa, List<SemaExpr> args, SemaType ret, Maybe<Boolean> inline)
 	{
-		var argsSsa = new ArrayList<String>();
+		var argsSsa = new ArrayList<IrValue>();
 
 		for(var arg : args)
 			argsSsa.add(generate(arg, context).unwrap());
 
 		context.write('\t');
 
-		Maybe<String> retSsa = Maybe.none();
+		Maybe<IrValue> retSsa = Maybe.none();
 
 		if(!Types.isZeroSized(ret))
 		{
@@ -330,7 +328,7 @@ public class ExprCodeGenerator implements IVisitor
 		return retSsa;
 	}
 
-	private Maybe<String> visit(SemaExprDirectFunctionCall functionCall)
+	private Maybe<IrValue> visit(SemaExprDirectFunctionCall functionCall)
 	{
 		String name;
 
@@ -342,23 +340,23 @@ public class ExprCodeGenerator implements IVisitor
 		else
 			name = FunctionNameMangler.mangle(functionCall.function);
 
-		var functionSsa = '@' + name;
+		var functionSsa = new IrValueSymbol(name);
 		return generateFunctionCall(functionSsa, functionCall.args, functionCall.function.ret, functionCall.inline);
 	}
 
-	private Maybe<String> visit(SemaExprImplicitConversionArrayPointerToPointer conversion)
+	private Maybe<IrValue> visit(SemaExprImplicitConversionArrayPointerToPointer conversion)
 	{
 		return Maybe.some(generateGetElementPtr(conversion.expr, INDEX_ZERO_EXPR));
 	}
 
-	private String generateInsertValue(String compoundTypeString, String compoundSsa, String elementTypeString, String elementSsa, int index)
+	private IrValueSsa generateInsertValue(String compoundTypeString, IrValue compoundSsa, String elementTypeString, IrValue elementSsa, int index)
 	{
 		var ssa = context.allocateSsa();
 		context.writef("\t%s = insertvalue %s %s, %s %s, %s\n", ssa, compoundTypeString, compoundSsa, elementTypeString, elementSsa, index);
 		return ssa;
 	}
 
-	private Maybe<String> visit(SemaExprImplicitConversionArrayPointerToSlice conversion)
+	private Maybe<IrValue> visit(SemaExprImplicitConversionArrayPointerToSlice conversion)
 	{
 		var pointerSsa = generateGetElementPtr(conversion.expr, INDEX_ZERO_EXPR);
 		var elementType = Types.removeSlice(conversion.type());
@@ -366,7 +364,7 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some(generateSliceConstruction(elementType, pointerSsa, length));
 	}
 
-	private Maybe<String> visit(SemaExprImplicitConversionLValueToRValue conversion)
+	private Maybe<IrValue> visit(SemaExprImplicitConversionLValueToRValue conversion)
 	{
 		if(Types.isZeroSized(conversion.type()))
 			return Maybe.none();
@@ -376,22 +374,22 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some(generateLoad(lvalueSsa, lvalueTypeString));
 	}
 
-	private Maybe<String> visit(SemaExprImplicitConversionNonNullablePointerToNullablePointer conversion)
+	private Maybe<IrValue> visit(SemaExprImplicitConversionNonNullablePointerToNullablePointer conversion)
 	{
 		return generate(conversion.expr, context);
 	}
 
-	private Maybe<String> visit(SemaExprImplicitConversionNullToNullablePointer conversion)
+	private Maybe<IrValue> visit(SemaExprImplicitConversionNullToNullablePointer conversion)
 	{
-		return Maybe.some("null");
+		return Maybe.some(IrValues.NULL);
 	}
 
-	private Maybe<String> visit(SemaExprImplicitConversionPointerToNonConstToPointerToConst conversion)
+	private Maybe<IrValue> visit(SemaExprImplicitConversionPointerToNonConstToPointerToConst conversion)
 	{
 		return generate(conversion.expr, context);
 	}
 
-	private Maybe<String> visit(SemaExprImplicitConversionPointerToBytePointer conversion)
+	private Maybe<IrValue> visit(SemaExprImplicitConversionPointerToBytePointer conversion)
 	{
 		var exprTypeString = TypeCodeGenerator.generate(conversion.expr.type(), context.platform());
 		var exprSsa = generate(conversion.expr, context).unwrap();
@@ -400,29 +398,29 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some(resultSsa);
 	}
 
-	private Maybe<String> visit(SemaExprImplicitConversionSliceToSliceOfConst conversion)
+	private Maybe<IrValue> visit(SemaExprImplicitConversionSliceToSliceOfConst conversion)
 	{
 		return generate(conversion.expr, context);
 	}
 
-	private Maybe<String> visit(SemaExprImplicitConversionWiden conversion)
+	private Maybe<IrValue> visit(SemaExprImplicitConversionWiden conversion)
 	{
 		var valueSsa = generate(conversion.expr, context).unwrap();
 		return Maybe.some(generateCast(valueSsa, conversion.expr.type(), conversion.type(), SemaExprCast.Kind.WIDEN_CAST));
 	}
 
-	private Maybe<String> visit(SemaExprImplicitVoidInReturn implicitVoid)
+	private Maybe<IrValue> visit(SemaExprImplicitVoidInReturn implicitVoid)
 	{
 		return Maybe.none();
 	}
 
-	private Maybe<String> visit(SemaExprIndirectFunctionCall functionCall)
+	private Maybe<IrValue> visit(SemaExprIndirectFunctionCall functionCall)
 	{
 		var functionSsa = generate(functionCall.expr, context).unwrap();
 		return generateFunctionCall(functionSsa, functionCall.args, functionCall.type(), Maybe.none());
 	}
 
-	private Maybe<String> visit(SemaExprFieldAccess fieldAccess)
+	private Maybe<IrValue> visit(SemaExprFieldAccess fieldAccess)
 	{
 		var isRValue = fieldAccess.expr.kind() == ExprKind.RVALUE;
 
@@ -441,111 +439,84 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some(resultSsa);
 	}
 
-	private Maybe<String> visit(SemaExprLitArray lit)
+	private Maybe<IrValue> visit(SemaExprLitArray lit)
 	{
-		var builder = new StringBuilder();
-		builder.append('[');
+		var elementTypeString = TypeCodeGenerator.generate(lit.type, context.platform());
 
-		if(!lit.values.isEmpty())
-		{
-			builder.append(TypeCodeGenerator.generate(lit.values.get(0).type(), context.platform()));
-			builder.append(' ');
-			builder.append(generate(lit.values.get(0), context).unwrap());
+		var values = lit.values.stream()
+		                       .map(expr -> generate(expr, context).unwrap())
+		                       .collect(Collectors.toList());
 
-			for(var i = 1; i != lit.values.size(); ++i)
-			{
-				SemaExpr expr = lit.values.get(i);
-				builder.append(", ");
-				builder.append(TypeCodeGenerator.generate(expr.type(), context.platform()));
-				builder.append(' ');
-				builder.append(generate(expr, context).unwrap());
-			}
-		}
-
-		builder.append(']');
-
-		return Maybe.some(builder.toString());
+		return Maybe.some(IrValues.ofConstantArray(elementTypeString, values));
 	}
 
-	private Maybe<String> visit(SemaExprLitBool lit)
+	private Maybe<IrValue> visit(SemaExprLitBool lit)
 	{
-		return Maybe.some("" + lit.value);
+		return Maybe.some(IrValues.ofConstant(lit.value));
 	}
 
-	private String toFloatHexString(Fraction f)
+	private Maybe<IrValue> visit(SemaExprLitFloat lit)
 	{
-		// llvm requires float literals to be as wide as double literals but representable in a float
-		// hence we take the float value and widen it to double
-		var d = f.toFloat();
-		var l = Double.doubleToLongBits(d);
-		return String.format("0x%x", l);
+		var value = lit.type == BuiltinType.FLOAT32
+		            ? IrValues.ofConstant(lit.value.toFloat())
+		            : IrValues.ofConstant(lit.value.toDouble());
+
+		return Maybe.some(value);
 	}
 
-	private String toDoubleHexString(Fraction f)
+	private Maybe<IrValue> visit(SemaExprLitInt lit)
 	{
-		var d = f.toDouble();
-		var l = Double.doubleToRawLongBits(d);
-		return String.format("0x%x", l);
+		return Maybe.some(IrValues.ofConstant(lit.value.longValueExact()));
 	}
 
-	private Maybe<String> visit(SemaExprLitFloat lit)
+	private Maybe<IrValue> visit(SemaExprLitNull lit)
 	{
-		var s = lit.type == BuiltinType.FLOAT32
-		        ? toFloatHexString(lit.value)
-		        : toDoubleHexString(lit.value);
-
-		return Maybe.some(s);
+		return Maybe.some(IrValues.NULL);
 	}
 
-	private Maybe<String> visit(SemaExprLitInt lit)
-	{
-		return Maybe.some(lit.value.toString());
-	}
-
-	private Maybe<String> visit(SemaExprLitNull lit)
-	{
-		return Maybe.some("null");
-	}
-
-	private Maybe<String> visit(SemaExprLitString lit)
+	private Maybe<IrValue> visit(SemaExprLitString lit)
 	{
 		return Maybe.some(context.stringPool().get(lit.value));
 	}
 
-	private Maybe<String> visit(SemaExprNamedFunc namedFunc)
+	private Maybe<IrValue> visit(SemaExprNamedFunc namedFunc)
 	{
 		if(namedFunc.func instanceof SemaDeclExternFunction)
-			return Maybe.some("@" + ((SemaDeclExternFunction)namedFunc.func).externName.or(namedFunc.func.name()));
+		{
+			var name = ((SemaDeclExternFunction)namedFunc.func).externName.or(namedFunc.func.name());
+			return Maybe.some(IrValues.ofSymbol(name));
+		}
 
-		return Maybe.some("@" + FunctionNameMangler.mangle(namedFunc.func));
+		var name = FunctionNameMangler.mangle(namedFunc.func);
+		return Maybe.some(IrValues.ofSymbol(name));
 	}
 
-	private Maybe<String> visit(SemaExprNamedGlobal namedGlobal)
+	private Maybe<IrValue> visit(SemaExprNamedGlobal namedGlobal)
 	{
-		return Maybe.some('@' + namedGlobal.global.qualifiedName().toString());
+		return Maybe.some(IrValues.ofSymbol(namedGlobal.global.qualifiedName().toString()));
 	}
 
-	private Maybe<String> visit(SemaExprNamedLocal namedLocal)
+	private Maybe<IrValue> visit(SemaExprNamedLocal namedLocal)
 	{
-		return Maybe.some('%' + namedLocal.local.name);
+		return Maybe.some(IrValues.ofSsa(namedLocal.local.name));
 	}
 
-	private Maybe<String> visit(SemaExprNamedParam namedParam)
+	private Maybe<IrValue> visit(SemaExprNamedParam namedParam)
 	{
-		return Maybe.some('%' + namedParam.param.name);
+		return Maybe.some(IrValues.ofSsa(namedParam.param.name));
 	}
 
-	private Maybe<String> visit(SemaExprOffsetof offsetof)
+	private Maybe<IrValue> visit(SemaExprOffsetof offsetof)
 	{
-		return Maybe.some("" + offsetof.field.offsetof());
+		return Maybe.some(IrValues.ofConstant(offsetof.field.offsetof()));
 	}
 
-	private Maybe<String> visit(SemaExprSizeof sizeof)
+	private Maybe<IrValue> visit(SemaExprSizeof sizeof)
 	{
-		return Maybe.some("" + Types.sizeof(sizeof.type, context.platform()));
+		return Maybe.some(IrValues.ofConstant(Types.sizeof(sizeof.type, context.platform())));
 	}
 
-	private String generateExtractValue(SemaExpr compound, int index)
+	private IrValueSsa generateExtractValue(SemaExpr compound, int index)
 	{
 		var compoundSsa = generate(compound, context).unwrap();
 		var compoundTypeString = TypeCodeGenerator.generate(compound.type(), context.platform());
@@ -555,7 +526,7 @@ public class ExprCodeGenerator implements IVisitor
 		return fieldSsa;
 	}
 
-	private Maybe<String> visit(SemaExprSliceGetLength sliceGetLength)
+	private Maybe<IrValue> visit(SemaExprSliceGetLength sliceGetLength)
 	{
 		if(sliceGetLength.expr.kind() == ExprKind.RVALUE)
 			return Maybe.some(generateExtractValue(sliceGetLength.expr, 1));
@@ -563,7 +534,7 @@ public class ExprCodeGenerator implements IVisitor
 		return Maybe.some(generateGetElementPtr(sliceGetLength.expr, INDEX_ONE_EXPR));
 	}
 
-	private Maybe<String> visit(SemaExprSliceGetPointer sliceGetPointer)
+	private Maybe<IrValue> visit(SemaExprSliceGetPointer sliceGetPointer)
 	{
 		if(sliceGetPointer.expr.kind() == ExprKind.RVALUE)
 			return Maybe.some(generateExtractValue(sliceGetPointer.expr, 0));
