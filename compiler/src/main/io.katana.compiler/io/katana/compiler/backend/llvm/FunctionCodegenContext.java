@@ -14,10 +14,15 @@
 
 package io.katana.compiler.backend.llvm;
 
-public class FunctionCodegenContext
+public class FunctionCodegenContext extends FileCodegenContext
 {
 	private int ssaCounter = 1;
 	private int labelCounter = 1;
+
+	public FunctionCodegenContext(FileCodegenContext context)
+	{
+		super(context);
+	}
 
 	public String allocateSsa()
 	{

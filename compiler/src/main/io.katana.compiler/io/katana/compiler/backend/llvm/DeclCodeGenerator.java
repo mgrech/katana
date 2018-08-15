@@ -170,8 +170,8 @@ public class DeclCodeGenerator implements IVisitor
 		if(!function.locals.isEmpty())
 			context.write('\n');
 
-		var fcontext = new FunctionCodegenContext();
-		var stmtCodeGen = new StmtCodeGenerator(context, fcontext);
+		var fcontext = new FunctionCodegenContext(context);
+		var stmtCodeGen = new StmtCodeGenerator(fcontext);
 
 		for(var stmt : function.body)
 			stmtCodeGen.generate(stmt);
@@ -204,7 +204,7 @@ public class DeclCodeGenerator implements IVisitor
 
 		var qualifiedName = qualifiedName(global);
 		var typeString = TypeCodeGenerator.generate(global.type, context.platform());
-		var initializerString = global.init.map(i -> ExprCodeGenerator.generate(i, context, null).unwrap()).or("zeroinitializer");
+		var initializerString = global.init.map(i -> ExprCodeGenerator.generate(i, null).unwrap()).or("zeroinitializer");
 		var kind = Types.isConst(global.type) ? "constant" : "global";
 		context.writef("@%s = private %s %s %s\n", qualifiedName, kind, typeString, initializerString);
 	}

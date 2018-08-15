@@ -37,24 +37,22 @@ public class ExprCodeGenerator implements IVisitor
 	private static final SemaExpr INDEX_ZERO_EXPR = new SemaExprLitInt(BigInteger.ZERO, BuiltinType.INT32);
 	private static final SemaExpr INDEX_ONE_EXPR = new SemaExprLitInt(BigInteger.ONE, BuiltinType.INT32);
 
-	private FileCodegenContext context;
-	private FunctionCodegenContext fcontext;
+	private FunctionCodegenContext context;
 
-	private ExprCodeGenerator(FileCodegenContext context, FunctionCodegenContext fcontext)
+	private ExprCodeGenerator(FunctionCodegenContext context)
 	{
 		this.context = context;
-		this.fcontext = fcontext;
 	}
 
-	public static Maybe<String> generate(SemaExpr expr, FileCodegenContext context, FunctionCodegenContext fcontext)
+	public static Maybe<String> generate(SemaExpr expr, FunctionCodegenContext context)
 	{
-		var visitor = new ExprCodeGenerator(context, fcontext);
+		var visitor = new ExprCodeGenerator(context);
 		return (Maybe<String>)expr.accept(visitor);
 	}
 
 	private String generateLoad(String where, String type)
 	{
-		var ssa = fcontext.allocateSsa();
+		var ssa = context.allocateSsa();
 		context.writef("\t%s = load %s, %s* %s\n", ssa, type, type, where);
 		return ssa;
 	}
@@ -66,9 +64,9 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(RValueToLValueConversion conversion)
 	{
-		var exprSsa = generate(conversion.expr, context, fcontext).unwrap();
+		var exprSsa = generate(conversion.expr, context).unwrap();
 		var exprType = TypeCodeGenerator.generate(conversion.expr.type(), context.platform());
-		var resultSsa = fcontext.allocateSsa();
+		var resultSsa = context.allocateSsa();
 		generateStore(resultSsa, exprSsa, exprType);
 		return Maybe.some(resultSsa);
 	}
@@ -78,7 +76,7 @@ public class ExprCodeGenerator implements IVisitor
 		if(Types.isZeroSized(addressof.expr.type()))
 			return Maybe.some(ZEROSIZE_VALUE_ADDRESS);
 
-		return generate(addressof.expr, context, fcontext);
+		return generate(addressof.expr, context);
 	}
 
 	private Maybe<String> visit(SemaExprAlignof alignof)
@@ -88,15 +86,15 @@ public class ExprCodeGenerator implements IVisitor
 
 	private String generateGetElementPtr(SemaExpr compound, SemaExpr index)
 	{
-		var compoundSsa = generate(compound, context, fcontext).unwrap();
+		var compoundSsa = generate(compound, context).unwrap();
 
 		var baseType = Types.removePointer(compound.type());
 		var baseTypeString = TypeCodeGenerator.generate(baseType, context.platform());
 
 		var indexTypeString = TypeCodeGenerator.generate(index.type(), context.platform());
-		var indexSsa = generate(index, context, fcontext).unwrap();
+		var indexSsa = generate(index, context).unwrap();
 
-		var resultSsa = fcontext.allocateSsa();
+		var resultSsa = context.allocateSsa();
 		context.writef("\t%s = getelementptr %s, %s* %s, i64 0, %s %s\n", resultSsa, baseTypeString, baseTypeString, compoundSsa, indexTypeString, indexSsa);
 		return resultSsa;
 	}
@@ -157,15 +155,15 @@ public class ExprCodeGenerator implements IVisitor
 			return Maybe.none();
 
 		var typeString = TypeCodeGenerator.generate(assign.right.type(), context.platform());
-		var right = generate(assign.right, context, fcontext).unwrap();
-		var left = generate(assign.left, context, fcontext).unwrap();
+		var right = generate(assign.right, context).unwrap();
+		var left = generate(assign.left, context).unwrap();
 		generateStore(left, right, typeString);
 		return Maybe.some(left);
 	}
 
 	private Maybe<String> visit(SemaExprBuiltinCall builtinCall)
 	{
-		return builtinCall.func.generateCall(builtinCall, context, fcontext);
+		return builtinCall.func.generateCall(builtinCall, context);
 	}
 
 	private String instrForCast(SemaType targetType, SemaExprCast.Kind kind)
@@ -207,7 +205,7 @@ public class ExprCodeGenerator implements IVisitor
 
 	private String generateCast(String valueSsa, SemaType sourceType, SemaType targetType, SemaExprCast.Kind kind)
 	{
-		var resultSsa = fcontext.allocateSsa();
+		var resultSsa = context.allocateSsa();
 		var sourceTypeString = TypeCodeGenerator.generate(sourceType, context.platform());
 		var targetTypeString = TypeCodeGenerator.generate(targetType, context.platform());
 
@@ -218,7 +216,7 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprCast cast)
 	{
-		var valueSsa = generate(cast.expr, context, fcontext).unwrap();
+		var valueSsa = generate(cast.expr, context).unwrap();
 		String resultSsa;
 
 		var sourceType = cast.expr.type();
@@ -268,7 +266,7 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprConst const_)
 	{
-		return generate(const_.expr, context, fcontext);
+		return generate(const_.expr, context);
 	}
 
 	private Maybe<String> visit(SemaExprDeref deref)
@@ -276,7 +274,7 @@ public class ExprCodeGenerator implements IVisitor
 		if(Types.isZeroSized(deref.type()))
 			return Maybe.none();
 
-		return generate(deref.expr, context, fcontext);
+		return generate(deref.expr, context);
 	}
 
 	private Maybe<String> generateFunctionCall(String functionSsa, List<SemaExpr> args, SemaType ret, Maybe<Boolean> inline)
@@ -284,7 +282,7 @@ public class ExprCodeGenerator implements IVisitor
 		var argsSsa = new ArrayList<String>();
 
 		for(var arg : args)
-			argsSsa.add(generate(arg, context, fcontext).unwrap());
+			argsSsa.add(generate(arg, context).unwrap());
 
 		context.write('\t');
 
@@ -292,7 +290,7 @@ public class ExprCodeGenerator implements IVisitor
 
 		if(!Types.isZeroSized(ret))
 		{
-			retSsa = Maybe.some(fcontext.allocateSsa());
+			retSsa = Maybe.some(context.allocateSsa());
 			context.writef("%s = ", retSsa.unwrap());
 		}
 
@@ -355,7 +353,7 @@ public class ExprCodeGenerator implements IVisitor
 
 	private String generateInsertValue(String compoundTypeString, String compoundSsa, String elementTypeString, String elementSsa, int index)
 	{
-		var ssa = fcontext.allocateSsa();
+		var ssa = context.allocateSsa();
 		context.writef("\t%s = insertvalue %s %s, %s %s, %s\n", ssa, compoundTypeString, compoundSsa, elementTypeString, elementSsa, index);
 		return ssa;
 	}
@@ -373,14 +371,14 @@ public class ExprCodeGenerator implements IVisitor
 		if(Types.isZeroSized(conversion.type()))
 			return Maybe.none();
 
-		var lvalueSsa = generate(conversion.expr, context, fcontext).unwrap();
+		var lvalueSsa = generate(conversion.expr, context).unwrap();
 		var lvalueTypeString = TypeCodeGenerator.generate(conversion.type(), context.platform());
 		return Maybe.some(generateLoad(lvalueSsa, lvalueTypeString));
 	}
 
 	private Maybe<String> visit(SemaExprImplicitConversionNonNullablePointerToNullablePointer conversion)
 	{
-		return generate(conversion.expr, context, fcontext);
+		return generate(conversion.expr, context);
 	}
 
 	private Maybe<String> visit(SemaExprImplicitConversionNullToNullablePointer conversion)
@@ -390,26 +388,26 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprImplicitConversionPointerToNonConstToPointerToConst conversion)
 	{
-		return generate(conversion.expr, context, fcontext);
+		return generate(conversion.expr, context);
 	}
 
 	private Maybe<String> visit(SemaExprImplicitConversionPointerToBytePointer conversion)
 	{
 		var exprTypeString = TypeCodeGenerator.generate(conversion.expr.type(), context.platform());
-		var exprSsa = generate(conversion.expr, context, fcontext).unwrap();
-		var resultSsa = fcontext.allocateSsa();
+		var exprSsa = generate(conversion.expr, context).unwrap();
+		var resultSsa = context.allocateSsa();
 		context.writef("\t%s = bitcast %s %s to i8*\n", resultSsa, exprTypeString, exprSsa);
 		return Maybe.some(resultSsa);
 	}
 
 	private Maybe<String> visit(SemaExprImplicitConversionSliceToSliceOfConst conversion)
 	{
-		return generate(conversion.expr, context, fcontext);
+		return generate(conversion.expr, context);
 	}
 
 	private Maybe<String> visit(SemaExprImplicitConversionWiden conversion)
 	{
-		var valueSsa = generate(conversion.expr, context, fcontext).unwrap();
+		var valueSsa = generate(conversion.expr, context).unwrap();
 		return Maybe.some(generateCast(valueSsa, conversion.expr.type(), conversion.type(), SemaExprCast.Kind.WIDEN_CAST));
 	}
 
@@ -420,7 +418,7 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprIndirectFunctionCall functionCall)
 	{
-		var functionSsa = generate(functionCall.expr, context, fcontext).unwrap();
+		var functionSsa = generate(functionCall.expr, context).unwrap();
 		return generateFunctionCall(functionSsa, functionCall.args, functionCall.type(), Maybe.none());
 	}
 
@@ -445,26 +443,22 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<String> visit(SemaExprLitArray lit)
 	{
-		// array literals should not generate any temporary variables as they are required to be literals
-		// hence we do not pass a builder to this context (null)
-		var tmpContext = new FileCodegenContext(context.build(), context.platform(), null, context.stringPool());
 		var builder = new StringBuilder();
-
 		builder.append('[');
 
 		if(!lit.values.isEmpty())
 		{
-			builder.append(TypeCodeGenerator.generate(lit.values.get(0).type(), tmpContext.platform()));
+			builder.append(TypeCodeGenerator.generate(lit.values.get(0).type(), context.platform()));
 			builder.append(' ');
-			builder.append(generate(lit.values.get(0), tmpContext, null).unwrap());
+			builder.append(generate(lit.values.get(0), context).unwrap());
 
 			for(var i = 1; i != lit.values.size(); ++i)
 			{
 				SemaExpr expr = lit.values.get(i);
 				builder.append(", ");
-				builder.append(TypeCodeGenerator.generate(expr.type(), tmpContext.platform()));
+				builder.append(TypeCodeGenerator.generate(expr.type(), context.platform()));
 				builder.append(' ');
-				builder.append(generate(expr, tmpContext, null).unwrap());
+				builder.append(generate(expr, context).unwrap());
 			}
 		}
 
@@ -553,10 +547,10 @@ public class ExprCodeGenerator implements IVisitor
 
 	private String generateExtractValue(SemaExpr compound, int index)
 	{
-		var compoundSsa = generate(compound, context, fcontext).unwrap();
+		var compoundSsa = generate(compound, context).unwrap();
 		var compoundTypeString = TypeCodeGenerator.generate(compound.type(), context.platform());
 
-		var fieldSsa = fcontext.allocateSsa();
+		var fieldSsa = context.allocateSsa();
 		context.writef("\t%s = extractvalue %s %s, %s\n", fieldSsa, compoundTypeString, compoundSsa, index);
 		return fieldSsa;
 	}

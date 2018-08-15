@@ -24,15 +24,13 @@ import java.util.ArrayList;
 @SuppressWarnings("unused")
 public class StmtCodeGenerator implements IVisitor
 {
-	private FileCodegenContext context;
-	private FunctionCodegenContext fcontext;
+	private FunctionCodegenContext context;
 
 	private boolean preceededByTerminator = false;
 
-	public StmtCodeGenerator(FileCodegenContext context, FunctionCodegenContext fcontext)
+	public StmtCodeGenerator(FunctionCodegenContext context)
 	{
 		this.context = context;
-		this.fcontext = fcontext;
 	}
 
 	public void generate(SemaStmt stmt)
@@ -62,7 +60,7 @@ public class StmtCodeGenerator implements IVisitor
 	private void visit(SemaStmtExprStmt stmt)
 	{
 		preceededByTerminator = false;
-		ExprCodeGenerator.generate(stmt.expr, context, fcontext);
+		ExprCodeGenerator.generate(stmt.expr, context);
 	}
 
 	private void generateGoto(String label)
@@ -83,10 +81,10 @@ public class StmtCodeGenerator implements IVisitor
 
 	private void visit(SemaStmtIf if_)
 	{
-		var condSsa = ExprCodeGenerator.generate(if_.condition, context, fcontext).unwrap();
+		var condSsa = ExprCodeGenerator.generate(if_.condition, context).unwrap();
 
-		var thenLabel = fcontext.allocateLabel("if.then");
-		var afterLabel = fcontext.allocateLabel("if.after");
+		var thenLabel = context.allocateLabel("if.then");
+		var afterLabel = context.allocateLabel("if.after");
 
 		var firstLabel = if_.negated ? afterLabel : thenLabel;
 		var secondLabel = if_.negated ? thenLabel : afterLabel;
@@ -103,7 +101,7 @@ public class StmtCodeGenerator implements IVisitor
 
 	private void visit(SemaStmtIfElse ifelse)
 	{
-		var after = fcontext.allocateLabel("ifelse.after");
+		var after = context.allocateLabel("ifelse.after");
 
 		var then = new ArrayList<SemaStmt>();
 		then.add(ifelse.then);
@@ -116,7 +114,7 @@ public class StmtCodeGenerator implements IVisitor
 
 	private void visit(SemaStmtLoop loop)
 	{
-		var label = fcontext.allocateLabel("loop");
+		var label = context.allocateLabel("loop");
 
 		visit(label);
 		generate(loop.body);
@@ -125,7 +123,7 @@ public class StmtCodeGenerator implements IVisitor
 
 	private void visit(SemaStmtWhile while_)
 	{
-		var afterLabel = fcontext.allocateLabel("while.after");
+		var afterLabel = context.allocateLabel("while.after");
 
 		var body = new ArrayList<SemaStmt>();
 		body.add(new SemaStmtIf(!while_.negated, while_.condition, new GeneratedGoto(afterLabel)));
@@ -158,7 +156,7 @@ public class StmtCodeGenerator implements IVisitor
 	{
 		preceededByTerminator = true;
 
-		var returnSsa = ExprCodeGenerator.generate(ret.ret, context, fcontext);
+		var returnSsa = ExprCodeGenerator.generate(ret.ret, context);
 
 		if(returnSsa.isNone())
 		{

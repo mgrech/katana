@@ -109,14 +109,14 @@ public class BinaryOp extends BuiltinFunc
 	}
 
 	@Override
-	public Maybe<String> generateCall(SemaExprBuiltinCall call, FileCodegenContext context, FunctionCodegenContext fcontext)
+	public Maybe<String> generateCall(SemaExprBuiltinCall call, FunctionCodegenContext context)
 	{
 		var type = (SemaTypeBuiltin)call.args.get(0).type();
 		var typeString = TypeCodeGenerator.generate(type, context.platform());
-		var leftSsa = ExprCodeGenerator.generate(call.args.get(0), context, fcontext).unwrap();
-		var rightSsa = ExprCodeGenerator.generate(call.args.get(1), context, fcontext).unwrap();
+		var leftSsa = ExprCodeGenerator.generate(call.args.get(0), context).unwrap();
+		var rightSsa = ExprCodeGenerator.generate(call.args.get(1), context).unwrap();
 		var instr = instrForType(type);
-		var resultSsa = fcontext.allocateSsa();
+		var resultSsa = context.allocateSsa();
 		context.writef("\t%s = %s %s %s, %s\n", resultSsa, instr, typeString, leftSsa, rightSsa);
 		return Maybe.some(resultSsa);
 	}

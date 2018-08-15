@@ -32,5 +32,5 @@ public abstract class BuiltinFunc
 	}
 
 	public abstract SemaType validateCall(List<SemaType> args);
-	public abstract Maybe<String> generateCall(SemaExprBuiltinCall call, FileCodegenContext context, FunctionCodegenContext fcontext);
+	public abstract Maybe<String> generateCall(SemaExprBuiltinCall call, FunctionCodegenContext context);
 }
