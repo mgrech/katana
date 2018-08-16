@@ -20,12 +20,10 @@ import io.katana.compiler.backend.llvm.ir.*;
 import io.katana.compiler.sema.decl.SemaDeclExternFunction;
 import io.katana.compiler.sema.expr.*;
 import io.katana.compiler.sema.type.SemaType;
-import io.katana.compiler.sema.type.SemaTypeBuiltin;
 import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,123 +43,129 @@ public class ExprCodeGenerator implements IVisitor
 	public static Maybe<IrValue> generate(SemaExpr expr, FunctionCodegenContext context)
 	{
 		var visitor = new ExprCodeGenerator(context);
-		return (Maybe<IrValue>)expr.accept(visitor);
+		return Maybe.wrap((IrValue)expr.accept(visitor));
 	}
 
-	private IrValueSsa generateLoad(IrValue where, String type)
+	private IrValue lower(SemaExpr expr)
 	{
-		var ssa = context.allocateSsa();
-		context.writef("\t%s = load %s, %s* %s\n", ssa, type, type, where);
-		return ssa;
+		return (IrValue)expr.accept(this);
 	}
 
-	private void generateStore(IrValue where, IrValue what, String type)
+	private IrType lower(SemaType type)
 	{
-		context.writef("\tstore %s %s, %s* %s\n", type, what, type, where);
+		return TypeCodeGenerator.generate(type, context.platform());
 	}
 
-	private Maybe<IrValue> visit(RValueToLValueConversion conversion)
+	private IrValueSsa generateLoad(IrValue pointer, IrType type)
 	{
-		var exprSsa = generate(conversion.expr, context).unwrap();
-		var exprType = TypeCodeGenerator.generate(conversion.expr.type(), context.platform());
-		var resultSsa = context.allocateSsa();
-		generateStore(resultSsa, exprSsa, exprType);
-		return Maybe.some(resultSsa);
+		var result = context.allocateSsa();
+		context.writef("\t%s = load %s, %s* %s\n", result, type, type, pointer);
+		return result;
 	}
 
-	private Maybe<IrValue> visit(SemaExprAddressof addressof)
+	private void generateStore(IrValue pointer, IrValue value, IrType type)
+	{
+		context.writef("\tstore %s %s, %s* %s\n", type, value, type, pointer);
+	}
+
+	private IrValue visit(RValueToLValueConversion conversion)
+	{
+		var value = lower(conversion.expr);
+		var type = lower(conversion.expr.type());
+		var pointer = context.allocateSsa();
+		generateStore(pointer, value, type);
+		return pointer;
+	}
+
+	private IrValue visit(SemaExprAddressof addressof)
 	{
 		if(Types.isZeroSized(addressof.expr.type()))
-			return Maybe.some(IrValues.ADDRESS_ONE);
+			return IrValues.ADDRESS_ONE;
 
-		return generate(addressof.expr, context);
+		return lower(addressof.expr);
 	}
 
-	private Maybe<IrValue> visit(SemaExprAlignof alignof)
+	private IrValue visit(SemaExprAlignof alignof)
 	{
-		return Maybe.some(IrValues.ofConstant(Types.alignof(alignof.type, context.platform())));
+		return IrValues.ofConstant(Types.alignof(alignof.type, context.platform()));
 	}
 
-	private IrValueSsa generateGetElementPtr(SemaExpr compound, SemaExpr index)
+	private IrValueSsa generateGetElementPtr(SemaExpr compoundExpr, SemaExpr indexExpr)
 	{
-		var compoundSsa = generate(compound, context).unwrap();
+		var compound = lower(compoundExpr);
+		var baseType = lower(Types.removePointer(compoundExpr.type()));
+		var indexType = lower(indexExpr.type());
+		var index = lower(indexExpr);
 
-		var baseType = Types.removePointer(compound.type());
-		var baseTypeString = TypeCodeGenerator.generate(baseType, context.platform());
-
-		var indexTypeString = TypeCodeGenerator.generate(index.type(), context.platform());
-		var indexSsa = generate(index, context).unwrap();
-
-		var resultSsa = context.allocateSsa();
-		context.writef("\t%s = getelementptr %s, %s* %s, i64 0, %s %s\n", resultSsa, baseTypeString, baseTypeString, compoundSsa, indexTypeString, indexSsa);
-		return resultSsa;
+		var result = context.allocateSsa();
+		context.writef("\t%s = getelementptr %s, %s* %s, i64 0, %s %s\n", result, baseType, baseType, compound, indexType, index);
+		return result;
 	}
 
-	private Maybe<IrValue> visit(SemaExprArrayAccess arrayAccess)
+	private IrValue visit(SemaExprArrayAccess arrayAccess)
 	{
 		if(Types.isZeroSized(arrayAccess.type()))
-			return Maybe.none();
+			return null;
 
 		var isRValue = arrayAccess.expr.kind() == ExprKind.RVALUE;
 
 		if(isRValue)
 			arrayAccess.expr = new RValueToLValueConversion(arrayAccess.expr);
 
-		var resultSsa = generateGetElementPtr(arrayAccess.expr, arrayAccess.index);
+		var result = generateGetElementPtr(arrayAccess.expr, arrayAccess.index);
 
 		if(isRValue)
 		{
-			var resultTypeString = TypeCodeGenerator.generate(arrayAccess.type(), context.platform());
-			return Maybe.some(generateLoad(resultSsa, resultTypeString));
+			var resultType = lower(arrayAccess.type());
+			return generateLoad(result, resultType);
 		}
 
-		return Maybe.some(resultSsa);
+		return result;
 	}
 
-	private Maybe<IrValue> visit(SemaExprArrayGetLength arrayGetLength)
+	private IrValue visit(SemaExprArrayGetLength arrayGetLength)
 	{
-		return Maybe.some(IrValues.ofConstant(Types.arrayLength(arrayGetLength.expr.type())));
+		return IrValues.ofConstant(Types.arrayLength(arrayGetLength.expr.type()));
 	}
 
-	private Maybe<IrValue> visit(SemaExprArrayGetPointer arrayGetPointer)
+	private IrValue visit(SemaExprArrayGetPointer arrayGetPointer)
 	{
-		return Maybe.some(generateGetElementPtr(arrayGetPointer.expr, INDEX_ZERO_EXPR));
+		return generateGetElementPtr(arrayGetPointer.expr, INDEX_ZERO_EXPR);
 	}
 
-	private IrValueSsa generateSliceConstruction(SemaType elementType, IrValue pointerSsa, long length)
+	private IrValueSsa generateSliceConstruction(SemaType elementType, IrValue pointer, long length)
 	{
-		var pointerType = Types.addNullablePointer(elementType);
-		var pointerTypeString = TypeCodeGenerator.generate(pointerType, context.platform());
-		var lengthTypeString = TypeCodeGenerator.generate(SemaTypeBuiltin.INT, context.platform());
-		var structTypeString = String.format("{%s, %s}", pointerTypeString, lengthTypeString);
+		var sliceType = (IrTypeStructLiteral)lower(Types.addSlice(elementType));
+		var pointerType = sliceType.fields.get(0);
+		var lengthType = sliceType.fields.get(1);
 
-		var intermediateSsa = generateInsertValue(structTypeString, IrValues.UNDEF, pointerTypeString, pointerSsa, 0);
-		return generateInsertValue(structTypeString, intermediateSsa, lengthTypeString, IrValues.ofConstant(length), 1);
+		var intermediate = generateInsertValue(sliceType, IrValues.UNDEF, pointerType, pointer, 0);
+		return generateInsertValue(sliceType, intermediate, lengthType, IrValues.ofConstant(length), 1);
 	}
 
-	private Maybe<IrValue> visit(SemaExprArrayGetSlice arrayGetSlice)
+	private IrValue visit(SemaExprArrayGetSlice arrayGetSlice)
 	{
 		var elementType = Types.removeSlice(arrayGetSlice.type());
-		var pointerSsa = generateGetElementPtr(arrayGetSlice.expr, INDEX_ZERO_EXPR);
+		var pointer = generateGetElementPtr(arrayGetSlice.expr, INDEX_ZERO_EXPR);
 		var length = Types.arrayLength(Types.removePointer(arrayGetSlice.expr.type()));
-		return Maybe.some(generateSliceConstruction(elementType, pointerSsa, length));
+		return generateSliceConstruction(elementType, pointer, length);
 	}
 
-	private Maybe<IrValue> visit(SemaExprAssign assign)
+	private IrValue visit(SemaExprAssign assign)
 	{
 		if(Types.isZeroSized(assign.type()))
-			return Maybe.none();
+			return null;
 
-		var typeString = TypeCodeGenerator.generate(assign.right.type(), context.platform());
-		var right = generate(assign.right, context).unwrap();
-		var left = generate(assign.left, context).unwrap();
-		generateStore(left, right, typeString);
-		return Maybe.some(left);
+		var type = lower(assign.right.type());
+		var right = lower(assign.right);
+		var left = lower(assign.left);
+		generateStore(left, right, type);
+		return left;
 	}
 
-	private Maybe<IrValue> visit(SemaExprBuiltinCall builtinCall)
+	private IrValue visit(SemaExprBuiltinCall builtinCall)
 	{
-		return builtinCall.func.generateCall(builtinCall, context).map(v -> v);
+		return builtinCall.func.generateCall(builtinCall, context);
 	}
 
 	private String instrForCast(SemaType targetType, SemaExprCast.Kind kind)
@@ -201,20 +205,20 @@ public class ExprCodeGenerator implements IVisitor
 		throw new AssertionError("unreachable");
 	}
 
-	private IrValueSsa generateCast(IrValue valueSsa, SemaType sourceType, SemaType targetType, SemaExprCast.Kind kind)
+	private IrValueSsa generateCast(IrValue value, SemaType sourceType, SemaType targetType, SemaExprCast.Kind kind)
 	{
-		var resultSsa = context.allocateSsa();
-		var sourceTypeString = TypeCodeGenerator.generate(sourceType, context.platform());
-		var targetTypeString = TypeCodeGenerator.generate(targetType, context.platform());
+		var result = context.allocateSsa();
+		var sourceTypeIr = lower(sourceType);
+		var targetTypeIr = lower(targetType);
 
 		var instr = instrForCast(targetType, kind);
-		context.writef("\t%s = %s %s %s to %s\n", resultSsa, instr, sourceTypeString, valueSsa, targetTypeString);
-		return resultSsa;
+		context.writef("\t%s = %s %s %s to %s\n", result, instr, sourceTypeIr, value, targetTypeIr);
+		return result;
 	}
 
-	private Maybe<IrValue> visit(SemaExprCast cast)
+	private IrValue visit(SemaExprCast cast)
 	{
-		var value = generate(cast.expr, context).unwrap();
+		var value = lower(cast.expr);
 
 		var sourceType = cast.expr.type();
 		var targetType = cast.type;
@@ -222,25 +226,25 @@ public class ExprCodeGenerator implements IVisitor
 		switch(cast.kind)
 		{
 		case SIGN_CAST:
-			return Maybe.some(value);
+			return value;
 
 		case WIDEN_CAST:
 			if(Types.equalSizes(sourceType, targetType, context.platform()))
-				return Maybe.some(value);
+				return value;
 
-			return Maybe.some(generateCast(value, sourceType, targetType, SemaExprCast.Kind.WIDEN_CAST));
+			return generateCast(value, sourceType, targetType, SemaExprCast.Kind.WIDEN_CAST);
 
 		case NARROW_CAST:
 			if(Types.equalSizes(sourceType, targetType, context.platform()))
-				return Maybe.some(value);
+				return value;
 
-			return Maybe.some(generateCast(value, sourceType, targetType, SemaExprCast.Kind.NARROW_CAST));
+			return generateCast(value, sourceType, targetType, SemaExprCast.Kind.NARROW_CAST);
 
 		case POINTER_CAST:
 			if(Types.equal(Types.removeConst(sourceType), Types.removeConst(targetType)))
-				return Maybe.some(value);
+				return value;
 
-			return Maybe.some(generateCast(value, sourceType, targetType, SemaExprCast.Kind.POINTER_CAST));
+			return generateCast(value, sourceType, targetType, SemaExprCast.Kind.POINTER_CAST);
 
 		default: break;
 		}
@@ -248,55 +252,53 @@ public class ExprCodeGenerator implements IVisitor
 		throw new AssertionError("unreachable");
 	}
 
-	private Maybe<IrValue> visit(SemaExprConst const_)
+	private IrValue visit(SemaExprConst const_)
 	{
-		return generate(const_.expr, context);
+		return lower(const_.expr);
 	}
 
-	private Maybe<IrValue> visit(SemaExprDeref deref)
+	private IrValue visit(SemaExprDeref deref)
 	{
 		if(Types.isZeroSized(deref.type()))
-			return Maybe.none();
+			return null;
 
-		return generate(deref.expr, context);
+		return lower(deref.expr);
 	}
 
-	private Maybe<IrValue> generateFunctionCall(IrValue functionSsa, List<SemaExpr> args, SemaType ret, Maybe<Boolean> inline)
+	private IrValue generateFunctionCall(IrValue function, List<SemaExpr> args, SemaType returnType, Maybe<Boolean> inline)
 	{
-		var argsSsa = new ArrayList<IrValue>();
-
-		for(var arg : args)
-			argsSsa.add(generate(arg, context).unwrap());
+		var argsIr = args.stream()
+		                 .map(this::lower)
+		                 .collect(Collectors.toList());
 
 		context.write('\t');
 
-		Maybe<IrValue> retSsa = Maybe.none();
+		Maybe<IrValue> returnValue = Maybe.none();
 
-		if(!Types.isZeroSized(ret))
+		if(!Types.isZeroSized(returnType))
 		{
-			retSsa = Maybe.some(context.allocateSsa());
-			context.writef("%s = ", retSsa.unwrap());
+			returnValue = Maybe.some(context.allocateSsa());
+			context.writef("%s = ", returnValue.unwrap());
 		}
 
-		var retTypeString = TypeCodeGenerator.generate(ret, context.platform());
-
-		context.writef("call %s %s(", retTypeString, functionSsa);
+		var returnTypeIr = lower(returnType);
+		context.writef("call %s %s(", returnTypeIr, function);
 
 		if(!args.isEmpty())
 		{
 			if(!Types.isZeroSized(args.get(0).type()))
 			{
-				context.write(TypeCodeGenerator.generate(args.get(0).type(), context.platform()));
+				context.write(lower(args.get(0).type()));
 				context.write(' ');
-				context.write(argsSsa.get(0));
+				context.write(argsIr.get(0));
 			}
 
-			for(var i = 1; i != argsSsa.size(); ++i)
+			for(var i = 1; i != argsIr.size(); ++i)
 			{
 				if(!Types.isZeroSized(args.get(i).type()))
 				{
-					var argTypeString = TypeCodeGenerator.generate(args.get(i).type(), context.platform());
-					context.writef(", %s %s", argTypeString, argsSsa.get(i));
+					var argType = lower(args.get(i).type());
+					context.writef(", %s %s", argType, argsIr.get(i));
 				}
 			}
 		}
@@ -311,220 +313,222 @@ public class ExprCodeGenerator implements IVisitor
 
 		context.write('\n');
 
-		return retSsa;
+		return returnValue.unwrap();
 	}
 
-	private Maybe<IrValue> visit(SemaExprDirectFunctionCall functionCall)
+	private IrValue visit(SemaExprDirectFunctionCall call)
 	{
 		String name;
 
-		if(functionCall.function instanceof SemaDeclExternFunction)
+		if(call.function instanceof SemaDeclExternFunction)
 		{
-			SemaDeclExternFunction extfn = (SemaDeclExternFunction)functionCall.function;
-			name = extfn.externName.or(extfn.name());
+			var function = (SemaDeclExternFunction)call.function;
+			name = function.externName.or(function.name());
 		}
 		else
-			name = FunctionNameMangler.mangle(functionCall.function);
+			name = FunctionNameMangler.mangle(call.function);
 
-		var functionSsa = new IrValueSymbol(name);
-		return generateFunctionCall(functionSsa, functionCall.args, functionCall.function.ret, functionCall.inline);
+		var function = IrValues.ofSymbol(name);
+		return generateFunctionCall(function, call.args, call.function.ret, call.inline);
 	}
 
-	private Maybe<IrValue> visit(SemaExprImplicitConversionArrayPointerToPointer conversion)
+	private IrValue visit(SemaExprImplicitConversionArrayPointerToPointer conversion)
 	{
-		return Maybe.some(generateGetElementPtr(conversion.expr, INDEX_ZERO_EXPR));
+		return generateGetElementPtr(conversion.expr, INDEX_ZERO_EXPR);
 	}
 
-	private IrValueSsa generateInsertValue(String compoundTypeString, IrValue compoundSsa, String elementTypeString, IrValue elementSsa, int index)
+	private IrValueSsa generateInsertValue(IrType compoundType, IrValue compound, IrType elementType, IrValue element, int index)
 	{
-		var ssa = context.allocateSsa();
-		context.writef("\t%s = insertvalue %s %s, %s %s, %s\n", ssa, compoundTypeString, compoundSsa, elementTypeString, elementSsa, index);
-		return ssa;
+		var result = context.allocateSsa();
+		context.writef("\t%s = insertvalue %s %s, %s %s, %s\n", result, compoundType, compound, elementType, element, index);
+		return result;
 	}
 
-	private Maybe<IrValue> visit(SemaExprImplicitConversionArrayPointerToSlice conversion)
+	private IrValue visit(SemaExprImplicitConversionArrayPointerToSlice conversion)
 	{
-		var pointerSsa = generateGetElementPtr(conversion.expr, INDEX_ZERO_EXPR);
-		var elementType = Types.removeSlice(conversion.type());
+		var pointer = generateGetElementPtr(conversion.expr, INDEX_ZERO_EXPR);
 		var length = Types.arrayLength(Types.removePointer(conversion.expr.type()));
-		return Maybe.some(generateSliceConstruction(elementType, pointerSsa, length));
+		var elementType = Types.removeSlice(conversion.type());
+		return generateSliceConstruction(elementType, pointer, length);
 	}
 
-	private Maybe<IrValue> visit(SemaExprImplicitConversionLValueToRValue conversion)
+	private IrValue visit(SemaExprImplicitConversionLValueToRValue conversion)
 	{
 		if(Types.isZeroSized(conversion.type()))
-			return Maybe.none();
+			return null;
 
-		var lvalueSsa = generate(conversion.expr, context).unwrap();
-		var lvalueTypeString = TypeCodeGenerator.generate(conversion.type(), context.platform());
-		return Maybe.some(generateLoad(lvalueSsa, lvalueTypeString));
+		var value = lower(conversion.expr);
+		var type = lower(conversion.type());
+		return generateLoad(value, type);
 	}
 
-	private Maybe<IrValue> visit(SemaExprImplicitConversionNonNullablePointerToNullablePointer conversion)
+	private IrValue visit(SemaExprImplicitConversionNonNullablePointerToNullablePointer conversion)
 	{
-		return generate(conversion.expr, context);
+		return lower(conversion.expr);
 	}
 
-	private Maybe<IrValue> visit(SemaExprImplicitConversionNullToNullablePointer conversion)
+	private IrValue visit(SemaExprImplicitConversionNullToNullablePointer conversion)
 	{
-		return Maybe.some(IrValues.NULL);
+		return IrValues.NULL;
 	}
 
-	private Maybe<IrValue> visit(SemaExprImplicitConversionPointerToNonConstToPointerToConst conversion)
+	private IrValue visit(SemaExprImplicitConversionPointerToNonConstToPointerToConst conversion)
 	{
-		return generate(conversion.expr, context);
+		return lower(conversion.expr);
 	}
 
-	private Maybe<IrValue> visit(SemaExprImplicitConversionPointerToBytePointer conversion)
+	private IrValue visit(SemaExprImplicitConversionPointerToBytePointer conversion)
 	{
-		var exprTypeString = TypeCodeGenerator.generate(conversion.expr.type(), context.platform());
-		var exprSsa = generate(conversion.expr, context).unwrap();
-		var resultSsa = context.allocateSsa();
-		context.writef("\t%s = bitcast %s %s to i8*\n", resultSsa, exprTypeString, exprSsa);
-		return Maybe.some(resultSsa);
+		var pointerType = lower(conversion.expr.type());
+		var pointer = lower(conversion.expr);
+		var result = context.allocateSsa();
+		context.writef("\t%s = bitcast %s %s to i8*\n", result, pointerType, pointer);
+		return result;
 	}
 
-	private Maybe<IrValue> visit(SemaExprImplicitConversionSliceToSliceOfConst conversion)
+	private IrValue visit(SemaExprImplicitConversionSliceToSliceOfConst conversion)
 	{
-		return generate(conversion.expr, context);
+		return lower(conversion.expr);
 	}
 
-	private Maybe<IrValue> visit(SemaExprImplicitConversionWiden conversion)
+	private IrValue visit(SemaExprImplicitConversionWiden conversion)
 	{
-		var valueSsa = generate(conversion.expr, context).unwrap();
-		return Maybe.some(generateCast(valueSsa, conversion.expr.type(), conversion.type(), SemaExprCast.Kind.WIDEN_CAST));
+		var value = lower(conversion.expr);
+		var sourceType = conversion.expr.type();
+		var targetType = conversion.type();
+		return generateCast(value, sourceType, targetType, SemaExprCast.Kind.WIDEN_CAST);
 	}
 
-	private Maybe<IrValue> visit(SemaExprImplicitVoidInReturn implicitVoid)
+	private IrValue visit(SemaExprImplicitVoidInReturn implicitVoid)
 	{
-		return Maybe.none();
+		return null;
 	}
 
-	private Maybe<IrValue> visit(SemaExprIndirectFunctionCall functionCall)
+	private IrValue visit(SemaExprIndirectFunctionCall functionCall)
 	{
-		var functionSsa = generate(functionCall.expr, context).unwrap();
-		return generateFunctionCall(functionSsa, functionCall.args, functionCall.type(), Maybe.none());
+		var function = lower(functionCall.expr);
+		return generateFunctionCall(function, functionCall.args, functionCall.type(), Maybe.none());
 	}
 
-	private Maybe<IrValue> visit(SemaExprFieldAccess fieldAccess)
+	private IrValue visit(SemaExprFieldAccess fieldAccess)
 	{
 		var isRValue = fieldAccess.expr.kind() == ExprKind.RVALUE;
 
 		if(isRValue)
 			fieldAccess.expr = new RValueToLValueConversion(fieldAccess.expr);
 
-		var indexExpr = new SemaExprLitInt(BigInteger.valueOf(fieldAccess.field.index), BuiltinType.INT32);
-		var resultSsa = generateGetElementPtr(fieldAccess.expr, indexExpr);
+		var index = new SemaExprLitInt(BigInteger.valueOf(fieldAccess.field.index), BuiltinType.INT32);
+		var result = generateGetElementPtr(fieldAccess.expr, index);
 
 		if(isRValue)
 		{
-			var fieldTypeString = TypeCodeGenerator.generate(indexExpr.type(), context.platform());
-			return Maybe.some(generateLoad(resultSsa, fieldTypeString));
+			var fieldType = lower(index.type());
+			return generateLoad(result, fieldType);
 		}
 
-		return Maybe.some(resultSsa);
+		return result;
 	}
 
-	private Maybe<IrValue> visit(SemaExprLitArray lit)
+	private IrValue visit(SemaExprLitArray lit)
 	{
-		var elementTypeString = TypeCodeGenerator.generate(lit.type, context.platform());
-
+		var elementType = lower(lit.type);
 		var values = lit.values.stream()
-		                       .map(expr -> generate(expr, context).unwrap())
+		                       .map(this::lower)
 		                       .collect(Collectors.toList());
 
-		return Maybe.some(IrValues.ofConstantArray(elementTypeString, values));
+		return IrValues.ofConstantArray(elementType, values);
 	}
 
-	private Maybe<IrValue> visit(SemaExprLitBool lit)
+	private IrValue visit(SemaExprLitBool lit)
 	{
-		return Maybe.some(IrValues.ofConstant(lit.value));
+		return IrValues.ofConstant(lit.value);
 	}
 
-	private Maybe<IrValue> visit(SemaExprLitFloat lit)
+	private IrValue visit(SemaExprLitFloat lit)
 	{
-		var value = lit.type == BuiltinType.FLOAT32
-		            ? IrValues.ofConstant(lit.value.toFloat())
-		            : IrValues.ofConstant(lit.value.toDouble());
-
-		return Maybe.some(value);
+		return lit.type == BuiltinType.FLOAT32
+		       ? IrValues.ofConstant(lit.value.toFloat())
+		       : IrValues.ofConstant(lit.value.toDouble());
 	}
 
-	private Maybe<IrValue> visit(SemaExprLitInt lit)
+	private IrValue visit(SemaExprLitInt lit)
 	{
-		return Maybe.some(IrValues.ofConstant(lit.value.longValueExact()));
+		return IrValues.ofConstant(lit.value.longValueExact());
 	}
 
-	private Maybe<IrValue> visit(SemaExprLitNull lit)
+	private IrValue visit(SemaExprLitNull lit)
 	{
-		return Maybe.some(IrValues.NULL);
+		return IrValues.NULL;
 	}
 
-	private Maybe<IrValue> visit(SemaExprLitString lit)
+	private IrValue visit(SemaExprLitString lit)
 	{
-		return Maybe.some(context.stringPool().get(lit.value));
+		return context.stringPool().get(lit.value);
 	}
 
-	private Maybe<IrValue> visit(SemaExprNamedFunc namedFunc)
+	private IrValue visit(SemaExprNamedFunc namedFunc)
 	{
 		if(namedFunc.func instanceof SemaDeclExternFunction)
 		{
 			var name = ((SemaDeclExternFunction)namedFunc.func).externName.or(namedFunc.func.name());
-			return Maybe.some(IrValues.ofSymbol(name));
+			return IrValues.ofSymbol(name);
 		}
 
 		var name = FunctionNameMangler.mangle(namedFunc.func);
-		return Maybe.some(IrValues.ofSymbol(name));
+		return IrValues.ofSymbol(name);
 	}
 
-	private Maybe<IrValue> visit(SemaExprNamedGlobal namedGlobal)
+	private IrValue visit(SemaExprNamedGlobal namedGlobal)
 	{
-		return Maybe.some(IrValues.ofSymbol(namedGlobal.global.qualifiedName().toString()));
+		var name = namedGlobal.global.qualifiedName().toString();
+		return IrValues.ofSymbol(name);
 	}
 
-	private Maybe<IrValue> visit(SemaExprNamedLocal namedLocal)
+	private IrValue visit(SemaExprNamedLocal namedLocal)
 	{
-		return Maybe.some(IrValues.ofSsa(namedLocal.local.name));
+		return IrValues.ofSsa(namedLocal.local.name);
 	}
 
-	private Maybe<IrValue> visit(SemaExprNamedParam namedParam)
+	private IrValue visit(SemaExprNamedParam namedParam)
 	{
-		return Maybe.some(IrValues.ofSsa(namedParam.param.name));
+		return IrValues.ofSsa(namedParam.param.name);
 	}
 
-	private Maybe<IrValue> visit(SemaExprOffsetof offsetof)
+	private IrValue visit(SemaExprOffsetof offsetof)
 	{
-		return Maybe.some(IrValues.ofConstant(offsetof.field.offsetof()));
+		var offset = offsetof.field.offsetof();
+		return IrValues.ofConstant(offset);
 	}
 
-	private Maybe<IrValue> visit(SemaExprSizeof sizeof)
+	private IrValue visit(SemaExprSizeof sizeof)
 	{
-		return Maybe.some(IrValues.ofConstant(Types.sizeof(sizeof.type, context.platform())));
+		var size = Types.sizeof(sizeof.type, context.platform());
+		return IrValues.ofConstant(size);
 	}
 
 	private IrValueSsa generateExtractValue(SemaExpr compound, int index)
 	{
-		var compoundSsa = generate(compound, context).unwrap();
-		var compoundTypeString = TypeCodeGenerator.generate(compound.type(), context.platform());
+		var compoundIr = lower(compound);
+		var compoundType = lower(compound.type());
 
-		var fieldSsa = context.allocateSsa();
-		context.writef("\t%s = extractvalue %s %s, %s\n", fieldSsa, compoundTypeString, compoundSsa, index);
-		return fieldSsa;
+		var result = context.allocateSsa();
+		context.writef("\t%s = extractvalue %s %s, %s\n", result, compoundType, compoundIr, index);
+		return result;
 	}
 
-	private Maybe<IrValue> visit(SemaExprSliceGetLength sliceGetLength)
+	private IrValue visit(SemaExprSliceGetLength sliceGetLength)
 	{
 		if(sliceGetLength.expr.kind() == ExprKind.RVALUE)
-			return Maybe.some(generateExtractValue(sliceGetLength.expr, 1));
+			return generateExtractValue(sliceGetLength.expr, 1);
 
-		return Maybe.some(generateGetElementPtr(sliceGetLength.expr, INDEX_ONE_EXPR));
+		return generateGetElementPtr(sliceGetLength.expr, INDEX_ONE_EXPR);
 	}
 
-	private Maybe<IrValue> visit(SemaExprSliceGetPointer sliceGetPointer)
+	private IrValue visit(SemaExprSliceGetPointer sliceGetPointer)
 	{
 		if(sliceGetPointer.expr.kind() == ExprKind.RVALUE)
-			return Maybe.some(generateExtractValue(sliceGetPointer.expr, 0));
+			return generateExtractValue(sliceGetPointer.expr, 0);
 
-		return Maybe.some(generateGetElementPtr(sliceGetPointer.expr, INDEX_ZERO_EXPR));
+		return generateGetElementPtr(sliceGetPointer.expr, INDEX_ZERO_EXPR);
 	}
 }

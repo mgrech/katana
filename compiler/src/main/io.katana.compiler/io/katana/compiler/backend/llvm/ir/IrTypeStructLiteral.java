@@ -1,4 +1,4 @@
-// Copyright 2016-2018 Markus Grech
+// Copyright 2018 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,24 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler;
-
-import io.katana.compiler.backend.llvm.FunctionCodegenContext;
-import io.katana.compiler.backend.llvm.ir.IrValueSsa;
-import io.katana.compiler.sema.expr.SemaExprBuiltinCall;
-import io.katana.compiler.sema.type.SemaType;
+package io.katana.compiler.backend.llvm.ir;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-public abstract class BuiltinFunc
+public class IrTypeStructLiteral extends IrType
 {
-	public final String name;
+	public final List<IrType> fields;
 
-	protected BuiltinFunc(String name)
+	public IrTypeStructLiteral(List<IrType> fields)
 	{
-		this.name = name;
+		this.fields = fields;
 	}
 
-	public abstract SemaType validateCall(List<SemaType> args);
-	public abstract IrValueSsa generateCall(SemaExprBuiltinCall call, FunctionCodegenContext context);
+	@Override
+	public String toString()
+	{
+		var fieldsString = fields.stream()
+		                         .map(IrType::toString)
+		                         .collect(Collectors.joining(", "));
+
+		return '{' + fieldsString + '}';
+	}
 }

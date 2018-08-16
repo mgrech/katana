@@ -16,8 +16,12 @@ package io.katana.compiler.backend.llvm;
 
 import io.katana.compiler.analysis.Types;
 import io.katana.compiler.backend.PlatformContext;
+import io.katana.compiler.backend.llvm.ir.IrType;
+import io.katana.compiler.backend.llvm.ir.IrTypes;
 import io.katana.compiler.sema.type.*;
 import io.katana.compiler.visitor.IVisitor;
+
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 public class TypeCodeGenerator implements IVisitor
@@ -29,13 +33,18 @@ public class TypeCodeGenerator implements IVisitor
 		this.context = context;
 	}
 
-	public static String generate(SemaType type, PlatformContext context)
+	public static IrType generate(SemaType type, PlatformContext context)
 	{
 		var visitor = new TypeCodeGenerator(context);
-		return (String)type.accept(visitor);
+		return (IrType)type.accept(visitor);
 	}
 
-	private String visit(SemaTypeBuiltin type)
+	private IrType lower(SemaType type)
+	{
+		return (IrType)type.accept(this);
+	}
+
+	private IrType visit(SemaTypeBuiltin type)
 	{
 		switch(type.which)
 		{
@@ -49,15 +58,15 @@ public class TypeCodeGenerator implements IVisitor
 		case UINT32:
 		case UINT64:
 		case UINT:
-			return "i" + Types.sizeof(type, context) * 8;
+			return IrTypes.ofInteger(Types.sizeof(type, context) * 8);
 
 		case BYTE:
-			return "i8";
+			return IrTypes.I8;
 
-		case BOOL:    return "i1";
-		case FLOAT32: return "float";
-		case FLOAT64: return "double";
-		case VOID:    return "void";
+		case BOOL:    return IrTypes.I1;
+		case FLOAT32: return IrTypes.FLOAT;
+		case FLOAT64: return IrTypes.DOUBLE;
+		case VOID:    return IrTypes.VOID;
 
 		default: break;
 		}
@@ -65,82 +74,59 @@ public class TypeCodeGenerator implements IVisitor
 		throw new AssertionError("unreachable");
 	}
 
-	private String visit(SemaTypeFunction type)
+	private IrType visit(SemaTypeFunction type)
 	{
-		var ret = TypeCodeGenerator.generate(type.ret, context);
+		var returnType = lower(type.ret);
+		var parameterTypes = type.params.stream()
+		                                .map(this::lower)
+		                                .collect(Collectors.toList());
 
-		var params = new StringBuilder();
-
-		if(!type.params.isEmpty())
-		{
-			params.append(TypeCodeGenerator.generate(type.params.get(0), context));
-
-			for(var i = 1; i != type.params.size(); ++i)
-			{
-				params.append(", ");
-				params.append(TypeCodeGenerator.generate(type.params.get(i), context));
-			}
-		}
-
-		return String.format("%s(%s)", ret, params.toString());
+		return IrTypes.ofFunction(returnType, parameterTypes);
 	}
 
-	private String visit(SemaTypeStruct type)
+	private IrType visit(SemaTypeStruct type)
 	{
-		return '%' + type.decl.qualifiedName().toString();
+		return IrTypes.ofIdentifiedStruct(type.decl.qualifiedName().toString());
 	}
 
-	private String visit(SemaTypeSlice type)
+	private IrType visit(SemaTypeSlice type)
 	{
-		var baseTypeString = TypeCodeGenerator.generate(type.type, context);
-		var intString = TypeCodeGenerator.generate(SemaTypeBuiltin.INT, context);
-		return String.format("{%s*, %s}", baseTypeString, intString);
+		var elementType = lower(type.type);
+		var elementPointerType = IrTypes.ofPointer(elementType);
+		var lengthType = lower(SemaTypeBuiltin.INT);
+		return IrTypes.ofLiteralStruct(elementPointerType, lengthType);
 	}
 
-	private String visit(SemaTypeArray type)
+	private IrType visit(SemaTypeArray type)
 	{
-		return String.format("[%s x %s]", type.length, TypeCodeGenerator.generate(type.type, context));
+		return IrTypes.ofArray(type.length, lower(type.type));
 	}
 
-	private String visit(SemaTypeConst type)
+	private IrType visit(SemaTypeConst type)
 	{
-		return generate(type.type, context);
+		return lower(type.type);
 	}
 
-	private String visit(SemaTypeNullablePointer type)
+	private IrType visit(SemaTypeNullablePointer type)
 	{
 		if(Types.isZeroSized(type.type))
-			return "i8*";
+			return IrTypes.ofPointer(IrTypes.I8);
 
-		return String.format("%s*", generate(type.type, context));
+		return IrTypes.ofPointer(lower(type.type));
 	}
 
-	private String visit(SemaTypeNonNullablePointer type)
+	private IrType visit(SemaTypeNonNullablePointer type)
 	{
 		if(Types.isZeroSized(type.type))
-			return "i8*";
+			return IrTypes.ofPointer(IrTypes.I8);
 
-		return String.format("%s*", generate(type.type, context));
+		return IrTypes.ofPointer(lower(type.type));
 	}
 
-	private String visit(SemaTypeTuple tuple)
+	private IrType visit(SemaTypeTuple tuple)
 	{
-		var builder = new StringBuilder();
-		builder.append('{');
-
-		if(!tuple.types.isEmpty())
-		{
-			builder.append(generate(tuple.types.get(0), context));
-
-			for(var i = 1; i != tuple.types.size(); ++i)
-			{
-				builder.append(", ");
-				builder.append(generate(tuple.types.get(i), context));
-			}
-		}
-
-		builder.append('}');
-
-		return builder.toString();
+		return IrTypes.ofLiteralStruct(tuple.types.stream()
+		                                          .map(this::lower)
+		                                          .collect(Collectors.toList()));
 	}
 }

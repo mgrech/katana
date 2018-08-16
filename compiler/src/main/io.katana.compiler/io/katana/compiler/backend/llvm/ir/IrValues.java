@@ -42,7 +42,7 @@ public class IrValues
 		return new IrValueConstant(literal);
 	}
 
-	public static IrValueConstant ofConstantArray(String elementType, List<IrValue> elements)
+	public static IrValueConstant ofConstantArray(IrType elementType, List<IrValue> elements)
 	{
 		var builder = new StringBuilder();
 
