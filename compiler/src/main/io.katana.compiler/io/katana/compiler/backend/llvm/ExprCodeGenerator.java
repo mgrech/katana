@@ -68,12 +68,21 @@ public class ExprCodeGenerator implements IVisitor
 		context.writef("\tstore %s %s, %s* %s\n", type, value, type, pointer);
 	}
 
+	private IrValueSsa generateAlloca(IrType type, long alignment)
+	{
+		var result = context.allocateSsa();
+		context.writef("\t%s = alloca %s, align %s\n", result, type, alignment);
+		return result;
+	}
+
 	private IrValue visit(RValueToLValueConversion conversion)
 	{
 		var value = lower(conversion.expr);
-		var type = lower(conversion.expr.type());
-		var pointer = context.allocateSsa();
-		generateStore(pointer, value, type);
+		var type = conversion.expr.type();
+		var alignment = Types.alignof(type, context.platform());
+		var typeIr = lower(type);
+		var pointer = generateAlloca(typeIr, alignment);
+		generateStore(pointer, value, typeIr);
 		return pointer;
 	}
 
