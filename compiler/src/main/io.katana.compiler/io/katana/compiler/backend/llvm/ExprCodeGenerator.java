@@ -214,8 +214,7 @@ public class ExprCodeGenerator implements IVisitor
 
 	private Maybe<IrValue> visit(SemaExprCast cast)
 	{
-		var valueSsa = generate(cast.expr, context).unwrap();
-		IrValue resultSsa;
+		var value = generate(cast.expr, context).unwrap();
 
 		var sourceType = cast.expr.type();
 		var targetType = cast.type;
@@ -223,43 +222,30 @@ public class ExprCodeGenerator implements IVisitor
 		switch(cast.kind)
 		{
 		case SIGN_CAST:
-			resultSsa = valueSsa;
-			break;
+			return Maybe.some(value);
 
 		case WIDEN_CAST:
 			if(Types.equalSizes(sourceType, targetType, context.platform()))
-			{
-				resultSsa = valueSsa;
-				break;
-			}
+				return Maybe.some(value);
 
-			resultSsa = generateCast(valueSsa, sourceType, targetType, SemaExprCast.Kind.WIDEN_CAST);
-			break;
+			return Maybe.some(generateCast(value, sourceType, targetType, SemaExprCast.Kind.WIDEN_CAST));
 
 		case NARROW_CAST:
 			if(Types.equalSizes(sourceType, targetType, context.platform()))
-			{
-				resultSsa = valueSsa;
-				break;
-			}
+				return Maybe.some(value);
 
-			resultSsa = generateCast(valueSsa, sourceType, targetType, SemaExprCast.Kind.NARROW_CAST);
-			break;
+			return Maybe.some(generateCast(value, sourceType, targetType, SemaExprCast.Kind.NARROW_CAST));
 
 		case POINTER_CAST:
 			if(Types.equal(Types.removeConst(sourceType), Types.removeConst(targetType)))
-			{
-				resultSsa = valueSsa;
-				break;
-			}
+				return Maybe.some(value);
 
-			resultSsa = generateCast(valueSsa, sourceType, targetType, SemaExprCast.Kind.POINTER_CAST);
-			break;
+			return Maybe.some(generateCast(value, sourceType, targetType, SemaExprCast.Kind.POINTER_CAST));
 
-		default: throw new AssertionError("unreachable");
+		default: break;
 		}
 
-		return Maybe.some(resultSsa);
+		throw new AssertionError("unreachable");
 	}
 
 	private Maybe<IrValue> visit(SemaExprConst const_)
