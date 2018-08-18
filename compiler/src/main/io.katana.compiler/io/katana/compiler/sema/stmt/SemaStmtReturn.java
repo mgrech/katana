@@ -15,12 +15,13 @@
 package io.katana.compiler.sema.stmt;
 
 import io.katana.compiler.sema.expr.SemaExpr;
+import io.katana.compiler.utils.Maybe;
 
 public class SemaStmtReturn extends SemaStmt
 {
-	public SemaExpr ret;
+	public Maybe<SemaExpr> ret;
 
-	public SemaStmtReturn(SemaExpr ret)
+	public SemaStmtReturn(Maybe<SemaExpr> ret)
 	{
 		this.ret = ret;
 	}

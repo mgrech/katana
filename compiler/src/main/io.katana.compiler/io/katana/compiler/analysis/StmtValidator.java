@@ -146,7 +146,7 @@ public class StmtValidator implements IVisitor
 		if(value.isNone())
 		{
 			if(Types.isVoid(retTypeNoConst))
-				return new SemaStmtReturn(new SemaExprImplicitVoidInReturn());
+				return new SemaStmtReturn(Maybe.none());
 
 			var fmt = "function '%s' returns value of type '%s', no value given";
 			throw new CompileException(String.format(fmt, function.qualifiedName(), TypeString.of(retTypeNoConst)));
@@ -161,7 +161,7 @@ public class StmtValidator implements IVisitor
 			throw new CompileException(String.format(fmt, function.qualifiedName(), TypeString.of(retTypeNoConst), TypeString.of(typeNoConst)));
 		}
 
-		return new SemaStmtReturn(value.unwrap());
+		return new SemaStmtReturn(value);
 	}
 
 	private SemaStmt visit(AstStmtExprStmt exprStmt)

@@ -351,11 +351,6 @@ public class ExprCodeGenerator implements IVisitor
 		return generateCast(value, sourceType, targetType, SemaExprCast.Kind.WIDEN_CAST);
 	}
 
-	private IrValue visit(SemaExprImplicitVoidInReturn implicitVoid)
-	{
-		return null;
-	}
-
 	private IrValue visit(SemaExprIndirectFunctionCall functionCall)
 	{
 		var function = lower(functionCall.expr);

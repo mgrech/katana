@@ -165,8 +165,8 @@ public class StmtCodeGenerator implements IVisitor
 	private void visit(SemaStmtReturn ret)
 	{
 		preceededByTerminator = true;
-		var type = lower(ret.ret.type());
-		var value = lower(ret.ret);
+		var type = ret.ret.map(SemaExpr::type).map(this::lower).or(IrTypes.VOID);
+		var value = ret.ret.map(this::lower).unwrap();
 		builder.ret(type, value);
 	}
 
