@@ -1,4 +1,4 @@
-// Copyright 2016-2018 Markus Grech
+// Copyright 2018 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.ast.expr;
+package io.katana.compiler;
 
-import io.katana.compiler.Inlining;
-
-import java.util.List;
-
-public class AstExprFunctionCall extends AstExpr
+public enum Inlining
 {
-	public AstExpr expr;
-	public List<AstExpr> args;
-	public Inlining inline;
-
-	public AstExprFunctionCall(AstExpr expr, List<AstExpr> args, Inlining inline)
-	{
-		this.expr = expr;
-		this.args = args;
-		this.inline = inline;
-	}
+	AUTO,
+	ALWAYS,
+	NEVER,
 }

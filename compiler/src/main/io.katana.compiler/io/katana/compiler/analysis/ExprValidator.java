@@ -15,6 +15,7 @@
 package io.katana.compiler.analysis;
 
 import io.katana.compiler.BuiltinType;
+import io.katana.compiler.Inlining;
 import io.katana.compiler.Limits;
 import io.katana.compiler.ast.expr.*;
 import io.katana.compiler.ast.type.AstType;
@@ -327,7 +328,7 @@ public class ExprValidator implements IVisitor
 		}
 	}
 
-	private SemaExpr resolveOverloadedCall(List<SemaDeclFunction> set, String name, List<AstExpr> args, Maybe<Boolean> inline)
+	private SemaExpr resolveOverloadedCall(List<SemaDeclFunction> set, String name, List<AstExpr> args, Inlining inline)
 	{
 		var candidates = new IdentityHashMap<SemaDeclFunction, List<Maybe<SemaExpr>>>();
 		var failed = new IdentityHashMap<SemaDeclFunction, List<Maybe<SemaExpr>>>();
@@ -764,7 +765,7 @@ public class ExprValidator implements IVisitor
 		                             .filter(o -> o.exported)
 		                             .collect(Collectors.toList());
 
-		return resolveOverloadedCall(overloads, set.name(), args, Maybe.none());
+		return resolveOverloadedCall(overloads, set.name(), args, Inlining.AUTO);
 	}
 
 	private SemaExpr visit(AstExprOpInfix op, Maybe<SemaType> deduce)

@@ -14,9 +14,9 @@
 
 package io.katana.compiler.sema.expr;
 
+import io.katana.compiler.Inlining;
 import io.katana.compiler.sema.decl.SemaDeclFunction;
 import io.katana.compiler.sema.type.SemaType;
-import io.katana.compiler.utils.Maybe;
 
 import java.util.List;
 
@@ -24,9 +24,9 @@ public class SemaExprDirectFunctionCall extends SimpleRValueExpr
 {
 	public SemaDeclFunction function;
 	public List<SemaExpr> args;
-	public Maybe<Boolean> inline;
+	public Inlining inline;
 
-	public SemaExprDirectFunctionCall(SemaDeclFunction function, List<SemaExpr> args, Maybe<Boolean> inline)
+	public SemaExprDirectFunctionCall(SemaDeclFunction function, List<SemaExpr> args, Inlining inline)
 	{
 		this.function = function;
 		this.args = args;

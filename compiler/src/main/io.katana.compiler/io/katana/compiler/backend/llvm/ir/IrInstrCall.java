@@ -14,6 +14,7 @@
 
 package io.katana.compiler.backend.llvm.ir;
 
+import io.katana.compiler.Inlining;
 import io.katana.compiler.utils.Maybe;
 
 import java.util.List;
@@ -25,10 +26,10 @@ public class IrInstrCall extends IrInstr
 	public final IrValue function;
 	public final List<IrType> argTypes;
 	public final List<IrValue> args;
-	public final Maybe<Boolean> inline;
+	public final Inlining inline;
 
 	public IrInstrCall(Maybe<IrValueSsa> result, IrType returnType, IrValue function, List<IrType> argTypes,
-	                   List<IrValue> args, Maybe<Boolean> inline)
+	                   List<IrValue> args, Inlining inline)
 	{
 		this.result = result;
 		this.returnType = returnType;
@@ -58,11 +59,13 @@ public class IrInstrCall extends IrInstr
 
 		builder.append(')');
 
-		if(inline.isSome())
-			if(inline.get())
-				builder.append(" alwaysinline");
-			else
-				builder.append(" noinline");
+		switch(inline)
+		{
+		case AUTO:   break;
+		case ALWAYS: builder.append(" alwaysinline");
+		case NEVER:  builder.append(" noinline");
+		default: throw new AssertionError("unreachable");
+		}
 
 		return builder.toString();
 	}

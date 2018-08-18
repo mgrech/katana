@@ -15,6 +15,7 @@
 package io.katana.compiler.backend.llvm;
 
 import io.katana.compiler.BuiltinType;
+import io.katana.compiler.Inlining;
 import io.katana.compiler.analysis.Types;
 import io.katana.compiler.backend.llvm.ir.*;
 import io.katana.compiler.sema.decl.SemaDeclExternFunction;
@@ -259,7 +260,7 @@ public class ExprCodeGenerator implements IVisitor
 		return lower(deref.expr);
 	}
 
-	private IrValue generateFunctionCall(IrValue function, List<SemaExpr> args, SemaType returnType, Maybe<Boolean> inline)
+	private IrValue generateFunctionCall(IrValue function, List<SemaExpr> args, SemaType returnType, Inlining inline)
 	{
 		var returnTypeIr = lower(returnType);
 
@@ -358,7 +359,7 @@ public class ExprCodeGenerator implements IVisitor
 	private IrValue visit(SemaExprIndirectFunctionCall functionCall)
 	{
 		var function = lower(functionCall.expr);
-		return generateFunctionCall(function, functionCall.args, functionCall.type(), Maybe.none());
+		return generateFunctionCall(function, functionCall.args, functionCall.type(), Inlining.AUTO);
 	}
 
 	private IrValue visit(SemaExprFieldAccess fieldAccess)

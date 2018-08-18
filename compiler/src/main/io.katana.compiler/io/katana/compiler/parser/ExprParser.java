@@ -15,6 +15,7 @@
 package io.katana.compiler.parser;
 
 import io.katana.compiler.BuiltinType;
+import io.katana.compiler.Inlining;
 import io.katana.compiler.ast.expr.*;
 import io.katana.compiler.ast.type.AstType;
 import io.katana.compiler.diag.CompileException;
@@ -82,7 +83,7 @@ public class ExprParser
 			}
 			else if(ParseTools.option(ctx, TokenType.PUNCT_LPAREN, true))
 			{
-				expr = parseFunctionCall(ctx, expr, Maybe.none());
+				expr = parseFunctionCall(ctx, expr, Inlining.AUTO);
 				ParseTools.expect(ctx, TokenType.PUNCT_RPAREN, true);
 			}
 			else if(ParseTools.option(ctx, TokenType.PUNCT_LBRACKET, true))
@@ -236,6 +237,12 @@ public class ExprParser
 		throw new AssertionError("unreachable");
 	}
 
+	private static Inlining parseInlineSpecifier(ParseContext ctx)
+	{
+		var token = ParseTools.consumeExpected(ctx, TokenType.LIT_BOOL);
+		return (boolean)token.value ? Inlining.ALWAYS : Inlining.NEVER;
+	}
+
 	private static AstExpr parseMisc(ParseContext ctx)
 	{
 		var token = ParseTools.consume(ctx);
@@ -261,11 +268,10 @@ public class ExprParser
 			return parseBuiltinCall(ctx);
 
 		case MISC_INLINE:
-			var inline = ParseTools.parenthesized(ctx,
-				() -> (boolean)ParseTools.consumeExpected(ctx, TokenType.LIT_BOOL).value);
+			var inline = ParseTools.parenthesized(ctx, () -> parseInlineSpecifier(ctx));
 			var name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 			ParseTools.expect(ctx, TokenType.PUNCT_LPAREN, true);
-			var call = parseFunctionCall(ctx, new AstExprNamedSymbol(name), Maybe.some(inline));
+			var call = parseFunctionCall(ctx, new AstExprNamedSymbol(name), inline);
 			ParseTools.expect(ctx, TokenType.PUNCT_RPAREN, true);
 			return call;
 
@@ -319,7 +325,7 @@ public class ExprParser
 		return new AstExprBuiltinCall(path.toString(), args);
 	}
 
-	private static AstExprFunctionCall parseFunctionCall(ParseContext ctx, AstExpr expr, Maybe<Boolean> inline)
+	private static AstExprFunctionCall parseFunctionCall(ParseContext ctx, AstExpr expr, Inlining inline)
 	{
 		var args = parseArguments(ctx);
 		return new AstExprFunctionCall(expr, args, inline);

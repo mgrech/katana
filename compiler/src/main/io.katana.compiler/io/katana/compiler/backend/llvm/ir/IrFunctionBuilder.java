@@ -14,6 +14,7 @@
 
 package io.katana.compiler.backend.llvm.ir;
 
+import io.katana.compiler.Inlining;
 import io.katana.compiler.utils.Maybe;
 
 import java.util.ArrayList;
@@ -92,7 +93,7 @@ public class IrFunctionBuilder
 		return result;
 	}
 
-	public Maybe<IrValueSsa> call(IrType returnType, IrValue function, List<IrType> argTypes, List<IrValue> args, Maybe<Boolean> inline)
+	public Maybe<IrValueSsa> call(IrType returnType, IrValue function, List<IrType> argTypes, List<IrValue> args, Inlining inline)
 	{
 		var result = returnType == IrTypes.VOID
 		             ? Maybe.<IrValueSsa>none()
