@@ -32,14 +32,6 @@ public class FileCodegenContext
 		this.stringPool = stringPool;
 	}
 
-	protected FileCodegenContext(FileCodegenContext other)
-	{
-		this.build = other.build;
-		this.platform = other.platform;
-		this.builder = other.builder;
-		this.stringPool = other.stringPool;
-	}
-
 	public BuildTarget build()
 	{
 		return build;

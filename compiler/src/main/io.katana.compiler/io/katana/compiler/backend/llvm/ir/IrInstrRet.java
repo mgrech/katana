@@ -1,4 +1,4 @@
-// Copyright 2016-2018 Markus Grech
+// Copyright 2018 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,16 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm;
+package io.katana.compiler.backend.llvm.ir;
 
-import io.katana.compiler.sema.stmt.SemaStmt;
+import io.katana.compiler.utils.Maybe;
 
-public class GeneratedLabel extends SemaStmt
+public class IrInstrRet extends IrInstr
 {
-	public final String name;
+	public final IrType type;
+	public final Maybe<IrValue> value;
 
-	public GeneratedLabel(String name)
+	public IrInstrRet(IrType type, Maybe<IrValue> value)
 	{
-		this.name = name;
+		this.type = type;
+		this.value = value;
+	}
+
+	@Override
+	public String toString()
+	{
+		if(type == IrTypes.VOID)
+			return "ret void";
+
+		return String.format("ret %s %s", type, value.unwrap());
 	}
 }

@@ -15,8 +15,12 @@
 package io.katana.compiler.backend.llvm;
 
 import io.katana.compiler.analysis.Types;
+import io.katana.compiler.backend.llvm.ir.*;
 import io.katana.compiler.sema.decl.SemaDeclDefinedFunction;
+import io.katana.compiler.sema.expr.SemaExpr;
 import io.katana.compiler.sema.stmt.*;
+import io.katana.compiler.sema.type.SemaType;
+import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
 
 import java.util.ArrayList;
@@ -24,13 +28,25 @@ import java.util.ArrayList;
 @SuppressWarnings("unused")
 public class StmtCodeGenerator implements IVisitor
 {
-	private FunctionCodegenContext context;
+	private final FileCodegenContext context;
+	private final IrFunctionBuilder builder;
 
 	private boolean preceededByTerminator = false;
 
-	public StmtCodeGenerator(FunctionCodegenContext context)
+	public StmtCodeGenerator(FileCodegenContext context, IrFunctionBuilder builder)
 	{
 		this.context = context;
+		this.builder = builder;
+	}
+
+	private Maybe<IrValue> lower(SemaExpr expr)
+	{
+		return ExprCodeGenerator.generate(expr, context, builder);
+	}
+
+	private IrType lower(SemaType type)
+	{
+		return TypeCodeGenerator.generate(type, context.platform());
 	}
 
 	public void generate(SemaStmt stmt)
@@ -43,9 +59,9 @@ public class StmtCodeGenerator implements IVisitor
 		if(!preceededByTerminator)
 		{
 			if(Types.isZeroSized(func.ret))
-				context.write("\tret void\n");
+				builder.ret(IrTypes.VOID, Maybe.none());
 			else
-				context.write("\tunreachable\n");
+				builder.unreachable();
 		}
 	}
 
@@ -60,48 +76,48 @@ public class StmtCodeGenerator implements IVisitor
 	private void visit(SemaStmtExprStmt stmt)
 	{
 		preceededByTerminator = false;
-		ExprCodeGenerator.generate(stmt.expr, context);
+		lower(stmt.expr);
 	}
 
-	private void generateGoto(String label)
+	private void generateGoto(IrLabel label)
 	{
 		preceededByTerminator = true;
-		context.writef("\tbr label %%%s\n\n", label);
+		builder.br(label);
 	}
 
 	private void visit(SemaStmtGoto goto_)
 	{
-		generateGoto("ul$" + goto_.target.name);
+		generateGoto(IrLabel.of(goto_.target.name));
 	}
 
 	private void visit(GeneratedGoto goto_)
 	{
-		generateGoto(goto_.label.name);
+		generateGoto(IrLabel.of(goto_.label.name));
 	}
 
 	private void visit(SemaStmtIf if_)
 	{
-		var condSsa = ExprCodeGenerator.generate(if_.condition, context).unwrap();
+		var condition = lower(if_.condition).unwrap();
 
-		var thenLabel = context.allocateLabel("if.then");
-		var afterLabel = context.allocateLabel("if.after");
+		var thenLabel = builder.allocateLabel("if.then");
+		var afterLabel = builder.allocateLabel("if.after");
 
-		var firstLabel = if_.negated ? afterLabel : thenLabel;
-		var secondLabel = if_.negated ? thenLabel : afterLabel;
+		var trueLabel = if_.negated ? afterLabel : thenLabel;
+		var falseLabel = if_.negated ? thenLabel : afterLabel;
 
-		context.writef("\tbr i1 %s, label %%%s, label %%%s\n\n", condSsa, firstLabel.name, secondLabel.name);
+		builder.br(condition, trueLabel, falseLabel);
 		preceededByTerminator = true;
 
-		visit(thenLabel);
+		generateLabel(thenLabel);
 		generate(if_.then);
-		visit(afterLabel);
+		generateLabel(afterLabel);
 
 		preceededByTerminator = false;
 	}
 
 	private void visit(SemaStmtIfElse ifelse)
 	{
-		var after = context.allocateLabel("ifelse.after");
+		var after = builder.allocateLabel("ifelse.after");
 
 		var then = new ArrayList<SemaStmt>();
 		then.add(ifelse.then);
@@ -109,64 +125,49 @@ public class StmtCodeGenerator implements IVisitor
 
 		visit(new SemaStmtIf(ifelse.negated, ifelse.condition, new SemaStmtCompound(then)));
 		generate(ifelse.else_);
-		visit(after);
+		generateLabel(after);
 	}
 
 	private void visit(SemaStmtLoop loop)
 	{
-		var label = context.allocateLabel("loop");
-
-		visit(label);
+		var label = builder.allocateLabel("loop");
+		generateLabel(label);
 		generate(loop.body);
-		visit(new GeneratedGoto(label));
+		builder.br(label);
 	}
 
 	private void visit(SemaStmtWhile while_)
 	{
-		var afterLabel = context.allocateLabel("while.after");
+		var afterLabel = builder.allocateLabel("while.after");
 
 		var body = new ArrayList<SemaStmt>();
 		body.add(new SemaStmtIf(!while_.negated, while_.condition, new GeneratedGoto(afterLabel)));
 		body.add(while_.body);
 
 		visit(new SemaStmtLoop(new SemaStmtCompound(body)));
-		visit(afterLabel);
+		generateLabel(afterLabel);
 	}
 
-	private void generateLabel(String name)
+	private void generateLabel(IrLabel label)
 	{
 		if(!preceededByTerminator)
-			context.writef("\tbr label %%%s\n\n", name);
+			builder.br(label);
 
-		context.writef("%s:\n", name);
+		builder.label(label.name);
 		preceededByTerminator = false;
 	}
 
 	private void visit(SemaStmtLabel label)
 	{
-		generateLabel("ul$" + label.name);
-	}
-
-	private void visit(GeneratedLabel label)
-	{
-		generateLabel(label.name);
+		generateLabel(IrLabel.of(label.name));
 	}
 
 	private void visit(SemaStmtReturn ret)
 	{
 		preceededByTerminator = true;
-
-		var returnSsa = ExprCodeGenerator.generate(ret.ret, context);
-
-		if(returnSsa.isNone())
-		{
-			context.write("\tret void\n\n");
-			return;
-		}
-
-		var type = ret.ret.type();
-		var llvmType = TypeCodeGenerator.generate(type, context.platform());
-		context.writef("\tret %s %s\n\n", llvmType, returnSsa.unwrap());
+		var type = lower(ret.ret.type());
+		var value = lower(ret.ret);
+		builder.ret(type, value);
 	}
 
 	private void visit(SemaStmtNullStmt nullStmt)

@@ -33,16 +33,18 @@ public class ExprCodeGenerator implements IVisitor
 	private static final SemaExpr INDEX_ZERO_EXPR = new SemaExprLitInt(BigInteger.ZERO, BuiltinType.INT32);
 	private static final SemaExpr INDEX_ONE_EXPR = new SemaExprLitInt(BigInteger.ONE, BuiltinType.INT32);
 
-	private FunctionCodegenContext context;
+	private final FileCodegenContext context;
+	private final IrFunctionBuilder builder;
 
-	private ExprCodeGenerator(FunctionCodegenContext context)
+	private ExprCodeGenerator(FileCodegenContext context, IrFunctionBuilder builder)
 	{
 		this.context = context;
+		this.builder = builder;
 	}
 
-	public static Maybe<IrValue> generate(SemaExpr expr, FunctionCodegenContext context)
+	public static Maybe<IrValue> generate(SemaExpr expr, FileCodegenContext context, IrFunctionBuilder builder)
 	{
-		var visitor = new ExprCodeGenerator(context);
+		var visitor = new ExprCodeGenerator(context, builder);
 		return Maybe.wrap((IrValue)expr.accept(visitor));
 	}
 
@@ -56,33 +58,14 @@ public class ExprCodeGenerator implements IVisitor
 		return TypeCodeGenerator.generate(type, context.platform());
 	}
 
-	private IrValueSsa generateLoad(IrValue pointer, IrType type)
-	{
-		var result = context.allocateSsa();
-		context.writef("\t%s = load %s, %s* %s\n", result, type, type, pointer);
-		return result;
-	}
-
-	private void generateStore(IrValue pointer, IrValue value, IrType type)
-	{
-		context.writef("\tstore %s %s, %s* %s\n", type, value, type, pointer);
-	}
-
-	private IrValueSsa generateAlloca(IrType type, long alignment)
-	{
-		var result = context.allocateSsa();
-		context.writef("\t%s = alloca %s, align %s\n", result, type, alignment);
-		return result;
-	}
-
 	private IrValue visit(RValueToLValueConversion conversion)
 	{
 		var value = lower(conversion.expr);
 		var type = conversion.expr.type();
 		var alignment = Types.alignof(type, context.platform());
 		var typeIr = lower(type);
-		var pointer = generateAlloca(typeIr, alignment);
-		generateStore(pointer, value, typeIr);
+		var pointer = builder.alloca(typeIr, alignment);
+		builder.store(typeIr, value, pointer);
 		return pointer;
 	}
 
@@ -105,10 +88,7 @@ public class ExprCodeGenerator implements IVisitor
 		var baseType = lower(Types.removePointer(compoundExpr.type()));
 		var indexType = lower(indexExpr.type());
 		var index = lower(indexExpr);
-
-		var result = context.allocateSsa();
-		context.writef("\t%s = getelementptr %s, %s* %s, i64 0, %s %s\n", result, baseType, baseType, compound, indexType, index);
-		return result;
+		return builder.getelementptr(baseType, compound, indexType, index);
 	}
 
 	private IrValue visit(SemaExprArrayAccess arrayAccess)
@@ -126,7 +106,7 @@ public class ExprCodeGenerator implements IVisitor
 		if(isRValue)
 		{
 			var resultType = lower(arrayAccess.type());
-			return generateLoad(result, resultType);
+			return builder.load(resultType, result);
 		}
 
 		return result;
@@ -148,8 +128,8 @@ public class ExprCodeGenerator implements IVisitor
 		var pointerType = sliceType.fields.get(0);
 		var lengthType = sliceType.fields.get(1);
 
-		var intermediate = generateInsertValue(sliceType, IrValues.UNDEF, pointerType, pointer, 0);
-		return generateInsertValue(sliceType, intermediate, lengthType, IrValues.ofConstant(length), 1);
+		var intermediate = builder.insertvalue(sliceType, IrValues.UNDEF, pointerType, pointer, 0);
+		return builder.insertvalue(sliceType, intermediate, lengthType, IrValues.ofConstant(length), 1);
 	}
 
 	private IrValue visit(SemaExprArrayGetSlice arrayGetSlice)
@@ -168,45 +148,53 @@ public class ExprCodeGenerator implements IVisitor
 		var type = lower(assign.right.type());
 		var right = lower(assign.right);
 		var left = lower(assign.left);
-		generateStore(left, right, type);
+		builder.store(type, right, left);
 		return left;
 	}
 
-	private IrValue visit(SemaExprBuiltinCall builtinCall)
+	public IrValue visit(SemaExprBuiltinCall builtinCall)
 	{
-		return builtinCall.func.generateCall(builtinCall, context);
+		var args = builtinCall.args.stream()
+		                           .map(this::lower)
+		                           .collect(Collectors.toList());
+
+		var type = lower(builtinCall.args.get(0).type());
+		return builder.binary(builtinCall.name, type, args.get(0), args.get(1));
 	}
 
-	private String instrForCast(SemaType targetType, SemaExprCast.Kind kind)
+	private IrInstrConversion.Kind lowerCastKind(SemaExprCast.Kind kind, SemaType targetType)
 	{
 		switch(kind)
 		{
 		case WIDEN_CAST:
 			if(Types.isFloatingPoint(targetType))
-				return "fpext";
+				return IrInstrConversion.Kind.FPEXT;
 
 			if(Types.isSigned(targetType))
-				return "sext";
+				return IrInstrConversion.Kind.SEXT;
 
 			if(Types.isUnsigned(targetType))
-				return "zext";
+				return IrInstrConversion.Kind.ZEXT;
 
-			throw new AssertionError("unreachable");
+			break;
 
 		case NARROW_CAST:
 			if(Types.isFloatingPoint(targetType))
-				return "fptrunc";
+				return IrInstrConversion.Kind.FPTRUNC;
 
 			if(Types.isInteger(targetType))
-				return "trunc";
+				return IrInstrConversion.Kind.TRUNC;
 
-			throw new AssertionError("unreachable");
+			break;
 
 		case POINTER_CAST:
 			if(Types.isPointer(targetType))
-				return "inttoptr";
+				return IrInstrConversion.Kind.INTTOPTR;
 
-			return "ptrtoint";
+			if(Types.isInteger(targetType))
+				return IrInstrConversion.Kind.PTRTOINT;
+
+			break;
 
 		default: break;
 		}
@@ -216,13 +204,10 @@ public class ExprCodeGenerator implements IVisitor
 
 	private IrValueSsa generateCast(IrValue value, SemaType sourceType, SemaType targetType, SemaExprCast.Kind kind)
 	{
-		var result = context.allocateSsa();
+		var kindIr = lowerCastKind(kind, targetType);
 		var sourceTypeIr = lower(sourceType);
 		var targetTypeIr = lower(targetType);
-
-		var instr = instrForCast(targetType, kind);
-		context.writef("\t%s = %s %s %s to %s\n", result, instr, sourceTypeIr, value, targetTypeIr);
-		return result;
+		return builder.convert(kindIr, sourceTypeIr, value, targetTypeIr);
 	}
 
 	private IrValue visit(SemaExprCast cast)
@@ -276,53 +261,18 @@ public class ExprCodeGenerator implements IVisitor
 
 	private IrValue generateFunctionCall(IrValue function, List<SemaExpr> args, SemaType returnType, Maybe<Boolean> inline)
 	{
+		var returnTypeIr = lower(returnType);
+
 		var argsIr = args.stream()
 		                 .map(this::lower)
 		                 .collect(Collectors.toList());
 
-		context.write('\t');
+		var argTypesIr = args.stream()
+		                     .map(SemaExpr::type)
+		                     .map(this::lower)
+		                     .collect(Collectors.toList());
 
-		Maybe<IrValue> returnValue = Maybe.none();
-
-		if(!Types.isZeroSized(returnType))
-		{
-			returnValue = Maybe.some(context.allocateSsa());
-			context.writef("%s = ", returnValue.unwrap());
-		}
-
-		var returnTypeIr = lower(returnType);
-		context.writef("call %s %s(", returnTypeIr, function);
-
-		if(!args.isEmpty())
-		{
-			if(!Types.isZeroSized(args.get(0).type()))
-			{
-				context.write(lower(args.get(0).type()));
-				context.write(' ');
-				context.write(argsIr.get(0));
-			}
-
-			for(var i = 1; i != argsIr.size(); ++i)
-			{
-				if(!Types.isZeroSized(args.get(i).type()))
-				{
-					var argType = lower(args.get(i).type());
-					context.writef(", %s %s", argType, argsIr.get(i));
-				}
-			}
-		}
-
-		context.write(')');
-
-		if(inline.isSome())
-			if(inline.unwrap())
-				context.write(" alwaysinline");
-			else
-				context.write(" noinline");
-
-		context.write('\n');
-
-		return returnValue.unwrap();
+		return builder.call(returnTypeIr, function, argTypesIr, argsIr, inline).unwrap();
 	}
 
 	private IrValue visit(SemaExprDirectFunctionCall call)
@@ -346,13 +296,6 @@ public class ExprCodeGenerator implements IVisitor
 		return generateGetElementPtr(conversion.expr, INDEX_ZERO_EXPR);
 	}
 
-	private IrValueSsa generateInsertValue(IrType compoundType, IrValue compound, IrType elementType, IrValue element, int index)
-	{
-		var result = context.allocateSsa();
-		context.writef("\t%s = insertvalue %s %s, %s %s, %s\n", result, compoundType, compound, elementType, element, index);
-		return result;
-	}
-
 	private IrValue visit(SemaExprImplicitConversionArrayPointerToSlice conversion)
 	{
 		var pointer = generateGetElementPtr(conversion.expr, INDEX_ZERO_EXPR);
@@ -368,7 +311,7 @@ public class ExprCodeGenerator implements IVisitor
 
 		var value = lower(conversion.expr);
 		var type = lower(conversion.type());
-		return generateLoad(value, type);
+		return builder.load(type, value);
 	}
 
 	private IrValue visit(SemaExprImplicitConversionNonNullablePointerToNullablePointer conversion)
@@ -388,11 +331,10 @@ public class ExprCodeGenerator implements IVisitor
 
 	private IrValue visit(SemaExprImplicitConversionPointerToBytePointer conversion)
 	{
-		var pointerType = lower(conversion.expr.type());
-		var pointer = lower(conversion.expr);
-		var result = context.allocateSsa();
-		context.writef("\t%s = bitcast %s %s to i8*\n", result, pointerType, pointer);
-		return result;
+		var sourceType = lower(conversion.expr.type());
+		var value = lower(conversion.expr);
+		var targetType = IrTypes.ofPointer(IrTypes.I8);
+		return builder.convert(IrInstrConversion.Kind.BITCAST, sourceType, value, targetType);
 	}
 
 	private IrValue visit(SemaExprImplicitConversionSliceToSliceOfConst conversion)
@@ -432,7 +374,7 @@ public class ExprCodeGenerator implements IVisitor
 		if(isRValue)
 		{
 			var fieldType = lower(index.type());
-			return generateLoad(result, fieldType);
+			return builder.load(fieldType, result);
 		}
 
 		return result;
@@ -519,10 +461,7 @@ public class ExprCodeGenerator implements IVisitor
 	{
 		var compoundIr = lower(compound);
 		var compoundType = lower(compound.type());
-
-		var result = context.allocateSsa();
-		context.writef("\t%s = extractvalue %s %s, %s\n", result, compoundType, compoundIr, index);
-		return result;
+		return builder.extractvalue(compoundType, compoundIr, index);
 	}
 
 	private IrValue visit(SemaExprSliceGetLength sliceGetLength)

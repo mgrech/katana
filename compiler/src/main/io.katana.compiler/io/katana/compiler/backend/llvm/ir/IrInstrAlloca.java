@@ -1,4 +1,4 @@
-// Copyright 2016-2018 Markus Grech
+// Copyright 2018 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,21 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler;
+package io.katana.compiler.backend.llvm.ir;
 
-import io.katana.compiler.sema.expr.SemaExpr;
-import io.katana.compiler.sema.expr.SemaExprBuiltinCall;
-
-import java.util.List;
-
-public abstract class BuiltinFunc
+public class IrInstrAlloca extends IrInstr
 {
-	public final String name;
+	public final IrValueSsa result;
+	public final IrType type;
+	public final long align;
 
-	protected BuiltinFunc(String name)
+	public IrInstrAlloca(IrValueSsa result, IrType type, long align)
 	{
-		this.name = name;
+		this.result = result;
+		this.type = type;
+		this.align = align;
 	}
 
-	public abstract SemaExprBuiltinCall validateCall(List<SemaExpr> args);
+	@Override
+	public String toString()
+	{
+		return String.format("%s = alloca %s, align %s", result, type, align);
+	}
 }

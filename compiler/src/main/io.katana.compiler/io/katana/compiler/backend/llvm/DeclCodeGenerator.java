@@ -15,7 +15,9 @@
 package io.katana.compiler.backend.llvm;
 
 import io.katana.compiler.analysis.Types;
+import io.katana.compiler.backend.llvm.ir.IrFunctionBuilder;
 import io.katana.compiler.backend.llvm.ir.IrValueConstant;
+import io.katana.compiler.backend.llvm.ir.IrValues;
 import io.katana.compiler.sema.decl.*;
 import io.katana.compiler.sema.type.SemaTypeNonNullablePointer;
 import io.katana.compiler.visitor.IVisitor;
@@ -140,6 +142,7 @@ public class DeclCodeGenerator implements IVisitor
 
 	private void generateFunctionBody(SemaDeclDefinedFunction function)
 	{
+		var builder = new IrFunctionBuilder();
 		context.write("{\n");
 
 		for(var param : function.params)
@@ -147,14 +150,13 @@ public class DeclCodeGenerator implements IVisitor
 			if(Types.isZeroSized(param.type))
 				continue;
 
-			var typeString = TypeCodeGenerator.generate(param.type, context.platform());
+			var type = TypeCodeGenerator.generate(param.type, context.platform());
 			var alignment = Types.alignof(param.type, context.platform());
-			context.writef("\t%%%s = alloca %s, align %s\n", param.name, typeString, alignment);
-			context.writef("\tstore %s %%p$%s, %s* %%%s\n", typeString, param.name, typeString, param.name);
+			var paramIr = IrValues.ofSsa("p$" + param.name);
+			var paramCopy = IrValues.ofSsa(param.name);
+			builder.alloca(paramCopy, type, alignment);
+			builder.store(type, paramIr, paramCopy);
 		}
-
-		if(!function.params.isEmpty())
-			context.write('\n');
 
 		for(var entry : function.localsByName.entrySet())
 		{
@@ -163,22 +165,19 @@ public class DeclCodeGenerator implements IVisitor
 			if(Types.isZeroSized(type))
 				continue;
 
-			var llvmType = TypeCodeGenerator.generate(type, context.platform());
-			var align = Types.alignof(type, context.platform());
-			context.writef("\t%%%s = alloca %s, align %s\n", entry.getKey(), llvmType, align);
+			var typeIr = TypeCodeGenerator.generate(type, context.platform());
+			var alignment = Types.alignof(type, context.platform());
+			builder.alloca(IrValues.ofSsa(entry.getKey()), typeIr, alignment);
 		}
 
-		if(!function.locals.isEmpty())
-			context.write('\n');
-
-		var fcontext = new FunctionCodegenContext(context);
-		var stmtCodeGen = new StmtCodeGenerator(fcontext);
+		var stmtCodeGen = new StmtCodeGenerator(context, builder);
 
 		for(var stmt : function.body)
 			stmtCodeGen.generate(stmt);
 
 		stmtCodeGen.finish(function);
 
+		context.write(builder.build());
 		context.write("}\n");
 	}
 
@@ -205,7 +204,7 @@ public class DeclCodeGenerator implements IVisitor
 
 		var qualifiedName = qualifiedName(global);
 		var typeString = TypeCodeGenerator.generate(global.type, context.platform());
-		var initializerString = global.init.map(i -> ExprCodeGenerator.generate(i, null).unwrap()).or(new IrValueConstant("zeroinitializer"));
+		var initializerString = global.init.map(i -> ExprCodeGenerator.generate(i, null, null).unwrap()).or(new IrValueConstant("zeroinitializer"));
 		var kind = Types.isConst(global.type) ? "constant" : "global";
 		context.writef("@%s = private %s %s %s\n", qualifiedName, kind, typeString, initializerString);
 	}

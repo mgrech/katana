@@ -172,7 +172,6 @@ public class ExprValidator implements IVisitor
 			throw new CompileException(String.format("builtin '%s' not found", builtinCall.name));
 
 		var args = new ArrayList<SemaExpr>();
-		var types = new ArrayList<SemaType>();
 
 		for(var i = 0; i != builtinCall.args.size(); ++i)
 		{
@@ -189,12 +188,10 @@ public class ExprValidator implements IVisitor
 				semaExpr = new SemaExprImplicitConversionLValueToRValue(semaExpr);
 
 			args.add(semaExpr);
-			types.add(type);
 		}
 
-		var func = maybeFunc.unwrap();
-		var ret = func.validateCall(types);
-		return new SemaExprBuiltinCall(func, args, ret);
+		var builtin = maybeFunc.unwrap();
+		return builtin.validateCall(args);
 	}
 
 	private SemaExpr visit(AstExprConst const_, Maybe<SemaType> deduce)

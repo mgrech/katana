@@ -14,13 +14,14 @@
 
 package io.katana.compiler.backend.llvm;
 
+import io.katana.compiler.backend.llvm.ir.IrLabel;
 import io.katana.compiler.sema.stmt.SemaStmt;
 
 public class GeneratedGoto extends SemaStmt
 {
-	public final GeneratedLabel label;
+	public final IrLabel label;
 
-	public GeneratedGoto(GeneratedLabel label)
+	public GeneratedGoto(IrLabel label)
 	{
 		this.label = label;
 	}

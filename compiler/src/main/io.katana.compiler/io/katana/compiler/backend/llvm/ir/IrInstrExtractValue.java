@@ -1,4 +1,4 @@
-// Copyright 2016-2018 Markus Grech
+// Copyright 2018 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,28 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.sema.expr;
+package io.katana.compiler.backend.llvm.ir;
 
-import io.katana.compiler.sema.type.SemaType;
-
-import java.util.List;
-
-public class SemaExprBuiltinCall extends SimpleRValueExpr
+public class IrInstrExtractValue extends IrInstr
 {
-	public String name;
-	public List<SemaExpr> args;
-	public SemaType ret;
+	public final IrValueSsa result;
+	public final IrType compoundType;
+	public final IrValue compound;
+	public final int index;
 
-	public SemaExprBuiltinCall(String name, List<SemaExpr> args, SemaType ret)
+	public IrInstrExtractValue(IrValueSsa result, IrType compoundType, IrValue compound, int index)
 	{
-		this.name = name;
-		this.args = args;
-		this.ret = ret;
+		this.result = result;
+		this.compoundType = compoundType;
+		this.compound = compound;
+		this.index = index;
 	}
 
 	@Override
-	public SemaType type()
+	public String toString()
 	{
-		return ret;
+		return String.format("%s = extractvalue %s %s, %s", result, compoundType, compound, index);
 	}
 }

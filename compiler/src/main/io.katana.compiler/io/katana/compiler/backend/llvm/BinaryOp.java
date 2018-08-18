@@ -17,8 +17,8 @@ package io.katana.compiler.backend.llvm;
 import io.katana.compiler.BuiltinFunc;
 import io.katana.compiler.BuiltinType;
 import io.katana.compiler.analysis.Types;
-import io.katana.compiler.backend.llvm.ir.IrValueSsa;
 import io.katana.compiler.diag.CompileException;
+import io.katana.compiler.sema.expr.SemaExpr;
 import io.katana.compiler.sema.expr.SemaExprBuiltinCall;
 import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.sema.type.SemaTypeBuiltin;
@@ -44,81 +44,42 @@ public class BinaryOp extends BuiltinFunc
 		this.ret = ret;
 	}
 
-	private void unsupportedType(String what)
+	private String instrForType(SemaTypeBuiltin type)
 	{
-		throw new CompileException(String.format("builtin %s does not support %s", name, what));
-	}
+		if(Types.isBuiltin(type, BuiltinType.BOOL))
+			return boolInstr.unwrap();
 
-	private void checkTypeSupport(BuiltinType type)
-	{
-		switch(type.kind)
-		{
-		case BOOL:
-			if(boolInstr.isNone())
-				unsupportedType("bools");
-			break;
+		if(Types.isSigned(type))
+			return sintInstr.unwrap();
 
-		case INT:
-			if(sintInstr.isNone())
-				unsupportedType("signed integer types");
-			break;
+		if(Types.isUnsigned(type))
+			return uintInstr.unwrap();
 
-		case UINT:
-			if(uintInstr.isNone())
-				unsupportedType("unsigned integer types");
-			break;
+		if(Types.isFloatingPoint(type))
+			return floatInstr.unwrap();
 
-		case FLOAT:
-			if(floatInstr.isNone())
-				unsupportedType("floating point types");
-			break;
-
-		default: throw new AssertionError("unreachable");
-		}
+		return null;
 	}
 
 	@Override
-	public SemaType validateCall(List<SemaType> args)
+	public SemaExprBuiltinCall validateCall(List<SemaExpr> args)
 	{
 		if(args.size() != 2)
 			throw new CompileException(String.format("builtin %s expects 2 arguments", name));
 
-		var argType = Types.removeConst(args.get(0));
+		var argType = Types.removeConst(args.get(0).type());
 
-		if(!Types.equal(argType, Types.removeConst(args.get(1))))
+		if(!Types.equal(argType, Types.removeConst(args.get(1).type())))
 			throw new CompileException(String.format("arguments to builtin %s must be of same type", name));
 
 		if(!Types.isBuiltin(argType))
 			throw new CompileException(String.format("builtin %s requires arguments of builtin type", name));
 
-		checkTypeSupport(((SemaTypeBuiltin)argType).which);
-		return ret.or(argType);
-	}
+		var instr = instrForType((SemaTypeBuiltin)argType);
 
-	private String instrForType(SemaTypeBuiltin type)
-	{
-		switch(type.which.kind)
-		{
-		case BOOL: return boolInstr.unwrap();
-		case INT: return sintInstr.unwrap();
-		case UINT: return uintInstr.unwrap();
-		case FLOAT: return floatInstr.unwrap();
-		default: break;
-		}
+		if(instr == null)
+			throw new CompileException(String.format("unsupported type for builtin %s", name));
 
-		throw new AssertionError("unreachable");
-	}
-
-	@Override
-	public IrValueSsa generateCall(SemaExprBuiltinCall call, FunctionCodegenContext context)
-	{
-		var type = (SemaTypeBuiltin)call.args.get(0).type();
-		var typeIr = TypeCodeGenerator.generate(type, context.platform());
-		var left = ExprCodeGenerator.generate(call.args.get(0), context).unwrap();
-		var right = ExprCodeGenerator.generate(call.args.get(1), context).unwrap();
-		var instr = instrForType(type);
-		var result = context.allocateSsa();
-		context.writef("\t%s = %s %s %s, %s\n", result, instr, typeIr, left, right);
-		return result;
+		return new SemaExprBuiltinCall(instr, args, ret.or(argType));
 	}
 }
