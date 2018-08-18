@@ -14,8 +14,7 @@
 
 package io.katana.compiler.backend.llvm;
 
-import io.katana.compiler.backend.llvm.ir.IrValue;
-import io.katana.compiler.backend.llvm.ir.IrValues;
+import io.katana.compiler.backend.llvm.ir.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -28,7 +27,7 @@ public class StringPool
 
 	private String generateName()
 	{
-		return String.format(".strpool.%s", counter++);
+		return String.format("strpool$%s", counter++);
 	}
 
 	public IrValue get(String value)
@@ -73,14 +72,15 @@ public class StringPool
 		return result.toString();
 	}
 
-	public void generate(StringBuilder builder)
+	public void generate(IrModuleBuilder builder)
 	{
 		for(var entry : namesByValue.entrySet())
 		{
 			var name = entry.getValue();
 			var value = entry.getKey();
-			var strfmt = "@%s = private unnamed_addr constant [%s x i8] c\"%s\"\n";
-			builder.append(String.format(strfmt, name, value.length(), escape(value)));
+			var type = IrTypes.ofArray(value.length(), IrTypes.I8);
+			var initializer = String.format("c\"%s\"", escape(entry.getKey()));
+			builder.defineGlobal(name, AddressMergeability.UNNAMED_ADDR, true, type, new IrValueConstant(initializer));
 		}
 	}
 }

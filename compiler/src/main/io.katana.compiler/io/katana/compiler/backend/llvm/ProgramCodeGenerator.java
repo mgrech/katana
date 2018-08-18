@@ -15,9 +15,11 @@
 package io.katana.compiler.backend.llvm;
 
 import io.katana.compiler.BuiltinType;
+import io.katana.compiler.Inlining;
 import io.katana.compiler.analysis.Types;
 import io.katana.compiler.ast.AstPath;
 import io.katana.compiler.backend.PlatformContext;
+import io.katana.compiler.backend.llvm.ir.*;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.diag.TypeString;
 import io.katana.compiler.project.BuildTarget;
@@ -31,6 +33,7 @@ import io.katana.compiler.utils.Maybe;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
 
 public class ProgramCodeGenerator
 {
@@ -39,27 +42,25 @@ public class ProgramCodeGenerator
 		for(var child : module.children().values())
 			generateDecls(generator, child);
 
-		module.decls().values().forEach(generator::generate);
+		module.decls().values().forEach(generator::lower);
 	}
 
-	private static void generateEntryPointWrapper(StringBuilder builder, SemaDecl func)
+	private static IrDeclFunctionDef generateMain(SemaDecl func, PlatformContext context)
 	{
-		var ret = ((SemaDeclFunction)func).ret;
+		var builder = new IrFunctionBuilder();
 
-		builder.append("define i32 @main()\n{\n");
+		var returnType = ((SemaDeclFunction)func).ret;
+		var returnTypeIr = TypeCodeGenerator.generate(returnType, context);
+		var function = IrValues.ofSymbol(func.qualifiedName().toString());
+		var result = builder.call(returnTypeIr, function, Collections.emptyList(), Collections.emptyList(), Inlining.AUTO);
 
-		if(Types.isVoid(ret))
-		{
-			builder.append(String.format("\tcall void @%s()\n", func.qualifiedName()));
-			builder.append("\tret i32 0\n");
-		}
+		if(result.isNone())
+			builder.ret(IrTypes.I32, Maybe.some(IrValues.ofConstant(0)));
 		else
-		{
-			builder.append(String.format("\t%%1 = call i32 @%s()\n", func.qualifiedName()));
-			builder.append("\tret i32 %1\n");
-		}
+			builder.ret(IrTypes.I32, result.map(v -> v));
 
-		builder.append("}\n");
+		var signature = new IrFunctionSignature(Linkage.EXTERNAL, DllStorageClass.NONE, IrTypes.I32, "main", Collections.emptyList());
+		return new IrDeclFunctionDef(signature, builder.build());
 	}
 
 	private static Maybe<SemaDecl> findDeclByPath(SemaProgram program, String pathString)
@@ -77,7 +78,7 @@ public class ProgramCodeGenerator
 		return module.unwrap().findDecl(symbol);
 	}
 
-	private static SemaDecl findEntryPointFunction(SemaProgram program, String name)
+	private static SemaDecl findEntryPoint(SemaProgram program, String name)
 	{
 		var entry = findDeclByPath(program, name);
 
@@ -104,17 +105,21 @@ public class ProgramCodeGenerator
 
 	public static void generate(BuildTarget build, SemaProgram program, PlatformContext platform, Path outputFile) throws IOException
 	{
-		var builder = new StringBuilder();
-		builder.append(String.format("target triple = \"%s\"\n\n", platform.target()));
-
+		var builder = new IrModuleBuilder();
 		var stringPool = new StringPool();
-		var context = new FileCodegenContext(build, platform, builder, stringPool);
-		generateDecls(new DeclCodeGenerator(context), program.root);
+		var context = new FileCodegenContext(build, platform, stringPool);
+
+		builder.declareTargetTriple(context.platform().target());
+		generateDecls(new DeclCodeGenerator(context, builder), program.root);
 		stringPool.generate(builder);
 
 		if(build.entryPoint != null)
-			generateEntryPointWrapper(builder, findEntryPointFunction(program, build.entryPoint));
+		{
+			var entryPoint = findEntryPoint(program, build.entryPoint);
+			var wrapper = generateMain(entryPoint, platform);
+			builder.append(wrapper);
+		}
 
-		FileUtils.writeFile(builder.toString(), outputFile);
+		FileUtils.writeFile(builder.build().toString(), outputFile);
 	}
 }

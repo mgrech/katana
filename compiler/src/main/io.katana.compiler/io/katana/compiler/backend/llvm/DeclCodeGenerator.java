@@ -15,26 +15,42 @@
 package io.katana.compiler.backend.llvm;
 
 import io.katana.compiler.analysis.Types;
-import io.katana.compiler.backend.llvm.ir.IrFunctionBuilder;
-import io.katana.compiler.backend.llvm.ir.IrValueConstant;
-import io.katana.compiler.backend.llvm.ir.IrValues;
+import io.katana.compiler.backend.llvm.ir.*;
+import io.katana.compiler.project.BuildType;
 import io.katana.compiler.sema.decl.*;
-import io.katana.compiler.sema.type.SemaTypeNonNullablePointer;
+import io.katana.compiler.sema.expr.SemaExpr;
+import io.katana.compiler.sema.type.SemaType;
+import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 public class DeclCodeGenerator implements IVisitor
 {
-	private FileCodegenContext context;
+	private final FileCodegenContext context;
+	private final IrModuleBuilder builder;
 
-	public DeclCodeGenerator(FileCodegenContext context)
+	public DeclCodeGenerator(FileCodegenContext context, IrModuleBuilder builder)
 	{
 		this.context = context;
+		this.builder = builder;
 	}
 
-	public void generate(SemaDecl decl)
+	public void lower(SemaDecl decl)
 	{
 		decl.accept(this);
+	}
+
+	private Maybe<IrValue> lower(SemaExpr expr)
+	{
+		return ExprCodeGenerator.generate(expr, context, null);
+	}
+
+	private IrType lower(SemaType type)
+	{
+		return TypeCodeGenerator.generate(type, context.platform());
 	}
 
 	private static String qualifiedName(SemaDecl decl)
@@ -48,109 +64,35 @@ public class DeclCodeGenerator implements IVisitor
 		if(Types.isZeroSized(struct))
 			return;
 
-		context.write('%');
-		context.write(qualifiedName(struct));
-		context.write(" = type { ");
+		var name = qualifiedName(struct);
 
-		var fields = struct.fieldsByIndex();
+		var fields = struct.fieldsByIndex().stream()
+		                                   .map(f -> f.type)
+		                                   .filter(t -> !Types.isZeroSized(t))
+		                                   .map(this::lower)
+		                                   .collect(Collectors.toList());
 
-		if(!fields.isEmpty())
-		{
-			if(!Types.isZeroSized(fields.get(0).type))
-				context.write(TypeCodeGenerator.generate(fields.get(0).type, context.platform()));
-
-			for(var i = 1; i != fields.size(); ++i)
-			{
-				if(!Types.isZeroSized(fields.get(i).type))
-				{
-					context.write(", ");
-					context.write(TypeCodeGenerator.generate(fields.get(i).type, context.platform()));
-				}
-			}
-		}
-
-		context.write(" }\n");
+		builder.defineType(name, fields);
 	}
 
-	private void generateParam(SemaDeclFunction.Param param, boolean isExternal)
+	private IrFunctionParameter lower(SemaDeclFunction.Param parameter, boolean external)
 	{
-		if(Types.isZeroSized(param.type))
-			return;
-
-		context.write(TypeCodeGenerator.generate(param.type, context.platform()));
-
-		if(param.type instanceof SemaTypeNonNullablePointer)
-			context.write(" nonnull");
-
-		if(!isExternal)
-		{
-			context.write(" %p$");
-			context.write(param.name);
-		}
+		var type = lower(parameter.type);
+		var nonnull = Types.isNonNullablePointer(parameter.type);
+		var name = external ? parameter.name : "p$" + parameter.name;
+		return new IrFunctionParameter(type, name, nonnull);
 	}
 
-	private void generateSignature(SemaDeclFunction function)
-	{
-		var isExternal = function instanceof SemaDeclExternFunction;
-
-		if(isExternal)
-			context.write("declare ");
-		else
-		{
-			context.write("define ");
-
-			if(function.exported)
-			{
-				switch(context.build().type)
-				{
-				case LIBRARY_SHARED: context.write("dllexport "); break;
-				case LIBRARY_STATIC: break;
-				case EXECUTABLE: break;
-				default: throw new AssertionError("unreachable");
-				}
-			}
-			else
-				context.write("private ");
-		}
-
-		context.write(TypeCodeGenerator.generate(function.ret, context.platform()));
-		context.write(" @");
-
-		if(isExternal)
-			context.write(((SemaDeclExternFunction)function).externName.or(function.name()));
-		else
-			context.write(FunctionNameMangler.mangle(function));
-
-		context.write('(');
-
-		if(!function.params.isEmpty())
-		{
-			var first = function.params.get(0);
-			generateParam(first, isExternal);
-
-			for(var i = 1; i != function.params.size(); ++i)
-			{
-				context.write(", ");
-
-				var param = function.params.get(i);
-				generateParam(param, isExternal);
-			}
-		}
-
-		context.write(")\n");
-	}
-
-	private void generateFunctionBody(SemaDeclDefinedFunction function)
+	private List<IrInstr> lowerBody(SemaDeclDefinedFunction function)
 	{
 		var builder = new IrFunctionBuilder();
-		context.write("{\n");
 
 		for(var param : function.params)
 		{
 			if(Types.isZeroSized(param.type))
 				continue;
 
-			var type = TypeCodeGenerator.generate(param.type, context.platform());
+			var type = lower(param.type);
 			var alignment = Types.alignof(param.type, context.platform());
 			var paramIr = IrValues.ofSsa("p$" + param.name);
 			var paramCopy = IrValues.ofSsa(param.name);
@@ -165,7 +107,7 @@ public class DeclCodeGenerator implements IVisitor
 			if(Types.isZeroSized(type))
 				continue;
 
-			var typeIr = TypeCodeGenerator.generate(type, context.platform());
+			var typeIr = lower(type);
 			var alignment = Types.alignof(type, context.platform());
 			builder.alloca(IrValues.ofSsa(entry.getKey()), typeIr, alignment);
 		}
@@ -176,25 +118,52 @@ public class DeclCodeGenerator implements IVisitor
 			stmtCodeGen.generate(stmt);
 
 		stmtCodeGen.finish(function);
+		return builder.build();
+	}
 
-		context.write(builder.build());
-		context.write("}\n");
+	private void lower(SemaDeclDefinedFunction function)
+	{
+		var linkage = function.exported ? Linkage.EXTERNAL : Linkage.PRIVATE;
+
+		var dllStorageClass = context.build().type == BuildType.LIBRARY_SHARED
+		                      ? function.exported ? DllStorageClass.DLLEXPORT : DllStorageClass.NONE
+		                      : DllStorageClass.NONE;
+
+		var returnType = lower(function.ret);
+		var name = FunctionNameMangler.mangle(function);
+
+		var params = function.params.stream()
+		                            .filter(p -> !Types.isZeroSized(p.type))
+		                            .map(p -> lower(p, false))
+		                            .collect(Collectors.toList());
+
+		var signature = new IrFunctionSignature(linkage, dllStorageClass, returnType, name, params);
+		builder.defineFunction(signature, lowerBody(function));
+	}
+
+	private void lower(SemaDeclExternFunction function)
+	{
+		var returnType = lower(function.ret);
+		var name = function.externName.or(function.name());
+
+		var params = function.params.stream()
+		                            .filter(p -> !Types.isZeroSized(p.type))
+		                            .map(p -> lower(p, true))
+		                            .collect(Collectors.toList());
+
+		var signature = new IrFunctionSignature(Linkage.EXTERNAL, DllStorageClass.NONE, returnType, name, params);
+		builder.declareFunction(signature);
 	}
 
 	private void visit(SemaDeclOverloadSet set)
 	{
 		for(var overload : set.overloads)
-		{
-			if(overload instanceof SemaDeclDefinedFunction)
-			{
-				generateSignature(overload);
-				generateFunctionBody((SemaDeclDefinedFunction)overload);
-			}
-			else if(overload instanceof SemaDeclExternFunction)
-				generateSignature(overload);
+			if(overload instanceof SemaDeclExternFunction)
+				lower((SemaDeclExternFunction)overload);
+			else if(overload instanceof SemaDeclDefinedFunction)
+				lower((SemaDeclDefinedFunction)overload);
 			else
 				throw new AssertionError("unreachable");
-		}
 	}
 
 	private void visit(SemaDeclGlobal global)
@@ -202,11 +171,10 @@ public class DeclCodeGenerator implements IVisitor
 		if(Types.isZeroSized(global.type))
 			return;
 
-		var qualifiedName = qualifiedName(global);
-		var typeString = TypeCodeGenerator.generate(global.type, context.platform());
-		var initializerString = global.init.map(i -> ExprCodeGenerator.generate(i, null, null).unwrap()).or(new IrValueConstant("zeroinitializer"));
-		var kind = Types.isConst(global.type) ? "constant" : "global";
-		context.writef("@%s = private %s %s %s\n", qualifiedName, kind, typeString, initializerString);
+		var name = qualifiedName(global);
+		var type = lower(global.type);
+		var initializer = global.init.map(i -> lower(i).unwrap()).or(new IrValueConstant("zeroinitializer"));
+		builder.defineGlobal(name, AddressMergeability.NONE, Types.isConst(global.type), type, initializer);
 	}
 
 	private void visit(SemaDeclTypeAlias alias)

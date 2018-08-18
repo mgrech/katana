@@ -21,14 +21,12 @@ public class FileCodegenContext
 {
 	private final BuildTarget build;
 	private final PlatformContext platform;
-	private final StringBuilder builder;
 	private final StringPool stringPool;
 
-	public FileCodegenContext(BuildTarget build, PlatformContext platform, StringBuilder builder, StringPool stringPool)
+	public FileCodegenContext(BuildTarget build, PlatformContext platform, StringPool stringPool)
 	{
 		this.build = build;
 		this.platform = platform;
-		this.builder = builder;
 		this.stringPool = stringPool;
 	}
 
@@ -45,15 +43,5 @@ public class FileCodegenContext
 	public StringPool stringPool()
 	{
 		return stringPool;
-	}
-
-	public <T> void write(T value)
-	{
-		builder.append(value);
-	}
-
-	public void writef(String fmt, Object... values)
-	{
-		builder.append(String.format(fmt, values));
 	}
 }

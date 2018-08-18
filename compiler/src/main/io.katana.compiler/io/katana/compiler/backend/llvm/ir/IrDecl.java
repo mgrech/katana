@@ -14,35 +14,6 @@
 
 package io.katana.compiler.backend.llvm.ir;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-public class IrFunction
+public abstract class IrDecl
 {
-	public final List<IrInstr> instructions;
-
-	public IrFunction(List<IrInstr> instructions)
-	{
-		this.instructions = instructions;
-	}
-
-	private String toString(IrInstr instr)
-	{
-		var builder = new StringBuilder();
-
-		if(!(instr instanceof IrInstrLabel))
-			builder.append('\t');
-
-		builder.append(instr);
-		builder.append('\n');
-		return builder.toString();
-	}
-
-	@Override
-	public String toString()
-	{
-		return instructions.stream()
-		                   .map(this::toString)
-		                   .collect(Collectors.joining());
-	}
 }

@@ -36,9 +36,9 @@ public class IrFunctionBuilder
 		return IrLabel.of(String.format("%s$%s", name, labelCounter++));
 	}
 
-	public IrFunction build()
+	public List<IrInstr> build()
 	{
-		return new IrFunction(instrs);
+		return instrs;
 	}
 
 	public void alloca(IrValueSsa result, IrType type, long alignment)
