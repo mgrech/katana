@@ -12,27 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm.ir;
+package io.katana.compiler.backend.llvm.ir.decl;
 
-import io.katana.compiler.backend.llvm.ir.decl.IrDecl;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
-public class IrModule
+public class IrDeclFunctionDecl extends IrDecl
 {
-	public final List<IrDecl> decls;
+	public final IrFunctionSignature signature;
 
-	public IrModule(List<IrDecl> decls)
+	public IrDeclFunctionDecl(IrFunctionSignature signature)
 	{
-		this.decls = decls;
+		this.signature = signature;
 	}
 
 	@Override
 	public String toString()
 	{
-		return decls.stream()
-		            .map(IrDecl::toString)
-		            .collect(Collectors.joining());
+		return String.format("declare %s\n", signature);
 	}
 }

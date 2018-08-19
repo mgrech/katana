@@ -12,27 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm.ir;
+package io.katana.compiler.backend.llvm.ir.value;
 
-import io.katana.compiler.backend.llvm.ir.decl.IrDecl;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
-public class IrModule
+public class IrValueConstant extends IrValue
 {
-	public final List<IrDecl> decls;
+	private final String value;
 
-	public IrModule(List<IrDecl> decls)
+	public IrValueConstant(String value)
 	{
-		this.decls = decls;
+		this.value = value;
 	}
 
 	@Override
 	public String toString()
 	{
-		return decls.stream()
-		            .map(IrDecl::toString)
-		            .collect(Collectors.joining());
+		return value;
 	}
 }

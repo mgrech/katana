@@ -12,27 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm.ir;
+package io.katana.compiler.backend.llvm.ir.instr;
 
-import io.katana.compiler.backend.llvm.ir.decl.IrDecl;
+import io.katana.compiler.backend.llvm.ir.type.IrType;
+import io.katana.compiler.backend.llvm.ir.type.IrTypes;
+import io.katana.compiler.backend.llvm.ir.value.IrValue;
+import io.katana.compiler.utils.Maybe;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-public class IrModule
+public class IrInstrRet extends IrInstr
 {
-	public final List<IrDecl> decls;
+	public final IrType type;
+	public final Maybe<IrValue> value;
 
-	public IrModule(List<IrDecl> decls)
+	public IrInstrRet(IrType type, Maybe<IrValue> value)
 	{
-		this.decls = decls;
+		this.type = type;
+		this.value = value;
 	}
 
 	@Override
 	public String toString()
 	{
-		return decls.stream()
-		            .map(IrDecl::toString)
-		            .collect(Collectors.joining());
+		if(type == IrTypes.VOID)
+			return "ret void";
+
+		return String.format("ret %s %s", type, value.unwrap());
 	}
 }

@@ -14,6 +14,10 @@
 
 package io.katana.compiler.backend.llvm.ir;
 
+import io.katana.compiler.backend.llvm.ir.decl.*;
+import io.katana.compiler.backend.llvm.ir.instr.IrInstr;
+import io.katana.compiler.backend.llvm.ir.type.IrType;
+import io.katana.compiler.backend.llvm.ir.value.IrValue;
 import io.katana.compiler.platform.TargetTriple;
 
 import java.util.ArrayList;

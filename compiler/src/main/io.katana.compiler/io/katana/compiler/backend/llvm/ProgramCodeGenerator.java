@@ -19,7 +19,10 @@ import io.katana.compiler.Inlining;
 import io.katana.compiler.analysis.Types;
 import io.katana.compiler.ast.AstPath;
 import io.katana.compiler.backend.PlatformContext;
-import io.katana.compiler.backend.llvm.ir.*;
+import io.katana.compiler.backend.llvm.ir.IrModuleBuilder;
+import io.katana.compiler.backend.llvm.ir.decl.*;
+import io.katana.compiler.backend.llvm.ir.type.IrTypes;
+import io.katana.compiler.backend.llvm.ir.value.IrValues;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.diag.TypeString;
 import io.katana.compiler.project.BuildTarget;
@@ -37,12 +40,12 @@ import java.util.Collections;
 
 public class ProgramCodeGenerator
 {
-	private static void generateDecls(DeclCodeGenerator generator, SemaModule module)
+	private static void generateDecls(DeclLowerer lowerer, SemaModule module)
 	{
 		for(var child : module.children().values())
-			generateDecls(generator, child);
+			generateDecls(lowerer, child);
 
-		module.decls().values().forEach(generator::lower);
+		module.decls().values().forEach(lowerer::lower);
 	}
 
 	private static IrDeclFunctionDef generateMain(SemaDecl func, PlatformContext context)
@@ -110,7 +113,7 @@ public class ProgramCodeGenerator
 		var context = new FileCodegenContext(build, platform, stringPool);
 
 		builder.declareTargetTriple(context.platform().target());
-		generateDecls(new DeclCodeGenerator(context, builder), program.root);
+		generateDecls(new DeclLowerer(context, builder), program.root);
 		stringPool.generate(builder);
 
 		if(build.entryPoint != null)

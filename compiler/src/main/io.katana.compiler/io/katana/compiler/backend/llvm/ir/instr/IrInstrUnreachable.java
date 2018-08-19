@@ -12,27 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm.ir;
+package io.katana.compiler.backend.llvm.ir.instr;
 
-import io.katana.compiler.backend.llvm.ir.decl.IrDecl;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
-public class IrModule
+public class IrInstrUnreachable extends IrInstr
 {
-	public final List<IrDecl> decls;
-
-	public IrModule(List<IrDecl> decls)
-	{
-		this.decls = decls;
-	}
-
 	@Override
 	public String toString()
 	{
-		return decls.stream()
-		            .map(IrDecl::toString)
-		            .collect(Collectors.joining());
+		return "unreachable";
 	}
 }

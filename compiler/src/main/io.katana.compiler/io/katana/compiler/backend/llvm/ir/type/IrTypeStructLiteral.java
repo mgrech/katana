@@ -12,27 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm.ir;
-
-import io.katana.compiler.backend.llvm.ir.decl.IrDecl;
+package io.katana.compiler.backend.llvm.ir.type;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class IrModule
+public class IrTypeStructLiteral extends IrType
 {
-	public final List<IrDecl> decls;
+	public final List<IrType> fields;
 
-	public IrModule(List<IrDecl> decls)
+	public IrTypeStructLiteral(List<IrType> fields)
 	{
-		this.decls = decls;
+		this.fields = fields;
 	}
 
 	@Override
 	public String toString()
 	{
-		return decls.stream()
-		            .map(IrDecl::toString)
-		            .collect(Collectors.joining());
+		var fieldsString = fields.stream()
+		                         .map(IrType::toString)
+		                         .collect(Collectors.joining(", "));
+
+		return '{' + fieldsString + '}';
 	}
 }

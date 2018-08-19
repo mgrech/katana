@@ -14,7 +14,12 @@
 
 package io.katana.compiler.backend.llvm;
 
-import io.katana.compiler.backend.llvm.ir.*;
+import io.katana.compiler.backend.llvm.ir.IrModuleBuilder;
+import io.katana.compiler.backend.llvm.ir.decl.AddressMergeability;
+import io.katana.compiler.backend.llvm.ir.type.IrTypes;
+import io.katana.compiler.backend.llvm.ir.value.IrValue;
+import io.katana.compiler.backend.llvm.ir.value.IrValueConstant;
+import io.katana.compiler.backend.llvm.ir.value.IrValues;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;

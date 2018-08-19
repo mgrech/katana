@@ -16,8 +16,8 @@ package io.katana.compiler.backend.llvm;
 
 import io.katana.compiler.analysis.Types;
 import io.katana.compiler.backend.PlatformContext;
-import io.katana.compiler.backend.llvm.ir.IrType;
-import io.katana.compiler.backend.llvm.ir.IrTypes;
+import io.katana.compiler.backend.llvm.ir.type.IrType;
+import io.katana.compiler.backend.llvm.ir.type.IrTypes;
 import io.katana.compiler.sema.type.*;
 import io.katana.compiler.visitor.IVisitor;
 

@@ -12,27 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm.ir;
+package io.katana.compiler.backend.llvm.ir.instr;
 
-import io.katana.compiler.backend.llvm.ir.decl.IrDecl;
+import io.katana.compiler.backend.llvm.ir.IrLabel;
+import io.katana.compiler.backend.llvm.ir.value.IrValue;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-public class IrModule
+public class IrInstrBrCond extends IrInstr
 {
-	public final List<IrDecl> decls;
+	public final IrValue condition;
+	public final IrLabel trueLabel;
+	public final IrLabel falseLabel;
 
-	public IrModule(List<IrDecl> decls)
+	public IrInstrBrCond(IrValue condition, IrLabel trueLabel, IrLabel falseLabel)
 	{
-		this.decls = decls;
+		this.condition = condition;
+		this.trueLabel = trueLabel;
+		this.falseLabel = falseLabel;
 	}
 
 	@Override
 	public String toString()
 	{
-		return decls.stream()
-		            .map(IrDecl::toString)
-		            .collect(Collectors.joining());
+		return String.format("br i1 %s, label %s, label %s", condition, trueLabel, falseLabel);
 	}
 }

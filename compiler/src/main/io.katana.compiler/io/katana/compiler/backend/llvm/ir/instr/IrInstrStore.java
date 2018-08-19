@@ -12,27 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm.ir;
+package io.katana.compiler.backend.llvm.ir.instr;
 
-import io.katana.compiler.backend.llvm.ir.decl.IrDecl;
+import io.katana.compiler.backend.llvm.ir.type.IrType;
+import io.katana.compiler.backend.llvm.ir.value.IrValue;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-public class IrModule
+public class IrInstrStore extends IrInstr
 {
-	public final List<IrDecl> decls;
+	public final IrType type;
+	public final IrValue value;
+	public final IrValue pointer;
 
-	public IrModule(List<IrDecl> decls)
+	public IrInstrStore(IrType type, IrValue value, IrValue pointer)
 	{
-		this.decls = decls;
+		this.type = type;
+		this.value = value;
+		this.pointer = pointer;
 	}
 
 	@Override
 	public String toString()
 	{
-		return decls.stream()
-		            .map(IrDecl::toString)
-		            .collect(Collectors.joining());
+		return String.format("store %s %s, %s* %s", type, value, type, pointer);
 	}
 }

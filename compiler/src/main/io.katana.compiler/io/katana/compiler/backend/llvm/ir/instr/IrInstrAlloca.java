@@ -12,27 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm.ir;
+package io.katana.compiler.backend.llvm.ir.instr;
 
-import io.katana.compiler.backend.llvm.ir.decl.IrDecl;
+import io.katana.compiler.backend.llvm.ir.type.IrType;
+import io.katana.compiler.backend.llvm.ir.value.IrValueSsa;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-public class IrModule
+public class IrInstrAlloca extends IrInstr
 {
-	public final List<IrDecl> decls;
+	public final IrValueSsa result;
+	public final IrType type;
+	public final long align;
 
-	public IrModule(List<IrDecl> decls)
+	public IrInstrAlloca(IrValueSsa result, IrType type, long align)
 	{
-		this.decls = decls;
+		this.result = result;
+		this.type = type;
+		this.align = align;
 	}
 
 	@Override
 	public String toString()
 	{
-		return decls.stream()
-		            .map(IrDecl::toString)
-		            .collect(Collectors.joining());
+		return String.format("%s = alloca %s, align %s", result, type, align);
 	}
 }

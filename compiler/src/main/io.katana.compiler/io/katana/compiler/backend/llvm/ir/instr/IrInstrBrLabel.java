@@ -12,27 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm.ir;
+package io.katana.compiler.backend.llvm.ir.instr;
 
-import io.katana.compiler.backend.llvm.ir.decl.IrDecl;
+import io.katana.compiler.backend.llvm.ir.IrLabel;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-public class IrModule
+public class IrInstrBrLabel extends IrInstr
 {
-	public final List<IrDecl> decls;
+	public final IrLabel label;
 
-	public IrModule(List<IrDecl> decls)
+	public IrInstrBrLabel(IrLabel label)
 	{
-		this.decls = decls;
+		this.label = label;
 	}
 
 	@Override
 	public String toString()
 	{
-		return decls.stream()
-		            .map(IrDecl::toString)
-		            .collect(Collectors.joining());
+		return String.format("br label %s", label);
 	}
 }
