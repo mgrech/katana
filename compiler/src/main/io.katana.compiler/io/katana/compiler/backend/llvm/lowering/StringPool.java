@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm;
+package io.katana.compiler.backend.llvm.lowering;
 
 import io.katana.compiler.backend.llvm.ir.IrModuleBuilder;
 import io.katana.compiler.backend.llvm.ir.decl.AddressMergeability;
@@ -77,7 +77,7 @@ public class StringPool
 		return result.toString();
 	}
 
-	public void generate(IrModuleBuilder builder)
+	public void lower(IrModuleBuilder builder)
 	{
 		for(var entry : namesByValue.entrySet())
 		{

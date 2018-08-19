@@ -12,31 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm;
+package io.katana.compiler.backend;
 
 import io.katana.compiler.sema.type.*;
 import io.katana.compiler.visitor.IVisitor;
 
 @SuppressWarnings("unused")
-public class TypeMangler implements IVisitor
+public class TypeNameMangling implements IVisitor
 {
-	private static final TypeMangler INSTANCE = new TypeMangler();
+	private static final TypeNameMangling INSTANCE = new TypeNameMangling();
 
-	private TypeMangler() {}
+	private TypeNameMangling() {}
 
-	public static String mangle(SemaType type)
+	public static String of(SemaType type)
 	{
 		return (String)type.accept(INSTANCE);
 	}
 
 	private String visit(SemaTypeSlice slice)
 	{
-		return String.format("slice-%s", mangle(slice.type));
+		return String.format("slice-%s", of(slice.type));
 	}
 
 	private String visit(SemaTypeArray array)
 	{
-		return String.format("array-%s-%s", array.length, mangle(array.type));
+		return String.format("array-%s-%s", array.length, of(array.type));
 	}
 
 	private String visit(SemaTypeBuiltin builtin)
@@ -46,7 +46,7 @@ public class TypeMangler implements IVisitor
 
 	private String visit(SemaTypeConst const_)
 	{
-		return String.format("const-%s", mangle(const_.type));
+		return String.format("const-%s", of(const_.type));
 	}
 
 	private String visit(SemaTypeFunction function)
@@ -56,12 +56,12 @@ public class TypeMangler implements IVisitor
 
 	private String visit(SemaTypeNonNullablePointer pointer)
 	{
-		return String.format("pointer-%s", mangle(pointer.type));
+		return String.format("pointer-%s", of(pointer.type));
 	}
 
 	private String visit(SemaTypeNullablePointer pointer)
 	{
-		return String.format("npointer-%s", mangle(pointer.type));
+		return String.format("npointer-%s", of(pointer.type));
 	}
 
 	private String visit(SemaTypeStruct user)
@@ -79,7 +79,7 @@ public class TypeMangler implements IVisitor
 		for(var type : tuple.types)
 		{
 			builder.append('-');
-			builder.append(mangle(type));
+			builder.append(of(type));
 		}
 
 		return builder.toString();

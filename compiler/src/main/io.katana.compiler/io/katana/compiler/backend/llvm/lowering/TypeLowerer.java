@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm;
+package io.katana.compiler.backend.llvm.lowering;
 
 import io.katana.compiler.analysis.Types;
 import io.katana.compiler.backend.PlatformContext;
@@ -24,18 +24,18 @@ import io.katana.compiler.visitor.IVisitor;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
-public class TypeCodeGenerator implements IVisitor
+public class TypeLowerer implements IVisitor
 {
 	private PlatformContext context;
 
-	private TypeCodeGenerator(PlatformContext context)
+	private TypeLowerer(PlatformContext context)
 	{
 		this.context = context;
 	}
 
-	public static IrType generate(SemaType type, PlatformContext context)
+	public static IrType lower(SemaType type, PlatformContext context)
 	{
-		var visitor = new TypeCodeGenerator(context);
+		var visitor = new TypeLowerer(context);
 		return (IrType)type.accept(visitor);
 	}
 

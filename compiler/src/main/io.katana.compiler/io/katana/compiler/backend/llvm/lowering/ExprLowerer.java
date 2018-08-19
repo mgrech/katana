@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm;
+package io.katana.compiler.backend.llvm.lowering;
 
 import io.katana.compiler.BuiltinType;
 import io.katana.compiler.Inlining;
 import io.katana.compiler.analysis.Types;
+import io.katana.compiler.backend.FunctionNameMangling;
+import io.katana.compiler.backend.llvm.FileCodegenContext;
+import io.katana.compiler.backend.llvm.RValueToLValueConversion;
 import io.katana.compiler.backend.llvm.ir.decl.IrFunctionBuilder;
 import io.katana.compiler.backend.llvm.ir.instr.IrInstrConversion;
 import io.katana.compiler.backend.llvm.ir.type.IrType;
@@ -63,7 +66,7 @@ public class ExprLowerer implements IVisitor
 
 	private IrType lower(SemaType type)
 	{
-		return TypeCodeGenerator.generate(type, context.platform());
+		return TypeLowerer.lower(type, context.platform());
 	}
 
 	private IrValue visit(RValueToLValueConversion conversion)
@@ -293,7 +296,7 @@ public class ExprLowerer implements IVisitor
 			name = function.externName.or(function.name());
 		}
 		else
-			name = FunctionNameMangler.mangle(call.function);
+			name = FunctionNameMangling.of(call.function);
 
 		var function = IrValues.ofSymbol(name);
 		return generateFunctionCall(function, call.args, call.function.ret, call.inline);
@@ -428,7 +431,7 @@ public class ExprLowerer implements IVisitor
 			return IrValues.ofSymbol(name);
 		}
 
-		var name = FunctionNameMangler.mangle(namedFunc.func);
+		var name = FunctionNameMangling.of(namedFunc.func);
 		return IrValues.ofSymbol(name);
 	}
 

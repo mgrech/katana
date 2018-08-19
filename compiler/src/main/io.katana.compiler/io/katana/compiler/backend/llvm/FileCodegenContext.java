@@ -15,6 +15,7 @@
 package io.katana.compiler.backend.llvm;
 
 import io.katana.compiler.backend.PlatformContext;
+import io.katana.compiler.backend.llvm.lowering.StringPool;
 import io.katana.compiler.project.BuildTarget;
 
 public class FileCodegenContext

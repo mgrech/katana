@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm;
+package io.katana.compiler.backend.llvm.lowering;
 
 import io.katana.compiler.analysis.Types;
+import io.katana.compiler.backend.llvm.FileCodegenContext;
+import io.katana.compiler.backend.llvm.GeneratedGoto;
 import io.katana.compiler.backend.llvm.ir.IrLabel;
 import io.katana.compiler.backend.llvm.ir.decl.IrFunctionBuilder;
 import io.katana.compiler.backend.llvm.ir.type.IrType;
@@ -66,7 +68,7 @@ public class StmtLowerer implements IVisitor
 
 	private IrType lower(SemaType type)
 	{
-		return TypeCodeGenerator.generate(type, context.platform());
+		return TypeLowerer.lower(type, context.platform());
 	}
 
 	private void visit(SemaStmtCompound compound)

@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm;
+package io.katana.compiler.backend.llvm.lowering;
 
 import io.katana.compiler.BuiltinType;
 import io.katana.compiler.Inlining;
 import io.katana.compiler.analysis.Types;
 import io.katana.compiler.ast.AstPath;
 import io.katana.compiler.backend.PlatformContext;
+import io.katana.compiler.backend.llvm.FileCodegenContext;
 import io.katana.compiler.backend.llvm.ir.IrModuleBuilder;
 import io.katana.compiler.backend.llvm.ir.decl.*;
 import io.katana.compiler.backend.llvm.ir.type.IrTypes;
@@ -38,22 +39,22 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 
-public class ProgramCodeGenerator
+public class ProgramLowerer
 {
-	private static void generateDecls(DeclLowerer lowerer, SemaModule module)
+	private static void lowerDecls(DeclLowerer lowerer, SemaModule module)
 	{
 		for(var child : module.children().values())
-			generateDecls(lowerer, child);
+			lowerDecls(lowerer, child);
 
 		module.decls().values().forEach(lowerer::lower);
 	}
 
-	private static IrDeclFunctionDef generateMain(SemaDecl func, PlatformContext context)
+	private static IrDeclFunctionDef createMain(SemaDecl func, PlatformContext context)
 	{
 		var builder = new IrFunctionBuilder();
 
 		var returnType = ((SemaDeclFunction)func).ret;
-		var returnTypeIr = TypeCodeGenerator.generate(returnType, context);
+		var returnTypeIr = TypeLowerer.lower(returnType, context);
 		var function = IrValues.ofSymbol(func.qualifiedName().toString());
 		var result = builder.call(returnTypeIr, function, Collections.emptyList(), Collections.emptyList(), Inlining.AUTO);
 
@@ -106,20 +107,20 @@ public class ProgramCodeGenerator
 		throw new CompileException(String.format("entry point must return 'void' or 'int32', got '%s'", TypeString.of(func.ret)));
 	}
 
-	public static void generate(BuildTarget build, SemaProgram program, PlatformContext platform, Path outputFile) throws IOException
+	public static void lower(BuildTarget build, SemaProgram program, PlatformContext platform, Path outputFile) throws IOException
 	{
 		var builder = new IrModuleBuilder();
 		var stringPool = new StringPool();
 		var context = new FileCodegenContext(build, platform, stringPool);
 
 		builder.declareTargetTriple(context.platform().target());
-		generateDecls(new DeclLowerer(context, builder), program.root);
-		stringPool.generate(builder);
+		lowerDecls(new DeclLowerer(context, builder), program.root);
+		stringPool.lower(builder);
 
 		if(build.entryPoint != null)
 		{
 			var entryPoint = findEntryPoint(program, build.entryPoint);
-			var wrapper = generateMain(entryPoint, platform);
+			var wrapper = createMain(entryPoint, platform);
 			builder.append(wrapper);
 		}
 

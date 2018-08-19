@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm;
+package io.katana.compiler.backend.llvm.lowering;
 
 import io.katana.compiler.analysis.Types;
+import io.katana.compiler.backend.FunctionNameMangling;
+import io.katana.compiler.backend.llvm.FileCodegenContext;
 import io.katana.compiler.backend.llvm.ir.IrModuleBuilder;
 import io.katana.compiler.backend.llvm.ir.decl.*;
 import io.katana.compiler.backend.llvm.ir.instr.IrInstr;
@@ -56,7 +58,7 @@ public class DeclLowerer implements IVisitor
 
 	private IrType lower(SemaType type)
 	{
-		return TypeCodeGenerator.generate(type, context.platform());
+		return TypeLowerer.lower(type, context.platform());
 	}
 
 	private static String qualifiedName(SemaDecl decl)
@@ -136,7 +138,7 @@ public class DeclLowerer implements IVisitor
 		                      : DllStorageClass.NONE;
 
 		var returnType = lower(function.ret);
-		var name = FunctionNameMangler.mangle(function);
+		var name = FunctionNameMangling.of(function);
 
 		var params = function.params.stream()
 		                            .filter(p -> !Types.isZeroSized(p.type))

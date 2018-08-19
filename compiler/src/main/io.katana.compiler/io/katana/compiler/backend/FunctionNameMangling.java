@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm;
+package io.katana.compiler.backend;
 
 import io.katana.compiler.sema.decl.SemaDeclDefinedOperator;
 import io.katana.compiler.sema.decl.SemaDeclFunction;
@@ -20,7 +20,7 @@ import io.katana.compiler.sema.decl.SemaDeclFunction;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class FunctionNameMangler
+public class FunctionNameMangling
 {
 	private static final Map<Character, String> OP_MANGLING = new TreeMap<>();
 
@@ -78,14 +78,14 @@ public class FunctionNameMangler
 		return function.qualifiedName().toString();
 	}
 
-	public static String mangle(SemaDeclFunction function)
+	public static String of(SemaDeclFunction function)
 	{
 		var builder = new StringBuilder();
 
 		for(var param : function.params)
 		{
 			builder.append('$');
-			builder.append(TypeMangler.mangle(param.type));
+			builder.append(TypeNameMangling.of(param.type));
 		}
 
 		return mangleFunctionName(function) + builder.toString();
