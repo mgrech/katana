@@ -20,7 +20,7 @@ import io.katana.compiler.diag.DiagnosticKind;
 public class ScannerDiagnostics
 {
 	public static final DiagnosticId INVALID_CODEPOINT                = new DiagnosticId(DiagnosticKind.LEXICAL,  1, "invalid codepoint encountered: %s");
-	public static final DiagnosticId UNTERMINATED_MULTILINE_COMMENT   = new DiagnosticId(DiagnosticKind.LEXICAL, 2, "unterminated multi-line comment");
+	public static final DiagnosticId UNTERMINATED_MULTILINE_COMMENT   = new DiagnosticId(DiagnosticKind.LEXICAL,  2, "unterminated multi-line comment");
 
 	public static final DiagnosticId UNTERMINATED_STRING              = new DiagnosticId(DiagnosticKind.LEXICAL,  3, "unterminated string literal");
 	public static final DiagnosticId INVALID_ESCAPE                   = new DiagnosticId(DiagnosticKind.LEXICAL,  4, "invalid escape sequence %s");
