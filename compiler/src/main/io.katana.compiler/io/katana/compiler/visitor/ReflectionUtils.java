@@ -15,53 +15,43 @@
 package io.katana.compiler.visitor;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class ReflectionUtils
 {
 	public static Method findMatchingMethod(Class clazz, String name, Class[] args)
 	{
-		var allMethods = clazz.getDeclaredMethods();
+		var candidates = Arrays.stream(clazz.getDeclaredMethods())
+		                       .filter(m -> m.getParameterCount() == args.length)
+		                       .filter(m -> m.getName().equals(name))
+		                       .filter(m -> isCallable(m, args))
+		                       .collect(Collectors.toList());
 
-		var sameNameAndParamCountMethods = new ArrayList<Method>();
-
-		for(var method : allMethods)
-			if(method.getParameterCount() == args.length && method.getName().equals(name))
-				sameNameAndParamCountMethods.add(method);
-
-		var matches = new ArrayList<Method>();
-
-		for(var method : sameNameAndParamCountMethods)
-			if(isCallable(method, args))
-				matches.add(method);
-
-		if(matches.isEmpty())
+		if(candidates.isEmpty())
 		{
-			var argsDesc = new ArrayList<String>();
-
-			for(var arg : args)
-				argsDesc.add(arg == null ? "null" : "'" + arg.getName() + "'");
+			var argsDesc = Arrays.stream(args)
+			                     .map(a -> a == null ? "null" : '\'' + a.getName() + '\'')
+			                     .collect(Collectors.joining(", "));
 
 			var fmt = "no matching method found in class '%s' for argument(s) %s";
-			throw new RuntimeException(String.format(fmt, clazz.getName(), String.join(", ", argsDesc)));
+			throw new RuntimeException(String.format(fmt, clazz.getName(), argsDesc));
 		}
 
-		if(matches.size() > 1)
-			return tryFindExactMatch(clazz, matches, args);
+		if(candidates.size() > 1)
+			return tryFindExactMatch(clazz, candidates, args);
 
-		return matches.get(0);
+		return candidates.get(0);
 	}
 
 	private static boolean isCallable(Method method, Class[] args)
 	{
 		var params = method.getParameterTypes();
 
-		for(var i = 0; i != args.length; ++i)
-			if(args[i] != null && !params[i].isAssignableFrom(args[i]))
-				return false;
-
-		return true;
+		return IntStream.range(0, args.length)
+		                .allMatch(i -> args[i] == null || params[i].isAssignableFrom(args[i]));
 	}
 
 	private static Method tryFindExactMatch(Class clazz, List<Method> matches, Class[] args)
@@ -70,18 +60,10 @@ public class ReflectionUtils
 		{
 			var params = method.getParameterTypes();
 
-			var exact = true;
+			var exactMatch = IntStream.of(0, args.length)
+			                          .allMatch(i -> args[i] == null || params[i] == args[i]);
 
-			for(var i = 0; i != args.length; ++i)
-			{
-				if(args[i] == null)
-					continue;
-
-				if(params[i] != args[i])
-					exact = false;
-			}
-
-			if(exact)
+			if(exactMatch)
 				return method;
 		}
 
