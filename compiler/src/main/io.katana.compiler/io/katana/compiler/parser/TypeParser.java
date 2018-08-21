@@ -33,7 +33,7 @@ public class TypeParser
 
 	private static AstType doParse(ParseContext ctx, boolean const_)
 	{
-		if(ParseTools.option(ctx, TokenType.DECL_FN, true))
+		if(ParseTools.option(ctx, TokenType.KW_FN, true))
 		{
 			if(const_)
 				ctx.error(-2, ParserDiagnostics.FORMING_CONST_FUNCTION_TYPE);

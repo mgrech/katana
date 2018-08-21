@@ -35,15 +35,15 @@ public class DeclParser
 {
 	public static AstDecl parse(ParseContext ctx)
 	{
-		var exported = ParseTools.option(ctx, TokenType.DECL_EXPORT, true);
-		var opaque = ParseTools.option(ctx, TokenType.DECL_OPAQUE, true);
+		var exported = ParseTools.option(ctx, TokenType.KW_EXPORT, true);
+		var opaque = ParseTools.option(ctx, TokenType.KW_OPAQUE, true);
 
 		if(opaque && !exported)
 			throw new CompileException("'opaque' must go after 'export'");
 
 		Maybe<Maybe<String>> extern = Maybe.none();
 
-		if(ParseTools.option(ctx, TokenType.DECL_EXTERN, true))
+		if(ParseTools.option(ctx, TokenType.KW_EXTERN, true))
 		{
 			Maybe<String> externName = Maybe.none();
 
@@ -53,29 +53,29 @@ public class DeclParser
 			extern = Maybe.some(externName);
 		}
 
-		if(extern.isSome() && ctx.token().type != TokenType.DECL_FN)
+		if(extern.isSome() && ctx.token().type != TokenType.KW_FN)
 			throw new CompileException("extern can only be applied to overloads");
 
 		switch(ctx.token().type)
 		{
-		case DECL_FN:     return parseFunction(ctx, exported, opaque, extern);
-		case DECL_DATA:   return parseStruct(ctx, exported, opaque);
-		case DECL_GLOBAL: return parseGlobal(ctx, exported, opaque);
-		case DECL_OP:     return parseOperator(ctx, exported);
+		case KW_FN:       return parseFunction(ctx, exported, opaque, extern);
+		case KW_DATA:     return parseStruct(ctx, exported, opaque);
+		case KW_GLOBAL:   return parseGlobal(ctx, exported, opaque);
+		case KW_OPERATOR: return parseOperator(ctx, exported);
 
-		case DECL_IMPORT:
+		case KW_IMPORT:
 			if(exported)
 				throw new CompileException("imports cannot be exported");
 
 			return parseImport(ctx);
 
-		case DECL_MODULE:
+		case KW_MODULE:
 			if(exported)
 				throw new CompileException("modules cannot be exported");
 
 			return parseModule(ctx);
 
-		case DECL_TYPE:
+		case KW_TYPE:
 			if(opaque)
 				throw new CompileException("type aliases cannot be exported opaquely");
 
@@ -84,19 +84,19 @@ public class DeclParser
 		default: break;
 		}
 
-		ParseTools.unexpectedToken(ctx, TokenCategory.DECL);
+		ParseTools.unexpectedToken(ctx);
 		throw new AssertionError("unreachable");
 	}
 
 	private static Kind parseOpKind(ParseContext ctx)
 	{
-		if(ParseTools.option(ctx, TokenType.DECL_PREFIX, true))
+		if(ParseTools.option(ctx, TokenType.KW_PREFIX, true))
 			return Kind.PREFIX;
 
-		if(ParseTools.option(ctx, TokenType.DECL_INFIX, true))
+		if(ParseTools.option(ctx, TokenType.KW_INFIX, true))
 			return Kind.INFIX;
 
-		else if(ParseTools.option(ctx, TokenType.DECL_POSTFIX, true))
+		else if(ParseTools.option(ctx, TokenType.KW_POSTFIX, true))
 			return Kind.POSTFIX;
 
 		ParseTools.unexpectedToken(ctx);
@@ -244,7 +244,7 @@ public class DeclParser
 		ctx.advance();
 
 		var name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
-		var abiCompat = ParseTools.option(ctx, TokenType.DECL_ABI, true);
+		var abiCompat = ParseTools.option(ctx, TokenType.KW_ABI, true);
 		ParseTools.expect(ctx, TokenType.PUNCT_LBRACE, true);
 
 		var fields = new ArrayList<AstDeclStruct.Field>();
@@ -267,7 +267,7 @@ public class DeclParser
 
 	private static Maybe<AstExprLiteral> parseGlobalInitAndScolon(ParseContext ctx)
 	{
-		if(ParseTools.option(ctx, TokenType.MISC_UNDEF, true))
+		if(ParseTools.option(ctx, TokenType.KW_UNDEF, true))
 		{
 			ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 			return Maybe.none();

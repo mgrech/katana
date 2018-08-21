@@ -44,7 +44,7 @@ public class MiscellaneousTests
 	{
 		var tok = Tokenization.of("hello @foo world");
 		tok.expectToken(0, 5, TokenCategory.IDENT, TokenType.IDENT, "hello");
-		tok.expectToken(6, 4, TokenCategory.STMT, TokenType.STMT_LABEL, "foo");
+		tok.expectToken(6, 4, TokenCategory.LABEL, TokenType.LABEL, "foo");
 		tok.expectToken(11, 5, TokenCategory.IDENT, TokenType.IDENT, "world");
 		tok.expectNoFurtherTokensOrErrors();
 	}
@@ -54,7 +54,7 @@ public class MiscellaneousTests
 	{
 		var tok = Tokenization.of("@");
 		tok.expectError(0, 1, ScannerDiagnostics.EMPTY_LABEL);
-		tok.expectToken(0, 1, TokenCategory.STMT, TokenType.STMT_LABEL, null);
+		tok.expectToken(0, 1, TokenCategory.LABEL, TokenType.LABEL, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 }

@@ -94,7 +94,7 @@ public class ExprParser
 			}
 			else if(ParseTools.option(ctx, ".", true))
 			{
-				var global = ParseTools.option(ctx, TokenType.DECL_GLOBAL, true);
+				var global = ParseTools.option(ctx, TokenType.KW_GLOBAL, true);
 				var name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 				expr = new AstExprMemberAccess(expr, name, global);
 			}
@@ -112,7 +112,7 @@ public class ExprParser
 			return new AstExprParens(expr);
 		}
 
-		if(ParseTools.option(ctx, TokenType.DECL_GLOBAL, true))
+		if(ParseTools.option(ctx, TokenType.KW_GLOBAL, true))
 		{
 			var name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 			return new AstExprNamedGlobal(name);
@@ -126,9 +126,6 @@ public class ExprParser
 
 		if(ParseTools.option(ctx, TokenCategory.LIT, false))
 			return parseLiteral(ctx);
-
-		if(ParseTools.option(ctx, TokenCategory.MISC, false))
-			return parseMisc(ctx);
 
 		if(ParseTools.option(ctx, TokenType.PUNCT_LBRACKET, true))
 			return parseArrayLiteral(ctx);
@@ -146,8 +143,7 @@ public class ExprParser
 		if(ctx.token() == null)
 			throw new CompileException("unexpected end of file");
 
-		ParseTools.unexpectedToken(ctx);
-		throw new AssertionError("unreachable");
+		return parseMisc(ctx);
 	}
 
 	private static AstExpr parseConst(ParseContext ctx)
@@ -227,10 +223,10 @@ public class ExprParser
 
 		switch(castType)
 		{
-		case MISC_WIDEN_CAST:   return new AstExprWidenCast  (type, expr);
-		case MISC_NARROW_CAST:  return new AstExprNarrowCast (type, expr);
-		case MISC_SIGN_CAST:    return new AstExprSignCast   (type, expr);
-		case MISC_POINTER_CAST: return new AstExprPointerCast(type, expr);
+		case KW_WIDEN_CAST:   return new AstExprWidenCast  (type, expr);
+		case KW_NARROW_CAST:  return new AstExprNarrowCast (type, expr);
+		case KW_SIGN_CAST:    return new AstExprSignCast   (type, expr);
+		case KW_POINTER_CAST: return new AstExprPointerCast(type, expr);
 		default: break;
 		}
 
@@ -245,17 +241,18 @@ public class ExprParser
 
 	private static AstExpr parseMisc(ParseContext ctx)
 	{
+		var backtrack = ctx.clone();
 		var token = ParseTools.consume(ctx);
 
 		switch(token.type)
 		{
-		case MISC_SIZEOF:
+		case KW_SIZEOF:
 			return ParseTools.parenthesized(ctx, () -> new AstExprSizeof(TypeParser.parse(ctx)));
 
-		case MISC_ALIGNOF:
+		case KW_ALIGNOF:
 			return ParseTools.parenthesized(ctx, () -> new AstExprAlignof(TypeParser.parse(ctx)));
 
-		case MISC_OFFSETOF:
+		case KW_OFFSETOF:
 			return ParseTools.parenthesized(ctx, () ->
 			{
 				var type = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
@@ -264,10 +261,10 @@ public class ExprParser
 				return new AstExprOffsetof(type, field);
 			});
 
-		case MISC_BUILTIN:
+		case KW_BUILTIN:
 			return parseBuiltinCall(ctx);
 
-		case MISC_INLINE:
+		case KW_INLINE:
 			var inline = ParseTools.parenthesized(ctx, () -> parseInlineSpecifier(ctx));
 			var name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 			ParseTools.expect(ctx, TokenType.PUNCT_LPAREN, true);
@@ -275,14 +272,17 @@ public class ExprParser
 			ParseTools.expect(ctx, TokenType.PUNCT_RPAREN, true);
 			return call;
 
-		case MISC_NARROW_CAST:
-		case MISC_WIDEN_CAST:
-		case MISC_SIGN_CAST:
-		case MISC_POINTER_CAST:
+		case KW_NARROW_CAST:
+		case KW_WIDEN_CAST:
+		case KW_SIGN_CAST:
+		case KW_POINTER_CAST:
 			return parseCast(ctx, token.type);
 
-		default: throw new AssertionError("unreachable");
+		default: break;
 		}
+
+		ParseTools.unexpectedToken(backtrack);
+		throw new AssertionError("unreachable");
 	}
 
 	private static AstExpr parseLiteral(ParseContext ctx)

@@ -29,7 +29,7 @@ public class KeywordIdentifierTests
 	{
 		var tok = Tokenization.of(" void#type\npointer_cast ");
 		tok.expectToken(1, 4, TokenCategory.TYPE, TokenType.TYPE_VOID, null);
-		tok.expectToken(11, 12, TokenCategory.MISC, TokenType.MISC_POINTER_CAST, null);
+		tok.expectToken(11, 12, TokenCategory.KW, TokenType.KW_POINTER_CAST, null);
 		tok.expectNoFurtherTokensOrErrors();
 	}
 

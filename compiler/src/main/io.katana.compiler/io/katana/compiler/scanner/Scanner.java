@@ -291,45 +291,43 @@ public class Scanner
 	{
 		switch(value)
 		{
-		case "abi":      return Tokens.DECL_ABI;
-		case "data":     return Tokens.DECL_DATA;
-		case "extern":   return Tokens.DECL_EXTERN;
-		case "export":   return Tokens.DECL_EXPORT;
-		case "fn":       return Tokens.DECL_FN;
-		case "global":   return Tokens.DECL_GLOBAL;
-		case "import":   return Tokens.DECL_IMPORT;
-		case "infix":    return Tokens.DECL_INFIX;
-		case "module":   return Tokens.DECL_MODULE;
-		case "operator": return Tokens.DECL_OP;
-		case "opaque":   return Tokens.DECL_OPAQUE;
-		case "postfix":  return Tokens.DECL_POSTFIX;
-		case "prefix":   return Tokens.DECL_PREFIX;
-		case "type":     return Tokens.DECL_TYPE;
+		case "abi":          return Tokens.KW_ABI;
+		case "alignof":      return Tokens.KW_ALIGNOF;
+		case "builtin":      return Tokens.KW_BUILTIN;
+		case "data":         return Tokens.KW_DATA;
+		case "else":         return Tokens.KW_ELSE;
+		case "export":       return Tokens.KW_EXPORT;
+		case "extern":       return Tokens.KW_EXTERN;
+		case "fn":           return Tokens.KW_FN;
+		case "global":       return Tokens.KW_GLOBAL;
+		case "goto":         return Tokens.KW_GOTO;
+		case "if":           return Tokens.KW_IF;
+		case "import":       return Tokens.KW_IMPORT;
+		case "infix":        return Tokens.KW_INFIX;
+		case "inline":       return Tokens.KW_INLINE;
+		case "local":        return Tokens.KW_LOCAL;
+		case "loop":         return Tokens.KW_LOOP;
+		case "module":       return Tokens.KW_MODULE;
+		case "narrow_cast":  return Tokens.KW_NARROW_CAST;
+		case "offsetof":     return Tokens.KW_OFFSETOF;
+		case "opaque":       return Tokens.KW_OPAQUE;
+		case "operator":     return Tokens.KW_OPERATOR;
+		case "pointer_cast": return Tokens.KW_POINTER_CAST;
+		case "postfix":      return Tokens.KW_POSTFIX;
+		case "prefix":       return Tokens.KW_PREFIX;
+		case "return":       return Tokens.KW_RETURN;
+		case "sign_cast":    return Tokens.KW_SIGN_CAST;
+		case "sizeof":       return Tokens.KW_SIZEOF;
+		case "type":         return Tokens.KW_TYPE;
+		case "undef":        return Tokens.KW_UNDEF;
+		case "unless":       return Tokens.KW_UNLESS;
+		case "until":        return Tokens.KW_UNTIL;
+		case "while":        return Tokens.KW_WHILE;
+		case "widen_cast":   return Tokens.KW_WIDEN_CAST;
 
 		case "false": return Tokens.LIT_BOOL_F;
 		case "true":  return Tokens.LIT_BOOL_T;
 		case "null":  return Tokens.LIT_NULL;
-
-		case "alignof":      return Tokens.MISC_ALIGNOF;
-		case "builtin":      return Tokens.MISC_BUILTIN;
-		case "inline":       return Tokens.MISC_INLINE;
-		case "narrow_cast":  return Tokens.MISC_NARROW_CAST;
-		case "offsetof":     return Tokens.MISC_OFFSETOF;
-		case "pointer_cast": return Tokens.MISC_POINTER_CAST;
-		case "sign_cast":    return Tokens.MISC_SIGN_CAST;
-		case "sizeof":       return Tokens.MISC_SIZEOF;
-		case "undef":        return Tokens.MISC_UNDEF;
-		case "widen_cast":   return Tokens.MISC_WIDEN_CAST;
-
-		case "else":   return Tokens.STMT_ELSE;
-		case "goto":   return Tokens.STMT_GOTO;
-		case "if":     return Tokens.STMT_IF;
-		case "local":  return Tokens.STMT_LOCAL;
-		case "loop":   return Tokens.STMT_LOOP;
-		case "return": return Tokens.STMT_RETURN;
-		case "unless": return Tokens.STMT_UNLESS;
-		case "until":  return Tokens.STMT_UNTIL;
-		case "while":  return Tokens.STMT_WHILE;
 
 		case "bool":    return Tokens.TYPE_BOOL;
 		case "byte":    return Tokens.TYPE_BYTE;

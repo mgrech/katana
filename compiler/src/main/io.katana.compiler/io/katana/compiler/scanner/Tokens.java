@@ -16,35 +16,43 @@ package io.katana.compiler.scanner;
 
 public class Tokens
 {
-	public static final Token DECL_ABI     = new Token(TokenCategory.DECL, TokenType.DECL_ABI);
-	public static final Token DECL_DATA    = new Token(TokenCategory.DECL, TokenType.DECL_DATA);
-	public static final Token DECL_EXPORT  = new Token(TokenCategory.DECL, TokenType.DECL_EXPORT);
-	public static final Token DECL_EXTERN  = new Token(TokenCategory.DECL, TokenType.DECL_EXTERN);
-	public static final Token DECL_FN      = new Token(TokenCategory.DECL, TokenType.DECL_FN);
-	public static final Token DECL_GLOBAL  = new Token(TokenCategory.DECL, TokenType.DECL_GLOBAL);
-	public static final Token DECL_IMPORT  = new Token(TokenCategory.DECL, TokenType.DECL_IMPORT);
-	public static final Token DECL_INFIX   = new Token(TokenCategory.DECL, TokenType.DECL_INFIX);
-	public static final Token DECL_MODULE  = new Token(TokenCategory.DECL, TokenType.DECL_MODULE);
-	public static final Token DECL_OP      = new Token(TokenCategory.DECL, TokenType.DECL_OP);
-	public static final Token DECL_OPAQUE  = new Token(TokenCategory.TYPE, TokenType.DECL_OPAQUE);
-	public static final Token DECL_POSTFIX = new Token(TokenCategory.DECL, TokenType.DECL_POSTFIX);
-	public static final Token DECL_PREFIX  = new Token(TokenCategory.DECL, TokenType.DECL_PREFIX);
-	public static final Token DECL_TYPE    = new Token(TokenCategory.DECL, TokenType.DECL_TYPE);
+	public static final Token KW_ABI          = new Token(TokenCategory.KW, TokenType.KW_ABI);
+	public static final Token KW_ALIGNOF      = new Token(TokenCategory.KW, TokenType.KW_ALIGNOF);
+	public static final Token KW_BUILTIN      = new Token(TokenCategory.KW, TokenType.KW_BUILTIN);
+	public static final Token KW_DATA         = new Token(TokenCategory.KW, TokenType.KW_DATA);
+	public static final Token KW_ELSE         = new Token(TokenCategory.KW, TokenType.KW_ELSE);
+	public static final Token KW_EXPORT       = new Token(TokenCategory.KW, TokenType.KW_EXPORT);
+	public static final Token KW_EXTERN       = new Token(TokenCategory.KW, TokenType.KW_EXTERN);
+	public static final Token KW_FN           = new Token(TokenCategory.KW, TokenType.KW_FN);
+	public static final Token KW_GLOBAL       = new Token(TokenCategory.KW, TokenType.KW_GLOBAL);
+	public static final Token KW_GOTO         = new Token(TokenCategory.KW, TokenType.KW_GOTO);
+	public static final Token KW_IF           = new Token(TokenCategory.KW, TokenType.KW_IF);
+	public static final Token KW_IMPORT       = new Token(TokenCategory.KW, TokenType.KW_IMPORT);
+	public static final Token KW_INFIX        = new Token(TokenCategory.KW, TokenType.KW_INFIX);
+	public static final Token KW_INLINE       = new Token(TokenCategory.KW, TokenType.KW_INLINE);
+	public static final Token KW_LOCAL        = new Token(TokenCategory.KW, TokenType.KW_LOCAL);
+	public static final Token KW_LOOP         = new Token(TokenCategory.KW, TokenType.KW_LOOP);
+	public static final Token KW_MODULE       = new Token(TokenCategory.KW, TokenType.KW_MODULE);
+	public static final Token KW_NARROW_CAST  = new Token(TokenCategory.KW, TokenType.KW_NARROW_CAST);
+	public static final Token KW_OFFSETOF     = new Token(TokenCategory.KW, TokenType.KW_OFFSETOF);
+	public static final Token KW_OPERATOR     = new Token(TokenCategory.KW, TokenType.KW_OPERATOR);
+	public static final Token KW_OPAQUE       = new Token(TokenCategory.KW, TokenType.KW_OPAQUE);
+	public static final Token KW_POINTER_CAST = new Token(TokenCategory.KW, TokenType.KW_POINTER_CAST);
+	public static final Token KW_POSTFIX      = new Token(TokenCategory.KW, TokenType.KW_POSTFIX);
+	public static final Token KW_PREFIX       = new Token(TokenCategory.KW, TokenType.KW_PREFIX);
+	public static final Token KW_RETURN       = new Token(TokenCategory.KW, TokenType.KW_RETURN);
+	public static final Token KW_SIGN_CAST    = new Token(TokenCategory.KW, TokenType.KW_SIGN_CAST);
+	public static final Token KW_SIZEOF       = new Token(TokenCategory.KW, TokenType.KW_SIZEOF);
+	public static final Token KW_TYPE         = new Token(TokenCategory.KW, TokenType.KW_TYPE);
+	public static final Token KW_UNDEF        = new Token(TokenCategory.KW, TokenType.KW_UNDEF);
+	public static final Token KW_UNLESS       = new Token(TokenCategory.KW, TokenType.KW_UNLESS);
+	public static final Token KW_UNTIL        = new Token(TokenCategory.KW, TokenType.KW_UNTIL);
+	public static final Token KW_WHILE        = new Token(TokenCategory.KW, TokenType.KW_WHILE);
+	public static final Token KW_WIDEN_CAST   = new Token(TokenCategory.KW, TokenType.KW_WIDEN_CAST);
 
 	public static final Token LIT_BOOL_F = new Token(TokenCategory.LIT, TokenType.LIT_BOOL, false);
 	public static final Token LIT_BOOL_T = new Token(TokenCategory.LIT, TokenType.LIT_BOOL, true);
 	public static final Token LIT_NULL   = new Token(TokenCategory.LIT, TokenType.LIT_NULL);
-
-	public static final Token MISC_ALIGNOF      = new Token(TokenCategory.MISC, TokenType.MISC_ALIGNOF);
-	public static final Token MISC_BUILTIN      = new Token(TokenCategory.MISC, TokenType.MISC_BUILTIN);
-	public static final Token MISC_INLINE       = new Token(TokenCategory.MISC, TokenType.MISC_INLINE);
-	public static final Token MISC_NARROW_CAST  = new Token(TokenCategory.MISC, TokenType.MISC_NARROW_CAST);
-	public static final Token MISC_OFFSETOF     = new Token(TokenCategory.MISC, TokenType.MISC_OFFSETOF);
-	public static final Token MISC_POINTER_CAST = new Token(TokenCategory.MISC, TokenType.MISC_POINTER_CAST);
-	public static final Token MISC_SIGN_CAST    = new Token(TokenCategory.MISC, TokenType.MISC_SIGN_CAST);
-	public static final Token MISC_SIZEOF       = new Token(TokenCategory.MISC, TokenType.MISC_SIZEOF);
-	public static final Token MISC_UNDEF        = new Token(TokenCategory.MISC, TokenType.MISC_UNDEF);
-	public static final Token MISC_WIDEN_CAST   = new Token(TokenCategory.MISC, TokenType.MISC_WIDEN_CAST);
 
 	public static final Token PUNCT_COMMA    = new Token(TokenCategory.PUNCT, TokenType.PUNCT_COMMA);
 	public static final Token PUNCT_DOLLAR   = new Token(TokenCategory.PUNCT, TokenType.PUNCT_DOLLAR);
@@ -55,16 +63,6 @@ public class Tokens
 	public static final Token PUNCT_RBRACKET = new Token(TokenCategory.PUNCT, TokenType.PUNCT_RBRACKET);
 	public static final Token PUNCT_RPAREN   = new Token(TokenCategory.PUNCT, TokenType.PUNCT_RPAREN);
 	public static final Token PUNCT_SCOLON   = new Token(TokenCategory.PUNCT, TokenType.PUNCT_SCOLON);
-
-	public static final Token STMT_ELSE   = new Token(TokenCategory.STMT, TokenType.STMT_ELSE);
-	public static final Token STMT_GOTO   = new Token(TokenCategory.STMT, TokenType.STMT_GOTO);
-	public static final Token STMT_IF     = new Token(TokenCategory.STMT, TokenType.STMT_IF);
-	public static final Token STMT_LOCAL  = new Token(TokenCategory.STMT, TokenType.STMT_LOCAL);
-	public static final Token STMT_LOOP   = new Token(TokenCategory.STMT, TokenType.STMT_LOOP);
-	public static final Token STMT_RETURN = new Token(TokenCategory.STMT, TokenType.STMT_RETURN);
-	public static final Token STMT_UNLESS = new Token(TokenCategory.STMT, TokenType.STMT_UNLESS);
-	public static final Token STMT_UNTIL  = new Token(TokenCategory.STMT, TokenType.STMT_UNTIL);
-	public static final Token STMT_WHILE  = new Token(TokenCategory.STMT, TokenType.STMT_WHILE);
 
 	public static final Token TYPE_BOOL    = new Token(TokenCategory.TYPE, TokenType.TYPE_BOOL);
 	public static final Token TYPE_BYTE    = new Token(TokenCategory.TYPE, TokenType.TYPE_BYTE);
@@ -91,7 +89,7 @@ public class Tokens
 
 	public static Token label(String value)
 	{
-		return new Token(TokenCategory.STMT, TokenType.STMT_LABEL, value);
+		return new Token(TokenCategory.LABEL, TokenType.LABEL, value);
 	}
 
 	public static Token numericLiteral(TokenType type, Object value)

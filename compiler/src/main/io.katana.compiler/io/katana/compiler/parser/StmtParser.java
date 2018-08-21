@@ -23,31 +23,31 @@ public class StmtParser
 {
 	public static AstStmt parse(ParseContext ctx)
 	{
-		if(ParseTools.option(ctx, TokenType.STMT_LOCAL, true))
+		if(ParseTools.option(ctx, TokenType.KW_LOCAL, true))
 			return parseLocal(ctx);
 
-		if(ParseTools.option(ctx, TokenType.STMT_IF, true))
+		if(ParseTools.option(ctx, TokenType.KW_IF, true))
 			return parseIf(ctx, false);
 
-		if(ParseTools.option(ctx, TokenType.STMT_UNLESS, true))
+		if(ParseTools.option(ctx, TokenType.KW_UNLESS, true))
 			return parseIf(ctx, true);
 
-		if(ParseTools.option(ctx, TokenType.STMT_GOTO, true))
+		if(ParseTools.option(ctx, TokenType.KW_GOTO, true))
 			return parseGoto(ctx);
 
-		if(ParseTools.option(ctx, TokenType.STMT_RETURN, true))
+		if(ParseTools.option(ctx, TokenType.KW_RETURN, true))
 			return parseReturn(ctx);
 
-		if(ParseTools.option(ctx, TokenType.STMT_LOOP, true))
+		if(ParseTools.option(ctx, TokenType.KW_LOOP, true))
 			return parseLoop(ctx);
 
-		if(ParseTools.option(ctx, TokenType.STMT_WHILE, true))
+		if(ParseTools.option(ctx, TokenType.KW_WHILE, true))
 			return parseWhile(ctx, false);
 
-		if(ParseTools.option(ctx, TokenType.STMT_UNTIL, true))
+		if(ParseTools.option(ctx, TokenType.KW_UNTIL, true))
 			return parseWhile(ctx, true);
 
-		if(ParseTools.option(ctx, TokenType.STMT_LABEL, false))
+		if(ParseTools.option(ctx, TokenType.LABEL, false))
 			return parseLabel(ctx);
 
 		if(ParseTools.option(ctx, TokenType.PUNCT_LBRACE, true))
@@ -58,7 +58,7 @@ public class StmtParser
 
 	private static Maybe<AstExpr> parseLocalInitAndScolon(ParseContext ctx)
 	{
-		if(ParseTools.option(ctx, TokenType.MISC_UNDEF, true))
+		if(ParseTools.option(ctx, TokenType.KW_UNDEF, true))
 		{
 			ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 			return Maybe.none();
@@ -101,7 +101,7 @@ public class StmtParser
 
 		Maybe<AstStmt> else_ = Maybe.none();
 
-		if(ParseTools.option(ctx, TokenType.STMT_ELSE, true))
+		if(ParseTools.option(ctx, TokenType.KW_ELSE, true))
 			else_ = Maybe.some(parse(ctx));
 
 		if(else_.isNone())
@@ -112,7 +112,7 @@ public class StmtParser
 
 	private static AstStmtGoto parseGoto(ParseContext ctx)
 	{
-		var label = (String)ParseTools.consumeExpected(ctx, TokenType.STMT_LABEL).value;
+		var label = (String)ParseTools.consumeExpected(ctx, TokenType.LABEL).value;
 		ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
 		return new AstStmtGoto(label);
 	}

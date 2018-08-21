@@ -16,12 +16,11 @@ package io.katana.compiler.scanner;
 
 public enum TokenCategory
 {
-	DECL,
+	KW,
 	IDENT,
+	LABEL,
 	LIT,
-	MISC,
 	OP,
 	PUNCT,
-	STMT,
 	TYPE,
 }
