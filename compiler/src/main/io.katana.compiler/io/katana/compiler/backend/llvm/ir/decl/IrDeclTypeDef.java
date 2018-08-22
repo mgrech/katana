@@ -37,6 +37,6 @@ public class IrDeclTypeDef extends IrDecl
 		                    .map(IrType::toString)
 		                    .collect(Collectors.joining(", "));
 
-		return String.format("%s = type {%s}\n", name, content);
+		return String.format("%%%s = type {%s}\n", name, content);
 	}
 }
