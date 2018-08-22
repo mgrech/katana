@@ -242,7 +242,7 @@ public class ExprParser
 
 	private static AstExpr parseMisc(ParseContext ctx)
 	{
-		var backtrack = ctx.clone();
+		var state = ctx.recordState();
 		var token = ParseTools.consume(ctx);
 
 		switch(token.type)
@@ -282,7 +282,8 @@ public class ExprParser
 		default: break;
 		}
 
-		ParseTools.unexpectedToken(backtrack);
+		ctx.backtrack(state);
+		ParseTools.unexpectedToken(ctx);
 		throw new AssertionError("unreachable");
 	}
 

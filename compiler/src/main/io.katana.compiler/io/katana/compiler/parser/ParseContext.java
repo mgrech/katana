@@ -23,8 +23,22 @@ import io.katana.compiler.scanner.Token;
 
 import java.util.List;
 
-public class ParseContext implements Cloneable
+public class ParseContext
 {
+	public static class BacktrackState
+	{
+		private final int currentToken;
+		private final int diagnosticCount;
+		private final LateParseExprs lateParseExprs;
+
+		public BacktrackState(int currentToken, int diagnosticCount, LateParseExprs lateParseExprs)
+		{
+			this.currentToken = currentToken;
+			this.diagnosticCount = diagnosticCount;
+			this.lateParseExprs = lateParseExprs;
+		}
+	}
+
 	private final SourceFile file;
 	private final List<Token> tokens;
 	private final DiagnosticsManager diag;
@@ -62,17 +76,16 @@ public class ParseContext implements Cloneable
 		return file;
 	}
 
-	@Override
-	public ParseContext clone()
+	public BacktrackState recordState()
 	{
-		return new ParseContext(file, tokens, diag, lateParseExprs.clone(), current);
+		return new BacktrackState(current, diag.amount(), lateParseExprs.clone());
 	}
 
-	public void backtrack(ParseContext ctx)
+	public void backtrack(BacktrackState state)
 	{
-		current = ctx.current;
-		diag.rewind(diag.amount() - ctx.diag.amount());
-		lateParseExprs = ctx.lateParseExprs;
+		current = state.currentToken;
+		diag.rewind(diag.amount() - state.diagnosticCount);
+		lateParseExprs = state.lateParseExprs;
 	}
 
 	public LateParseExprs lateParseExprs()

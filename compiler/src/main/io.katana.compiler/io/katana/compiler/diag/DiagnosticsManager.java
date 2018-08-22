@@ -24,7 +24,6 @@ public class DiagnosticsManager
 {
 	private final boolean stackTraces;
 	private final List<Diagnostic> diagnostics = new ArrayList<>();
-	private boolean successful = true;
 
 	public DiagnosticsManager(boolean stackTraces)
 	{
@@ -53,7 +52,6 @@ public class DiagnosticsManager
 
 	public void error(SourceLocation location, DiagnosticId id, Object... args)
 	{
-		successful = false;
 		diagnose(location, id, DiagnosticType.ERROR, args);
 	}
 
@@ -64,7 +62,8 @@ public class DiagnosticsManager
 
 	public boolean successful()
 	{
-		return successful;
+		return diagnostics.stream()
+		                  .noneMatch(d -> d.type == DiagnosticType.ERROR);
 	}
 
 	public String summary()

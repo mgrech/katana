@@ -286,7 +286,7 @@ public class DeclParser
 	{
 		ctx.advance();
 
-		var tmp = ctx.clone();
+		var state = ctx.recordState();
 
 		if(ParseTools.option(ctx, TokenType.IDENT, false))
 		{
@@ -299,7 +299,7 @@ public class DeclParser
 			}
 		}
 
-		ctx.backtrack(tmp);
+		ctx.backtrack(state);
 
 		var type = TypeParser.parse(ctx);
 		var name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
