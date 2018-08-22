@@ -330,6 +330,11 @@ public class ExprLowerer implements IVisitor
 		return lower(conversion.expr);
 	}
 
+	private IrValue visit(SemaExprImplicitConversionNullToSlice conversion)
+	{
+		return generateSliceConstruction(Types.removeSlice(conversion.type), IrValues.ADDRESS_ONE, 0);
+	}
+
 	private IrValue visit(SemaExprImplicitConversionNullToNullablePointer conversion)
 	{
 		return IrValues.NULL;
