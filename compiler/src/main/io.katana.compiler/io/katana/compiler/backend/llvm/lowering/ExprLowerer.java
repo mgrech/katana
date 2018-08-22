@@ -312,13 +312,14 @@ public class ExprLowerer implements IVisitor
 	{
 		var elementType = Types.removeArray(Types.removePointer(conversion.expr.type()));
 		var length = Types.arrayLength(Types.removePointer(conversion.expr.type()));
+		var size = length * Types.sizeof(elementType, context.platform());
 
 		var pointerType = IrTypes.ofPointer(lower(elementType));
 		var pointer = generateGetElementPtr(conversion.expr, INDEX_ZERO_EXPR);
 		var bytePointerType = IrTypes.ofPointer(IrTypes.I8);
 		var bytePointer = builder.convert(IrInstrConversion.Kind.BITCAST, pointerType, pointer, bytePointerType);
 
-		return generateSliceConstruction(SemaTypeBuiltin.BYTE, bytePointer, length);
+		return generateSliceConstruction(SemaTypeBuiltin.BYTE, bytePointer, size);
 	}
 
 	private IrValue visit(SemaExprImplicitConversionArrayPointerToSlice conversion)
