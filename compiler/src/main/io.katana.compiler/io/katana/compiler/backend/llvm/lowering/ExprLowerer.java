@@ -415,7 +415,7 @@ public class ExprLowerer implements IVisitor
 
 		if(isRValue)
 		{
-			var fieldType = lower(index.type());
+			var fieldType = lower(fieldAccess.field.type);
 			return builder.load(fieldType, result);
 		}
 
