@@ -31,6 +31,7 @@ import io.katana.compiler.backend.llvm.ir.value.IrValues;
 import io.katana.compiler.sema.decl.SemaDeclExternFunction;
 import io.katana.compiler.sema.expr.*;
 import io.katana.compiler.sema.type.SemaType;
+import io.katana.compiler.sema.type.SemaTypeBuiltin;
 import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
 
@@ -305,6 +306,19 @@ public class ExprLowerer implements IVisitor
 	private IrValue visit(SemaExprImplicitConversionArrayPointerToPointer conversion)
 	{
 		return generateGetElementPtr(conversion.expr, INDEX_ZERO_EXPR);
+	}
+
+	private IrValue visit(SemaExprImplicitConversionArrayPointerToByteSlice conversion)
+	{
+		var elementType = Types.removeArray(Types.removePointer(conversion.expr.type()));
+		var length = Types.arrayLength(Types.removePointer(conversion.expr.type()));
+
+		var pointerType = IrTypes.ofPointer(lower(elementType));
+		var pointer = generateGetElementPtr(conversion.expr, INDEX_ZERO_EXPR);
+		var bytePointerType = IrTypes.ofPointer(IrTypes.I8);
+		var bytePointer = builder.convert(IrInstrConversion.Kind.BITCAST, pointerType, pointer, bytePointerType);
+
+		return generateSliceConstruction(SemaTypeBuiltin.BYTE, bytePointer, length);
 	}
 
 	private IrValue visit(SemaExprImplicitConversionArrayPointerToSlice conversion)

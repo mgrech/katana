@@ -108,6 +108,8 @@ public class ImplicitConversions
 
 		// ![N]T -> []      T, ?[N]T -> []      T
 		// ![N]T -> []const T, ?[N]T -> []const T
+		// ![N]T -> []      byte, ?[N]T -> []      byte
+		// ![N]T -> []const byte, ?[N]T -> []const byte
 		if(Types.isPointer(sourceType) && Types.isSlice(targetType))
 		{
 			var sourcePointeeType = Types.removePointer(sourceType);
@@ -120,6 +122,9 @@ public class ImplicitConversions
 
 				if(Types.equal(sourceElementType, targetElementTypeNoConst))
 					return new SemaExprImplicitConversionArrayPointerToSlice(rvalueExpr, targetType);
+
+				if(Types.isByte(targetElementTypeNoConst))
+					return new SemaExprImplicitConversionArrayPointerToByteSlice(rvalueExpr, targetType);
 			}
 		}
 
