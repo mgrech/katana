@@ -35,15 +35,14 @@ import io.katana.compiler.sema.type.SemaTypeBuiltin;
 import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
 
-import java.math.BigInteger;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 public class ExprLowerer implements IVisitor
 {
-	private static final SemaExpr INDEX_ZERO_EXPR = new SemaExprLitInt(BigInteger.ZERO, BuiltinType.INT32);
-	private static final SemaExpr INDEX_ONE_EXPR = new SemaExprLitInt(BigInteger.ONE, BuiltinType.INT32);
+	private static final int SLICE_POINTER_FIELD_INDEX = 0;
+	private static final int SLICE_LENGTH_FIELD_INDEX = 1;
 
 	private final FileCodegenContext context;
 	private final IrFunctionBuilder builder;
@@ -94,12 +93,15 @@ public class ExprLowerer implements IVisitor
 		return IrValues.ofConstant(Types.alignof(alignof.type, context.platform()));
 	}
 
-	private IrValueSsa generateGetElementPtr(SemaExpr compoundExpr, SemaExpr indexExpr)
+	private IrValueSsa generateGetElementPtr(SemaExpr compoundExpr, int index)
+	{
+		return generateGetElementPtr(compoundExpr, IrTypes.I32, IrValues.ofConstant(index));
+	}
+
+	private IrValueSsa generateGetElementPtr(SemaExpr compoundExpr, IrType indexType, IrValue index)
 	{
 		var compound = lower(compoundExpr);
 		var baseType = lower(Types.removePointer(compoundExpr.type()));
-		var indexType = lower(indexExpr.type());
-		var index = lower(indexExpr);
 		return builder.getelementptr(baseType, compound, indexType, index);
 	}
 
@@ -113,7 +115,9 @@ public class ExprLowerer implements IVisitor
 		if(isRValue)
 			arrayAccess.expr = new RValueToLValueConversion(arrayAccess.expr);
 
-		var result = generateGetElementPtr(arrayAccess.expr, arrayAccess.index);
+		var indexType = lower(arrayAccess.index.type());
+		var index = lower(arrayAccess.index);
+		var result = generateGetElementPtr(arrayAccess.expr, indexType, index);
 
 		if(isRValue)
 		{
@@ -131,7 +135,7 @@ public class ExprLowerer implements IVisitor
 
 	private IrValue visit(SemaExprArrayGetPointer arrayGetPointer)
 	{
-		return generateGetElementPtr(arrayGetPointer.expr, INDEX_ZERO_EXPR);
+		return generateGetElementPtr(arrayGetPointer.expr, 0);
 	}
 
 	private IrValueSsa generateSliceConstruction(SemaType elementType, IrValue pointer, IrValue length)
@@ -140,14 +144,15 @@ public class ExprLowerer implements IVisitor
 		var pointerType = sliceType.fields.get(0);
 		var lengthType = sliceType.fields.get(1);
 
-		var intermediate = builder.insertvalue(sliceType, IrValues.UNDEF, pointerType, pointer, 0);
-		return builder.insertvalue(sliceType, intermediate, lengthType, length, 1);
+		var intermediate = builder.insertvalue(sliceType, IrValues.UNDEF, pointerType, pointer,
+		                                       SLICE_POINTER_FIELD_INDEX);
+		return builder.insertvalue(sliceType, intermediate, lengthType, length, SLICE_LENGTH_FIELD_INDEX);
 	}
 
 	private IrValue visit(SemaExprArrayGetSlice arrayGetSlice)
 	{
 		var elementType = Types.removeSlice(arrayGetSlice.type());
-		var pointer = generateGetElementPtr(arrayGetSlice.expr, INDEX_ZERO_EXPR);
+		var pointer = generateGetElementPtr(arrayGetSlice.expr, 0);
 		var length = Types.arrayLength(Types.removePointer(arrayGetSlice.expr.type()));
 		return generateSliceConstruction(elementType, pointer, IrValues.ofConstant(length));
 	}
@@ -305,7 +310,7 @@ public class ExprLowerer implements IVisitor
 
 	private IrValue visit(SemaExprImplicitConversionArrayPointerToPointer conversion)
 	{
-		return generateGetElementPtr(conversion.expr, INDEX_ZERO_EXPR);
+		return generateGetElementPtr(conversion.expr, 0);
 	}
 
 	private IrValue visit(SemaExprImplicitConversionArrayPointerToByteSlice conversion)
@@ -315,7 +320,7 @@ public class ExprLowerer implements IVisitor
 		var size = length * Types.sizeof(elementType, context.platform());
 
 		var pointerType = IrTypes.ofPointer(lower(elementType));
-		var pointer = generateGetElementPtr(conversion.expr, INDEX_ZERO_EXPR);
+		var pointer = generateGetElementPtr(conversion.expr, 0);
 		var bytePointerType = IrTypes.ofPointer(IrTypes.I8);
 		var bytePointer = builder.convert(IrInstrConversion.Kind.BITCAST, pointerType, pointer, bytePointerType);
 
@@ -324,7 +329,7 @@ public class ExprLowerer implements IVisitor
 
 	private IrValue visit(SemaExprImplicitConversionArrayPointerToSlice conversion)
 	{
-		var pointer = generateGetElementPtr(conversion.expr, INDEX_ZERO_EXPR);
+		var pointer = generateGetElementPtr(conversion.expr, 0);
 		var length = Types.arrayLength(Types.removePointer(conversion.expr.type()));
 		var elementType = Types.removeSlice(conversion.type());
 		return generateSliceConstruction(elementType, pointer, IrValues.ofConstant(length));
@@ -373,9 +378,9 @@ public class ExprLowerer implements IVisitor
 		var elementType = Types.removeSlice(conversion.expr.type());
 		var slice = lower(conversion.expr);
 		var sliceType = lower(conversion.expr.type());
-		var pointer = builder.extractvalue(sliceType, slice, 0);
+		var pointer = builder.extractvalue(sliceType, slice, SLICE_POINTER_FIELD_INDEX);
 		var pointerType = IrTypes.ofPointer(lower(elementType));
-		var length = builder.extractvalue(sliceType, slice, 1);
+		var length = builder.extractvalue(sliceType, slice, SLICE_LENGTH_FIELD_INDEX);
 		var lengthType = lower(SemaTypeBuiltin.INT);
 		var sizeof = Types.sizeof(elementType, context.platform());
 		var byteSize = builder.binary("mul", lengthType, length, IrValues.ofConstant(sizeof));
@@ -410,8 +415,7 @@ public class ExprLowerer implements IVisitor
 		if(isRValue)
 			fieldAccess.expr = new RValueToLValueConversion(fieldAccess.expr);
 
-		var index = new SemaExprLitInt(BigInteger.valueOf(fieldAccess.field.index), BuiltinType.INT32);
-		var result = generateGetElementPtr(fieldAccess.expr, index);
+		var result = generateGetElementPtr(fieldAccess.expr, fieldAccess.field.index);
 
 		if(isRValue)
 		{
@@ -509,16 +513,16 @@ public class ExprLowerer implements IVisitor
 	private IrValue visit(SemaExprSliceGetLength sliceGetLength)
 	{
 		if(sliceGetLength.expr.kind() == ExprKind.RVALUE)
-			return generateExtractValue(sliceGetLength.expr, 1);
+			return generateExtractValue(sliceGetLength.expr, SLICE_LENGTH_FIELD_INDEX);
 
-		return generateGetElementPtr(sliceGetLength.expr, INDEX_ONE_EXPR);
+		return generateGetElementPtr(sliceGetLength.expr, SLICE_LENGTH_FIELD_INDEX);
 	}
 
 	private IrValue visit(SemaExprSliceGetPointer sliceGetPointer)
 	{
 		if(sliceGetPointer.expr.kind() == ExprKind.RVALUE)
-			return generateExtractValue(sliceGetPointer.expr, 0);
+			return generateExtractValue(sliceGetPointer.expr, SLICE_POINTER_FIELD_INDEX);
 
-		return generateGetElementPtr(sliceGetPointer.expr, INDEX_ZERO_EXPR);
+		return generateGetElementPtr(sliceGetPointer.expr, SLICE_POINTER_FIELD_INDEX);
 	}
 }
