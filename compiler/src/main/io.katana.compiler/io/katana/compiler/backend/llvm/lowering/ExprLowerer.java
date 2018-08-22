@@ -134,14 +134,14 @@ public class ExprLowerer implements IVisitor
 		return generateGetElementPtr(arrayGetPointer.expr, INDEX_ZERO_EXPR);
 	}
 
-	private IrValueSsa generateSliceConstruction(SemaType elementType, IrValue pointer, long length)
+	private IrValueSsa generateSliceConstruction(SemaType elementType, IrValue pointer, IrValue length)
 	{
 		var sliceType = (IrTypeStructLiteral)lower(Types.addSlice(elementType));
 		var pointerType = sliceType.fields.get(0);
 		var lengthType = sliceType.fields.get(1);
 
 		var intermediate = builder.insertvalue(sliceType, IrValues.UNDEF, pointerType, pointer, 0);
-		return builder.insertvalue(sliceType, intermediate, lengthType, IrValues.ofConstant(length), 1);
+		return builder.insertvalue(sliceType, intermediate, lengthType, length, 1);
 	}
 
 	private IrValue visit(SemaExprArrayGetSlice arrayGetSlice)
@@ -149,7 +149,7 @@ public class ExprLowerer implements IVisitor
 		var elementType = Types.removeSlice(arrayGetSlice.type());
 		var pointer = generateGetElementPtr(arrayGetSlice.expr, INDEX_ZERO_EXPR);
 		var length = Types.arrayLength(Types.removePointer(arrayGetSlice.expr.type()));
-		return generateSliceConstruction(elementType, pointer, length);
+		return generateSliceConstruction(elementType, pointer, IrValues.ofConstant(length));
 	}
 
 	private IrValue visit(SemaExprAssign assign)
@@ -319,7 +319,7 @@ public class ExprLowerer implements IVisitor
 		var bytePointerType = IrTypes.ofPointer(IrTypes.I8);
 		var bytePointer = builder.convert(IrInstrConversion.Kind.BITCAST, pointerType, pointer, bytePointerType);
 
-		return generateSliceConstruction(SemaTypeBuiltin.BYTE, bytePointer, size);
+		return generateSliceConstruction(SemaTypeBuiltin.BYTE, bytePointer, IrValues.ofConstant(length));
 	}
 
 	private IrValue visit(SemaExprImplicitConversionArrayPointerToSlice conversion)
@@ -327,7 +327,7 @@ public class ExprLowerer implements IVisitor
 		var pointer = generateGetElementPtr(conversion.expr, INDEX_ZERO_EXPR);
 		var length = Types.arrayLength(Types.removePointer(conversion.expr.type()));
 		var elementType = Types.removeSlice(conversion.type());
-		return generateSliceConstruction(elementType, pointer, length);
+		return generateSliceConstruction(elementType, pointer, IrValues.ofConstant(length));
 	}
 
 	private IrValue visit(SemaExprImplicitConversionLValueToRValue conversion)
@@ -347,7 +347,7 @@ public class ExprLowerer implements IVisitor
 
 	private IrValue visit(SemaExprImplicitConversionNullToSlice conversion)
 	{
-		return generateSliceConstruction(Types.removeSlice(conversion.type), IrValues.ADDRESS_ONE, 0);
+		return generateSliceConstruction(Types.removeSlice(conversion.type), IrValues.ADDRESS_ONE, IrValues.ofConstant(0));
 	}
 
 	private IrValue visit(SemaExprImplicitConversionNullToNullablePointer conversion)
@@ -366,6 +366,22 @@ public class ExprLowerer implements IVisitor
 		var value = lower(conversion.expr);
 		var targetType = IrTypes.ofPointer(IrTypes.I8);
 		return builder.convert(IrInstrConversion.Kind.BITCAST, sourceType, value, targetType);
+	}
+
+	private IrValue visit(SemaExprImplicitConversionSliceToByteSlice conversion)
+	{
+		var elementType = Types.removeSlice(conversion.expr.type());
+		var slice = lower(conversion.expr);
+		var sliceType = lower(conversion.expr.type());
+		var pointer = builder.extractvalue(sliceType, slice, 0);
+		var pointerType = IrTypes.ofPointer(lower(elementType));
+		var length = builder.extractvalue(sliceType, slice, 1);
+		var lengthType = lower(SemaTypeBuiltin.INT);
+		var sizeof = Types.sizeof(elementType, context.platform());
+		var byteSize = builder.binary("mul", lengthType, length, IrValues.ofConstant(sizeof));
+		var bytePointerType = IrTypes.ofPointer(IrTypes.I8);
+		var bytePointer = builder.convert(IrInstrConversion.Kind.BITCAST, pointerType, pointer, bytePointerType);
+		return generateSliceConstruction(SemaTypeBuiltin.BYTE, bytePointer, byteSize);
 	}
 
 	private IrValue visit(SemaExprImplicitConversionSliceToSliceOfConst conversion)

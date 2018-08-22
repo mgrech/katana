@@ -62,6 +62,23 @@ public class ImplicitConversions
 		return expr;
 	}
 
+	private static SemaExpr performSliceConversions(SemaExpr expr, SemaType targetType)
+	{
+		var sourceType = expr.type();
+		var sourceElementType = Types.removeSlice(sourceType);
+		var targetElementType = Types.removeSlice(targetType);
+
+		// []T -> []const T
+		if(!Types.isConst(sourceElementType) && Types.isConst(targetElementType))
+			expr = new SemaExprImplicitConversionSliceToSliceOfConst(expr);
+
+		// []T -> []byte, []const T -> []const byte
+		if(!Types.isByte(sourceElementType) && Types.isByte(targetElementType))
+			expr = new SemaExprImplicitConversionSliceToByteSlice(expr, targetType);
+
+		return expr;
+	}
+
 	private static SemaExpr ensureRValue(SemaExpr expr)
 	{
 		switch(expr.kind())
@@ -101,10 +118,9 @@ public class ImplicitConversions
 		if(Types.isPointer(sourceType) && Types.isPointer(targetType))
 			return performPointerConversions(rvalueExpr, targetType);
 
-		// []T -> []const T
-		if(Types.isSlice(sourceType) && !Types.isConst(Types.removeSlice(sourceType))
-		&& Types.isSlice(targetType) && Types.isConst(Types.removeSlice(targetType)))
-			return new SemaExprImplicitConversionSliceToSliceOfConst(rvalueExpr);
+		// slice conversions
+		if(Types.isSlice(sourceType) && Types.isSlice(targetType))
+			return performSliceConversions(rvalueExpr, targetType);
 
 		// ![N]T -> []      T, ?[N]T -> []      T
 		// ![N]T -> []const T, ?[N]T -> []const T
