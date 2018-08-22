@@ -27,9 +27,9 @@ import java.util.TreeMap;
 
 public class SemaDeclDefinedFunction extends SemaDeclFunction
 {
-	public class Local implements SemaSymbol
+	public class Variable implements SemaSymbol
 	{
-		public Local(String name, SemaType type, int index)
+		public Variable(String name, SemaType type, int index)
 		{
 			this.name = name;
 			this.type = type;
@@ -47,8 +47,8 @@ public class SemaDeclDefinedFunction extends SemaDeclFunction
 		public int index;
 	}
 
-	public List<Local> locals = new ArrayList<>();
-	public Map<String, Local> localsByName = new TreeMap<>();
+	public List<Variable> variables = new ArrayList<>();
+	public Map<String, Variable> variablesByName = new TreeMap<>();
 	public List<SemaStmt> body = new ArrayList<>();
 	public Map<String, SemaStmtLabel> labels = new TreeMap<>();
 
@@ -57,14 +57,14 @@ public class SemaDeclDefinedFunction extends SemaDeclFunction
 		super(module, exported, opaque, name);
 	}
 
-	public boolean defineLocal(String name, SemaType type)
+	public boolean defineVariable(String name, SemaType type)
 	{
-		if(localsByName.containsKey(name))
+		if(variablesByName.containsKey(name))
 			return false;
 
-		var local = new Local(name, type, locals.size());
-		locals.add(local);
-		localsByName.put(name, local);
+		var var_ = new Variable(name, type, variables.size());
+		variables.add(var_);
+		variablesByName.put(name, var_);
 		return true;
 	}
 

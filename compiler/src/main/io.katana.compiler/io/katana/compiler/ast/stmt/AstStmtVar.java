@@ -12,23 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.sema.expr;
+package io.katana.compiler.ast.stmt;
 
-import io.katana.compiler.sema.decl.SemaDeclDefinedFunction;
-import io.katana.compiler.sema.type.SemaType;
+import io.katana.compiler.ast.expr.AstExpr;
+import io.katana.compiler.ast.type.AstType;
+import io.katana.compiler.utils.Maybe;
 
-public class SemaExprNamedLocal extends SimpleLValueExpr
+public class AstStmtVar extends AstStmt
 {
-	public SemaDeclDefinedFunction.Local local;
+	public Maybe<AstType> type;
+	public String name;
+	public Maybe<AstExpr> init;
 
-	public SemaExprNamedLocal(SemaDeclDefinedFunction.Local local)
+	public AstStmtVar(Maybe<AstType> type, String name, Maybe<AstExpr> init)
 	{
-		this.local = local;
-	}
-
-	@Override
-	public SemaType type()
-	{
-		return local.type;
+		this.type = type;
+		this.name = name;
+		this.init = init;
 	}
 }

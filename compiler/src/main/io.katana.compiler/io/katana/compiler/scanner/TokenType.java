@@ -30,7 +30,6 @@ public enum TokenType
 	KW_IMPORT,
 	KW_INFIX,
 	KW_INLINE,
-	KW_LOCAL,
 	KW_LOOP,
 	KW_MODULE,
 	KW_NARROW_CAST,
@@ -47,6 +46,7 @@ public enum TokenType
 	KW_UNDEF,
 	KW_UNLESS,
 	KW_UNTIL,
+	KW_VAR,
 	KW_WHILE,
 	KW_WIDEN_CAST,
 

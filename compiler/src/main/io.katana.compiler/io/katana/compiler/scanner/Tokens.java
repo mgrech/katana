@@ -30,7 +30,6 @@ public class Tokens
 	public static final Token KW_IMPORT       = new Token(TokenCategory.KW, TokenType.KW_IMPORT);
 	public static final Token KW_INFIX        = new Token(TokenCategory.KW, TokenType.KW_INFIX);
 	public static final Token KW_INLINE       = new Token(TokenCategory.KW, TokenType.KW_INLINE);
-	public static final Token KW_LOCAL        = new Token(TokenCategory.KW, TokenType.KW_LOCAL);
 	public static final Token KW_LOOP         = new Token(TokenCategory.KW, TokenType.KW_LOOP);
 	public static final Token KW_MODULE       = new Token(TokenCategory.KW, TokenType.KW_MODULE);
 	public static final Token KW_NARROW_CAST  = new Token(TokenCategory.KW, TokenType.KW_NARROW_CAST);
@@ -47,6 +46,7 @@ public class Tokens
 	public static final Token KW_UNDEF        = new Token(TokenCategory.KW, TokenType.KW_UNDEF);
 	public static final Token KW_UNLESS       = new Token(TokenCategory.KW, TokenType.KW_UNLESS);
 	public static final Token KW_UNTIL        = new Token(TokenCategory.KW, TokenType.KW_UNTIL);
+	public static final Token KW_VAR          = new Token(TokenCategory.KW, TokenType.KW_VAR);
 	public static final Token KW_WHILE        = new Token(TokenCategory.KW, TokenType.KW_WHILE);
 	public static final Token KW_WIDEN_CAST   = new Token(TokenCategory.KW, TokenType.KW_WIDEN_CAST);
 

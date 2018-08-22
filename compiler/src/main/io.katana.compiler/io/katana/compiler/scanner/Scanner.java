@@ -305,7 +305,6 @@ public class Scanner
 		case "import":       return Tokens.KW_IMPORT;
 		case "infix":        return Tokens.KW_INFIX;
 		case "inline":       return Tokens.KW_INLINE;
-		case "local":        return Tokens.KW_LOCAL;
 		case "loop":         return Tokens.KW_LOOP;
 		case "module":       return Tokens.KW_MODULE;
 		case "narrow_cast":  return Tokens.KW_NARROW_CAST;
@@ -322,6 +321,7 @@ public class Scanner
 		case "undef":        return Tokens.KW_UNDEF;
 		case "unless":       return Tokens.KW_UNLESS;
 		case "until":        return Tokens.KW_UNTIL;
+		case "var":          return Tokens.KW_VAR;
 		case "while":        return Tokens.KW_WHILE;
 		case "widen_cast":   return Tokens.KW_WIDEN_CAST;
 

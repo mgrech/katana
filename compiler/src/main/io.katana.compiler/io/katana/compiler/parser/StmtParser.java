@@ -23,8 +23,8 @@ public class StmtParser
 {
 	public static AstStmt parse(ParseContext ctx)
 	{
-		if(ParseTools.option(ctx, TokenType.KW_LOCAL, true))
-			return parseLocal(ctx);
+		if(ParseTools.option(ctx, TokenType.KW_VAR, true))
+			return parseVar(ctx);
 
 		if(ParseTools.option(ctx, TokenType.KW_IF, true))
 			return parseIf(ctx, false);
@@ -56,7 +56,7 @@ public class StmtParser
 		return parseExprStmt(ctx);
 	}
 
-	private static Maybe<AstExpr> parseLocalInitAndScolon(ParseContext ctx)
+	private static Maybe<AstExpr> parseVarInitAndScolon(ParseContext ctx)
 	{
 		if(ParseTools.option(ctx, TokenType.KW_UNDEF, true))
 		{
@@ -69,7 +69,7 @@ public class StmtParser
 		return Maybe.some(init);
 	}
 
-	private static AstStmt parseLocal(ParseContext ctx)
+	private static AstStmt parseVar(ParseContext ctx)
 	{
 		var tmp = ctx.clone();
 
@@ -79,8 +79,8 @@ public class StmtParser
 
 			if(ParseTools.option(ctx, "=", true))
 			{
-				var init = parseLocalInitAndScolon(ctx);
-				return new AstStmtLocal(Maybe.none(), name, init);
+				var init = parseVarInitAndScolon(ctx);
+				return new AstStmtVar(Maybe.none(), name, init);
 			}
 		}
 
@@ -90,8 +90,8 @@ public class StmtParser
 		var name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 		ParseTools.expect(ctx, "=", true);
 
-		var init = parseLocalInitAndScolon(ctx);
-		return new AstStmtLocal(Maybe.some(type), name, init);
+		var init = parseVarInitAndScolon(ctx);
+		return new AstStmtVar(Maybe.some(type), name, init);
 	}
 
 	private static AstStmt parseIf(ParseContext ctx, boolean negated)

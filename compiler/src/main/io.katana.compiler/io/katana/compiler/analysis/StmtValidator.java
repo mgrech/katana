@@ -170,41 +170,41 @@ public class StmtValidator implements IVisitor
 		return new SemaStmtExprStmt(expr);
 	}
 
-	private SemaStmt visit(AstStmtLocal local)
+	private SemaStmt visit(AstStmtVar var_)
 	{
-		var maybeDeclaredType = local.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
+		var maybeDeclaredType = var_.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
 		var maybeDeclaredTypeNoConst = maybeDeclaredType.map(Types::removeConst);
 
-		if(local.init.isNone())
+		if(var_.init.isNone())
 		{
 			if(maybeDeclaredType.isNone())
-				throw new CompileException(String.format("local '%s' with 'undef' initializer has no explicit type", local.name));
+				throw new CompileException(String.format("variable '%s' with 'undef' initializer has no explicit type", var_.name));
 
-			if(!function.defineLocal(local.name, maybeDeclaredType.unwrap()))
-				throw new CompileException(String.format("redefinition of local '%s'", local.name));
+			if(!function.defineVariable(var_.name, maybeDeclaredType.unwrap()))
+				throw new CompileException(String.format("redefinition of variable '%s'", var_.name));
 
 			return new SemaStmtNullStmt();
 		}
 
-		var init = ExprValidator.validate(local.init.unwrap(), scope, context, validateDecl, maybeDeclaredTypeNoConst);
+		var init = ExprValidator.validate(var_.init.unwrap(), scope, context, validateDecl, maybeDeclaredTypeNoConst);
 		var initTypeNoConst = Types.removeConst(init.type());
-		var localType = maybeDeclaredType.or(initTypeNoConst);
-		var localTypeNoConst = Types.removeConst(localType);
+		var varType = maybeDeclaredType.or(initTypeNoConst);
+		var varTypeNoConst = Types.removeConst(varType);
 
-		if(!Types.equal(localTypeNoConst, initTypeNoConst))
+		if(!Types.equal(varTypeNoConst, initTypeNoConst))
 		{
-			String fmt = "initializer for local '%s' has wrong type: expected '%s', got '%s'";
-			throw new CompileException(String.format(fmt, local.name, TypeString.of(localTypeNoConst), TypeString.of(initTypeNoConst)));
+			String fmt = "initializer for variable '%s' has wrong type: expected '%s', got '%s'";
+			throw new CompileException(String.format(fmt, var_.name, TypeString.of(varTypeNoConst), TypeString.of(initTypeNoConst)));
 		}
 
-		if(!function.defineLocal(local.name, localType))
-			throw new CompileException(String.format("redefinition of local '%s'", local.name));
+		if(!function.defineVariable(var_.name, varType))
+			throw new CompileException(String.format("redefinition of variable '%s'", var_.name));
 
 		if(init.kind() == ExprKind.LVALUE)
 			init = new SemaExprImplicitConversionLValueToRValue(init);
 
-		var semaLocal = function.localsByName.get(local.name);
-		var localref = new SemaExprNamedLocal(semaLocal);
-		return new SemaStmtExprStmt(new SemaExprAssign(localref, init));
+		var semaVar = function.variablesByName.get(var_.name);
+		var varRef = new SemaExprNamedVar(semaVar);
+		return new SemaStmtExprStmt(new SemaExprAssign(varRef, init));
 	}
 }

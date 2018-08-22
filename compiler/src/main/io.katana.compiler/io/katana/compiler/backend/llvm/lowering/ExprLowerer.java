@@ -441,9 +441,9 @@ public class ExprLowerer implements IVisitor
 		return IrValues.ofSymbol(name);
 	}
 
-	private IrValue visit(SemaExprNamedLocal namedLocal)
+	private IrValue visit(SemaExprNamedVar namedVar)
 	{
-		return IrValues.ofSsa(namedLocal.local.name);
+		return IrValues.ofSsa(namedVar.variable.name);
 	}
 
 	private IrValue visit(SemaExprNamedParam namedParam)

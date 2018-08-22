@@ -108,7 +108,7 @@ public class DeclLowerer implements IVisitor
 			builder.store(type, paramIr, paramCopy);
 		}
 
-		for(var entry : function.localsByName.entrySet())
+		for(var entry : function.variablesByName.entrySet())
 		{
 			var type = entry.getValue().type;
 

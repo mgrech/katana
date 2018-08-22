@@ -691,8 +691,8 @@ public class ExprValidator implements IVisitor
 		if(symbol instanceof SemaDecl)
 			return namedDeclExpr((SemaDecl)symbol, false);
 
-		if(symbol instanceof SemaDeclDefinedFunction.Local)
-			return new SemaExprNamedLocal((SemaDeclDefinedFunction.Local)symbol);
+		if(symbol instanceof SemaDeclDefinedFunction.Variable)
+			return new SemaExprNamedVar((SemaDeclDefinedFunction.Variable)symbol);
 
 		if(symbol instanceof SemaDeclFunction.Param)
 			return new SemaExprNamedParam((SemaDeclFunction.Param)symbol);
