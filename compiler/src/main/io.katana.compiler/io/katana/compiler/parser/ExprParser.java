@@ -220,7 +220,7 @@ public class ExprParser
 		ParseTools.expect(ctx, TokenType.PUNCT_LBRACKET, true);
 		var type = TypeParser.parse(ctx);
 		ParseTools.expect(ctx, TokenType.PUNCT_RBRACKET, true);
-		var expr = parse(ctx);
+		var expr = parsePrefixExpr(ctx);
 
 		switch(castType)
 		{
