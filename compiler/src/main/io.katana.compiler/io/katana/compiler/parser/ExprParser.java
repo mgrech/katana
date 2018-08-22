@@ -217,9 +217,10 @@ public class ExprParser
 
 	private static AstExpr parseCast(ParseContext ctx, TokenType castType)
 	{
-		ParseTools.expect(ctx, TokenType.PUNCT_DOLLAR, true);
+		ParseTools.expect(ctx, TokenType.PUNCT_LBRACKET, true);
 		var type = TypeParser.parse(ctx);
-		var expr = ParseTools.parenthesized(ctx, () -> parse(ctx));
+		ParseTools.expect(ctx, TokenType.PUNCT_RBRACKET, true);
+		var expr = parse(ctx);
 
 		switch(castType)
 		{
