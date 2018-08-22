@@ -21,13 +21,11 @@ import java.util.List;
 
 public class AstExprLitArray extends AstExprLiteral
 {
-	public Maybe<Long> length;
 	public Maybe<AstType> type;
 	public List<AstExprLiteral> values;
 
-	public AstExprLitArray(Maybe<Long> length, Maybe<AstType> type, List<AstExprLiteral> values)
+	public AstExprLitArray(Maybe<AstType> type, List<AstExprLiteral> values)
 	{
-		this.length = length;
 		this.type = type;
 		this.values = values;
 	}

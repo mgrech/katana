@@ -156,36 +156,18 @@ public class ExprParser
 
 	private static AstExpr parseArrayLiteral(ParseContext ctx)
 	{
-		Maybe<Long> size = Maybe.none();
-
-		if(!ParseTools.option(ctx, ":", true))
-		{
-			var sizeLit = parseLiteral(ctx);
-
-			if(!(sizeLit instanceof AstExprLitInt))
-				throw new CompileException("expected integer literal as length in array literal");
-
-			if(((AstExprLitInt)sizeLit).type.isSome())
-				throw new CompileException("length in array literal cannot have a type suffix");
-
-			try
-			{
-				size = Maybe.some(((AstExprLitInt)sizeLit).value.longValueExact());
-			}
-			catch(ArithmeticException ex)
-			{
-				throw new CompileException("array length too large");
-			}
-
-			ParseTools.expect(ctx, ":", true);
-		}
-
 		Maybe<AstType> type = Maybe.none();
 
-		if(!ParseTools.option(ctx, ":", true))
+		var state = ctx.recordState();
+
+		try
 		{
 			type = Maybe.some(TypeParser.parse(ctx));
 			ParseTools.expect(ctx, ":", true);
+		}
+		catch(CompileException ex)
+		{
+			ctx.backtrack(state);
 		}
 
 		var values = new ArrayList<AstExprLiteral>();
@@ -212,7 +194,7 @@ public class ExprParser
 			ParseTools.expect(ctx, TokenType.PUNCT_RBRACKET, true);
 		}
 
-		return new AstExprLitArray(size, type, values);
+		return new AstExprLitArray(type, values);
 	}
 
 	private static AstExpr parseCast(ParseContext ctx, TokenType castType)

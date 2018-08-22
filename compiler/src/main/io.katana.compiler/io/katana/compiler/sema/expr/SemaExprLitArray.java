@@ -21,13 +21,11 @@ import java.util.List;
 
 public class SemaExprLitArray extends SimpleRValueExpr
 {
-	public final long length;
 	public final SemaType type;
 	public final List<SemaExpr> values;
 
-	public SemaExprLitArray(long length, SemaType type, List<SemaExpr> values)
+	public SemaExprLitArray(SemaType type, List<SemaExpr> values)
 	{
-		this.length = length;
 		this.type = type;
 		this.values = values;
 	}
@@ -35,7 +33,7 @@ public class SemaExprLitArray extends SimpleRValueExpr
 	@Override
 	public SemaType type()
 	{
-		return Types.addArray(length, type);
+		return Types.addArray(values.size(), type);
 	}
 
 	@Override
