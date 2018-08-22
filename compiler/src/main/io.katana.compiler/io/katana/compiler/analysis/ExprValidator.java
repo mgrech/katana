@@ -608,6 +608,17 @@ public class ExprValidator implements IVisitor
 		}
 
 		var type = expr.type();
+
+		// auto derefs
+		while(Types.isPointer(type))
+		{
+			if(expr.kind() == ExprKind.LVALUE)
+				expr = new SemaExprImplicitConversionLValueToRValue(expr);
+			
+			expr = new SemaExprDeref(expr);
+			type = expr.type();
+		}
+
 		var typeNoConst = Types.removeConst(type);
 
 		if(typeNoConst instanceof SemaTypeSlice)
