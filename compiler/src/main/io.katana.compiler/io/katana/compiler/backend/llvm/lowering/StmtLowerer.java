@@ -178,4 +178,10 @@ public class StmtLowerer implements IVisitor
 
 	private void visit(SemaStmtNullStmt nullStmt)
 	{}
+
+	private void visit(SemaStmtUnreachable unreachable)
+	{
+		preceededByTerminator = true;
+		builder.unreachable();
+	}
 }

@@ -45,6 +45,7 @@ public class Tokens
 	public static final Token KW_TYPE         = new Token(TokenCategory.KW, TokenType.KW_TYPE);
 	public static final Token KW_UNDEF        = new Token(TokenCategory.KW, TokenType.KW_UNDEF);
 	public static final Token KW_UNLESS       = new Token(TokenCategory.KW, TokenType.KW_UNLESS);
+	public static final Token KW_UNREACHABLE  = new Token(TokenCategory.KW, TokenType.KW_UNREACHABLE);
 	public static final Token KW_UNTIL        = new Token(TokenCategory.KW, TokenType.KW_UNTIL);
 	public static final Token KW_VAR          = new Token(TokenCategory.KW, TokenType.KW_VAR);
 	public static final Token KW_WHILE        = new Token(TokenCategory.KW, TokenType.KW_WHILE);

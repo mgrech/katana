@@ -45,6 +45,7 @@ public enum TokenType
 	KW_TYPE,
 	KW_UNDEF,
 	KW_UNLESS,
+	KW_UNREACHABLE,
 	KW_UNTIL,
 	KW_VAR,
 	KW_WHILE,

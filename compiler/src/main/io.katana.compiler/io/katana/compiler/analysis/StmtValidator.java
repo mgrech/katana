@@ -207,4 +207,9 @@ public class StmtValidator implements IVisitor
 		var varRef = new SemaExprNamedVar(semaVar);
 		return new SemaStmtExprStmt(new SemaExprAssign(varRef, init));
 	}
+
+	private SemaStmt visit(AstStmtUnreachable unreachable)
+	{
+		return SemaStmtUnreachable.INSTANCE;
+	}
 }

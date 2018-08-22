@@ -47,6 +47,12 @@ public class StmtParser
 		if(ParseTools.option(ctx, TokenType.KW_UNTIL, true))
 			return parseWhile(ctx, true);
 
+		if(ParseTools.option(ctx, TokenType.KW_UNREACHABLE, true))
+		{
+			ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
+			return AstStmtUnreachable.INSTANCE;
+		}
+
 		if(ParseTools.option(ctx, TokenType.LABEL, false))
 			return parseLabel(ctx);
 

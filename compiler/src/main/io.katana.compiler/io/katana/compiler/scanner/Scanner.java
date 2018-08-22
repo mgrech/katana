@@ -320,6 +320,7 @@ public class Scanner
 		case "type":         return Tokens.KW_TYPE;
 		case "undef":        return Tokens.KW_UNDEF;
 		case "unless":       return Tokens.KW_UNLESS;
+		case "unreachable":  return Tokens.KW_UNREACHABLE;
 		case "until":        return Tokens.KW_UNTIL;
 		case "var":          return Tokens.KW_VAR;
 		case "while":        return Tokens.KW_WHILE;
