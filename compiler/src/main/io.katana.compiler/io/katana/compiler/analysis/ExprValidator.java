@@ -361,7 +361,7 @@ public class ExprValidator implements IVisitor
 		if(candidates.size() > 1)
 		{
 			var builder = new StringBuilder();
-			builder.append(String.format("ambiguous call to function '%s', %s candidates:\n", candidates.size(), name));
+			builder.append(String.format("ambiguous call to function '%s', %s candidates:\n", name, candidates.size()));
 
 			builder.append("\tmatching succeeded for the following overloads:\n");
 			appendDeducedOverloads(builder, candidates);
