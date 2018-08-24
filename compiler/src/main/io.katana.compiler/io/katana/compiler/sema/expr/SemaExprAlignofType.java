@@ -17,11 +17,11 @@ package io.katana.compiler.sema.expr;
 import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.sema.type.SemaTypeBuiltin;
 
-public class SemaExprAlignof extends SimpleRValueExpr
+public class SemaExprAlignofType extends SimpleRValueExpr
 {
 	public SemaType type;
 
-	public SemaExprAlignof(SemaType type)
+	public SemaExprAlignofType(SemaType type)
 	{
 		this.type = type;
 	}

@@ -1,4 +1,4 @@
-// Copyright 2016-2018 Markus Grech
+// Copyright 2018 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,14 +14,12 @@
 
 package io.katana.compiler.ast.expr;
 
-import io.katana.compiler.ast.type.AstType;
-
-public class AstExprAlignof extends AstExpr
+public class AstExprSizeofExpr extends AstExpr
 {
-	public AstType type;
+	public final AstExpr expr;
 
-	public AstExprAlignof(AstType type)
+	public AstExprSizeofExpr(AstExpr expr)
 	{
-		this.type = type;
+		this.expr = expr;
 	}
 }

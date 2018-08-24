@@ -16,11 +16,11 @@ package io.katana.compiler.ast.expr;
 
 import io.katana.compiler.ast.type.AstType;
 
-public class AstExprSizeof extends AstExpr
+public class AstExprSizeofType extends AstExpr
 {
 	public AstType type;
 
-	public AstExprSizeof(AstType type)
+	public AstExprSizeofType(AstType type)
 	{
 		this.type = type;
 	}

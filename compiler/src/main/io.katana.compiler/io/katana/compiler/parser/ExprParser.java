@@ -230,10 +230,24 @@ public class ExprParser
 		switch(token.type)
 		{
 		case KW_SIZEOF:
-			return ParseTools.parenthesized(ctx, () -> new AstExprSizeof(TypeParser.parse(ctx)));
+			if(ParseTools.option(ctx, TokenType.PUNCT_LBRACKET, true))
+			{
+				var type = TypeParser.parse(ctx);
+				ParseTools.expect(ctx, TokenType.PUNCT_RBRACKET, true);
+				return new AstExprSizeofType(type);
+			}
+
+			return new AstExprSizeofExpr(parsePrefixExpr(ctx));
 
 		case KW_ALIGNOF:
-			return ParseTools.parenthesized(ctx, () -> new AstExprAlignof(TypeParser.parse(ctx)));
+			if(ParseTools.option(ctx, TokenType.PUNCT_LBRACKET, true))
+			{
+				var type = TypeParser.parse(ctx);
+				ParseTools.expect(ctx, TokenType.PUNCT_RBRACKET, true);
+				return new AstExprAlignofType(type);
+			}
+
+			return new AstExprAlignofExpr(parsePrefixExpr(ctx));
 
 		case KW_OFFSETOF:
 			return ParseTools.parenthesized(ctx, () ->

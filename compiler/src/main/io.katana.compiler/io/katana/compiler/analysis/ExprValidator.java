@@ -113,7 +113,12 @@ public class ExprValidator implements IVisitor
 		return new SemaExprAddressof(expr);
 	}
 
-	private SemaExpr visit(AstExprAlignof alignof, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprAlignofExpr alignof, Maybe<SemaType> deduce)
+	{
+		return new SemaExprAlignof(validate(alignof.expr, scope, context, validateDecl, Maybe.none()).type());
+	}
+
+	private SemaExpr visit(AstExprAlignofType alignof, Maybe<SemaType> deduce)
 	{
 		return new SemaExprAlignof(TypeValidator.validate(alignof.type, scope, context, validateDecl));
 	}
@@ -810,7 +815,12 @@ public class ExprValidator implements IVisitor
 		return validateCast(cast.type, cast.expr, SemaExprCast.Kind.SIGN_CAST);
 	}
 
-	private SemaExpr visit(AstExprSizeof sizeof, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprSizeofExpr sizeof, Maybe<SemaType> deduce)
+	{
+		return new SemaExprSizeof(validate(sizeof.expr, scope, context, validateDecl, Maybe.none()).type());
+	}
+
+	private SemaExpr visit(AstExprSizeofType sizeof, Maybe<SemaType> deduce)
 	{
 		return new SemaExprSizeof(TypeValidator.validate(sizeof.type, scope, context, validateDecl));
 	}
