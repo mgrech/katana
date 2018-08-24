@@ -15,7 +15,6 @@
 package io.katana.compiler.analysis;
 
 import io.katana.compiler.BuiltinType;
-import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.sema.type.*;
 import io.katana.compiler.visitor.IVisitor;
 
