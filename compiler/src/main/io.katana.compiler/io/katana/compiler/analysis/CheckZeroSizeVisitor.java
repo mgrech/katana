@@ -53,7 +53,7 @@ public class CheckZeroSizeVisitor implements IVisitor
 
 	private boolean visit(SemaTypeFunction function)
 	{
-		throw new CompileException("sizeof applied to function type");
+		return false;
 	}
 
 	private boolean visit(SemaTypeNonNullablePointer pointer)
