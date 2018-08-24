@@ -124,6 +124,8 @@ public class ExprValidator implements IVisitor
 		var index = validate(indexAccess.index, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.INT));
 		var indexType = index.type();
 
+		value = autoDeref(value);
+
 		if(!Types.isBuiltin(indexType, BuiltinType.INT))
 			throw new CompileException(String.format("index access requires index of type 'int', got '%s'", TypeString.of(indexType)));
 
@@ -414,6 +416,8 @@ public class ExprValidator implements IVisitor
 			return resolveOverloadedCall(set.overloads, set.name(), call.args, call.inline);
 		}
 
+		expr = autoDeref(expr);
+
 		if(!Types.isFunction(expr.type()))
 			throw new CompileException("left side of function call does not yield a function type");
 
@@ -582,6 +586,22 @@ public class ExprValidator implements IVisitor
 		throw new CompileException(String.format("type '%s' has no field named '%s'", TypeString.of(type), fieldName));
 	}
 
+	private SemaExpr autoDeref(SemaExpr expr)
+	{
+		var type = expr.type();
+
+		while(Types.isPointer(type))
+		{
+			if(expr.kind() == ExprKind.LVALUE)
+				expr = new SemaExprImplicitConversionLValueToRValue(expr);
+
+			expr = new SemaExprDeref(expr);
+			type = expr.type();
+		}
+
+		return expr;
+	}
+
 	private SemaExpr visit(AstExprMemberAccess memberAccess, Maybe<SemaType> deduce)
 	{
 		var expr = validate(memberAccess.expr, scope, context, validateDecl, Maybe.none());
@@ -597,18 +617,9 @@ public class ExprValidator implements IVisitor
 			return namedDeclExpr(decl, memberAccess.global);
 		}
 
+		expr = autoDeref(expr);
+
 		var type = expr.type();
-
-		// auto derefs
-		while(Types.isPointer(type))
-		{
-			if(expr.kind() == ExprKind.LVALUE)
-				expr = new SemaExprImplicitConversionLValueToRValue(expr);
-			
-			expr = new SemaExprDeref(expr);
-			type = expr.type();
-		}
-
 		var typeNoConst = Types.removeConst(type);
 
 		if(typeNoConst instanceof SemaTypeSlice)
