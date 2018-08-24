@@ -79,10 +79,10 @@ public class IrFunctionBuilder
 		return result;
 	}
 
-	public IrValueSsa getelementptr(IrType baseType, IrValue compound, IrType indexType, IrValue index)
+	public IrValueSsa getelementptr(IrType baseType, IrValue compound, List<IrInstrGetElementPtr.Index> indices)
 	{
 		var result = allocateSsa();
-		instrs.add(new IrInstrGetElementPtr(result, baseType, compound, indexType, index));
+		instrs.add(new IrInstrGetElementPtr(result, baseType, compound, indices));
 		return result;
 	}
 

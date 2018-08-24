@@ -17,12 +17,12 @@ package io.katana.compiler.sema.expr;
 import io.katana.compiler.analysis.Types;
 import io.katana.compiler.sema.type.SemaType;
 
-public class SemaExprArrayAccess extends SemaExpr
+public class SemaExprArrayIndexAccess extends SemaExpr
 {
 	public SemaExpr expr;
 	public SemaExpr index;
 
-	public SemaExprArrayAccess(SemaExpr expr, SemaExpr index)
+	public SemaExprArrayIndexAccess(SemaExpr expr, SemaExpr index)
 	{
 		this.expr = expr;
 		this.index = index;

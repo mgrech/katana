@@ -89,7 +89,7 @@ public class ExprParser
 			else if(ParseTools.option(ctx, TokenType.PUNCT_LBRACKET, true))
 			{
 				var index = parse(ctx);
-				expr = new AstExprArrayAccess(expr, index);
+				expr = new AstExprIndexAccess(expr, index);
 				ParseTools.expect(ctx, TokenType.PUNCT_RBRACKET, true);
 			}
 			else if(ParseTools.option(ctx, ".", true))

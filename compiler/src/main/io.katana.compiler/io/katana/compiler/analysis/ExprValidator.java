@@ -118,22 +118,25 @@ public class ExprValidator implements IVisitor
 		return new SemaExprAlignof(TypeValidator.validate(alignof.type, scope, context, validateDecl));
 	}
 
-	private SemaExpr visit(AstExprArrayAccess arrayAccess, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprIndexAccess indexAccess, Maybe<SemaType> deduce)
 	{
-		var value = validate(arrayAccess.value, scope, context, validateDecl, Maybe.none());
-		var index = validate(arrayAccess.index, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.INT));
+		var value = validate(indexAccess.value, scope, context, validateDecl, Maybe.none());
+		var index = validate(indexAccess.index, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.INT));
 		var indexType = index.type();
 
 		if(!Types.isBuiltin(indexType, BuiltinType.INT))
-			throw new CompileException(String.format("array access requires index of type 'int', got '%s'", TypeString.of(indexType)));
+			throw new CompileException(String.format("index access requires index of type 'int', got '%s'", TypeString.of(indexType)));
 
-		if(!Types.isArray(value.type()))
-			throw new CompileException(String.format("array access requires expression yielding array type, got '%s'", TypeString.of(value.type())));
+		if(!Types.isArray(value.type()) && !Types.isSlice(value.type()))
+			throw new CompileException(String.format("index access requires expression yielding array or slice type, got '%s'", TypeString.of(value.type())));
 
 		if(index.kind() == ExprKind.LVALUE)
 			index = new SemaExprImplicitConversionLValueToRValue(index);
 
-		return new SemaExprArrayAccess(value, index);
+		if(Types.isSlice(value.type()))
+			return new SemaExprSliceIndexAccess(value, index);
+
+		return new SemaExprArrayIndexAccess(value, index);
 	}
 
 	private SemaExpr visit(AstExprAssign assign, Maybe<SemaType> deduce)
