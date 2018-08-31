@@ -115,12 +115,12 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprAlignofExpr alignof, Maybe<SemaType> deduce)
 	{
-		return new SemaExprAlignof(validate(alignof.expr, scope, context, validateDecl, Maybe.none()).type());
+		return new SemaExprAlignofType(validate(alignof.expr, scope, context, validateDecl, Maybe.none()).type());
 	}
 
 	private SemaExpr visit(AstExprAlignofType alignof, Maybe<SemaType> deduce)
 	{
-		return new SemaExprAlignof(TypeValidator.validate(alignof.type, scope, context, validateDecl));
+		return new SemaExprAlignofType(TypeValidator.validate(alignof.type, scope, context, validateDecl));
 	}
 
 	private SemaExpr visit(AstExprIndexAccess indexAccess, Maybe<SemaType> deduce)
@@ -817,12 +817,12 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprSizeofExpr sizeof, Maybe<SemaType> deduce)
 	{
-		return new SemaExprSizeof(validate(sizeof.expr, scope, context, validateDecl, Maybe.none()).type());
+		return new SemaExprSizeofType(validate(sizeof.expr, scope, context, validateDecl, Maybe.none()).type());
 	}
 
 	private SemaExpr visit(AstExprSizeofType sizeof, Maybe<SemaType> deduce)
 	{
-		return new SemaExprSizeof(TypeValidator.validate(sizeof.type, scope, context, validateDecl));
+		return new SemaExprSizeofType(TypeValidator.validate(sizeof.type, scope, context, validateDecl));
 	}
 
 	private SemaExpr visit(AstExprWidenCast cast, Maybe<SemaType> deduce)

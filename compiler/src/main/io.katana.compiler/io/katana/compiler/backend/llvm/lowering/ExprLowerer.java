@@ -90,7 +90,7 @@ public class ExprLowerer implements IVisitor
 		return lower(addressof.expr);
 	}
 
-	private IrValue visit(SemaExprAlignof alignof)
+	private IrValue visit(SemaExprAlignofType alignof)
 	{
 		return IrValues.ofConstant(Types.alignof(alignof.type, context.platform()));
 	}
@@ -505,7 +505,7 @@ public class ExprLowerer implements IVisitor
 		return IrValues.ofConstant(offset);
 	}
 
-	private IrValue visit(SemaExprSizeof sizeof)
+	private IrValue visit(SemaExprSizeofType sizeof)
 	{
 		var size = Types.sizeof(sizeof.type, context.platform());
 		return IrValues.ofConstant(size);
