@@ -14,6 +14,7 @@
 
 package io.katana.compiler.ast.decl;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.ast.AstPath;
 
 public class AstDeclModule extends AstDecl
@@ -22,7 +23,7 @@ public class AstDeclModule extends AstDecl
 
 	public AstDeclModule(AstPath path)
 	{
-		super(false, false);
+		super(ExportKind.HIDDEN);
 		this.path = path;
 	}
 }

@@ -14,6 +14,8 @@
 
 package io.katana.compiler.ast.decl;
 
+import io.katana.compiler.ExportKind;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +26,7 @@ public class AstDeclOverloadSet extends AstDecl
 
 	public AstDeclOverloadSet(String name)
 	{
-		super(false, false);
+		super(ExportKind.HIDDEN);
 		this.name = name;
 	}
 }

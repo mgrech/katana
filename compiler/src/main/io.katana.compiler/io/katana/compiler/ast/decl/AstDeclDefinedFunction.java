@@ -14,6 +14,7 @@
 
 package io.katana.compiler.ast.decl;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.ast.stmt.AstStmt;
 import io.katana.compiler.ast.type.AstType;
 import io.katana.compiler.utils.Maybe;
@@ -24,9 +25,9 @@ public class AstDeclDefinedFunction extends AstDeclFunction
 {
 	public List<AstStmt> body;
 
-	public AstDeclDefinedFunction(boolean exported, boolean opaque, String name, List<Param> params, Maybe<AstType> ret, List<AstStmt> body)
+	public AstDeclDefinedFunction(ExportKind exportKind, String name, List<Param> params, Maybe<AstType> ret, List<AstStmt> body)
 	{
-		super(exported, opaque, name, params, ret);
+		super(exportKind, name, params, ret);
 		this.body = body;
 	}
 }

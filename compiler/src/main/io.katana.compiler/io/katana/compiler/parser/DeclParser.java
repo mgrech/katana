@@ -14,6 +14,7 @@
 
 package io.katana.compiler.parser;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.ast.decl.*;
 import io.katana.compiler.ast.expr.AstExprLiteral;
 import io.katana.compiler.ast.stmt.AstStmt;
@@ -41,6 +42,8 @@ public class DeclParser
 		if(opaque && !exported)
 			throw new CompileException("'opaque' must go after 'export'");
 
+		var exportKind = exported ? opaque ? ExportKind.OPAQUE : ExportKind.FULL : ExportKind.HIDDEN;
+
 		Maybe<Maybe<String>> extern = Maybe.none();
 
 		if(ParseTools.option(ctx, TokenType.KW_EXTERN, true))
@@ -58,29 +61,13 @@ public class DeclParser
 
 		switch(ctx.token().type)
 		{
-		case KW_FN:       return parseFunction(ctx, exported, opaque, extern);
-		case KW_DATA:     return parseStruct(ctx, exported, opaque);
-		case KW_GLOBAL:   return parseGlobal(ctx, exported, opaque);
-		case KW_OPERATOR: return parseOperator(ctx, exported);
-
-		case KW_IMPORT:
-			if(exported)
-				throw new CompileException("imports cannot be exported");
-
-			return parseImport(ctx);
-
-		case KW_MODULE:
-			if(exported)
-				throw new CompileException("modules cannot be exported");
-
-			return parseModule(ctx);
-
-		case KW_TYPE:
-			if(opaque)
-				throw new CompileException("type aliases cannot be exported opaquely");
-
-			return parseTypeAlias(ctx, exported);
-
+		case KW_FN:       return parseFunction(ctx, exportKind, extern);
+		case KW_DATA:     return parseStruct(ctx, exportKind);
+		case KW_GLOBAL:   return parseGlobal(ctx, exportKind);
+		case KW_OPERATOR: return parseOperator(ctx, exportKind);
+		case KW_IMPORT:   return parseImport(ctx, exportKind);
+		case KW_MODULE:   return parseModule(ctx, exportKind);
+		case KW_TYPE:     return parseTypeAlias(ctx, exportKind);
 		default: break;
 		}
 
@@ -103,7 +90,7 @@ public class DeclParser
 		throw new AssertionError("unreachable");
 	}
 
-	private static AstDecl parseOperator(ParseContext ctx, boolean exported)
+	private static AstDecl parseOperator(ParseContext ctx, ExportKind exportKind)
 	{
 		ctx.advance();
 
@@ -119,13 +106,12 @@ public class DeclParser
 		if(kind == Kind.PREFIX)
 		{
 			ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
-			return new AstDeclOperator(exported, Operator.prefix(op));
+			return new AstDeclOperator(exportKind, Operator.prefix(op));
 		}
-
 		else if(kind == Kind.POSTFIX)
 		{
 			ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
-			return new AstDeclOperator(exported, Operator.postfix(op));
+			return new AstDeclOperator(exportKind, Operator.postfix(op));
 		}
 
 		Associativity assoc;
@@ -152,10 +138,10 @@ public class DeclParser
 		}
 
 		ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
-		return new AstDeclOperator(exported, Operator.infix(op, assoc, precedence.intValue()));
+		return new AstDeclOperator(exportKind, Operator.infix(op, assoc, precedence.intValue()));
 	}
 
-	private static AstDecl parseFunction(ParseContext ctx, boolean exported, boolean opaque, Maybe<Maybe<String>> extern)
+	private static AstDecl parseFunction(ParseContext ctx, ExportKind exportKind, Maybe<Maybe<String>> extern)
 	{
 		ctx.advance();
 
@@ -193,14 +179,14 @@ public class DeclParser
 		if(extern.isSome())
 		{
 			ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
-			return new AstDeclExternFunction(exported, opaque, extern.unwrap(), name, params, ret);
+			return new AstDeclExternFunction(exportKind, extern.unwrap(), name, params, ret);
 		}
 
 		var body = parseBody(ctx);
 
 		return name == null
-			? new AstDeclDefinedOperator(exported, opaque, op, kind, params, ret, body)
-			: new AstDeclDefinedFunction(exported, opaque, name, params, ret, body);
+			? new AstDeclDefinedOperator(exportKind, op, kind, params, ret, body)
+			: new AstDeclDefinedFunction(exportKind, name, params, ret, body);
 	}
 
 	private static List<AstDeclFunction.Param> parseParameterList(ParseContext ctx)
@@ -239,7 +225,7 @@ public class DeclParser
 		return body;
 	}
 
-	private static AstDeclStruct parseStruct(ParseContext ctx, boolean exported, boolean opaque)
+	private static AstDeclStruct parseStruct(ParseContext ctx, ExportKind exportKind)
 	{
 		ctx.advance();
 
@@ -254,7 +240,7 @@ public class DeclParser
 
 		ParseTools.expect(ctx, TokenType.PUNCT_RBRACE, true);
 
-		return new AstDeclStruct(exported, opaque, name, abiCompat, fields);
+		return new AstDeclStruct(exportKind, name, abiCompat, fields);
 	}
 
 	private static AstDeclStruct.Field parseField(ParseContext ctx)
@@ -282,7 +268,7 @@ public class DeclParser
 		return Maybe.some((AstExprLiteral)init);
 	}
 
-	private static AstDeclGlobal parseGlobal(ParseContext ctx, boolean exported, boolean opaque)
+	private static AstDeclGlobal parseGlobal(ParseContext ctx, ExportKind exportKind)
 	{
 		ctx.advance();
 
@@ -295,7 +281,7 @@ public class DeclParser
 			if(ParseTools.option(ctx, "=", true))
 			{
 				var init = parseGlobalInitAndScolon(ctx);
-				return new AstDeclGlobal(exported, opaque, Maybe.none(), name, init);
+				return new AstDeclGlobal(exportKind, Maybe.none(), name, init);
 			}
 		}
 
@@ -306,11 +292,14 @@ public class DeclParser
 		ParseTools.expect(ctx, "=", true);
 
 		var init = parseGlobalInitAndScolon(ctx);
-		return new AstDeclGlobal(exported, opaque, Maybe.some(type), name, init);
+		return new AstDeclGlobal(exportKind, Maybe.some(type), name, init);
 	}
 
-	private static AstDecl parseImport(ParseContext ctx)
+	private static AstDecl parseImport(ParseContext ctx, ExportKind exportKind)
 	{
+		if(exportKind != ExportKind.HIDDEN)
+			throw new CompileException("imports cannot be exported");
+
 		ctx.advance();
 
 		var path = ParseTools.path(ctx);
@@ -326,8 +315,11 @@ public class DeclParser
 		return new AstDeclImport(path);
 	}
 
-	private static AstDeclModule parseModule(ParseContext ctx)
+	private static AstDeclModule parseModule(ParseContext ctx, ExportKind exportKind)
 	{
+		if(exportKind != ExportKind.HIDDEN)
+			throw new CompileException("modules cannot be exported");
+
 		ctx.advance();
 
 		var path = ParseTools.path(ctx);
@@ -335,13 +327,17 @@ public class DeclParser
 		return new AstDeclModule(path);
 	}
 
-	private static AstDeclTypeAlias parseTypeAlias(ParseContext ctx, boolean exported)
+	private static AstDeclTypeAlias parseTypeAlias(ParseContext ctx, ExportKind exportKind)
 	{
+		if(exportKind == ExportKind.OPAQUE)
+			throw new CompileException("type aliases cannot be exported opaquely");
+
 		ctx.advance();
+
 		var name = (String)ParseTools.consumeExpected(ctx, TokenType.IDENT).value;
 		ParseTools.expect(ctx, "=", true);
 		var type = TypeParser.parse(ctx);
 		ParseTools.expect(ctx, TokenType.PUNCT_SCOLON, true);
-		return new AstDeclTypeAlias(exported, name, type);
+		return new AstDeclTypeAlias(exportKind, name, type);
 	}
 }

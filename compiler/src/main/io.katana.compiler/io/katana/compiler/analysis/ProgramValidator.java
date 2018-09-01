@@ -14,6 +14,7 @@
 
 package io.katana.compiler.analysis;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.ast.AstFile;
 import io.katana.compiler.ast.AstPath;
 import io.katana.compiler.ast.AstProgram;
@@ -57,7 +58,7 @@ public class ProgramValidator
 						}
 
 						var semaModule = program.findOrCreateModule(path);
-						var semaDecl = new SemaDeclOperator(semaModule, opDecl.exported, opDecl.operator);
+						var semaDecl = new SemaDeclOperator(semaModule, opDecl.exportKind, opDecl.operator);
 
 						if(!semaModule.declare(semaDecl))
 						{
@@ -69,7 +70,7 @@ public class ProgramValidator
 
 						file.getValue().defineSymbol(semaDecl);
 
-						if(semaDecl.exported)
+						if(semaDecl.exportKind != ExportKind.HIDDEN)
 							map.put(semaDecl.name(), semaDecl);
 					}
 
@@ -134,7 +135,7 @@ public class ProgramValidator
 			for(var decl : module.decls().values())
 				if(decl instanceof SemaDeclOverloadSet)
 					scope.defineSymbol(new SemaDeclImportedOverloadSet((SemaDeclOverloadSet)decl));
-				else if(decl.exported && !(decl instanceof SemaDeclOperator))
+				else if(decl.exportKind != ExportKind.HIDDEN && !(decl instanceof SemaDeclOperator))
 					scope.defineSymbol(decl);
 		}
 
@@ -146,7 +147,7 @@ public class ProgramValidator
 			for(var decl : module.decls().values())
 				if(decl instanceof SemaDeclOverloadSet)
 					semaImport.decls.put(decl.name(), new SemaDeclImportedOverloadSet((SemaDeclOverloadSet)decl));
-				else if(decl.exported)
+				else if(decl.exportKind != ExportKind.HIDDEN)
 					semaImport.decls.put(decl.name(), decl);
 
 			scope.defineSymbol(semaImport);

@@ -14,16 +14,15 @@
 
 package io.katana.compiler.ast.decl;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.visitor.IVisitable;
 
 public abstract class AstDecl implements IVisitable
 {
-	public boolean exported;
-	public boolean opaque;
+	public ExportKind exportKind;
 
-	protected AstDecl(boolean exported, boolean opaque)
+	protected AstDecl(ExportKind exportKind)
 	{
-		this.exported = exported;
-		this.opaque = opaque;
+		this.exportKind = exportKind;
 	}
 }

@@ -14,6 +14,7 @@
 
 package io.katana.compiler.sema.decl;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.sema.SemaModule;
 
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ public class SemaDeclOverloadSet extends SemaDecl
 
 	public SemaDeclOverloadSet(SemaModule module, String name)
 	{
-		super(module, false, false);
+		super(module, ExportKind.HIDDEN);
 		this.name = name;
 	}
 

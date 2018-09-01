@@ -14,6 +14,7 @@
 
 package io.katana.compiler.op;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.sema.decl.SemaDeclOperator;
 import io.katana.compiler.utils.Maybe;
 
@@ -30,9 +31,9 @@ public class BuiltinOps
 	{
 		switch(op.kind)
 		{
-		case PREFIX:  PREFIX_OPS .put(op.symbol, new SemaDeclOperator(null, true, Operator.prefix(op.symbol))); break;
-		case INFIX:   INFIX_OPS  .put(op.symbol, new SemaDeclOperator(null, true, Operator.infix(op.symbol, op.associativity, op.precedence))); break;
-		case POSTFIX: POSTFIX_OPS.put(op.symbol, new SemaDeclOperator(null, true, Operator.postfix(op.symbol))); break;
+		case PREFIX:  PREFIX_OPS .put(op.symbol, new SemaDeclOperator(null, ExportKind.FULL, Operator.prefix(op.symbol))); break;
+		case INFIX:   INFIX_OPS  .put(op.symbol, new SemaDeclOperator(null, ExportKind.FULL, Operator.infix(op.symbol, op.associativity, op.precedence))); break;
+		case POSTFIX: POSTFIX_OPS.put(op.symbol, new SemaDeclOperator(null, ExportKind.FULL, Operator.postfix(op.symbol))); break;
 		default: throw new AssertionError("unreachable");
 		}
 	}

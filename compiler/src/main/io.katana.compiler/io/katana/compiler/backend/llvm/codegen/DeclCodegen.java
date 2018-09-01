@@ -14,6 +14,7 @@
 
 package io.katana.compiler.backend.llvm.codegen;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.analysis.Types;
 import io.katana.compiler.backend.FunctionNameMangling;
 import io.katana.compiler.backend.llvm.FileCodegenContext;
@@ -131,10 +132,11 @@ public class DeclCodegen implements IVisitor
 
 	private void generate(SemaDeclDefinedFunction function)
 	{
-		var linkage = function.exported ? Linkage.EXTERNAL : Linkage.PRIVATE;
+		var exported = function.exportKind != ExportKind.HIDDEN;
+		var linkage = exported ? Linkage.EXTERNAL : Linkage.PRIVATE;
 
 		var dllStorageClass = context.build().type == BuildType.LIBRARY_SHARED
-		                      ? function.exported ? DllStorageClass.DLLEXPORT : DllStorageClass.NONE
+		                      ? exported ? DllStorageClass.DLLEXPORT : DllStorageClass.NONE
 		                      : DllStorageClass.NONE;
 
 		var returnType = generate(function.ret);

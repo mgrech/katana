@@ -15,6 +15,7 @@
 package io.katana.compiler.analysis;
 
 import io.katana.compiler.BuiltinType;
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.Inlining;
 import io.katana.compiler.Limits;
 import io.katana.compiler.ast.expr.*;
@@ -409,7 +410,7 @@ public class ExprValidator implements IVisitor
 			var candidates = new ArrayList<SemaDeclFunction>();
 
 			for(var function : set.overloads)
-				if(function.exported)
+				if(function.exportKind != ExportKind.HIDDEN)
 					candidates.add(function);
 
 			return resolveOverloadedCall(candidates, set.name(), call.args, call.inline);
@@ -779,7 +780,7 @@ public class ExprValidator implements IVisitor
 		          : ((SemaDeclImportedOverloadSet)symbol).set;
 
 		var overloads = set.overloads.stream()
-		                             .filter(o -> o.exported)
+		                             .filter(o -> o.exportKind != ExportKind.HIDDEN)
 		                             .collect(Collectors.toList());
 
 		return resolveOverloadedCall(overloads, set.name(), args, Inlining.AUTO);

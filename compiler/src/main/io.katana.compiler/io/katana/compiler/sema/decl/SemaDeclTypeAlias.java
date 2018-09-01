@@ -14,6 +14,7 @@
 
 package io.katana.compiler.sema.decl;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.sema.SemaModule;
 import io.katana.compiler.sema.SemaSymbol;
 import io.katana.compiler.sema.type.SemaType;
@@ -23,9 +24,9 @@ public class SemaDeclTypeAlias extends SemaDecl implements SemaSymbol
 	public String name;
 	public SemaType type;
 
-	public SemaDeclTypeAlias(SemaModule module, boolean exported, String name)
+	public SemaDeclTypeAlias(SemaModule module, ExportKind exportKind, String name)
 	{
-		super(module, exported, false);
+		super(module, exportKind);
 		this.name = name;
 	}
 

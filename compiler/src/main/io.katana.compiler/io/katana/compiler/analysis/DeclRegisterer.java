@@ -61,7 +61,7 @@ public class DeclRegisterer implements IVisitor
 
 	public SemaDecl visit(AstDeclGlobal decl, SemaScopeFile scope, SemaModule module)
 	{
-		var semaDecl = new SemaDeclGlobal(module, decl.exported, decl.opaque, decl.name);
+		var semaDecl = new SemaDeclGlobal(module, decl.exportKind, decl.name);
 		handleDecl(semaDecl, scope, module);
 		return semaDecl;
 	}
@@ -78,7 +78,7 @@ public class DeclRegisterer implements IVisitor
 			if(overload instanceof AstDeclExternFunction)
 			{
 				AstDeclExternFunction extOverload = (AstDeclExternFunction)overload;
-				semaOverload = new SemaDeclExternFunction(module, overload.exported, overload.opaque, extOverload.externName, extOverload.name);
+				semaOverload = new SemaDeclExternFunction(module, overload.exportKind, extOverload.externName, extOverload.name);
 			}
 			else if(overload instanceof AstDeclDefinedOperator)
 			{
@@ -99,12 +99,12 @@ public class DeclRegisterer implements IVisitor
 					throw new CompileException(String.format("multiple operator declarations found for '%s %s'", kind, op));
 				}
 
-				semaOverload = new SemaDeclDefinedOperator(module, overload.exported, overload.opaque, (SemaDeclOperator)opCandidates.get(0));
+				semaOverload = new SemaDeclDefinedOperator(module, overload.exportKind, (SemaDeclOperator)opCandidates.get(0));
 			}
 			else if(overload instanceof AstDeclDefinedFunction)
 			{
 				var defOverload = (AstDeclDefinedFunction)overload;
-				semaOverload = new SemaDeclDefinedFunction(module, overload.exported, overload.opaque, defOverload.name);
+				semaOverload = new SemaDeclDefinedFunction(module, overload.exportKind, defOverload.name);
 			}
 			else
 				throw new AssertionError("unreachable");
@@ -117,14 +117,14 @@ public class DeclRegisterer implements IVisitor
 
 	public SemaDecl visit(AstDeclStruct decl, SemaScopeFile scope, SemaModule module)
 	{
-		var semaDecl = new SemaDeclStruct(module, decl.exported, decl.opaque, decl.name, decl.abiCompat);
+		var semaDecl = new SemaDeclStruct(module, decl.exportKind, decl.name, decl.abiCompat);
 		handleDecl(semaDecl, scope, module);
 		return semaDecl;
 	}
 
 	public SemaDecl visit(AstDeclTypeAlias decl, SemaScopeFile scope, SemaModule module)
 	{
-		var semaDecl = new SemaDeclTypeAlias(module, decl.exported, decl.name);
+		var semaDecl = new SemaDeclTypeAlias(module, decl.exportKind, decl.name);
 		handleDecl(semaDecl, scope, module);
 		return semaDecl;
 	}

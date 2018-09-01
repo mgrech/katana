@@ -14,6 +14,7 @@
 
 package io.katana.compiler.sema.decl;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.ast.AstPath;
 import io.katana.compiler.sema.SemaModule;
 import io.katana.compiler.sema.SemaSymbol;
@@ -22,14 +23,12 @@ import io.katana.compiler.visitor.IVisitable;
 public abstract class SemaDecl implements SemaSymbol, IVisitable
 {
 	private SemaModule module;
-	public boolean exported;
-	public boolean opaque;
+	public ExportKind exportKind;
 
-	protected SemaDecl(SemaModule module, boolean exported, boolean opaque)
+	protected SemaDecl(SemaModule module, ExportKind exportKind)
 	{
 		this.module = module;
-		this.exported = exported;
-		this.opaque = opaque;
+		this.exportKind = exportKind;
 	}
 
 	public AstPath qualifiedName()

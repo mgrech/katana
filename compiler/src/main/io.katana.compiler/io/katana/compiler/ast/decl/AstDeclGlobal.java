@@ -14,6 +14,7 @@
 
 package io.katana.compiler.ast.decl;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.ast.expr.AstExprLiteral;
 import io.katana.compiler.ast.type.AstType;
 import io.katana.compiler.utils.Maybe;
@@ -24,9 +25,9 @@ public class AstDeclGlobal extends AstDecl
 	public String name;
 	public Maybe<AstExprLiteral> init;
 
-	public AstDeclGlobal(boolean exported, boolean opaque, Maybe<AstType> type, String name, Maybe<AstExprLiteral> init)
+	public AstDeclGlobal(ExportKind exportKind, Maybe<AstType> type, String name, Maybe<AstExprLiteral> init)
 	{
-		super(exported, opaque);
+		super(exportKind);
 		this.type = type;
 		this.name = name;
 		this.init = init;

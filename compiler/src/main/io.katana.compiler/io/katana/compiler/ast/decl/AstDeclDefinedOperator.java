@@ -14,6 +14,7 @@
 
 package io.katana.compiler.ast.decl;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.ast.stmt.AstStmt;
 import io.katana.compiler.ast.type.AstType;
 import io.katana.compiler.op.Kind;
@@ -27,9 +28,9 @@ public class AstDeclDefinedOperator extends AstDeclDefinedFunction
 	public final String op;
 	public final Kind kind;
 
-	public AstDeclDefinedOperator(boolean exported, boolean opaque, String op, Kind kind, List<Param> params, Maybe<AstType> ret, List<AstStmt> body)
+	public AstDeclDefinedOperator(ExportKind exportKind, String op, Kind kind, List<Param> params, Maybe<AstType> ret, List<AstStmt> body)
 	{
-		super(exported, opaque, Operator.implName(op, kind), params, ret, body);
+		super(exportKind, Operator.implName(op, kind), params, ret, body);
 		this.op = op;
 		this.kind = kind;
 	}

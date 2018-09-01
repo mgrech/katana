@@ -14,6 +14,7 @@
 
 package io.katana.compiler.sema.decl;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.sema.SemaModule;
 
 import java.util.HashMap;
@@ -27,7 +28,7 @@ public class SemaDeclRenamedImport extends SemaDecl
 
 	public SemaDeclRenamedImport(SemaModule module, String rename)
 	{
-		super(null, false, false);
+		super(null, ExportKind.HIDDEN);
 		this.module = module;
 		this.rename = rename;
 	}

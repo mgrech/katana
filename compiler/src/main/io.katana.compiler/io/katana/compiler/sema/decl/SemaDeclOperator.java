@@ -14,6 +14,7 @@
 
 package io.katana.compiler.sema.decl;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.op.Operator;
 import io.katana.compiler.sema.SemaModule;
 
@@ -21,9 +22,9 @@ public class SemaDeclOperator extends SemaDecl
 {
 	public Operator operator;
 
-	public SemaDeclOperator(SemaModule module, boolean exported, Operator operator)
+	public SemaDeclOperator(SemaModule module, ExportKind exportKind, Operator operator)
 	{
-		super(module, exported, false);
+		super(module, exportKind);
 		this.operator = operator;
 	}
 

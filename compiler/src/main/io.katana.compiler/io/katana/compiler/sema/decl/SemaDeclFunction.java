@@ -14,6 +14,7 @@
 
 package io.katana.compiler.sema.decl;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.sema.SemaModule;
 import io.katana.compiler.sema.SemaSymbol;
 import io.katana.compiler.sema.scope.SemaScopeFunction;
@@ -52,9 +53,9 @@ public abstract class SemaDeclFunction extends SemaDecl
 	public SemaType ret;
 	public SemaScopeFunction scope;
 
-	protected SemaDeclFunction(SemaModule module, boolean exported, boolean opaque, String name)
+	protected SemaDeclFunction(SemaModule module, ExportKind exportKind, String name)
 	{
-		super(module, exported, opaque);
+		super(module, exportKind);
 		this.name = name;
 	}
 

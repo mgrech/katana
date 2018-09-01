@@ -14,6 +14,7 @@
 
 package io.katana.compiler.ast.decl;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.ast.type.AstType;
 import io.katana.compiler.utils.Maybe;
 
@@ -37,9 +38,9 @@ public class AstDeclFunction extends AstDecl
 	public List<Param> params;
 	public Maybe<AstType> ret;
 
-	protected AstDeclFunction(boolean exported, boolean opaque, String name, List<Param> params, Maybe<AstType> ret)
+	protected AstDeclFunction(ExportKind exportKind, String name, List<Param> params, Maybe<AstType> ret)
 	{
-		super(exported, opaque);
+		super(exportKind);
 		this.name = name;
 		this.params = params;
 		this.ret = ret;

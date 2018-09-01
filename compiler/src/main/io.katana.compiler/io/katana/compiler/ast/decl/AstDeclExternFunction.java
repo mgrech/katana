@@ -14,6 +14,7 @@
 
 package io.katana.compiler.ast.decl;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.ast.type.AstType;
 import io.katana.compiler.utils.Maybe;
 
@@ -23,9 +24,9 @@ public class AstDeclExternFunction extends AstDeclFunction
 {
 	public Maybe<String> externName;
 
-	public AstDeclExternFunction(boolean exported, boolean opaque, Maybe<String> externName, String name, List<Param> params, Maybe<AstType> ret)
+	public AstDeclExternFunction(ExportKind exportKind, Maybe<String> externName, String name, List<Param> params, Maybe<AstType> ret)
 	{
-		super(exported, opaque, name, params, ret);
+		super(exportKind, name, params, ret);
 		this.externName = externName;
 	}
 }

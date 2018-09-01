@@ -14,15 +14,16 @@
 
 package io.katana.compiler.ast.decl;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.op.Operator;
 
 public class AstDeclOperator extends AstDecl
 {
 	public Operator operator;
 
-	public AstDeclOperator(boolean exported, Operator operator)
+	public AstDeclOperator(ExportKind exportKind, Operator operator)
 	{
-		super(exported, false);
+		super(exportKind);
 		this.operator = operator;
 	}
 }

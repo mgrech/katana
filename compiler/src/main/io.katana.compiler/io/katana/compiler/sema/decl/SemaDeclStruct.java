@@ -14,6 +14,7 @@
 
 package io.katana.compiler.sema.decl;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.analysis.StructLayout;
 import io.katana.compiler.sema.SemaModule;
 import io.katana.compiler.sema.type.SemaType;
@@ -53,9 +54,9 @@ public class SemaDeclStruct extends SemaDecl
 	private final Map<String, Field> fieldsByName = new TreeMap<>();
 	public StructLayout layout;
 
-	public SemaDeclStruct(SemaModule module, boolean exported, boolean opaque, String name, boolean abiCompat)
+	public SemaDeclStruct(SemaModule module, ExportKind exportKind, String name, boolean abiCompat)
 	{
-		super(module, exported, opaque);
+		super(module, exportKind);
 		this.name = name;
 		this.abiCompat = abiCompat;
 	}

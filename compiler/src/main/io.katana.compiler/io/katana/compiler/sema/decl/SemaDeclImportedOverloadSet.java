@@ -14,13 +14,15 @@
 
 package io.katana.compiler.sema.decl;
 
+import io.katana.compiler.ExportKind;
+
 public class SemaDeclImportedOverloadSet extends SemaDecl
 {
 	public SemaDeclOverloadSet set;
 
 	public SemaDeclImportedOverloadSet(SemaDeclOverloadSet set)
 	{
-		super(null, false, false);
+		super(null, ExportKind.HIDDEN);
 		this.set = set;
 	}
 

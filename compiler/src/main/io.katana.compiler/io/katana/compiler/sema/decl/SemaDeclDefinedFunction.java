@@ -14,6 +14,7 @@
 
 package io.katana.compiler.sema.decl;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.sema.SemaModule;
 import io.katana.compiler.sema.SemaSymbol;
 import io.katana.compiler.sema.stmt.SemaStmt;
@@ -52,9 +53,9 @@ public class SemaDeclDefinedFunction extends SemaDeclFunction
 	public List<SemaStmt> body = new ArrayList<>();
 	public Map<String, SemaStmtLabel> labels = new TreeMap<>();
 
-	public SemaDeclDefinedFunction(SemaModule module, boolean exported, boolean opaque, String name)
+	public SemaDeclDefinedFunction(SemaModule module, ExportKind exportKind, String name)
 	{
-		super(module, exported, opaque, name);
+		super(module, exportKind, name);
 	}
 
 	public boolean defineVariable(String name, SemaType type)

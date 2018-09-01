@@ -1,4 +1,4 @@
-// Copyright 2016-2018 Markus Grech
+// Copyright 2018 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,19 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.sema.decl;
+package io.katana.compiler;
 
-import io.katana.compiler.ExportKind;
-import io.katana.compiler.sema.SemaModule;
-import io.katana.compiler.utils.Maybe;
-
-public class SemaDeclExternFunction extends SemaDeclFunction
+public enum ExportKind
 {
-	public Maybe<String> externName;
-
-	public SemaDeclExternFunction(SemaModule module, ExportKind exportKind, Maybe<String> externName, String name)
-	{
-		super(module, exportKind, name);
-		this.externName = externName;
-	}
+	FULL,
+	OPAQUE,
+	HIDDEN,
 }

@@ -14,6 +14,7 @@
 
 package io.katana.compiler.sema.decl;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.sema.SemaModule;
 import io.katana.compiler.sema.expr.SemaExpr;
 import io.katana.compiler.sema.type.SemaType;
@@ -25,9 +26,9 @@ public class SemaDeclGlobal extends SemaDecl
 	public SemaType type;
 	public Maybe<SemaExpr> init;
 
-	public SemaDeclGlobal(SemaModule module, boolean exported, boolean opaque, String name)
+	public SemaDeclGlobal(SemaModule module, ExportKind exportKind, String name)
 	{
-		super(module, exported, opaque);
+		super(module, exportKind);
 		this.name = name;
 	}
 

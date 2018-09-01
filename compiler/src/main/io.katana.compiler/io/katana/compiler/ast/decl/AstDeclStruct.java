@@ -14,6 +14,7 @@
 
 package io.katana.compiler.ast.decl;
 
+import io.katana.compiler.ExportKind;
 import io.katana.compiler.ast.type.AstType;
 
 import java.util.List;
@@ -42,9 +43,9 @@ public class AstDeclStruct extends AstDecl
 	public String name;
 	public List<Field> fields;
 
-	public AstDeclStruct(boolean exported, boolean opaque, String name, boolean abiCompat, List<Field> fields)
+	public AstDeclStruct(ExportKind exportKind, String name, boolean abiCompat, List<Field> fields)
 	{
-		super(exported, opaque);
+		super(exportKind);
 		this.name = name;
 		this.abiCompat = abiCompat;
 		this.fields = fields;
