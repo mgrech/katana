@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm.lowering;
+package io.katana.compiler.backend.llvm.codegen;
 
 import io.katana.compiler.analysis.Types;
 import io.katana.compiler.backend.FunctionNameMangling;
@@ -35,30 +35,30 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
-public class DeclLowerer implements IVisitor
+public class DeclCodegen implements IVisitor
 {
 	private final FileCodegenContext context;
 	private final IrModuleBuilder builder;
 
-	public DeclLowerer(FileCodegenContext context, IrModuleBuilder builder)
+	public DeclCodegen(FileCodegenContext context, IrModuleBuilder builder)
 	{
 		this.context = context;
 		this.builder = builder;
 	}
 
-	public void lower(SemaDecl decl)
+	public void generate(SemaDecl decl)
 	{
 		decl.accept(this);
 	}
 
-	private Maybe<IrValue> lower(SemaExpr expr)
+	private Maybe<IrValue> generate(SemaExpr expr)
 	{
-		return ExprLowerer.lower(expr, context, null);
+		return ExprCodegen.generate(expr, context, null);
 	}
 
-	private IrType lower(SemaType type)
+	private IrType generate(SemaType type)
 	{
-		return TypeLowerer.lower(type, context.platform());
+		return TypeCodegen.generate(type, context.platform());
 	}
 
 	private static String qualifiedName(SemaDecl decl)
@@ -77,21 +77,21 @@ public class DeclLowerer implements IVisitor
 		var fields = struct.fieldsByIndex().stream()
 		                                   .map(f -> f.type)
 		                                   .filter(t -> !Types.isZeroSized(t))
-		                                   .map(this::lower)
+		                                   .map(this::generate)
 		                                   .collect(Collectors.toList());
 
 		builder.defineType(name, fields);
 	}
 
-	private IrFunctionParameter lower(SemaDeclFunction.Param parameter, boolean external)
+	private IrFunctionParameter generate(SemaDeclFunction.Param parameter, boolean external)
 	{
-		var type = lower(parameter.type);
+		var type = generate(parameter.type);
 		var nonnull = Types.isNonNullablePointer(parameter.type);
 		var name = external ? parameter.name : "p$" + parameter.name;
 		return new IrFunctionParameter(type, name, nonnull);
 	}
 
-	private List<IrInstr> lowerBody(SemaDeclDefinedFunction function)
+	private List<IrInstr> generateBody(SemaDeclDefinedFunction function)
 	{
 		var builder = new IrFunctionBuilder();
 
@@ -100,7 +100,7 @@ public class DeclLowerer implements IVisitor
 			if(Types.isZeroSized(param.type))
 				continue;
 
-			var type = lower(param.type);
+			var type = generate(param.type);
 			var alignment = Types.alignof(param.type, context.platform());
 			var paramIr = IrValues.ofSsa("p$" + param.name);
 			var paramCopy = IrValues.ofSsa(param.name);
@@ -115,21 +115,21 @@ public class DeclLowerer implements IVisitor
 			if(Types.isZeroSized(type))
 				continue;
 
-			var typeIr = lower(type);
+			var typeIr = generate(type);
 			var alignment = Types.alignof(type, context.platform());
 			builder.alloca(IrValues.ofSsa(entry.getKey()), typeIr, alignment);
 		}
 
-		var stmtLowerer = new StmtLowerer(context, builder);
+		var stmtLowerer = new StmtCodegen(context, builder);
 
 		for(var stmt : function.body)
-			stmtLowerer.lower(stmt);
+			stmtLowerer.generate(stmt);
 
 		stmtLowerer.finish(function);
 		return builder.build();
 	}
 
-	private void lower(SemaDeclDefinedFunction function)
+	private void generate(SemaDeclDefinedFunction function)
 	{
 		var linkage = function.exported ? Linkage.EXTERNAL : Linkage.PRIVATE;
 
@@ -137,26 +137,26 @@ public class DeclLowerer implements IVisitor
 		                      ? function.exported ? DllStorageClass.DLLEXPORT : DllStorageClass.NONE
 		                      : DllStorageClass.NONE;
 
-		var returnType = lower(function.ret);
+		var returnType = generate(function.ret);
 		var name = FunctionNameMangling.of(function);
 
 		var params = function.params.stream()
 		                            .filter(p -> !Types.isZeroSized(p.type))
-		                            .map(p -> lower(p, false))
+		                            .map(p -> generate(p, false))
 		                            .collect(Collectors.toList());
 
 		var signature = new IrFunctionSignature(linkage, dllStorageClass, returnType, name, params);
-		builder.defineFunction(signature, lowerBody(function));
+		builder.defineFunction(signature, generateBody(function));
 	}
 
-	private void lower(SemaDeclExternFunction function)
+	private void generate(SemaDeclExternFunction function)
 	{
-		var returnType = lower(function.ret);
+		var returnType = generate(function.ret);
 		var name = function.externName.or(function.name());
 
 		var params = function.params.stream()
 		                            .filter(p -> !Types.isZeroSized(p.type))
-		                            .map(p -> lower(p, true))
+		                            .map(p -> generate(p, true))
 		                            .collect(Collectors.toList());
 
 		var signature = new IrFunctionSignature(Linkage.EXTERNAL, DllStorageClass.NONE, returnType, name, params);
@@ -167,9 +167,9 @@ public class DeclLowerer implements IVisitor
 	{
 		for(var overload : set.overloads)
 			if(overload instanceof SemaDeclExternFunction)
-				lower((SemaDeclExternFunction)overload);
+				generate((SemaDeclExternFunction)overload);
 			else if(overload instanceof SemaDeclDefinedFunction)
-				lower((SemaDeclDefinedFunction)overload);
+				generate((SemaDeclDefinedFunction)overload);
 			else
 				throw new AssertionError("unreachable");
 	}
@@ -180,8 +180,8 @@ public class DeclLowerer implements IVisitor
 			return;
 
 		var name = qualifiedName(global);
-		var type = lower(global.type);
-		var initializer = global.init.map(i -> lower(i).unwrap()).or(new IrValueConstant("zeroinitializer"));
+		var type = generate(global.type);
+		var initializer = global.init.map(i -> generate(i).unwrap()).or(new IrValueConstant("zeroinitializer"));
 		builder.defineGlobal(name, AddressMergeability.NONE, Types.isConst(global.type), type, initializer);
 	}
 

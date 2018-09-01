@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm.lowering;
+package io.katana.compiler.backend.llvm.codegen;
 
 import io.katana.compiler.analysis.Types;
 import io.katana.compiler.backend.llvm.FileCodegenContext;
@@ -32,20 +32,20 @@ import io.katana.compiler.visitor.IVisitor;
 import java.util.ArrayList;
 
 @SuppressWarnings("unused")
-public class StmtLowerer implements IVisitor
+public class StmtCodegen implements IVisitor
 {
 	private final FileCodegenContext context;
 	private final IrFunctionBuilder builder;
 
 	private boolean preceededByTerminator = false;
 
-	public StmtLowerer(FileCodegenContext context, IrFunctionBuilder builder)
+	public StmtCodegen(FileCodegenContext context, IrFunctionBuilder builder)
 	{
 		this.context = context;
 		this.builder = builder;
 	}
 
-	public void lower(SemaStmt stmt)
+	public void generate(SemaStmt stmt)
 	{
 		stmt.accept(this);
 	}
@@ -61,14 +61,14 @@ public class StmtLowerer implements IVisitor
 		}
 	}
 
-	private Maybe<IrValue> lower(SemaExpr expr)
+	private Maybe<IrValue> generate(SemaExpr expr)
 	{
-		return ExprLowerer.lower(expr, context, builder);
+		return ExprCodegen.generate(expr, context, builder);
 	}
 
-	private IrType lower(SemaType type)
+	private IrType generate(SemaType type)
 	{
-		return TypeLowerer.lower(type, context.platform());
+		return TypeCodegen.generate(type, context.platform());
 	}
 
 	private void visit(SemaStmtCompound compound)
@@ -76,13 +76,13 @@ public class StmtLowerer implements IVisitor
 		preceededByTerminator = false;
 
 		for(var stmt : compound.body)
-			lower(stmt);
+			generate(stmt);
 	}
 
 	private void visit(SemaStmtExprStmt stmt)
 	{
 		preceededByTerminator = false;
-		lower(stmt.expr);
+		generate(stmt.expr);
 	}
 
 	private void generateGoto(IrLabel label)
@@ -103,7 +103,7 @@ public class StmtLowerer implements IVisitor
 
 	private void visit(SemaStmtIf if_)
 	{
-		var condition = lower(if_.condition).unwrap();
+		var condition = generate(if_.condition).unwrap();
 
 		var thenLabel = builder.allocateLabel("if.then");
 		var afterLabel = builder.allocateLabel("if.after");
@@ -115,7 +115,7 @@ public class StmtLowerer implements IVisitor
 		preceededByTerminator = true;
 
 		generateLabel(thenLabel);
-		lower(if_.then);
+		generate(if_.then);
 		generateLabel(afterLabel);
 
 		preceededByTerminator = false;
@@ -130,7 +130,7 @@ public class StmtLowerer implements IVisitor
 		then.add(new GeneratedGoto(after));
 
 		visit(new SemaStmtIf(ifelse.negated, ifelse.condition, new SemaStmtCompound(then)));
-		lower(ifelse.else_);
+		generate(ifelse.else_);
 		generateLabel(after);
 	}
 
@@ -138,7 +138,7 @@ public class StmtLowerer implements IVisitor
 	{
 		var label = builder.allocateLabel("loop");
 		generateLabel(label);
-		lower(loop.body);
+		generate(loop.body);
 		builder.br(label);
 	}
 
@@ -171,8 +171,8 @@ public class StmtLowerer implements IVisitor
 	private void visit(SemaStmtReturn ret)
 	{
 		preceededByTerminator = true;
-		var type = ret.ret.map(SemaExpr::type).map(this::lower).or(IrTypes.VOID);
-		var value = ret.ret.map(this::lower).unwrap();
+		var type = ret.ret.map(SemaExpr::type).map(this::generate).or(IrTypes.VOID);
+		var value = ret.ret.map(this::generate).unwrap();
 		builder.ret(type, value);
 	}
 

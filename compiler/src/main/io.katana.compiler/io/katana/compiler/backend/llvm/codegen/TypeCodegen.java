@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm.lowering;
+package io.katana.compiler.backend.llvm.codegen;
 
 import io.katana.compiler.analysis.Types;
 import io.katana.compiler.backend.PlatformContext;
@@ -24,22 +24,22 @@ import io.katana.compiler.visitor.IVisitor;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
-public class TypeLowerer implements IVisitor
+public class TypeCodegen implements IVisitor
 {
 	private PlatformContext context;
 
-	private TypeLowerer(PlatformContext context)
+	private TypeCodegen(PlatformContext context)
 	{
 		this.context = context;
 	}
 
-	public static IrType lower(SemaType type, PlatformContext context)
+	public static IrType generate(SemaType type, PlatformContext context)
 	{
-		var visitor = new TypeLowerer(context);
-		return (IrType)type.accept(visitor);
+		var codegen = new TypeCodegen(context);
+		return codegen.generate(type);
 	}
 
-	private IrType lower(SemaType type)
+	private IrType generate(SemaType type)
 	{
 		return (IrType)type.accept(this);
 	}
@@ -76,9 +76,9 @@ public class TypeLowerer implements IVisitor
 
 	private IrType visit(SemaTypeFunction type)
 	{
-		var returnType = lower(type.ret);
+		var returnType = generate(type.ret);
 		var parameterTypes = type.params.stream()
-		                                .map(this::lower)
+		                                .map(this::generate)
 		                                .collect(Collectors.toList());
 
 		return IrTypes.ofFunction(returnType, parameterTypes);
@@ -91,20 +91,20 @@ public class TypeLowerer implements IVisitor
 
 	private IrType visit(SemaTypeSlice type)
 	{
-		var elementType = lower(type.type);
+		var elementType = generate(type.type);
 		var elementPointerType = IrTypes.ofPointer(elementType);
-		var lengthType = lower(SemaTypeBuiltin.INT);
+		var lengthType = generate(SemaTypeBuiltin.INT);
 		return IrTypes.ofLiteralStruct(elementPointerType, lengthType);
 	}
 
 	private IrType visit(SemaTypeArray type)
 	{
-		return IrTypes.ofArray(type.length, lower(type.type));
+		return IrTypes.ofArray(type.length, generate(type.type));
 	}
 
 	private IrType visit(SemaTypeConst type)
 	{
-		return lower(type.type);
+		return generate(type.type);
 	}
 
 	private IrType visit(SemaTypeNullablePointer type)
@@ -112,7 +112,7 @@ public class TypeLowerer implements IVisitor
 		if(Types.isZeroSized(type.type))
 			return IrTypes.ofPointer(IrTypes.I8);
 
-		return IrTypes.ofPointer(lower(type.type));
+		return IrTypes.ofPointer(generate(type.type));
 	}
 
 	private IrType visit(SemaTypeNonNullablePointer type)
@@ -120,13 +120,13 @@ public class TypeLowerer implements IVisitor
 		if(Types.isZeroSized(type.type))
 			return IrTypes.ofPointer(IrTypes.I8);
 
-		return IrTypes.ofPointer(lower(type.type));
+		return IrTypes.ofPointer(generate(type.type));
 	}
 
 	private IrType visit(SemaTypeTuple tuple)
 	{
 		return IrTypes.ofLiteralStruct(tuple.types.stream()
-		                                          .map(this::lower)
+		                                          .map(this::generate)
 		                                          .collect(Collectors.toList()));
 	}
 }

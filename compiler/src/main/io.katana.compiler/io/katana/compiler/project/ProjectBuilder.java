@@ -18,7 +18,7 @@ import io.katana.compiler.Katana;
 import io.katana.compiler.analysis.ProgramValidator;
 import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.backend.ResourceGenerator;
-import io.katana.compiler.backend.llvm.lowering.ProgramLowerer;
+import io.katana.compiler.backend.llvm.codegen.ProgramCodegen;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.diag.DiagnosticsManager;
 import io.katana.compiler.parser.ProgramParser;
@@ -301,7 +301,7 @@ public class ProjectBuilder
 		if(!diag.successful())
 			throw new CompileException(diag.summary());
 
-		ProgramLowerer.lower(build, program, context, katanaOutputFile);
+		ProgramCodegen.generate(build, program, context, katanaOutputFile);
 		return Maybe.some(katanaOutputFile);
 	}
 

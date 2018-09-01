@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.backend.llvm.lowering;
+package io.katana.compiler.backend.llvm.codegen;
 
 import io.katana.compiler.BuiltinType;
 import io.katana.compiler.Inlining;
@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
-public class ExprLowerer implements IVisitor
+public class ExprCodegen implements IVisitor
 {
 	private static final int SLICE_POINTER_FIELD_INDEX = 0;
 	private static final int SLICE_LENGTH_FIELD_INDEX = 1;
@@ -49,34 +49,34 @@ public class ExprLowerer implements IVisitor
 	private final FileCodegenContext context;
 	private final IrFunctionBuilder builder;
 
-	private ExprLowerer(FileCodegenContext context, IrFunctionBuilder builder)
+	private ExprCodegen(FileCodegenContext context, IrFunctionBuilder builder)
 	{
 		this.context = context;
 		this.builder = builder;
 	}
 
-	public static Maybe<IrValue> lower(SemaExpr expr, FileCodegenContext context, IrFunctionBuilder builder)
+	public static Maybe<IrValue> generate(SemaExpr expr, FileCodegenContext context, IrFunctionBuilder builder)
 	{
-		var visitor = new ExprLowerer(context, builder);
-		return Maybe.wrap((IrValue)expr.accept(visitor));
+		var codegen = new ExprCodegen(context, builder);
+		return Maybe.wrap(codegen.generate(expr));
 	}
 
-	private IrValue lower(SemaExpr expr)
+	private IrValue generate(SemaExpr expr)
 	{
 		return (IrValue)expr.accept(this);
 	}
 
-	private IrType lower(SemaType type)
+	private IrType generate(SemaType type)
 	{
-		return TypeLowerer.lower(type, context.platform());
+		return TypeCodegen.generate(type, context.platform());
 	}
 
 	private IrValue visit(RValueToLValueConversion conversion)
 	{
-		var value = lower(conversion.expr);
+		var value = generate(conversion.expr);
 		var type = conversion.expr.type();
 		var alignment = Types.alignof(type, context.platform());
-		var typeIr = lower(type);
+		var typeIr = generate(type);
 		var pointer = builder.alloca(typeIr, alignment);
 		builder.store(typeIr, value, pointer);
 		return pointer;
@@ -87,7 +87,7 @@ public class ExprLowerer implements IVisitor
 		if(Types.isZeroSized(addressof.expr.type()))
 			return IrValues.ADDRESS_ONE;
 
-		return lower(addressof.expr);
+		return generate(addressof.expr);
 	}
 
 	private IrValue visit(SemaExprAlignofType alignof)
@@ -102,8 +102,8 @@ public class ExprLowerer implements IVisitor
 
 	private IrValueSsa generateGetElementPtr(SemaExpr compoundExpr, boolean implicitIndexZero, IrType indexType, IrValue index)
 	{
-		var compound = lower(compoundExpr);
-		var baseType = lower(Types.removePointer(compoundExpr.type()));
+		var compound = generate(compoundExpr);
+		var baseType = generate(Types.removePointer(compoundExpr.type()));
 		var indices = new ArrayList<IrInstrGetElementPtr.Index>();
 
 		if(implicitIndexZero)
@@ -123,13 +123,13 @@ public class ExprLowerer implements IVisitor
 		if(isRValue)
 			arrayIndexAccess.expr = new RValueToLValueConversion(arrayIndexAccess.expr);
 
-		var indexType = lower(arrayIndexAccess.index.type());
-		var index = lower(arrayIndexAccess.index);
+		var indexType = generate(arrayIndexAccess.index.type());
+		var index = generate(arrayIndexAccess.index);
 		var result = generateGetElementPtr(arrayIndexAccess.expr, true, indexType, index);
 
 		if(isRValue)
 		{
-			var resultType = lower(arrayIndexAccess.type());
+			var resultType = generate(arrayIndexAccess.type());
 			return builder.load(resultType, result);
 		}
 
@@ -148,7 +148,7 @@ public class ExprLowerer implements IVisitor
 
 	private IrValueSsa generateSliceConstruction(SemaType elementType, IrValue pointer, IrValue length)
 	{
-		var sliceType = (IrTypeStructLiteral)lower(Types.addSlice(elementType));
+		var sliceType = (IrTypeStructLiteral)generate(Types.addSlice(elementType));
 		var pointerType = sliceType.fields.get(0);
 		var lengthType = sliceType.fields.get(1);
 
@@ -170,9 +170,9 @@ public class ExprLowerer implements IVisitor
 		if(Types.isZeroSized(assign.type()))
 			return null;
 
-		var type = lower(assign.right.type());
-		var right = lower(assign.right);
-		var left = lower(assign.left);
+		var type = generate(assign.right.type());
+		var right = generate(assign.right);
+		var left = generate(assign.left);
 		builder.store(type, right, left);
 		return left;
 	}
@@ -180,14 +180,14 @@ public class ExprLowerer implements IVisitor
 	public IrValue visit(SemaExprBuiltinCall builtinCall)
 	{
 		var args = builtinCall.args.stream()
-		                           .map(this::lower)
+		                           .map(this::generate)
 		                           .collect(Collectors.toList());
 
-		var type = lower(builtinCall.args.get(0).type());
+		var type = generate(builtinCall.args.get(0).type());
 		return builder.binary(builtinCall.name, type, args.get(0), args.get(1));
 	}
 
-	private IrInstrConversion.Kind lowerCastKind(SemaExprCast.Kind kind, SemaType targetType)
+	private IrInstrConversion.Kind generateCastKind(SemaExprCast.Kind kind, SemaType targetType)
 	{
 		switch(kind)
 		{
@@ -229,15 +229,15 @@ public class ExprLowerer implements IVisitor
 
 	private IrValueSsa generateCast(IrValue value, SemaType sourceType, SemaType targetType, SemaExprCast.Kind kind)
 	{
-		var kindIr = lowerCastKind(kind, targetType);
-		var sourceTypeIr = lower(sourceType);
-		var targetTypeIr = lower(targetType);
+		var kindIr = generateCastKind(kind, targetType);
+		var sourceTypeIr = generate(sourceType);
+		var targetTypeIr = generate(targetType);
 		return builder.convert(kindIr, sourceTypeIr, value, targetTypeIr);
 	}
 
 	private IrValue visit(SemaExprCast cast)
 	{
-		var value = lower(cast.expr);
+		var value = generate(cast.expr);
 
 		var sourceType = cast.expr.type();
 		var targetType = cast.type;
@@ -273,7 +273,7 @@ public class ExprLowerer implements IVisitor
 
 	private IrValue visit(SemaExprConst const_)
 	{
-		return lower(const_.expr);
+		return generate(const_.expr);
 	}
 
 	private IrValue visit(SemaExprDeref deref)
@@ -281,20 +281,20 @@ public class ExprLowerer implements IVisitor
 		if(Types.isZeroSized(deref.type()))
 			return null;
 
-		return lower(deref.expr);
+		return generate(deref.expr);
 	}
 
 	private IrValue generateFunctionCall(IrValue function, List<SemaExpr> args, SemaType returnType, Inlining inline)
 	{
-		var returnTypeIr = lower(returnType);
+		var returnTypeIr = generate(returnType);
 
 		var argsIr = args.stream()
-		                 .map(this::lower)
+		                 .map(this::generate)
 		                 .collect(Collectors.toList());
 
 		var argTypesIr = args.stream()
 		                     .map(SemaExpr::type)
-		                     .map(this::lower)
+		                     .map(this::generate)
 		                     .collect(Collectors.toList());
 
 		return builder.call(returnTypeIr, function, argTypesIr, argsIr, inline).unwrap();
@@ -327,7 +327,7 @@ public class ExprLowerer implements IVisitor
 		var length = Types.arrayLength(Types.removePointer(conversion.expr.type()));
 		var size = length * Types.sizeof(elementType, context.platform());
 
-		var pointerType = IrTypes.ofPointer(lower(elementType));
+		var pointerType = IrTypes.ofPointer(generate(elementType));
 		var pointer = generateGetElementPtr(conversion.expr, true, 0);
 		var bytePointerType = IrTypes.ofPointer(IrTypes.I8);
 		var bytePointer = builder.convert(IrInstrConversion.Kind.BITCAST, pointerType, pointer, bytePointerType);
@@ -348,14 +348,14 @@ public class ExprLowerer implements IVisitor
 		if(Types.isZeroSized(conversion.type()))
 			return null;
 
-		var value = lower(conversion.expr);
-		var type = lower(conversion.type());
+		var value = generate(conversion.expr);
+		var type = generate(conversion.type());
 		return builder.load(type, value);
 	}
 
 	private IrValue visit(SemaExprImplicitConversionNonNullablePointerToNullablePointer conversion)
 	{
-		return lower(conversion.expr);
+		return generate(conversion.expr);
 	}
 
 	private IrValue visit(SemaExprImplicitConversionNullToSlice conversion)
@@ -370,13 +370,13 @@ public class ExprLowerer implements IVisitor
 
 	private IrValue visit(SemaExprImplicitConversionPointerToNonConstToPointerToConst conversion)
 	{
-		return lower(conversion.expr);
+		return generate(conversion.expr);
 	}
 
 	private IrValue visit(SemaExprImplicitConversionPointerToBytePointer conversion)
 	{
-		var sourceType = lower(conversion.expr.type());
-		var value = lower(conversion.expr);
+		var sourceType = generate(conversion.expr.type());
+		var value = generate(conversion.expr);
 		var targetType = IrTypes.ofPointer(IrTypes.I8);
 		return builder.convert(IrInstrConversion.Kind.BITCAST, sourceType, value, targetType);
 	}
@@ -384,12 +384,12 @@ public class ExprLowerer implements IVisitor
 	private IrValue visit(SemaExprImplicitConversionSliceToByteSlice conversion)
 	{
 		var elementType = Types.removeSlice(conversion.expr.type());
-		var slice = lower(conversion.expr);
-		var sliceType = lower(conversion.expr.type());
+		var slice = generate(conversion.expr);
+		var sliceType = generate(conversion.expr.type());
 		var pointer = builder.extractvalue(sliceType, slice, SLICE_POINTER_FIELD_INDEX);
-		var pointerType = IrTypes.ofPointer(lower(elementType));
+		var pointerType = IrTypes.ofPointer(generate(elementType));
 		var length = builder.extractvalue(sliceType, slice, SLICE_LENGTH_FIELD_INDEX);
-		var lengthType = lower(SemaTypeBuiltin.INT);
+		var lengthType = generate(SemaTypeBuiltin.INT);
 		var sizeof = Types.sizeof(elementType, context.platform());
 		var byteSize = builder.binary("mul", lengthType, length, IrValues.ofConstant(sizeof));
 		var bytePointerType = IrTypes.ofPointer(IrTypes.I8);
@@ -399,12 +399,12 @@ public class ExprLowerer implements IVisitor
 
 	private IrValue visit(SemaExprImplicitConversionSliceToSliceOfConst conversion)
 	{
-		return lower(conversion.expr);
+		return generate(conversion.expr);
 	}
 
 	private IrValue visit(SemaExprImplicitConversionWiden conversion)
 	{
-		var value = lower(conversion.expr);
+		var value = generate(conversion.expr);
 		var sourceType = conversion.expr.type();
 		var targetType = conversion.type();
 		return generateCast(value, sourceType, targetType, SemaExprCast.Kind.WIDEN_CAST);
@@ -412,7 +412,7 @@ public class ExprLowerer implements IVisitor
 
 	private IrValue visit(SemaExprIndirectFunctionCall functionCall)
 	{
-		var function = lower(functionCall.expr);
+		var function = generate(functionCall.expr);
 		return generateFunctionCall(function, functionCall.args, functionCall.type(), Inlining.AUTO);
 	}
 
@@ -427,7 +427,7 @@ public class ExprLowerer implements IVisitor
 
 		if(isRValue)
 		{
-			var fieldType = lower(fieldAccess.field.type);
+			var fieldType = generate(fieldAccess.field.type);
 			return builder.load(fieldType, result);
 		}
 
@@ -436,9 +436,9 @@ public class ExprLowerer implements IVisitor
 
 	private IrValue visit(SemaExprLitArray lit)
 	{
-		var elementType = lower(lit.type);
+		var elementType = generate(lit.type);
 		var values = lit.values.stream()
-		                       .map(this::lower)
+		                       .map(this::generate)
 		                       .collect(Collectors.toList());
 
 		return IrValues.ofConstantArray(elementType, values);
@@ -513,8 +513,8 @@ public class ExprLowerer implements IVisitor
 
 	private IrValueSsa generateExtractValue(SemaExpr compound, int index)
 	{
-		var compoundIr = lower(compound);
-		var compoundType = lower(compound.type());
+		var compoundIr = generate(compound);
+		var compoundType = generate(compound.type());
 		return builder.extractvalue(compoundType, compoundIr, index);
 	}
 
@@ -541,8 +541,8 @@ public class ExprLowerer implements IVisitor
 		if(pointer.kind() == ExprKind.LVALUE)
 			pointer = new SemaExprImplicitConversionLValueToRValue(pointer);
 
-		var indexType = lower(sliceIndexAccess.index.type());
-		var index = lower(sliceIndexAccess.index);
+		var indexType = generate(sliceIndexAccess.index.type());
+		var index = generate(sliceIndexAccess.index);
 		return generateGetElementPtr(pointer, false, indexType, index);
 	}
 }
