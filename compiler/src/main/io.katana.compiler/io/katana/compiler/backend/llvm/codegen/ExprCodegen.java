@@ -90,9 +90,16 @@ public class ExprCodegen implements IVisitor
 		return generate(addressof.expr);
 	}
 
+	private IrValue visit(SemaExprAlignofExpr alignof)
+	{
+		var alignment = Types.alignof(alignof.expr.type(), context.platform());
+		return IrValues.ofConstant(alignment);
+	}
+
 	private IrValue visit(SemaExprAlignofType alignof)
 	{
-		return IrValues.ofConstant(Types.alignof(alignof.type, context.platform()));
+		var alignment = Types.alignof(alignof.type, context.platform());
+		return IrValues.ofConstant(alignment);
 	}
 
 	private IrValueSsa generateGetElementPtr(SemaExpr compoundExpr, boolean implicitIndexZero, int index)
@@ -503,6 +510,12 @@ public class ExprCodegen implements IVisitor
 	{
 		var offset = offsetof.field.offsetof();
 		return IrValues.ofConstant(offset);
+	}
+
+	private IrValue visit(SemaExprSizeofExpr sizeof)
+	{
+		var size = Types.sizeof(sizeof.expr.type(), context.platform());
+		return IrValues.ofConstant(size);
 	}
 
 	private IrValue visit(SemaExprSizeofType sizeof)
