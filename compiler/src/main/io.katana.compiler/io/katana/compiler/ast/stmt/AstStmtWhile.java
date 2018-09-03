@@ -19,13 +19,13 @@ import io.katana.compiler.ast.expr.AstExpr;
 public class AstStmtWhile extends AstStmt
 {
 	public boolean negated;
-	public AstExpr condition;
-	public AstStmt body;
+	public AstExpr conditionExpr;
+	public AstStmt bodyStmt;
 
-	public AstStmtWhile(boolean negated, AstExpr condition, AstStmt body)
+	public AstStmtWhile(boolean negated, AstExpr conditionExpr, AstStmt bodyStmt)
 	{
 		this.negated = negated;
-		this.condition = condition;
-		this.body = body;
+		this.conditionExpr = conditionExpr;
+		this.bodyStmt = bodyStmt;
 	}
 }

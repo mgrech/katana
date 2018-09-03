@@ -19,6 +19,11 @@ import io.katana.compiler.sema.type.SemaTypeBuiltin;
 
 public class SemaExprLitNull extends SimpleRValueExpr
 {
+	public static final SemaExprLitNull INSTANCE = new SemaExprLitNull();
+
+	private SemaExprLitNull()
+	{}
+
 	@Override
 	public SemaType type()
 	{

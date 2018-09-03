@@ -21,18 +21,18 @@ import java.util.List;
 
 public class SemaExprIndirectFunctionCall extends SimpleRValueExpr
 {
-	public SemaExpr expr;
-	public List<SemaExpr> args;
+	public SemaExpr functionExpr;
+	public List<SemaExpr> argExprs;
 
-	public SemaExprIndirectFunctionCall(SemaExpr expr, List<SemaExpr> args)
+	public SemaExprIndirectFunctionCall(SemaExpr functionExpr, List<SemaExpr> argExprs)
 	{
-		this.expr = expr;
-		this.args = args;
+		this.functionExpr = functionExpr;
+		this.argExprs = argExprs;
 	}
 
 	@Override
 	public SemaType type()
 	{
-		return ((SemaTypeFunction)expr.type()).ret;
+		return ((SemaTypeFunction)functionExpr.type()).returnType;
 	}
 }

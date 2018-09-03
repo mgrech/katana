@@ -20,9 +20,9 @@ import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.diag.TypeString;
 import io.katana.compiler.sema.decl.*;
-import io.katana.compiler.sema.scope.SemaScopeDefinedFunction;
 import io.katana.compiler.sema.scope.SemaScopeFile;
 import io.katana.compiler.sema.scope.SemaScopeFunction;
+import io.katana.compiler.sema.scope.SemaScopeFunctionBody;
 import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
 
@@ -66,8 +66,8 @@ public class DeclIfaceValidator implements IVisitor
 
 	private void validateFunction(SemaDeclFunction semaFunction, AstDeclFunction function, SemaScopeFile scope)
 	{
-		if(semaFunction instanceof SemaDeclDefinedFunction)
-			semaFunction.scope = new SemaScopeDefinedFunction(scope, (SemaDeclDefinedFunction)semaFunction);
+		if(semaFunction instanceof SemaDeclFunctionDef)
+			semaFunction.scope = new SemaScopeFunctionBody(scope, (SemaDeclFunctionDef)semaFunction);
 		else
 			semaFunction.scope = new SemaScopeFunction(scope, semaFunction);
 
@@ -79,7 +79,7 @@ public class DeclIfaceValidator implements IVisitor
 				throw new CompileException(String.format("duplicate parameter name '%s' in function '%s'", param.name, function.name));
 		}
 
-		semaFunction.ret = TypeValidator.validate(function.ret.or(AstTypeBuiltin.VOID), semaFunction.scope, context, validateDecl);
+		semaFunction.returnType = TypeValidator.validate(function.returnType.or(AstTypeBuiltin.VOID), semaFunction.scope, context, validateDecl);
 	}
 
 	private boolean sameSignatures(SemaDeclFunction a, SemaDeclFunction b)
@@ -129,17 +129,17 @@ public class DeclIfaceValidator implements IVisitor
 		var maybeDeclaredType = global.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
 		var maybeDeclaredTypeNoConst = maybeDeclaredType.map(Types::removeConst);
 
-		if(global.init.isNone())
+		if(global.initializerExpr.isNone())
 		{
 			if(maybeDeclaredType.isNone())
 				throw new CompileException(String.format("global '%s' with 'undef' initializer has no explicit type", global.name));
 
-			semaGlobal.init = Maybe.none();
+			semaGlobal.initializerExpr = Maybe.none();
 			semaGlobal.type = maybeDeclaredType.unwrap();
 			return;
 		}
 
-		var init = ExprValidator.validate(global.init.unwrap(), scope, context, validateDecl, maybeDeclaredTypeNoConst);
+		var init = ExprValidator.validate(global.initializerExpr.unwrap(), scope, context, validateDecl, maybeDeclaredTypeNoConst);
 
 		if(Types.isVoid(init.type()))
 			throw new CompileException(String.format("initializer for global '%s' yields 'void'", global.name));
@@ -154,13 +154,13 @@ public class DeclIfaceValidator implements IVisitor
 			throw new CompileException(String.format(fmt, semaGlobal.name(), TypeString.of(globalTypeNoConst), TypeString.of(initTypeNoConst)));
 		}
 
-		semaGlobal.init = Maybe.some(init);
+		semaGlobal.initializerExpr = Maybe.some(init);
 		semaGlobal.type = globalType;
 	}
 
 	private void visit(SemaDeclTypeAlias semaAlias, AstDeclTypeAlias alias, SemaScopeFile scope)
 	{
-		semaAlias.type = TypeValidator.validate(alias.type, scope, context, validateDecl);
+		semaAlias.aliasedType = TypeValidator.validate(alias.aliasedType, scope, context, validateDecl);
 	}
 
 	private void visit(SemaDeclOperator semaDecl, AstDeclOperator decl, SemaScopeFile scope)

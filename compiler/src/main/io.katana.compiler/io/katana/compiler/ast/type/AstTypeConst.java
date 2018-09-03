@@ -16,10 +16,10 @@ package io.katana.compiler.ast.type;
 
 public class AstTypeConst extends AstType
 {
-	public AstType type;
+	public AstType nestedType;
 
-	public AstTypeConst(AstType type)
+	public AstTypeConst(AstType nestedType)
 	{
-		this.type = type;
+		this.nestedType = nestedType;
 	}
 }

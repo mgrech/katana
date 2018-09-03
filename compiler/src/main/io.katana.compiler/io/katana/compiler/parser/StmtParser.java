@@ -159,7 +159,7 @@ public class StmtParser
 		var comp = new AstStmtCompound();
 
 		while(!ParseTools.option(ctx, TokenType.PUNCT_RBRACE, true))
-			comp.body.add(parse(ctx));
+			comp.bodyStmts.add(parse(ctx));
 
 		return comp;
 	}

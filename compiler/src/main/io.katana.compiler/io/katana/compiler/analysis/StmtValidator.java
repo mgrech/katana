@@ -21,7 +21,7 @@ import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.diag.TypeString;
 import io.katana.compiler.sema.decl.SemaDecl;
-import io.katana.compiler.sema.decl.SemaDeclDefinedFunction;
+import io.katana.compiler.sema.decl.SemaDeclFunctionDef;
 import io.katana.compiler.sema.expr.*;
 import io.katana.compiler.sema.scope.SemaScopeFunction;
 import io.katana.compiler.sema.stmt.*;
@@ -36,12 +36,12 @@ import java.util.function.Consumer;
 public class StmtValidator implements IVisitor
 {
 	private IdentityHashMap<SemaStmtGoto, String> gotos = new IdentityHashMap<>();
-	private SemaDeclDefinedFunction function;
+	private SemaDeclFunctionDef function;
 	private SemaScopeFunction scope;
 	private PlatformContext context;
 	private Consumer<SemaDecl> validateDecl;
 
-	public StmtValidator(SemaDeclDefinedFunction function, SemaScopeFunction scope, PlatformContext context, Consumer<SemaDecl> validateDecl)
+	public StmtValidator(SemaDeclFunctionDef function, SemaScopeFunction scope, PlatformContext context, Consumer<SemaDecl> validateDecl)
 	{
 		this.function = function;
 		this.scope = scope;
@@ -64,7 +64,7 @@ public class StmtValidator implements IVisitor
 			if(label == null)
 				throw new CompileException(String.format("unknown label '%s'", labelName));
 
-			entry.getKey().target = label;
+			entry.getKey().targetLabel = label;
 		}
 	}
 
@@ -72,8 +72,8 @@ public class StmtValidator implements IVisitor
 	{
 		var semaCompound = new SemaStmtCompound();
 
-		for(var stmt : compound.body)
-			semaCompound.body.add(validate(stmt));
+		for(var stmt : compound.bodyStmts)
+			semaCompound.bodyStmts.add(validate(stmt));
 
 		return semaCompound;
 	}
@@ -91,7 +91,7 @@ public class StmtValidator implements IVisitor
 	private SemaStmt visit(AstStmtGoto goto_)
 	{
 		var semaGoto = new SemaStmtGoto(null);
-		gotos.put(semaGoto, goto_.label);
+		gotos.put(semaGoto, goto_.targetLabelName);
 		return semaGoto;
 	}
 
@@ -117,31 +117,31 @@ public class StmtValidator implements IVisitor
 
 	private SemaStmt visit(AstStmtIf if_)
 	{
-		var condition = validateCondition(if_.condition, ConditionKind.IF);
-		return new SemaStmtIf(if_.negated, condition, validate(if_.then));
+		var condition = validateCondition(if_.conditionExpr, ConditionKind.IF);
+		return new SemaStmtIf(if_.negated, condition, validate(if_.thenStmt));
 	}
 
 	private SemaStmt visit(AstStmtIfElse ifelse)
 	{
-		var condition = validateCondition(ifelse.condition, ConditionKind.IF);
-		return new SemaStmtIfElse(ifelse.negated, condition, validate(ifelse.then), validate(ifelse.else_));
+		var condition = validateCondition(ifelse.conditionExpr, ConditionKind.IF);
+		return new SemaStmtIfElse(ifelse.negated, condition, validate(ifelse.thenStmt), validate(ifelse.elseStmt));
 	}
 
 	private SemaStmt visit(AstStmtLoop loop)
 	{
-		return new SemaStmtLoop(validate(loop.body));
+		return new SemaStmtLoop(validate(loop.bodyStmt));
 	}
 
 	private SemaStmt visit(AstStmtWhile while_)
 	{
-		var condition = validateCondition(while_.condition, ConditionKind.WHILE);
-		return new SemaStmtWhile(while_.negated, condition, validate(while_.body));
+		var condition = validateCondition(while_.conditionExpr, ConditionKind.WHILE);
+		return new SemaStmtWhile(while_.negated, condition, validate(while_.bodyStmt));
 	}
 
 	private SemaStmt visit(AstStmtReturn return_)
 	{
-		var value = return_.value.map(retval -> ExprValidator.validate(retval, scope, context, validateDecl, Maybe.some(function.ret)));
-		var retTypeNoConst = Types.removeConst(function.ret);
+		var value = return_.returnValueExpr.map(retval -> ExprValidator.validate(retval, scope, context, validateDecl, Maybe.some(function.returnType)));
+		var retTypeNoConst = Types.removeConst(function.returnType);
 
 		if(value.isNone())
 		{
@@ -166,7 +166,7 @@ public class StmtValidator implements IVisitor
 
 	private SemaStmt visit(AstStmtExprStmt exprStmt)
 	{
-		var expr = ExprValidator.validate(exprStmt.expr, scope, context, validateDecl, Maybe.none());
+		var expr = ExprValidator.validate(exprStmt.nestedExpr, scope, context, validateDecl, Maybe.none());
 		return new SemaStmtExprStmt(expr);
 	}
 
@@ -175,7 +175,7 @@ public class StmtValidator implements IVisitor
 		var maybeDeclaredType = var_.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
 		var maybeDeclaredTypeNoConst = maybeDeclaredType.map(Types::removeConst);
 
-		if(var_.init.isNone())
+		if(var_.initializerExpr.isNone())
 		{
 			if(maybeDeclaredType.isNone())
 				throw new CompileException(String.format("variable '%s' with 'undef' initializer has no explicit type", var_.name));
@@ -186,7 +186,7 @@ public class StmtValidator implements IVisitor
 			return new SemaStmtNullStmt();
 		}
 
-		var init = ExprValidator.validate(var_.init.unwrap(), scope, context, validateDecl, maybeDeclaredTypeNoConst);
+		var init = ExprValidator.validate(var_.initializerExpr.unwrap(), scope, context, validateDecl, maybeDeclaredTypeNoConst);
 		var initTypeNoConst = Types.removeConst(init.type());
 		var varType = maybeDeclaredType.or(initTypeNoConst);
 		var varTypeNoConst = Types.removeConst(varType);

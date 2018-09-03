@@ -18,12 +18,12 @@ import io.katana.compiler.ast.type.AstType;
 
 public class AstExprSignCast extends AstExpr
 {
-	public AstType type;
-	public AstExpr expr;
+	public AstType targetType;
+	public AstExpr nestedExpr;
 
-	public AstExprSignCast(AstType type, AstExpr expr)
+	public AstExprSignCast(AstType targetType, AstExpr nestedExpr)
 	{
-		this.type = type;
-		this.expr = expr;
+		this.targetType = targetType;
+		this.nestedExpr = nestedExpr;
 	}
 }

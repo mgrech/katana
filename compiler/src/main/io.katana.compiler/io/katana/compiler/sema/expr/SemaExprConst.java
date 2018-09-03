@@ -19,22 +19,22 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprConst extends SemaExpr
 {
-	public SemaExpr expr;
+	public SemaExpr nestedExpr;
 
-	public SemaExprConst(SemaExpr expr)
+	public SemaExprConst(SemaExpr nestedExpr)
 	{
-		this.expr = expr;
+		this.nestedExpr = nestedExpr;
 	}
 
 	@Override
 	public SemaType type()
 	{
-		return Types.addConst(expr.type());
+		return Types.addConst(nestedExpr.type());
 	}
 
 	@Override
 	public ExprKind kind()
 	{
-		return expr.kind();
+		return nestedExpr.kind();
 	}
 }

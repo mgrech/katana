@@ -16,10 +16,10 @@ package io.katana.compiler.ast.type;
 
 public class AstTypeSlice extends AstType
 {
-	public AstType type;
+	public AstType elementType;
 
-	public AstTypeSlice(AstType type)
+	public AstTypeSlice(AstType elementType)
 	{
-		this.type = type;
+		this.elementType = elementType;
 	}
 }

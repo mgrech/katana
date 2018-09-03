@@ -19,16 +19,16 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprNamedParam extends SimpleLValueExpr
 {
-	public SemaDeclFunction.Param param;
+	public SemaDeclFunction.Param decl;
 
-	public SemaExprNamedParam(SemaDeclFunction.Param param)
+	public SemaExprNamedParam(SemaDeclFunction.Param decl)
 	{
-		this.param = param;
+		this.decl = decl;
 	}
 
 	@Override
 	public SemaType type()
 	{
-		return param.type;
+		return decl.type;
 	}
 }

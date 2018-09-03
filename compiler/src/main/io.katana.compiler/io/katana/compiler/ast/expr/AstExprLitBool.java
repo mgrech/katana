@@ -16,10 +16,18 @@ package io.katana.compiler.ast.expr;
 
 public class AstExprLitBool extends AstExprLiteral
 {
+	public static final AstExprLitBool TRUE = new AstExprLitBool(true);
+	public static final AstExprLitBool FALSE = new AstExprLitBool(false);
+
 	public boolean value;
 
-	public AstExprLitBool(boolean value)
+	private AstExprLitBool(boolean value)
 	{
 		this.value = value;
+	}
+
+	public static AstExprLitBool of(boolean value)
+	{
+		return value ? TRUE : FALSE;
 	}
 }

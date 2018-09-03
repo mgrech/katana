@@ -76,12 +76,12 @@ public class OperatorParser
 
 	private static void replacePrefixOpSeq(AstExprOpPrefixSeq seq, Consumer<AstExpr> replace, SemaScopeFile scope)
 	{
-		var ops = parseOpSeq(scope, seq.seq, Kind.PREFIX);
+		var ops = parseOpSeq(scope, seq.symbols, Kind.PREFIX);
 
 		for(var i = ops.size() - 1; i != -1; --i)
-			seq.expr = createPrefixOp(seq.expr, ops.get(i));
+			seq.nestedExpr = createPrefixOp(seq.nestedExpr, ops.get(i));
 
-		replace.accept(seq.expr);
+		replace.accept(seq.nestedExpr);
 	}
 
 	private static AstExpr createPostfixOp(AstExpr expr, SemaDeclOperator decl)
@@ -91,12 +91,12 @@ public class OperatorParser
 
 	private static void replacePostfixOpSeq(AstExprOpPostfixSeq seq, Consumer<AstExpr> replace, SemaScopeFile scope)
 	{
-		var ops = parseOpSeq(scope, seq.seq, Kind.POSTFIX);
+		var ops = parseOpSeq(scope, seq.symbols, Kind.POSTFIX);
 
 		for(var i = 0; i != ops.size(); ++i)
-			seq.expr = createPostfixOp(seq.expr, ops.get(i));
+			seq.nestedExpr = createPostfixOp(seq.nestedExpr, ops.get(i));
 
-		replace.accept(seq.expr);
+		replace.accept(seq.nestedExpr);
 	}
 
 	private static List<SemaDeclOperator> findInfixOperators(SemaScopeFile scope, List<String> symbols)
@@ -240,16 +240,16 @@ public class OperatorParser
 
 	private static void replaceInfixOpList(AstExprOpInfixList list, Consumer<AstExpr> replace, SemaScopeFile scope)
 	{
-		var ops = findInfixOperators(scope, list.ops);
+		var ops = findInfixOperators(scope, list.infixOps);
 		var expr = new ArrayList<>();
 
 		for(var i = 0; i != ops.size(); ++i)
 		{
-			expr.add(list.exprs.get(i));
+			expr.add(list.nestedExprs.get(i));
 			expr.add(ops.get(i));
 		}
 
-		expr.add(list.exprs.get(list.exprs.size() - 1));
+		expr.add(list.nestedExprs.get(list.nestedExprs.size() - 1));
 
 		var replacement = parse(expr);
 		replace.accept(replacement);

@@ -12,22 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.ast.decl;
+package io.katana.compiler.sema.decl;
 
 import io.katana.compiler.ExportKind;
-import io.katana.compiler.ast.stmt.AstStmt;
-import io.katana.compiler.ast.type.AstType;
-import io.katana.compiler.utils.Maybe;
+import io.katana.compiler.op.Operator;
+import io.katana.compiler.sema.SemaModule;
 
-import java.util.List;
-
-public class AstDeclDefinedFunction extends AstDeclFunction
+public class SemaDeclOperatorDef extends SemaDeclFunctionDef
 {
-	public List<AstStmt> body;
+	public SemaDeclOperator decl;
 
-	public AstDeclDefinedFunction(ExportKind exportKind, String name, List<Param> params, Maybe<AstType> ret, List<AstStmt> body)
+	public SemaDeclOperatorDef(SemaModule module, ExportKind exportKind, SemaDeclOperator decl)
 	{
-		super(exportKind, name, params, ret);
-		this.body = body;
+		super(module, exportKind, Operator.implName(decl.operator.symbol, decl.operator.kind));
+		this.decl = decl;
 	}
 }

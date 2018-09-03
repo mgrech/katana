@@ -38,17 +38,17 @@ public class TypeString implements IVisitor
 
 	private String visit(SemaTypeConst type)
 	{
-		return String.format("const %s", of(type.type));
+		return String.format("const %s", of(type.nestedType));
 	}
 
 	private String visit(SemaTypeSlice type)
 	{
-		return String.format("[]%s", of(type.type));
+		return String.format("[]%s", of(type.elementType));
 	}
 
 	private String visit(SemaTypeArray type)
 	{
-		return String.format("[%s]%s", type.length, of(type.type));
+		return String.format("[%s]%s", type.length, of(type.elementType));
 	}
 
 	private String visit(SemaTypeBuiltin type)
@@ -63,28 +63,28 @@ public class TypeString implements IVisitor
 	{
 		var params = new StringBuilder();
 
-		if(!type.params.isEmpty())
+		if(!type.paramTypes.isEmpty())
 		{
-			params.append(of(type.params.get(0)));
+			params.append(of(type.paramTypes.get(0)));
 
-			for(var i = 1; i != type.params.size(); ++i)
+			for(var i = 1; i != type.paramTypes.size(); ++i)
 			{
 				params.append(", ");
-				params.append(of(type.params.get(i)));
+				params.append(of(type.paramTypes.get(i)));
 			}
 		}
 
-		var ret = Types.isVoid(type.ret) ? "" : " => " + of(type.ret);
+		var ret = Types.isVoid(type.returnType) ? "" : " => " + of(type.returnType);
 		return String.format("fn(%s)%s", params, ret);
 	}
 
 	private String visit(SemaTypeNullablePointer type)
 	{
-		return String.format("?%s", of(type.type));
+		return String.format("?%s", of(type.pointeeType));
 	}
 
 	private String visit(SemaTypeNonNullablePointer type)
 	{
-		return String.format("!%s", of(type.type));
+		return String.format("!%s", of(type.pointeeType));
 	}
 }

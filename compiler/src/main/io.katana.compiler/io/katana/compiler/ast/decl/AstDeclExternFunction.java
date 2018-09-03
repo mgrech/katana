@@ -24,9 +24,9 @@ public class AstDeclExternFunction extends AstDeclFunction
 {
 	public Maybe<String> externName;
 
-	public AstDeclExternFunction(ExportKind exportKind, Maybe<String> externName, String name, List<Param> params, Maybe<AstType> ret)
+	public AstDeclExternFunction(ExportKind exportKind, Maybe<String> externName, String name, List<Param> params, Maybe<AstType> returnType)
 	{
-		super(exportKind, name, params, ret);
+		super(exportKind, name, params, returnType);
 		this.externName = externName;
 	}
 }

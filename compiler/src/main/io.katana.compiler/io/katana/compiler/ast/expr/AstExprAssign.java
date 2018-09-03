@@ -16,12 +16,12 @@ package io.katana.compiler.ast.expr;
 
 public class AstExprAssign extends AstExpr
 {
-	public AstExpr left;
-	public AstExpr right;
+	public AstExpr leftExpr;
+	public AstExpr rightExpr;
 
-	public AstExprAssign(AstExpr left, AstExpr right)
+	public AstExprAssign(AstExpr leftExpr, AstExpr rightExpr)
 	{
-		this.left = left;
-		this.right = right;
+		this.leftExpr = leftExpr;
+		this.rightExpr = rightExpr;
 	}
 }

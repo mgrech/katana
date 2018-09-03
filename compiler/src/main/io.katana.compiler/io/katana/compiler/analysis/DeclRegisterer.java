@@ -80,31 +80,31 @@ public class DeclRegisterer implements IVisitor
 				AstDeclExternFunction extOverload = (AstDeclExternFunction)overload;
 				semaOverload = new SemaDeclExternFunction(module, overload.exportKind, extOverload.externName, extOverload.name);
 			}
-			else if(overload instanceof AstDeclDefinedOperator)
+			else if(overload instanceof AstDeclOperatorDef)
 			{
-				var defOverload = (AstDeclDefinedOperator)overload;
-				var opCandidates = scope.find(Operator.declName(defOverload.op, defOverload.kind));
+				var defOverload = (AstDeclOperatorDef)overload;
+				var opCandidates = scope.find(Operator.declName(defOverload.operator, defOverload.kind));
 
 				if(opCandidates.isEmpty())
 				{
 					var kind = defOverload.kind.toString().toLowerCase();
-					var op = defOverload.op;
+					var op = defOverload.operator;
 					throw new CompileException(String.format("no operator declaration found for '%s %s'", kind, op));
 				}
 
 				if(opCandidates.size() > 1)
 				{
 					var kind = defOverload.kind.toString().toLowerCase();
-					var op = defOverload.op;
+					var op = defOverload.operator;
 					throw new CompileException(String.format("multiple operator declarations found for '%s %s'", kind, op));
 				}
 
-				semaOverload = new SemaDeclDefinedOperator(module, overload.exportKind, (SemaDeclOperator)opCandidates.get(0));
+				semaOverload = new SemaDeclOperatorDef(module, overload.exportKind, (SemaDeclOperator)opCandidates.get(0));
 			}
-			else if(overload instanceof AstDeclDefinedFunction)
+			else if(overload instanceof AstDeclFunctionDef)
 			{
-				var defOverload = (AstDeclDefinedFunction)overload;
-				semaOverload = new SemaDeclDefinedFunction(module, overload.exportKind, defOverload.name);
+				var defOverload = (AstDeclFunctionDef)overload;
+				semaOverload = new SemaDeclFunctionDef(module, overload.exportKind, defOverload.name);
 			}
 			else
 				throw new AssertionError("unreachable");
@@ -117,7 +117,7 @@ public class DeclRegisterer implements IVisitor
 
 	public SemaDecl visit(AstDeclStruct decl, SemaScopeFile scope, SemaModule module)
 	{
-		var semaDecl = new SemaDeclStruct(module, decl.exportKind, decl.name, decl.abiCompat);
+		var semaDecl = new SemaDeclStruct(module, decl.exportKind, decl.name, decl.abiCompatible);
 		handleDecl(semaDecl, scope, module);
 		return semaDecl;
 	}

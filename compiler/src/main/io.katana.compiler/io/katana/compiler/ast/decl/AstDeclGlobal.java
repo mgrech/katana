@@ -23,13 +23,13 @@ public class AstDeclGlobal extends AstDecl
 {
 	public Maybe<AstType> type;
 	public String name;
-	public Maybe<AstExprLiteral> init;
+	public Maybe<AstExprLiteral> initializerExpr;
 
-	public AstDeclGlobal(ExportKind exportKind, Maybe<AstType> type, String name, Maybe<AstExprLiteral> init)
+	public AstDeclGlobal(ExportKind exportKind, Maybe<AstType> type, String name, Maybe<AstExprLiteral> initializerExpr)
 	{
 		super(exportKind);
 		this.type = type;
 		this.name = name;
-		this.init = init;
+		this.initializerExpr = initializerExpr;
 	}
 }

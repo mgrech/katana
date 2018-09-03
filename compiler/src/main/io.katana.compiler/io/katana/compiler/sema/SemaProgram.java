@@ -19,11 +19,11 @@ import io.katana.compiler.utils.Maybe;
 
 public class SemaProgram
 {
-	public SemaModule root = new SemaModule("", new AstPath(), null);
+	public SemaModule rootModule = new SemaModule("", new AstPath(), null);
 
 	public SemaModule findOrCreateModule(AstPath path)
 	{
-		var parent = root;
+		var parent = rootModule;
 
 		for(var component : path.components)
 			parent = parent.findOrCreateChild(component);
@@ -33,7 +33,7 @@ public class SemaProgram
 
 	public Maybe<SemaModule> findModule(AstPath path)
 	{
-		var current = root;
+		var current = rootModule;
 
 		for(var component : path.components)
 		{

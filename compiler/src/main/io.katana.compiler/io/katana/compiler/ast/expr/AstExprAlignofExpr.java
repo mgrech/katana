@@ -16,10 +16,10 @@ package io.katana.compiler.ast.expr;
 
 public class AstExprAlignofExpr extends AstExpr
 {
-	public final AstExpr expr;
+	public final AstExpr nestedExpr;
 
-	public AstExprAlignofExpr(AstExpr expr)
+	public AstExprAlignofExpr(AstExpr nestedExpr)
 	{
-		this.expr = expr;
+		this.nestedExpr = nestedExpr;
 	}
 }

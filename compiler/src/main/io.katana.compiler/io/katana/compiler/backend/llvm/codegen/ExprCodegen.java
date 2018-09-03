@@ -84,21 +84,21 @@ public class ExprCodegen implements IVisitor
 
 	private IrValue visit(SemaExprAddressof addressof)
 	{
-		if(Types.isZeroSized(addressof.expr.type()))
+		if(Types.isZeroSized(addressof.pointeeExpr.type()))
 			return IrValues.ADDRESS_ONE;
 
-		return generate(addressof.expr);
+		return generate(addressof.pointeeExpr);
 	}
 
 	private IrValue visit(SemaExprAlignofExpr alignof)
 	{
-		var alignment = Types.alignof(alignof.expr.type(), context.platform());
+		var alignment = Types.alignof(alignof.nestedExpr.type(), context.platform());
 		return IrValues.ofConstant(alignment);
 	}
 
 	private IrValue visit(SemaExprAlignofType alignof)
 	{
-		var alignment = Types.alignof(alignof.type, context.platform());
+		var alignment = Types.alignof(alignof.inspectedType, context.platform());
 		return IrValues.ofConstant(alignment);
 	}
 
@@ -125,14 +125,14 @@ public class ExprCodegen implements IVisitor
 		if(Types.isZeroSized(arrayIndexAccess.type()))
 			return null;
 
-		var isRValue = arrayIndexAccess.expr.kind() == ExprKind.RVALUE;
+		var isRValue = arrayIndexAccess.arrayExpr.kind() == ExprKind.RVALUE;
 
 		if(isRValue)
-			arrayIndexAccess.expr = new RValueToLValueConversion(arrayIndexAccess.expr);
+			arrayIndexAccess.arrayExpr = new RValueToLValueConversion(arrayIndexAccess.arrayExpr);
 
-		var indexType = generate(arrayIndexAccess.index.type());
-		var index = generate(arrayIndexAccess.index);
-		var result = generateGetElementPtr(arrayIndexAccess.expr, true, indexType, index);
+		var indexType = generate(arrayIndexAccess.indexExpr.type());
+		var index = generate(arrayIndexAccess.indexExpr);
+		var result = generateGetElementPtr(arrayIndexAccess.arrayExpr, true, indexType, index);
 
 		if(isRValue)
 		{
@@ -145,12 +145,12 @@ public class ExprCodegen implements IVisitor
 
 	private IrValue visit(SemaExprArrayGetLength arrayGetLength)
 	{
-		return IrValues.ofConstant(Types.arrayLength(arrayGetLength.expr.type()));
+		return IrValues.ofConstant(Types.arrayLength(arrayGetLength.arrayExpr.type()));
 	}
 
 	private IrValue visit(SemaExprArrayGetPointer arrayGetPointer)
 	{
-		return generateGetElementPtr(arrayGetPointer.expr, true, 0);
+		return generateGetElementPtr(arrayGetPointer.arrayExpr, true, 0);
 	}
 
 	private IrValueSsa generateSliceConstruction(SemaType elementType, IrValue pointer, IrValue length)
@@ -167,8 +167,8 @@ public class ExprCodegen implements IVisitor
 	private IrValue visit(SemaExprArrayGetSlice arrayGetSlice)
 	{
 		var elementType = Types.removeSlice(arrayGetSlice.type());
-		var pointer = generateGetElementPtr(arrayGetSlice.expr, true, 0);
-		var length = Types.arrayLength(Types.removePointer(arrayGetSlice.expr.type()));
+		var pointer = generateGetElementPtr(arrayGetSlice.arrayExpr, true, 0);
+		var length = Types.arrayLength(Types.removePointer(arrayGetSlice.arrayExpr.type()));
 		return generateSliceConstruction(elementType, pointer, IrValues.ofConstant(length));
 	}
 
@@ -186,11 +186,11 @@ public class ExprCodegen implements IVisitor
 
 	public IrValue visit(SemaExprBuiltinCall builtinCall)
 	{
-		var args = builtinCall.args.stream()
-		                           .map(this::generate)
-		                           .collect(Collectors.toList());
+		var args = builtinCall.argExprs.stream()
+		                               .map(this::generate)
+		                               .collect(Collectors.toList());
 
-		var type = generate(builtinCall.args.get(0).type());
+		var type = generate(builtinCall.argExprs.get(0).type());
 		return builder.binary(builtinCall.name, type, args.get(0), args.get(1));
 	}
 
@@ -244,10 +244,10 @@ public class ExprCodegen implements IVisitor
 
 	private IrValue visit(SemaExprCast cast)
 	{
-		var value = generate(cast.expr);
+		var value = generate(cast.nestedExpr);
 
-		var sourceType = cast.expr.type();
-		var targetType = cast.type;
+		var sourceType = cast.nestedExpr.type();
+		var targetType = cast.targetType;
 
 		switch(cast.kind)
 		{
@@ -280,7 +280,7 @@ public class ExprCodegen implements IVisitor
 
 	private IrValue visit(SemaExprConst const_)
 	{
-		return generate(const_.expr);
+		return generate(const_.nestedExpr);
 	}
 
 	private IrValue visit(SemaExprDeref deref)
@@ -288,7 +288,7 @@ public class ExprCodegen implements IVisitor
 		if(Types.isZeroSized(deref.type()))
 			return null;
 
-		return generate(deref.expr);
+		return generate(deref.pointerExpr);
 	}
 
 	private IrValue generateFunctionCall(IrValue function, List<SemaExpr> args, SemaType returnType, Inlining inline)
@@ -320,22 +320,22 @@ public class ExprCodegen implements IVisitor
 			name = FunctionNameMangling.of(call.function);
 
 		var function = IrValues.ofSymbol(name);
-		return generateFunctionCall(function, call.args, call.function.ret, call.inline);
+		return generateFunctionCall(function, call.args, call.function.returnType, call.inline);
 	}
 
 	private IrValue visit(SemaExprImplicitConversionArrayPointerToPointer conversion)
 	{
-		return generateGetElementPtr(conversion.expr, true, 0);
+		return generateGetElementPtr(conversion.nestedExpr, true, 0);
 	}
 
 	private IrValue visit(SemaExprImplicitConversionArrayPointerToByteSlice conversion)
 	{
-		var elementType = Types.removeArray(Types.removePointer(conversion.expr.type()));
-		var length = Types.arrayLength(Types.removePointer(conversion.expr.type()));
+		var elementType = Types.removeArray(Types.removePointer(conversion.nestedExpr.type()));
+		var length = Types.arrayLength(Types.removePointer(conversion.nestedExpr.type()));
 		var size = length * Types.sizeof(elementType, context.platform());
 
 		var pointerType = IrTypes.ofPointer(generate(elementType));
-		var pointer = generateGetElementPtr(conversion.expr, true, 0);
+		var pointer = generateGetElementPtr(conversion.nestedExpr, true, 0);
 		var bytePointerType = IrTypes.ofPointer(IrTypes.I8);
 		var bytePointer = builder.convert(IrInstrConversion.Kind.BITCAST, pointerType, pointer, bytePointerType);
 
@@ -344,8 +344,8 @@ public class ExprCodegen implements IVisitor
 
 	private IrValue visit(SemaExprImplicitConversionArrayPointerToSlice conversion)
 	{
-		var pointer = generateGetElementPtr(conversion.expr, true, 0);
-		var length = Types.arrayLength(Types.removePointer(conversion.expr.type()));
+		var pointer = generateGetElementPtr(conversion.nestedExpr, true, 0);
+		var length = Types.arrayLength(Types.removePointer(conversion.nestedExpr.type()));
 		var elementType = Types.removeSlice(conversion.type());
 		return generateSliceConstruction(elementType, pointer, IrValues.ofConstant(length));
 	}
@@ -355,19 +355,19 @@ public class ExprCodegen implements IVisitor
 		if(Types.isZeroSized(conversion.type()))
 			return null;
 
-		var value = generate(conversion.expr);
+		var value = generate(conversion.nestedExpr);
 		var type = generate(conversion.type());
 		return builder.load(type, value);
 	}
 
 	private IrValue visit(SemaExprImplicitConversionNonNullablePointerToNullablePointer conversion)
 	{
-		return generate(conversion.expr);
+		return generate(conversion.nestedExpr);
 	}
 
 	private IrValue visit(SemaExprImplicitConversionNullToSlice conversion)
 	{
-		return generateSliceConstruction(Types.removeSlice(conversion.type), IrValues.ADDRESS_ONE, IrValues.ofConstant(0));
+		return generateSliceConstruction(Types.removeSlice(conversion.targetType), IrValues.ADDRESS_ONE, IrValues.ofConstant(0));
 	}
 
 	private IrValue visit(SemaExprImplicitConversionNullToNullablePointer conversion)
@@ -377,22 +377,22 @@ public class ExprCodegen implements IVisitor
 
 	private IrValue visit(SemaExprImplicitConversionPointerToNonConstToPointerToConst conversion)
 	{
-		return generate(conversion.expr);
+		return generate(conversion.nestedExpr);
 	}
 
 	private IrValue visit(SemaExprImplicitConversionPointerToBytePointer conversion)
 	{
-		var sourceType = generate(conversion.expr.type());
-		var value = generate(conversion.expr);
+		var sourceType = generate(conversion.nestedExpr.type());
+		var value = generate(conversion.nestedExpr);
 		var targetType = IrTypes.ofPointer(IrTypes.I8);
 		return builder.convert(IrInstrConversion.Kind.BITCAST, sourceType, value, targetType);
 	}
 
 	private IrValue visit(SemaExprImplicitConversionSliceToByteSlice conversion)
 	{
-		var elementType = Types.removeSlice(conversion.expr.type());
-		var slice = generate(conversion.expr);
-		var sliceType = generate(conversion.expr.type());
+		var elementType = Types.removeSlice(conversion.nestedExpr.type());
+		var slice = generate(conversion.nestedExpr);
+		var sliceType = generate(conversion.nestedExpr.type());
 		var pointer = builder.extractvalue(sliceType, slice, SLICE_POINTER_FIELD_INDEX);
 		var pointerType = IrTypes.ofPointer(generate(elementType));
 		var length = builder.extractvalue(sliceType, slice, SLICE_LENGTH_FIELD_INDEX);
@@ -406,31 +406,31 @@ public class ExprCodegen implements IVisitor
 
 	private IrValue visit(SemaExprImplicitConversionSliceToSliceOfConst conversion)
 	{
-		return generate(conversion.expr);
+		return generate(conversion.nestedExpr);
 	}
 
 	private IrValue visit(SemaExprImplicitConversionWiden conversion)
 	{
-		var value = generate(conversion.expr);
-		var sourceType = conversion.expr.type();
+		var value = generate(conversion.nestedExpr);
+		var sourceType = conversion.nestedExpr.type();
 		var targetType = conversion.type();
 		return generateCast(value, sourceType, targetType, SemaExprCast.Kind.WIDEN_CAST);
 	}
 
 	private IrValue visit(SemaExprIndirectFunctionCall functionCall)
 	{
-		var function = generate(functionCall.expr);
-		return generateFunctionCall(function, functionCall.args, functionCall.type(), Inlining.AUTO);
+		var function = generate(functionCall.functionExpr);
+		return generateFunctionCall(function, functionCall.argExprs, functionCall.type(), Inlining.AUTO);
 	}
 
 	private IrValue visit(SemaExprFieldAccess fieldAccess)
 	{
-		var isRValue = fieldAccess.expr.kind() == ExprKind.RVALUE;
+		var isRValue = fieldAccess.structExpr.kind() == ExprKind.RVALUE;
 
 		if(isRValue)
-			fieldAccess.expr = new RValueToLValueConversion(fieldAccess.expr);
+			fieldAccess.structExpr = new RValueToLValueConversion(fieldAccess.structExpr);
 
-		var result = generateGetElementPtr(fieldAccess.expr, true, fieldAccess.field.index);
+		var result = generateGetElementPtr(fieldAccess.structExpr, true, fieldAccess.field.index);
 
 		if(isRValue)
 		{
@@ -443,10 +443,10 @@ public class ExprCodegen implements IVisitor
 
 	private IrValue visit(SemaExprLitArray lit)
 	{
-		var elementType = generate(lit.type);
-		var values = lit.values.stream()
-		                       .map(this::generate)
-		                       .collect(Collectors.toList());
+		var elementType = generate(lit.elementType);
+		var values = lit.elementExprs.stream()
+		                             .map(this::generate)
+		                             .collect(Collectors.toList());
 
 		return IrValues.ofConstantArray(elementType, values);
 	}
@@ -480,30 +480,30 @@ public class ExprCodegen implements IVisitor
 
 	private IrValue visit(SemaExprNamedFunc namedFunc)
 	{
-		if(namedFunc.func instanceof SemaDeclExternFunction)
+		if(namedFunc.decl instanceof SemaDeclExternFunction)
 		{
-			var name = ((SemaDeclExternFunction)namedFunc.func).externName.or(namedFunc.func.name());
+			var name = ((SemaDeclExternFunction)namedFunc.decl).externName.or(namedFunc.decl.name());
 			return IrValues.ofSymbol(name);
 		}
 
-		var name = FunctionNameMangling.of(namedFunc.func);
+		var name = FunctionNameMangling.of(namedFunc.decl);
 		return IrValues.ofSymbol(name);
 	}
 
 	private IrValue visit(SemaExprNamedGlobal namedGlobal)
 	{
-		var name = namedGlobal.global.qualifiedName().toString();
+		var name = namedGlobal.decl.qualifiedName().toString();
 		return IrValues.ofSymbol(name);
 	}
 
 	private IrValue visit(SemaExprNamedVar namedVar)
 	{
-		return IrValues.ofSsa(namedVar.variable.name);
+		return IrValues.ofSsa(namedVar.decl.name);
 	}
 
 	private IrValue visit(SemaExprNamedParam namedParam)
 	{
-		return IrValues.ofSsa(namedParam.param.name);
+		return IrValues.ofSsa(namedParam.decl.name);
 	}
 
 	private IrValue visit(SemaExprOffsetof offsetof)
@@ -514,13 +514,13 @@ public class ExprCodegen implements IVisitor
 
 	private IrValue visit(SemaExprSizeofExpr sizeof)
 	{
-		var size = Types.sizeof(sizeof.expr.type(), context.platform());
+		var size = Types.sizeof(sizeof.nestedExpr.type(), context.platform());
 		return IrValues.ofConstant(size);
 	}
 
 	private IrValue visit(SemaExprSizeofType sizeof)
 	{
-		var size = Types.sizeof(sizeof.type, context.platform());
+		var size = Types.sizeof(sizeof.inspectedType, context.platform());
 		return IrValues.ofConstant(size);
 	}
 
@@ -533,29 +533,29 @@ public class ExprCodegen implements IVisitor
 
 	private IrValue visit(SemaExprSliceGetLength sliceGetLength)
 	{
-		if(sliceGetLength.expr.kind() == ExprKind.RVALUE)
-			return generateExtractValue(sliceGetLength.expr, SLICE_LENGTH_FIELD_INDEX);
+		if(sliceGetLength.sliceExpr.kind() == ExprKind.RVALUE)
+			return generateExtractValue(sliceGetLength.sliceExpr, SLICE_LENGTH_FIELD_INDEX);
 
-		return generateGetElementPtr(sliceGetLength.expr, true, SLICE_LENGTH_FIELD_INDEX);
+		return generateGetElementPtr(sliceGetLength.sliceExpr, true, SLICE_LENGTH_FIELD_INDEX);
 	}
 
 	private IrValue visit(SemaExprSliceGetPointer sliceGetPointer)
 	{
-		if(sliceGetPointer.expr.kind() == ExprKind.RVALUE)
-			return generateExtractValue(sliceGetPointer.expr, SLICE_POINTER_FIELD_INDEX);
+		if(sliceGetPointer.sliceExpr.kind() == ExprKind.RVALUE)
+			return generateExtractValue(sliceGetPointer.sliceExpr, SLICE_POINTER_FIELD_INDEX);
 
-		return generateGetElementPtr(sliceGetPointer.expr, true, SLICE_POINTER_FIELD_INDEX);
+		return generateGetElementPtr(sliceGetPointer.sliceExpr, true, SLICE_POINTER_FIELD_INDEX);
 	}
 
 	private IrValue visit(SemaExprSliceIndexAccess sliceIndexAccess)
 	{
-		SemaExpr pointer = new SemaExprSliceGetPointer(sliceIndexAccess.expr);
+		SemaExpr pointer = new SemaExprSliceGetPointer(sliceIndexAccess.sliceExpr);
 
 		if(pointer.kind() == ExprKind.LVALUE)
 			pointer = new SemaExprImplicitConversionLValueToRValue(pointer);
 
-		var indexType = generate(sliceIndexAccess.index.type());
-		var index = generate(sliceIndexAccess.index);
+		var indexType = generate(sliceIndexAccess.indexExpr.type());
+		var index = generate(sliceIndexAccess.indexExpr);
 		return generateGetElementPtr(pointer, false, indexType, index);
 	}
 }

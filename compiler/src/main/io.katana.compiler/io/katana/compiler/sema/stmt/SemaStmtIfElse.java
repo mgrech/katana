@@ -19,15 +19,15 @@ import io.katana.compiler.sema.expr.SemaExpr;
 public class SemaStmtIfElse extends SemaStmt
 {
 	public boolean negated;
-	public SemaExpr condition;
-	public SemaStmt then;
-	public SemaStmt else_;
+	public SemaExpr conditionExpr;
+	public SemaStmt thenStmt;
+	public SemaStmt elseStmt;
 
-	public SemaStmtIfElse(boolean negated, SemaExpr condition, SemaStmt then, SemaStmt else_)
+	public SemaStmtIfElse(boolean negated, SemaExpr conditionExpr, SemaStmt thenStmt, SemaStmt elseStmt)
 	{
 		this.negated = negated;
-		this.condition = condition;
-		this.then = then;
-		this.else_ = else_;
+		this.conditionExpr = conditionExpr;
+		this.thenStmt = thenStmt;
+		this.elseStmt = elseStmt;
 	}
 }

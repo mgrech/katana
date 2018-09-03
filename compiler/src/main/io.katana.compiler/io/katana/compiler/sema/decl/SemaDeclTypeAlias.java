@@ -22,7 +22,7 @@ import io.katana.compiler.sema.type.SemaType;
 public class SemaDeclTypeAlias extends SemaDecl implements SemaSymbol
 {
 	public String name;
-	public SemaType type;
+	public SemaType aliasedType;
 
 	public SemaDeclTypeAlias(SemaModule module, ExportKind exportKind, String name)
 	{

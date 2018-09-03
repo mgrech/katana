@@ -18,10 +18,10 @@ import java.util.List;
 
 public class AstTypeTuple extends AstType
 {
-	public List<AstType> types;
+	public List<AstType> fieldTypes;
 
-	public AstTypeTuple(List<AstType> types)
+	public AstTypeTuple(List<AstType> fieldTypes)
 	{
-		this.types = types;
+		this.fieldTypes = fieldTypes;
 	}
 }

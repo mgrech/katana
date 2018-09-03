@@ -18,10 +18,10 @@ import io.katana.compiler.ast.type.AstType;
 
 public class AstExprAlignofType extends AstExpr
 {
-	public AstType type;
+	public AstType inspectedType;
 
-	public AstExprAlignofType(AstType type)
+	public AstExprAlignofType(AstType inspectedType)
 	{
-		this.type = type;
+		this.inspectedType = inspectedType;
 	}
 }

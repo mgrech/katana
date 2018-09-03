@@ -19,13 +19,13 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprArrayGetPointer extends SimpleRValueExpr
 {
-	public final SemaExpr expr;
+	public final SemaExpr arrayExpr;
 	private final transient SemaType cachedType;
 
-	public SemaExprArrayGetPointer(SemaExpr expr)
+	public SemaExprArrayGetPointer(SemaExpr arrayExpr)
 	{
-		this.expr = expr;
-		this.cachedType = Types.addNonNullablePointer(Types.removeArray(expr.type()));
+		this.arrayExpr = arrayExpr;
+		this.cachedType = Types.addNonNullablePointer(Types.removeArray(arrayExpr.type()));
 	}
 
 	@Override

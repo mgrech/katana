@@ -71,7 +71,7 @@ public class Types
 		if(type instanceof SemaTypeArray)
 		{
 			var array = (SemaTypeArray)type;
-			return addArray(array.length, addConst(array.type));
+			return addArray(array.length, addConst(array.elementType));
 		}
 
 		return new SemaTypeConst(type);
@@ -87,7 +87,7 @@ public class Types
 		var typeNoConst = removeConst(type);
 
 		if(typeNoConst instanceof SemaTypeSlice)
-			return ((SemaTypeSlice)typeNoConst).type;
+			return ((SemaTypeSlice)typeNoConst).elementType;
 
 		return type;
 	}
@@ -100,7 +100,7 @@ public class Types
 	public static SemaType removeArray(SemaType type)
 	{
 		if(type instanceof SemaTypeArray)
-			return ((SemaTypeArray)type).type;
+			return ((SemaTypeArray)type).elementType;
 
 		return type;
 	}
@@ -110,10 +110,10 @@ public class Types
 		type = removeConst(type);
 
 		if(type instanceof SemaTypeNullablePointer)
-			return ((SemaTypeNullablePointer)type).type;
+			return ((SemaTypeNullablePointer)type).pointeeType;
 
 		if(type instanceof SemaTypeNonNullablePointer)
-			return ((SemaTypeNonNullablePointer)type).type;
+			return ((SemaTypeNonNullablePointer)type).pointeeType;
 
 		return type;
 	}
@@ -121,12 +121,12 @@ public class Types
 	public static SemaType removeConst(SemaType type)
 	{
 		if(type instanceof SemaTypeConst)
-			return ((SemaTypeConst)type).type;
+			return ((SemaTypeConst)type).nestedType;
 
 		if(type instanceof SemaTypeArray)
 		{
 			var array = (SemaTypeArray)type;
-			return addArray(array.length, removeConst(array.type));
+			return addArray(array.length, removeConst(array.elementType));
 		}
 
 		return type;

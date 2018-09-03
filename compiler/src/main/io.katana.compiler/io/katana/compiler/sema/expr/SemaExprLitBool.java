@@ -19,11 +19,19 @@ import io.katana.compiler.sema.type.SemaTypeBuiltin;
 
 public class SemaExprLitBool extends SimpleRValueExpr
 {
+	public static final SemaExprLitBool TRUE = new SemaExprLitBool(true);
+	public static final SemaExprLitBool FALSE = new SemaExprLitBool(false);
+
 	public boolean value;
 
-	public SemaExprLitBool(boolean value)
+	private SemaExprLitBool(boolean value)
 	{
 		this.value = value;
+	}
+
+	public static SemaExprLitBool of(boolean value)
+	{
+		return value ? TRUE : FALSE;
 	}
 
 	@Override

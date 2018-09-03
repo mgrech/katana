@@ -16,10 +16,10 @@ package io.katana.compiler.ast.stmt;
 
 public class AstStmtGoto extends AstStmt
 {
-	public String label;
+	public String targetLabelName;
 
-	public AstStmtGoto(String label)
+	public AstStmtGoto(String targetLabelName)
 	{
-		this.label = label;
+		this.targetLabelName = targetLabelName;
 	}
 }

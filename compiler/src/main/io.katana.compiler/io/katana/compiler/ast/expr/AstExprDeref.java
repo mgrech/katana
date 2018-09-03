@@ -16,10 +16,10 @@ package io.katana.compiler.ast.expr;
 
 public class AstExprDeref extends AstExpr
 {
-	public AstExpr expr;
+	public AstExpr pointerExpr;
 
-	public AstExprDeref(AstExpr expr)
+	public AstExprDeref(AstExpr pointerExpr)
 	{
-		this.expr = expr;
+		this.pointerExpr = pointerExpr;
 	}
 }

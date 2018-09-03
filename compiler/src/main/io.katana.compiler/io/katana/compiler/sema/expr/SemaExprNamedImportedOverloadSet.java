@@ -19,11 +19,11 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprNamedImportedOverloadSet extends SemaExpr
 {
-	public SemaDeclImportedOverloadSet set;
+	public SemaDeclImportedOverloadSet decl;
 
-	public SemaExprNamedImportedOverloadSet(SemaDeclImportedOverloadSet set)
+	public SemaExprNamedImportedOverloadSet(SemaDeclImportedOverloadSet decl)
 	{
-		this.set = set;
+		this.decl = decl;
 	}
 
 	@Override

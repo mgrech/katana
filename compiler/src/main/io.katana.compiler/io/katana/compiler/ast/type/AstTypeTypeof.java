@@ -18,10 +18,10 @@ import io.katana.compiler.ast.expr.AstExpr;
 
 public class AstTypeTypeof extends AstType
 {
-	public AstExpr expr;
+	public AstExpr nestedExpr;
 
-	public AstTypeTypeof(AstExpr expr)
+	public AstTypeTypeof(AstExpr nestedExpr)
 	{
-		this.expr = expr;
+		this.nestedExpr = nestedExpr;
 	}
 }

@@ -16,10 +16,10 @@ package io.katana.compiler.sema.stmt;
 
 public class SemaStmtLoop extends SemaStmt
 {
-	public SemaStmt body;
+	public SemaStmt bodyStmt;
 
-	public SemaStmtLoop(SemaStmt body)
+	public SemaStmtLoop(SemaStmt bodyStmt)
 	{
-		this.body = body;
+		this.bodyStmt = bodyStmt;
 	}
 }

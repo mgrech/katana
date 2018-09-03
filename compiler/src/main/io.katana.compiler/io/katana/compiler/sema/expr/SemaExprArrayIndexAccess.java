@@ -19,24 +19,24 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprArrayIndexAccess extends SemaExpr
 {
-	public SemaExpr expr;
-	public SemaExpr index;
+	public SemaExpr arrayExpr;
+	public SemaExpr indexExpr;
 
-	public SemaExprArrayIndexAccess(SemaExpr expr, SemaExpr index)
+	public SemaExprArrayIndexAccess(SemaExpr arrayExpr, SemaExpr indexExpr)
 	{
-		this.expr = expr;
-		this.index = index;
+		this.arrayExpr = arrayExpr;
+		this.indexExpr = indexExpr;
 	}
 
 	@Override
 	public SemaType type()
 	{
-		return Types.removeArray(expr.type());
+		return Types.removeArray(arrayExpr.type());
 	}
 
 	@Override
 	public ExprKind kind()
 	{
-		return expr.kind();
+		return arrayExpr.kind();
 	}
 }

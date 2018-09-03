@@ -92,7 +92,7 @@ public class DeclCodegen implements IVisitor
 		return new IrFunctionParameter(type, name, nonnull);
 	}
 
-	private List<IrInstr> generateBody(SemaDeclDefinedFunction function)
+	private List<IrInstr> generateBody(SemaDeclFunctionDef function)
 	{
 		var builder = new IrFunctionBuilder();
 
@@ -130,7 +130,7 @@ public class DeclCodegen implements IVisitor
 		return builder.build();
 	}
 
-	private void generate(SemaDeclDefinedFunction function)
+	private void generate(SemaDeclFunctionDef function)
 	{
 		var exported = function.exportKind != ExportKind.HIDDEN;
 		var linkage = exported ? Linkage.EXTERNAL : Linkage.PRIVATE;
@@ -139,7 +139,7 @@ public class DeclCodegen implements IVisitor
 		                      ? exported ? DllStorageClass.DLLEXPORT : DllStorageClass.NONE
 		                      : DllStorageClass.NONE;
 
-		var returnType = generate(function.ret);
+		var returnType = generate(function.returnType);
 		var name = FunctionNameMangling.of(function);
 
 		var params = function.params.stream()
@@ -153,7 +153,7 @@ public class DeclCodegen implements IVisitor
 
 	private void generate(SemaDeclExternFunction function)
 	{
-		var returnType = generate(function.ret);
+		var returnType = generate(function.returnType);
 		var name = function.externName.or(function.name());
 
 		var params = function.params.stream()
@@ -170,8 +170,8 @@ public class DeclCodegen implements IVisitor
 		for(var overload : set.overloads)
 			if(overload instanceof SemaDeclExternFunction)
 				generate((SemaDeclExternFunction)overload);
-			else if(overload instanceof SemaDeclDefinedFunction)
-				generate((SemaDeclDefinedFunction)overload);
+			else if(overload instanceof SemaDeclFunctionDef)
+				generate((SemaDeclFunctionDef)overload);
 			else
 				throw new AssertionError("unreachable");
 	}
@@ -183,7 +183,7 @@ public class DeclCodegen implements IVisitor
 
 		var name = qualifiedName(global);
 		var type = generate(global.type);
-		var initializer = global.init.map(i -> generate(i).unwrap()).or(new IrValueConstant("zeroinitializer"));
+		var initializer = global.initializerExpr.map(i -> generate(i).unwrap()).or(new IrValueConstant("zeroinitializer"));
 		builder.defineGlobal(name, AddressMergeability.NONE, Types.isConst(global.type), type, initializer);
 	}
 

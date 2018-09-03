@@ -36,6 +36,6 @@ public class SemaExprDirectFunctionCall extends SimpleRValueExpr
 	@Override
 	public SemaType type()
 	{
-		return function.ret;
+		return function.returnType;
 	}
 }

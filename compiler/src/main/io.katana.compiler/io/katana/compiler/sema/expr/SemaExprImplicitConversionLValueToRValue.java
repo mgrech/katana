@@ -18,16 +18,16 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprImplicitConversionLValueToRValue extends SimpleRValueExpr
 {
-	public SemaExpr expr;
+	public SemaExpr nestedExpr;
 
-	public SemaExprImplicitConversionLValueToRValue(SemaExpr expr)
+	public SemaExprImplicitConversionLValueToRValue(SemaExpr nestedExpr)
 	{
-		this.expr = expr;
+		this.nestedExpr = nestedExpr;
 	}
 
 	@Override
 	public SemaType type()
 	{
-		return expr.type();
+		return nestedExpr.type();
 	}
 }

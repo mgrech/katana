@@ -20,12 +20,12 @@ import io.katana.compiler.ast.type.AstType;
 public class AstDeclTypeAlias extends AstDecl
 {
 	public String name;
-	public AstType type;
+	public AstType aliasedType;
 
-	public AstDeclTypeAlias(ExportKind exportKind, String name, AstType type)
+	public AstDeclTypeAlias(ExportKind exportKind, String name, AstType aliasedType)
 	{
 		super(exportKind);
 		this.name = name;
-		this.type = type;
+		this.aliasedType = aliasedType;
 	}
 }

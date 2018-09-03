@@ -16,10 +16,10 @@ package io.katana.compiler.sema.type;
 
 public class SemaTypeSlice extends SemaType
 {
-	public SemaType type;
+	public SemaType elementType;
 
-	public SemaTypeSlice(SemaType type)
+	public SemaTypeSlice(SemaType elementType)
 	{
-		this.type = type;
+		this.elementType = elementType;
 	}
 }

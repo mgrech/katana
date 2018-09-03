@@ -18,17 +18,17 @@ import io.katana.compiler.ExportKind;
 
 public class SemaDeclImportedOverloadSet extends SemaDecl
 {
-	public SemaDeclOverloadSet set;
+	public SemaDeclOverloadSet overloadSet;
 
-	public SemaDeclImportedOverloadSet(SemaDeclOverloadSet set)
+	public SemaDeclImportedOverloadSet(SemaDeclOverloadSet overloadSet)
 	{
 		super(null, ExportKind.HIDDEN);
-		this.set = set;
+		this.overloadSet = overloadSet;
 	}
 
 	@Override
 	public String name()
 	{
-		return set.name();
+		return overloadSet.name();
 	}
 }

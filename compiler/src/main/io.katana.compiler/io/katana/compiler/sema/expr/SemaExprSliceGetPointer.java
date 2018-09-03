@@ -19,13 +19,13 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprSliceGetPointer extends SemaExpr
 {
-	public final SemaExpr expr;
+	public final SemaExpr sliceExpr;
 	private final transient SemaType cachedType;
 
-	public SemaExprSliceGetPointer(SemaExpr expr)
+	public SemaExprSliceGetPointer(SemaExpr sliceExpr)
 	{
-		this.expr = expr;
-		this.cachedType = Types.addNonNullablePointer(Types.removeSlice(expr.type()));
+		this.sliceExpr = sliceExpr;
+		this.cachedType = Types.addNonNullablePointer(Types.removeSlice(sliceExpr.type()));
 	}
 
 	@Override
@@ -37,6 +37,6 @@ public class SemaExprSliceGetPointer extends SemaExpr
 	@Override
 	public ExprKind kind()
 	{
-		return expr.kind();
+		return sliceExpr.kind();
 	}
 }

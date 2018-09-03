@@ -24,25 +24,25 @@ public class AstDeclFunction extends AstDecl
 {
 	public static class Param
 	{
+		public AstType type;
+		public String name;
+
 		public Param(AstType type, String name)
 		{
 			this.type = type;
 			this.name = name;
 		}
-
-		public AstType type;
-		public String name;
 	}
 
 	public String name;
 	public List<Param> params;
-	public Maybe<AstType> ret;
+	public Maybe<AstType> returnType;
 
-	protected AstDeclFunction(ExportKind exportKind, String name, List<Param> params, Maybe<AstType> ret)
+	protected AstDeclFunction(ExportKind exportKind, String name, List<Param> params, Maybe<AstType> returnType)
 	{
 		super(exportKind);
 		this.name = name;
 		this.params = params;
-		this.ret = ret;
+		this.returnType = returnType;
 	}
 }

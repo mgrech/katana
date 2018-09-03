@@ -19,10 +19,10 @@ import io.katana.compiler.utils.Maybe;
 
 public class AstStmtReturn extends AstStmt
 {
-	public Maybe<AstExpr> value;
+	public Maybe<AstExpr> returnValueExpr;
 
-	public AstStmtReturn(Maybe<AstExpr> value)
+	public AstStmtReturn(Maybe<AstExpr> returnValueExpr)
 	{
-		this.value = value;
+		this.returnValueExpr = returnValueExpr;
 	}
 }

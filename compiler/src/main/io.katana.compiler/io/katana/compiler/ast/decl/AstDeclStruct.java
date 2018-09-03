@@ -23,14 +23,14 @@ public class AstDeclStruct extends AstDecl
 {
 	public static class Field
 	{
+		public AstType type;
+		public String name;
+
 		public Field(AstType type, String name)
 		{
 			this.type = type;
 			this.name = name;
 		}
-
-		public AstType type;
-		public String name;
 
 		@Override
 		public String toString()
@@ -39,15 +39,15 @@ public class AstDeclStruct extends AstDecl
 		}
 	}
 
-	public boolean abiCompat;
+	public boolean abiCompatible;
 	public String name;
 	public List<Field> fields;
 
-	public AstDeclStruct(ExportKind exportKind, String name, boolean abiCompat, List<Field> fields)
+	public AstDeclStruct(ExportKind exportKind, String name, boolean abiCompatible, List<Field> fields)
 	{
 		super(exportKind);
 		this.name = name;
-		this.abiCompat = abiCompat;
+		this.abiCompatible = abiCompatible;
 		this.fields = fields;
 	}
 

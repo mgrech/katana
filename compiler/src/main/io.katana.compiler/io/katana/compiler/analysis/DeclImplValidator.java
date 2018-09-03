@@ -14,11 +14,11 @@
 
 package io.katana.compiler.analysis;
 
-import io.katana.compiler.ast.decl.AstDeclDefinedFunction;
+import io.katana.compiler.ast.decl.AstDeclFunctionDef;
 import io.katana.compiler.ast.decl.AstDeclOverloadSet;
 import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.sema.decl.SemaDecl;
-import io.katana.compiler.sema.decl.SemaDeclDefinedFunction;
+import io.katana.compiler.sema.decl.SemaDeclFunctionDef;
 import io.katana.compiler.sema.decl.SemaDeclOverloadSet;
 import io.katana.compiler.visitor.IVisitor;
 
@@ -47,16 +47,16 @@ public class DeclImplValidator implements IVisitor
 		{
 			var overload = semaSet.overloads.get(i);
 
-			if(!(overload instanceof SemaDeclDefinedFunction))
+			if(!(overload instanceof SemaDeclFunctionDef))
 				continue;
 
-			var semaFunction = (SemaDeclDefinedFunction)overload;
-			var function = (AstDeclDefinedFunction)set.overloads.get(i);
+			var semaFunction = (SemaDeclFunctionDef)overload;
+			var function = (AstDeclFunctionDef)set.overloads.get(i);
 			validateDefinedFunction(semaFunction, function, context);
 		}
 	}
 
-	private static void validateDefinedFunction(SemaDeclDefinedFunction semaDecl, AstDeclDefinedFunction decl, PlatformContext context)
+	private static void validateDefinedFunction(SemaDeclFunctionDef semaDecl, AstDeclFunctionDef decl, PlatformContext context)
 	{
 		var validator = new StmtValidator(semaDecl, semaDecl.scope, context, (ign) -> {});
 

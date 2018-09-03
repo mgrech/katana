@@ -19,11 +19,11 @@ import io.katana.compiler.sema.type.SemaTypeBuiltin;
 
 public class SemaExprSizeofExpr extends SimpleRValueExpr
 {
-	public final SemaExpr expr;
+	public final SemaExpr nestedExpr;
 
-	public SemaExprSizeofExpr(SemaExpr expr)
+	public SemaExprSizeofExpr(SemaExpr nestedExpr)
 	{
-		this.expr = expr;
+		this.nestedExpr = nestedExpr;
 	}
 
 	@Override

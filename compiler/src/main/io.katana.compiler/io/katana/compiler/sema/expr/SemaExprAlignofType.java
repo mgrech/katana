@@ -19,11 +19,11 @@ import io.katana.compiler.sema.type.SemaTypeBuiltin;
 
 public class SemaExprAlignofType extends SimpleRValueExpr
 {
-	public SemaType type;
+	public SemaType inspectedType;
 
-	public SemaExprAlignofType(SemaType type)
+	public SemaExprAlignofType(SemaType inspectedType)
 	{
-		this.type = type;
+		this.inspectedType = inspectedType;
 	}
 
 	@Override

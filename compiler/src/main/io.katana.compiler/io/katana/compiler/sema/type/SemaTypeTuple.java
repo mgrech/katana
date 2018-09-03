@@ -20,12 +20,12 @@ import java.util.List;
 
 public class SemaTypeTuple extends SemaType
 {
-	public List<SemaType> types;
+	public List<SemaType> fieldTypes;
 	public StructLayout layout;
 
-	public SemaTypeTuple(List<SemaType> types, StructLayout layout)
+	public SemaTypeTuple(List<SemaType> fieldTypes, StructLayout layout)
 	{
-		this.types = types;
+		this.fieldTypes = fieldTypes;
 		this.layout = layout;
 	}
 }

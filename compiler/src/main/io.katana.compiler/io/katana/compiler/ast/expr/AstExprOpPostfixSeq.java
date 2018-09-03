@@ -16,12 +16,12 @@ package io.katana.compiler.ast.expr;
 
 public class AstExprOpPostfixSeq extends AstExpr
 {
-	public AstExpr expr;
-	public String seq;
+	public AstExpr nestedExpr;
+	public String symbols;
 
-	public AstExprOpPostfixSeq(AstExpr expr, String seq)
+	public AstExprOpPostfixSeq(AstExpr nestedExpr, String symbols)
 	{
-		this.expr = expr;
-		this.seq = seq;
+		this.nestedExpr = nestedExpr;
+		this.symbols = symbols;
 	}
 }

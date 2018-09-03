@@ -16,10 +16,10 @@ package io.katana.compiler.ast.type;
 
 public class AstTypeNullablePointer extends AstType
 {
-	public AstType type;
+	public AstType pointeeType;
 
-	public AstTypeNullablePointer(AstType type)
+	public AstTypeNullablePointer(AstType pointeeType)
 	{
-		this.type = type;
+		this.pointeeType = pointeeType;
 	}
 }

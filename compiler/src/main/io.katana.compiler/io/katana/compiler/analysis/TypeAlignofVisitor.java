@@ -36,7 +36,7 @@ public class TypeAlignofVisitor implements IVisitor
 
 	private long visit(SemaTypeArray arrayType)
 	{
-		return apply(arrayType.type, context);
+		return apply(arrayType.elementType, context);
 	}
 
 	private long visit(SemaTypeBuiltin builtinType)
@@ -63,7 +63,7 @@ public class TypeAlignofVisitor implements IVisitor
 
 	private long visit(SemaTypeConst constType)
 	{
-		return apply(constType.type, context);
+		return apply(constType.nestedType, context);
 	}
 
 	private long visit(SemaTypeFunction functionType)

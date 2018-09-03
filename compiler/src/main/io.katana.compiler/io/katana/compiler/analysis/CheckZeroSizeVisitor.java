@@ -37,7 +37,7 @@ public class CheckZeroSizeVisitor implements IVisitor
 
 	private boolean visit(SemaTypeArray array)
 	{
-		return array.length == 0 || apply(array.type);
+		return array.length == 0 || apply(array.elementType);
 	}
 
 	private boolean visit(SemaTypeBuiltin builtin)
@@ -47,7 +47,7 @@ public class CheckZeroSizeVisitor implements IVisitor
 
 	private boolean visit(SemaTypeConst const_)
 	{
-		return apply(const_.type);
+		return apply(const_.nestedType);
 	}
 
 	private boolean visit(SemaTypeFunction function)

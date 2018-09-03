@@ -19,5 +19,5 @@ import java.util.List;
 
 public class AstStmtCompound extends AstStmt
 {
-	public List<AstStmt> body = new ArrayList<>();
+	public List<AstStmt> bodyStmts = new ArrayList<>();
 }

@@ -22,7 +22,7 @@ import io.katana.compiler.backend.llvm.ir.decl.IrFunctionBuilder;
 import io.katana.compiler.backend.llvm.ir.type.IrType;
 import io.katana.compiler.backend.llvm.ir.type.IrTypes;
 import io.katana.compiler.backend.llvm.ir.value.IrValue;
-import io.katana.compiler.sema.decl.SemaDeclDefinedFunction;
+import io.katana.compiler.sema.decl.SemaDeclFunctionDef;
 import io.katana.compiler.sema.expr.SemaExpr;
 import io.katana.compiler.sema.stmt.*;
 import io.katana.compiler.sema.type.SemaType;
@@ -50,11 +50,11 @@ public class StmtCodegen implements IVisitor
 		stmt.accept(this);
 	}
 
-	public void finish(SemaDeclDefinedFunction func)
+	public void finish(SemaDeclFunctionDef func)
 	{
 		if(!preceededByTerminator)
 		{
-			if(Types.isZeroSized(func.ret))
+			if(Types.isZeroSized(func.returnType))
 				builder.ret(IrTypes.VOID, Maybe.none());
 			else
 				builder.unreachable();
@@ -75,14 +75,14 @@ public class StmtCodegen implements IVisitor
 	{
 		preceededByTerminator = false;
 
-		for(var stmt : compound.body)
+		for(var stmt : compound.bodyStmts)
 			generate(stmt);
 	}
 
 	private void visit(SemaStmtExprStmt stmt)
 	{
 		preceededByTerminator = false;
-		generate(stmt.expr);
+		generate(stmt.nestedExpr);
 	}
 
 	private void generateGoto(IrLabel label)
@@ -93,7 +93,7 @@ public class StmtCodegen implements IVisitor
 
 	private void visit(SemaStmtGoto goto_)
 	{
-		generateGoto(IrLabel.of(goto_.target.name));
+		generateGoto(IrLabel.of(goto_.targetLabel.name));
 	}
 
 	private void visit(GeneratedGoto goto_)
@@ -103,7 +103,7 @@ public class StmtCodegen implements IVisitor
 
 	private void visit(SemaStmtIf if_)
 	{
-		var condition = generate(if_.condition).unwrap();
+		var condition = generate(if_.conditionExpr).unwrap();
 
 		var thenLabel = builder.allocateLabel("if.then");
 		var afterLabel = builder.allocateLabel("if.after");
@@ -115,7 +115,7 @@ public class StmtCodegen implements IVisitor
 		preceededByTerminator = true;
 
 		generateLabel(thenLabel);
-		generate(if_.then);
+		generate(if_.thenStmt);
 		generateLabel(afterLabel);
 
 		preceededByTerminator = false;
@@ -126,11 +126,11 @@ public class StmtCodegen implements IVisitor
 		var after = builder.allocateLabel("ifelse.after");
 
 		var then = new ArrayList<SemaStmt>();
-		then.add(ifelse.then);
+		then.add(ifelse.thenStmt);
 		then.add(new GeneratedGoto(after));
 
-		visit(new SemaStmtIf(ifelse.negated, ifelse.condition, new SemaStmtCompound(then)));
-		generate(ifelse.else_);
+		visit(new SemaStmtIf(ifelse.negated, ifelse.conditionExpr, new SemaStmtCompound(then)));
+		generate(ifelse.elseStmt);
 		generateLabel(after);
 	}
 
@@ -138,7 +138,7 @@ public class StmtCodegen implements IVisitor
 	{
 		var label = builder.allocateLabel("loop");
 		generateLabel(label);
-		generate(loop.body);
+		generate(loop.bodyStmt);
 		builder.br(label);
 	}
 
@@ -147,8 +147,8 @@ public class StmtCodegen implements IVisitor
 		var afterLabel = builder.allocateLabel("while.after");
 
 		var body = new ArrayList<SemaStmt>();
-		body.add(new SemaStmtIf(!while_.negated, while_.condition, new GeneratedGoto(afterLabel)));
-		body.add(while_.body);
+		body.add(new SemaStmtIf(!while_.negated, while_.conditionExpr, new GeneratedGoto(afterLabel)));
+		body.add(while_.bodyStmt);
 
 		visit(new SemaStmtLoop(new SemaStmtCompound(body)));
 		generateLabel(afterLabel);
@@ -171,8 +171,8 @@ public class StmtCodegen implements IVisitor
 	private void visit(SemaStmtReturn ret)
 	{
 		preceededByTerminator = true;
-		var type = ret.ret.map(SemaExpr::type).map(this::generate).or(IrTypes.VOID);
-		var value = ret.ret.map(this::generate).unwrap();
+		var type = ret.returnValueExpr.map(SemaExpr::type).map(this::generate).or(IrTypes.VOID);
+		var value = ret.returnValueExpr.map(this::generate).unwrap();
 		builder.ret(type, value);
 	}
 

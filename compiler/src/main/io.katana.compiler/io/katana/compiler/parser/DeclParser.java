@@ -185,8 +185,8 @@ public class DeclParser
 		var body = parseBody(ctx);
 
 		return name == null
-			? new AstDeclDefinedOperator(exportKind, op, kind, params, ret, body)
-			: new AstDeclDefinedFunction(exportKind, name, params, ret, body);
+			? new AstDeclOperatorDef(exportKind, op, kind, params, ret, body)
+			: new AstDeclFunctionDef(exportKind, name, params, ret, body);
 	}
 
 	private static List<AstDeclFunction.Param> parseParameterList(ParseContext ctx)

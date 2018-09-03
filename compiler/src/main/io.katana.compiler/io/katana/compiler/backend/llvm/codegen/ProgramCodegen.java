@@ -53,7 +53,7 @@ public class ProgramCodegen
 	{
 		var builder = new IrFunctionBuilder();
 
-		var returnType = ((SemaDeclFunction)func).ret;
+		var returnType = ((SemaDeclFunction)func).returnType;
 		var returnTypeIr = TypeCodegen.generate(returnType, context);
 		var function = IrValues.ofSymbol(func.qualifiedName().toString());
 		var result = builder.call(returnTypeIr, function, Collections.emptyList(), Collections.emptyList(), Inlining.AUTO);
@@ -101,10 +101,10 @@ public class ProgramCodegen
 
 		var func = set.overloads.get(0);
 
-		if(Types.isVoid(func.ret) || Types.isBuiltin(func.ret, BuiltinType.INT32))
+		if(Types.isVoid(func.returnType) || Types.isBuiltin(func.returnType, BuiltinType.INT32))
 			return func;
 
-		throw new CompileException(String.format("entry point must return 'void' or 'int32', got '%s'", TypeString.of(func.ret)));
+		throw new CompileException(String.format("entry point must return 'void' or 'int32', got '%s'", TypeString.of(func.returnType)));
 	}
 
 	public static void generate(BuildTarget build, SemaProgram program, PlatformContext platform, Path outputFile) throws IOException
@@ -114,7 +114,7 @@ public class ProgramCodegen
 		var context = new FileCodegenContext(build, platform, stringPool);
 
 		builder.declareTargetTriple(context.platform().target());
-		generateDecls(new DeclCodegen(context, builder), program.root);
+		generateDecls(new DeclCodegen(context, builder), program.rootModule);
 		stringPool.generate(builder);
 
 		if(build.entryPoint != null)

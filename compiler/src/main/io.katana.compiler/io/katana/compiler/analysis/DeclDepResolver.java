@@ -35,7 +35,7 @@ public class DeclDepResolver
 	private void process(SemaDecl decl)
 	{
 		if(decl instanceof SemaDeclImportedOverloadSet)
-			decl = ((SemaDeclImportedOverloadSet)decl).set;
+			decl = ((SemaDeclImportedOverloadSet)decl).overloadSet;
 
 		var state = states.get(decl);
 

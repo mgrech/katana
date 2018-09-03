@@ -26,8 +26,8 @@ public class SemaModule implements SemaSymbol
 	private String name;
 	private AstPath path;
 	private SemaModule parent;
-	private Map<String, SemaModule> children = new TreeMap<>();
-	private Map<String, SemaDecl> decls = new TreeMap<>();
+	private Map<String, SemaModule> childrenByName = new TreeMap<>();
+	private Map<String, SemaDecl> declsByName = new TreeMap<>();
 
 	public SemaModule(String name, AstPath path, SemaModule parent)
 	{
@@ -38,10 +38,10 @@ public class SemaModule implements SemaSymbol
 
 	public boolean declare(SemaDecl decl)
 	{
-		if(decls.containsKey(decl.name()))
+		if(declsByName.containsKey(decl.name()))
 			return false;
 
-		decls.put(decl.name(), decl);
+		declsByName.put(decl.name(), decl);
 		return true;
 	}
 
@@ -52,7 +52,7 @@ public class SemaModule implements SemaSymbol
 
 		do
 		{
-			decl = decls.get(name);
+			decl = declsByName.get(name);
 			current = current.parent;
 		}
 		while(decl == null && current != null);
@@ -62,7 +62,7 @@ public class SemaModule implements SemaSymbol
 
 	public Maybe<SemaModule> findChild(String name)
 	{
-		var module = children.get(name);
+		var module = childrenByName.get(name);
 		return Maybe.wrap(module);
 	}
 
@@ -78,17 +78,17 @@ public class SemaModule implements SemaSymbol
 		path.components.add(name);
 
 		var module = new SemaModule(name, path, this);
-		children.put(name, module);
+		childrenByName.put(name, module);
 
 		return module;
 	}
 
 	public Map<String, SemaModule> children()
 	{
-		return children;
+		return childrenByName;
 	}
 
-	public Map<String, SemaDecl> decls() { return decls; }
+	public Map<String, SemaDecl> decls() { return declsByName; }
 
 	public AstPath path()
 	{

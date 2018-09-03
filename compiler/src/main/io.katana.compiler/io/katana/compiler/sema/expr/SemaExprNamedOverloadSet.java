@@ -19,11 +19,11 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprNamedOverloadSet extends SimpleLValueExpr
 {
-	public SemaDeclOverloadSet set;
+	public SemaDeclOverloadSet decl;
 
-	public SemaExprNamedOverloadSet(SemaDeclOverloadSet set)
+	public SemaExprNamedOverloadSet(SemaDeclOverloadSet decl)
 	{
-		this.set = set;
+		this.decl = decl;
 	}
 
 	@Override

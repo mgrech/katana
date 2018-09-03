@@ -17,11 +17,11 @@ package io.katana.compiler.ast.type;
 public class AstTypeArray extends AstType
 {
 	public long length;
-	public AstType type;
+	public AstType elementType;
 
-	public AstTypeArray(long length, AstType type)
+	public AstTypeArray(long length, AstType elementType)
 	{
 		this.length = length;
-		this.type = type;
+		this.elementType = elementType;
 	}
 }

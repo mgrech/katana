@@ -31,12 +31,12 @@ public class TypeNameMangling implements IVisitor
 
 	private String visit(SemaTypeSlice slice)
 	{
-		return String.format("slice-%s", of(slice.type));
+		return String.format("slice-%s", of(slice.elementType));
 	}
 
 	private String visit(SemaTypeArray array)
 	{
-		return String.format("array-%s-%s", array.length, of(array.type));
+		return String.format("array-%s-%s", array.length, of(array.elementType));
 	}
 
 	private String visit(SemaTypeBuiltin builtin)
@@ -46,7 +46,7 @@ public class TypeNameMangling implements IVisitor
 
 	private String visit(SemaTypeConst const_)
 	{
-		return String.format("const-%s", of(const_.type));
+		return String.format("const-%s", of(const_.nestedType));
 	}
 
 	private String visit(SemaTypeFunction function)
@@ -56,12 +56,12 @@ public class TypeNameMangling implements IVisitor
 
 	private String visit(SemaTypeNonNullablePointer pointer)
 	{
-		return String.format("pointer-%s", of(pointer.type));
+		return String.format("pointer-%s", of(pointer.pointeeType));
 	}
 
 	private String visit(SemaTypeNullablePointer pointer)
 	{
-		return String.format("npointer-%s", of(pointer.type));
+		return String.format("npointer-%s", of(pointer.pointeeType));
 	}
 
 	private String visit(SemaTypeStruct user)
@@ -74,9 +74,9 @@ public class TypeNameMangling implements IVisitor
 		var builder = new StringBuilder();
 		builder.append("tuple-");
 
-		builder.append(tuple.types.size());
+		builder.append(tuple.fieldTypes.size());
 
-		for(var type : tuple.types)
+		for(var type : tuple.fieldTypes)
 		{
 			builder.append('-');
 			builder.append(of(type));

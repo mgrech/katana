@@ -26,6 +26,10 @@ public class SemaDeclStruct extends SemaDecl
 {
 	public class Field
 	{
+		public String name;
+		public SemaType type;
+		public int index;
+
 		public Field(String name, SemaType type, int index)
 		{
 			this.name = name;
@@ -42,23 +46,19 @@ public class SemaDeclStruct extends SemaDecl
 		{
 			return SemaDeclStruct.this;
 		}
-
-		public String name;
-		public SemaType type;
-		public int index;
 	}
 
 	private String name;
-	public boolean abiCompat;
+	public boolean abiCompatible;
 	private final List<Field> fields = new ArrayList<>();
 	private final Map<String, Field> fieldsByName = new TreeMap<>();
 	public StructLayout layout;
 
-	public SemaDeclStruct(SemaModule module, ExportKind exportKind, String name, boolean abiCompat)
+	public SemaDeclStruct(SemaModule module, ExportKind exportKind, String name, boolean abiCompatible)
 	{
 		super(module, exportKind);
 		this.name = name;
-		this.abiCompat = abiCompat;
+		this.abiCompatible = abiCompatible;
 	}
 
 	public boolean defineField(String name, SemaType type)

@@ -18,18 +18,18 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprImplicitConversionPointerToBytePointer extends SimpleRValueExpr
 {
-	public SemaExpr expr;
-	public SemaType type;
+	public SemaExpr nestedExpr;
+	public SemaType targetType;
 
-	public SemaExprImplicitConversionPointerToBytePointer(SemaExpr expr, SemaType type)
+	public SemaExprImplicitConversionPointerToBytePointer(SemaExpr nestedExpr, SemaType targetType)
 	{
-		this.expr = expr;
-		this.type = type;
+		this.nestedExpr = nestedExpr;
+		this.targetType = targetType;
 	}
 
 	@Override
 	public SemaType type()
 	{
-		return type;
+		return targetType;
 	}
 }

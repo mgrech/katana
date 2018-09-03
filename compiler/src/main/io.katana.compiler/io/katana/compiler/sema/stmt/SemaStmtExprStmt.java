@@ -18,10 +18,10 @@ import io.katana.compiler.sema.expr.SemaExpr;
 
 public class SemaStmtExprStmt extends SemaStmt
 {
-	public SemaExpr expr;
+	public SemaExpr nestedExpr;
 
-	public SemaStmtExprStmt(SemaExpr expr)
+	public SemaStmtExprStmt(SemaExpr nestedExpr)
 	{
-		this.expr = expr;
+		this.nestedExpr = nestedExpr;
 	}
 }

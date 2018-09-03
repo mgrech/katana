@@ -19,16 +19,16 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprAddressof extends SimpleRValueExpr
 {
-	public SemaExpr expr;
+	public SemaExpr pointeeExpr;
 
-	public SemaExprAddressof(SemaExpr expr)
+	public SemaExprAddressof(SemaExpr pointeeExpr)
 	{
-		this.expr = expr;
+		this.pointeeExpr = pointeeExpr;
 	}
 
 	@Override
 	public SemaType type()
 	{
-		return Types.addNonNullablePointer(expr.type());
+		return Types.addNonNullablePointer(pointeeExpr.type());
 	}
 }

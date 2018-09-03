@@ -19,13 +19,13 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprImplicitConversionSliceToSliceOfConst extends SemaExpr
 {
-	public final SemaExpr expr;
+	public final SemaExpr nestedExpr;
 	private final transient SemaType cachedType;
 
-	public SemaExprImplicitConversionSliceToSliceOfConst(SemaExpr expr)
+	public SemaExprImplicitConversionSliceToSliceOfConst(SemaExpr nestedExpr)
 	{
-		this.expr = expr;
-		this.cachedType = Types.addSlice(Types.addConst(Types.removeSlice(expr.type())));
+		this.nestedExpr = nestedExpr;
+		this.cachedType = Types.addSlice(Types.addConst(Types.removeSlice(nestedExpr.type())));
 	}
 
 	@Override
@@ -37,6 +37,6 @@ public class SemaExprImplicitConversionSliceToSliceOfConst extends SemaExpr
 	@Override
 	public ExprKind kind()
 	{
-		return expr.kind();
+		return nestedExpr.kind();
 	}
 }

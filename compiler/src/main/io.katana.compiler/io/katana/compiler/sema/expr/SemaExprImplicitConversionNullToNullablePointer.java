@@ -18,16 +18,16 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprImplicitConversionNullToNullablePointer extends SimpleRValueExpr
 {
-	public final SemaType type;
+	public final SemaType targetType;
 
-	public SemaExprImplicitConversionNullToNullablePointer(SemaType type)
+	public SemaExprImplicitConversionNullToNullablePointer(SemaType targetType)
 	{
-		this.type = type;
+		this.targetType = targetType;
 	}
 
 	@Override
 	public SemaType type()
 	{
-		return type;
+		return targetType;
 	}
 }

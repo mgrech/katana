@@ -14,8 +14,8 @@
 
 package io.katana.compiler.backend;
 
-import io.katana.compiler.sema.decl.SemaDeclDefinedOperator;
 import io.katana.compiler.sema.decl.SemaDeclFunction;
+import io.katana.compiler.sema.decl.SemaDeclOperatorDef;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -62,7 +62,7 @@ public class FunctionNameMangling
 		return builder.toString();
 	}
 
-	private static String mangleOperatorName(SemaDeclDefinedOperator operator)
+	private static String mangleOperatorName(SemaDeclOperatorDef operator)
 	{
 		var op = operator.decl.operator.symbol;
 		var kind = operator.decl.operator.kind;
@@ -72,8 +72,8 @@ public class FunctionNameMangling
 
 	private static String mangleFunctionName(SemaDeclFunction function)
 	{
-		if(function instanceof SemaDeclDefinedOperator)
-			return function.module().name() + "." + mangleOperatorName((SemaDeclDefinedOperator)function);
+		if(function instanceof SemaDeclOperatorDef)
+			return function.module().name() + "." + mangleOperatorName((SemaDeclOperatorDef)function);
 
 		return function.qualifiedName().toString();
 	}

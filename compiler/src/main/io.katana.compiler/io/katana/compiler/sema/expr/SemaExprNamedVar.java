@@ -14,21 +14,21 @@
 
 package io.katana.compiler.sema.expr;
 
-import io.katana.compiler.sema.decl.SemaDeclDefinedFunction;
+import io.katana.compiler.sema.decl.SemaDeclFunctionDef;
 import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprNamedVar extends SimpleLValueExpr
 {
-	public SemaDeclDefinedFunction.Variable variable;
+	public SemaDeclFunctionDef.Variable decl;
 
-	public SemaExprNamedVar(SemaDeclDefinedFunction.Variable variable)
+	public SemaExprNamedVar(SemaDeclFunctionDef.Variable decl)
 	{
-		this.variable = variable;
+		this.decl = decl;
 	}
 
 	@Override
 	public SemaType type()
 	{
-		return variable.type;
+		return decl.type;
 	}
 }

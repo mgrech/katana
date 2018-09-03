@@ -18,10 +18,10 @@ import io.katana.compiler.ast.expr.AstExpr;
 
 public class AstStmtExprStmt extends AstStmt
 {
-	public AstExpr expr;
+	public AstExpr nestedExpr;
 
-	public AstStmtExprStmt(AstExpr expr)
+	public AstStmtExprStmt(AstExpr nestedExpr)
 	{
-		this.expr = expr;
+		this.nestedExpr = nestedExpr;
 	}
 }

@@ -16,14 +16,14 @@ package io.katana.compiler.ast.expr;
 
 public class AstExprMemberAccess extends AstExpr
 {
-	public AstExpr expr;
-	public String name;
-	public boolean global;
+	public AstExpr accesseeExpr;
+	public String memberName;
+	public boolean globalAccess;
 
-	public AstExprMemberAccess(AstExpr expr, String name, boolean global)
+	public AstExprMemberAccess(AstExpr accesseeExpr, String memberName, boolean globalAccess)
 	{
-		this.expr = expr;
-		this.name = name;
-		this.global = global;
+		this.accesseeExpr = accesseeExpr;
+		this.memberName = memberName;
+		this.globalAccess = globalAccess;
 	}
 }

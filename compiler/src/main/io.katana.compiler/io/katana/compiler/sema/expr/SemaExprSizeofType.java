@@ -19,11 +19,11 @@ import io.katana.compiler.sema.type.SemaTypeBuiltin;
 
 public class SemaExprSizeofType extends SimpleRValueExpr
 {
-	public SemaType type;
+	public SemaType inspectedType;
 
-	public SemaExprSizeofType(SemaType type)
+	public SemaExprSizeofType(SemaType inspectedType)
 	{
-		this.type = type;
+		this.inspectedType = inspectedType;
 	}
 
 	@Override

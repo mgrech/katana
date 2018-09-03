@@ -20,14 +20,14 @@ import java.util.List;
 
 public class AstExprFunctionCall extends AstExpr
 {
-	public AstExpr expr;
-	public List<AstExpr> args;
+	public AstExpr functionExpr;
+	public List<AstExpr> argExprs;
 	public Inlining inline;
 
-	public AstExprFunctionCall(AstExpr expr, List<AstExpr> args, Inlining inline)
+	public AstExprFunctionCall(AstExpr functionExpr, List<AstExpr> argExprs, Inlining inline)
 	{
-		this.expr = expr;
-		this.args = args;
+		this.functionExpr = functionExpr;
+		this.argExprs = argExprs;
 		this.inline = inline;
 	}
 }

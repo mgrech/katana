@@ -19,16 +19,16 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprDeref extends SimpleLValueExpr
 {
-	public SemaExpr expr;
+	public SemaExpr pointerExpr;
 
-	public SemaExprDeref(SemaExpr expr)
+	public SemaExprDeref(SemaExpr pointerExpr)
 	{
-		this.expr = expr;
+		this.pointerExpr = pointerExpr;
 	}
 
 	@Override
 	public SemaType type()
 	{
-		return Types.removePointer(expr.type());
+		return Types.removePointer(pointerExpr.type());
 	}
 }

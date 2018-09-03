@@ -21,19 +21,19 @@ import java.util.List;
 public class SemaExprBuiltinCall extends SimpleRValueExpr
 {
 	public String name;
-	public List<SemaExpr> args;
-	public SemaType ret;
+	public List<SemaExpr> argExprs;
+	public SemaType returnType;
 
-	public SemaExprBuiltinCall(String name, List<SemaExpr> args, SemaType ret)
+	public SemaExprBuiltinCall(String name, List<SemaExpr> argExprs, SemaType returnType)
 	{
 		this.name = name;
-		this.args = args;
-		this.ret = ret;
+		this.argExprs = argExprs;
+		this.returnType = returnType;
 	}
 
 	@Override
 	public SemaType type()
 	{
-		return ret;
+		return returnType;
 	}
 }

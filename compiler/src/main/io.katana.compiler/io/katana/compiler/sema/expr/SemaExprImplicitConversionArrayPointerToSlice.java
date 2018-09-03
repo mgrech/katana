@@ -18,12 +18,12 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprImplicitConversionArrayPointerToSlice extends SimpleRValueExpr
 {
-	public final SemaExpr expr;
+	public final SemaExpr nestedExpr;
 	public final SemaType targetType;
 
-	public SemaExprImplicitConversionArrayPointerToSlice(SemaExpr expr, SemaType targetType)
+	public SemaExprImplicitConversionArrayPointerToSlice(SemaExpr nestedExpr, SemaType targetType)
 	{
-		this.expr = expr;
+		this.nestedExpr = nestedExpr;
 		this.targetType = targetType;
 	}
 

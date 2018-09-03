@@ -26,20 +26,20 @@ public class SemaExprCast extends SimpleRValueExpr
 		POINTER_CAST,
 	}
 
-	public SemaType type;
-	public SemaExpr expr;
+	public SemaType targetType;
+	public SemaExpr nestedExpr;
 	public Kind kind;
 
-	public SemaExprCast(SemaType type, SemaExpr expr, Kind kind)
+	public SemaExprCast(SemaType targetType, SemaExpr nestedExpr, Kind kind)
 	{
-		this.type = type;
-		this.expr = expr;
+		this.targetType = targetType;
+		this.nestedExpr = nestedExpr;
 		this.kind = kind;
 	}
 
 	@Override
 	public SemaType type()
 	{
-		return type;
+		return targetType;
 	}
 }

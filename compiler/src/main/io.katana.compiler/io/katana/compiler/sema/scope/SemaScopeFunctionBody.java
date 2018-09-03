@@ -15,16 +15,16 @@
 package io.katana.compiler.sema.scope;
 
 import io.katana.compiler.sema.SemaSymbol;
-import io.katana.compiler.sema.decl.SemaDeclDefinedFunction;
+import io.katana.compiler.sema.decl.SemaDeclFunctionDef;
 
 import java.util.Collections;
 import java.util.List;
 
-public class SemaScopeDefinedFunction extends SemaScopeFunction
+public class SemaScopeFunctionBody extends SemaScopeFunction
 {
-	private SemaDeclDefinedFunction function;
+	private SemaDeclFunctionDef function;
 
-	public SemaScopeDefinedFunction(SemaScopeFile parent, SemaDeclDefinedFunction function)
+	public SemaScopeFunctionBody(SemaScopeFile parent, SemaDeclFunctionDef function)
 	{
 		super(parent, function);
 		this.function = function;

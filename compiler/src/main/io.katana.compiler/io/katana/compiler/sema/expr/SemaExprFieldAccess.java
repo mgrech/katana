@@ -20,26 +20,26 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprFieldAccess extends SemaExpr
 {
-	public SemaExpr expr;
+	public SemaExpr structExpr;
 	public SemaDeclStruct.Field field;
-	public boolean const_;
+	public boolean resultIsConst;
 
-	public SemaExprFieldAccess(SemaExpr expr, SemaDeclStruct.Field field, boolean const_)
+	public SemaExprFieldAccess(SemaExpr structExpr, SemaDeclStruct.Field field, boolean resultIsConst)
 	{
-		this.expr = expr;
+		this.structExpr = structExpr;
 		this.field = field;
-		this.const_ = const_;
+		this.resultIsConst = resultIsConst;
 	}
 
 	@Override
 	public SemaType type()
 	{
-		return const_ ? Types.addConst(field.type) : field.type;
+		return resultIsConst ? Types.addConst(field.type) : field.type;
 	}
 
 	@Override
 	public ExprKind kind()
 	{
-		return expr.kind();
+		return structExpr.kind();
 	}
 }

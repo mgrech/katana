@@ -26,10 +26,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class SemaDeclDefinedFunction extends SemaDeclFunction
+public class SemaDeclFunctionDef extends SemaDeclFunction
 {
 	public class Variable implements SemaSymbol
 	{
+		public String name;
+		public SemaType type;
+		public int index;
+
 		public Variable(String name, SemaType type, int index)
 		{
 			this.name = name;
@@ -42,10 +46,6 @@ public class SemaDeclDefinedFunction extends SemaDeclFunction
 		{
 			return name;
 		}
-
-		public String name;
-		public SemaType type;
-		public int index;
 	}
 
 	public List<Variable> variables = new ArrayList<>();
@@ -53,7 +53,7 @@ public class SemaDeclDefinedFunction extends SemaDeclFunction
 	public List<SemaStmt> body = new ArrayList<>();
 	public Map<String, SemaStmtLabel> labels = new TreeMap<>();
 
-	public SemaDeclDefinedFunction(SemaModule module, ExportKind exportKind, String name)
+	public SemaDeclFunctionDef(SemaModule module, ExportKind exportKind, String name)
 	{
 		super(module, exportKind, name);
 	}

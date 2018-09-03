@@ -36,12 +36,12 @@ public class TypesEqualVisitor implements IVisitor
 
 	private boolean visit(SemaTypeSlice left, SemaTypeSlice right)
 	{
-		return apply(left.type, right.type);
+		return apply(left.elementType, right.elementType);
 	}
 
 	private boolean visit(SemaTypeArray left, SemaTypeArray right)
 	{
-		return left.length == right.length && apply(left.type, right.type);
+		return left.length == right.length && apply(left.elementType, right.elementType);
 	}
 
 	private boolean visit(SemaTypeBuiltin left, SemaTypeBuiltin right)
@@ -51,25 +51,25 @@ public class TypesEqualVisitor implements IVisitor
 
 	private boolean visit(SemaTypeConst left, SemaTypeConst right)
 	{
-		return apply(left.type, right.type);
+		return apply(left.nestedType, right.nestedType);
 	}
 
 	private boolean visit(SemaTypeFunction left, SemaTypeFunction right)
 	{
-		if(!apply(left.ret, right.ret))
+		if(!apply(left.returnType, right.returnType))
 			return false;
 
-		return typeListsEqual(left.params, right.params);
+		return typeListsEqual(left.paramTypes, right.paramTypes);
 	}
 
 	private boolean visit(SemaTypeNonNullablePointer left, SemaTypeNonNullablePointer right)
 	{
-		return apply(left.type, right.type);
+		return apply(left.pointeeType, right.pointeeType);
 	}
 
 	private boolean visit(SemaTypeNullablePointer left, SemaTypeNullablePointer right)
 	{
-		return apply(left.type, right.type);
+		return apply(left.pointeeType, right.pointeeType);
 	}
 
 	private boolean visit(SemaTypeStruct left, SemaTypeStruct right)
@@ -79,10 +79,10 @@ public class TypesEqualVisitor implements IVisitor
 
 	private boolean visit(SemaTypeTuple left, SemaTypeTuple right)
 	{
-		if(left.types.size() != right.types.size())
+		if(left.fieldTypes.size() != right.fieldTypes.size())
 			return false;
 
-		return typeListsEqual(left.types, right.types);
+		return typeListsEqual(left.fieldTypes, right.fieldTypes);
 	}
 
 	private static boolean typeListsEqual(List<SemaType> left, List<SemaType> right)

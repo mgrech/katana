@@ -19,11 +19,11 @@ import io.katana.compiler.sema.type.SemaTypeBuiltin;
 
 public class SemaExprSliceGetLength extends SemaExpr
 {
-	public SemaExpr expr;
+	public SemaExpr sliceExpr;
 
-	public SemaExprSliceGetLength(SemaExpr expr)
+	public SemaExprSliceGetLength(SemaExpr sliceExpr)
 	{
-		this.expr = expr;
+		this.sliceExpr = sliceExpr;
 	}
 
 	@Override
@@ -35,6 +35,6 @@ public class SemaExprSliceGetLength extends SemaExpr
 	@Override
 	public ExprKind kind()
 	{
-		return expr.kind();
+		return sliceExpr.kind();
 	}
 }

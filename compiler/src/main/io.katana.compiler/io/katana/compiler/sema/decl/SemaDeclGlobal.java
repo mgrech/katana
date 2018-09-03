@@ -24,7 +24,7 @@ public class SemaDeclGlobal extends SemaDecl
 {
 	public String name;
 	public SemaType type;
-	public Maybe<SemaExpr> init;
+	public Maybe<SemaExpr> initializerExpr;
 
 	public SemaDeclGlobal(SemaModule module, ExportKind exportKind, String name)
 	{

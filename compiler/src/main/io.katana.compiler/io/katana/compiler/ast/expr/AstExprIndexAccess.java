@@ -16,12 +16,12 @@ package io.katana.compiler.ast.expr;
 
 public class AstExprIndexAccess extends AstExpr
 {
-	public AstExpr value;
-	public AstExpr index;
+	public AstExpr indexeeExpr;
+	public AstExpr indexExpr;
 
-	public AstExprIndexAccess(AstExpr value, AstExpr index)
+	public AstExprIndexAccess(AstExpr indexeeExpr, AstExpr indexExpr)
 	{
-		this.value = value;
-		this.index = index;
+		this.indexeeExpr = indexeeExpr;
+		this.indexExpr = indexExpr;
 	}
 }

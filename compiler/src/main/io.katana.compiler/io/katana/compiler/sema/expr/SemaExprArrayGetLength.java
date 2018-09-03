@@ -19,11 +19,11 @@ import io.katana.compiler.sema.type.SemaTypeBuiltin;
 
 public class SemaExprArrayGetLength extends SimpleRValueExpr
 {
-	public SemaExpr expr;
+	public SemaExpr arrayExpr;
 
-	public SemaExprArrayGetLength(SemaExpr expr)
+	public SemaExprArrayGetLength(SemaExpr arrayExpr)
 	{
-		this.expr = expr;
+		this.arrayExpr = arrayExpr;
 	}
 
 	@Override

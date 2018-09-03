@@ -19,15 +19,15 @@ import io.katana.compiler.ast.expr.AstExpr;
 public class AstStmtIfElse extends AstStmt
 {
 	public boolean negated;
-	public AstExpr condition;
-	public AstStmt then;
-	public AstStmt else_;
+	public AstExpr conditionExpr;
+	public AstStmt thenStmt;
+	public AstStmt elseStmt;
 
-	public AstStmtIfElse(boolean negated, AstExpr condition, AstStmt then, AstStmt else_)
+	public AstStmtIfElse(boolean negated, AstExpr conditionExpr, AstStmt thenStmt, AstStmt elseStmt)
 	{
 		this.negated = negated;
-		this.condition = condition;
-		this.then = then;
-		this.else_ = else_;
+		this.conditionExpr = conditionExpr;
+		this.thenStmt = thenStmt;
+		this.elseStmt = elseStmt;
 	}
 }

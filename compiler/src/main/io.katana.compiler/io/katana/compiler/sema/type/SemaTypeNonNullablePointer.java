@@ -16,10 +16,10 @@ package io.katana.compiler.sema.type;
 
 public class SemaTypeNonNullablePointer extends SemaType
 {
-	public SemaType type;
+	public SemaType pointeeType;
 
-	public SemaTypeNonNullablePointer(SemaType type)
+	public SemaTypeNonNullablePointer(SemaType pointeeType)
 	{
-		this.type = type;
+		this.pointeeType = pointeeType;
 	}
 }

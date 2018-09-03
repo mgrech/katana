@@ -16,12 +16,12 @@ package io.katana.compiler.ast.expr;
 
 public class AstExprOffsetof extends AstExpr
 {
-	public String type;
-	public String field;
+	public String typeName;
+	public String fieldName;
 
-	public AstExprOffsetof(String type, String field)
+	public AstExprOffsetof(String typeName, String fieldName)
 	{
-		this.type = type;
-		this.field = field;
+		this.typeName = typeName;
+		this.fieldName = fieldName;
 	}
 }

@@ -22,11 +22,11 @@ import java.util.ArrayList;
 
 public class SemaExprNamedFunc extends SimpleLValueExpr
 {
-	public SemaDeclFunction func;
+	public SemaDeclFunction decl;
 
-	public SemaExprNamedFunc(SemaDeclFunction func)
+	public SemaExprNamedFunc(SemaDeclFunction decl)
 	{
-		this.func = func;
+		this.decl = decl;
 	}
 
 	@Override
@@ -34,9 +34,9 @@ public class SemaExprNamedFunc extends SimpleLValueExpr
 	{
 		var params = new ArrayList<SemaType>();
 
-		for(var param : func.params)
+		for(var param : decl.params)
 			params.add(param.type);
 
-		return new SemaTypeFunction(func.ret, params);
+		return new SemaTypeFunction(decl.returnType, params);
 	}
 }

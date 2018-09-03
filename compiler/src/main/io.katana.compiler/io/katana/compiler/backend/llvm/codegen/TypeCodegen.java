@@ -76,10 +76,10 @@ public class TypeCodegen implements IVisitor
 
 	private IrType visit(SemaTypeFunction type)
 	{
-		var returnType = generate(type.ret);
-		var parameterTypes = type.params.stream()
-		                                .map(this::generate)
-		                                .collect(Collectors.toList());
+		var returnType = generate(type.returnType);
+		var parameterTypes = type.paramTypes.stream()
+		                                    .map(this::generate)
+		                                    .collect(Collectors.toList());
 
 		return IrTypes.ofFunction(returnType, parameterTypes);
 	}
@@ -91,7 +91,7 @@ public class TypeCodegen implements IVisitor
 
 	private IrType visit(SemaTypeSlice type)
 	{
-		var elementType = generate(type.type);
+		var elementType = generate(type.elementType);
 		var elementPointerType = IrTypes.ofPointer(elementType);
 		var lengthType = generate(SemaTypeBuiltin.INT);
 		return IrTypes.ofLiteralStruct(elementPointerType, lengthType);
@@ -99,34 +99,34 @@ public class TypeCodegen implements IVisitor
 
 	private IrType visit(SemaTypeArray type)
 	{
-		return IrTypes.ofArray(type.length, generate(type.type));
+		return IrTypes.ofArray(type.length, generate(type.elementType));
 	}
 
 	private IrType visit(SemaTypeConst type)
 	{
-		return generate(type.type);
+		return generate(type.nestedType);
 	}
 
 	private IrType visit(SemaTypeNullablePointer type)
 	{
-		if(Types.isZeroSized(type.type))
+		if(Types.isZeroSized(type.pointeeType))
 			return IrTypes.ofPointer(IrTypes.I8);
 
-		return IrTypes.ofPointer(generate(type.type));
+		return IrTypes.ofPointer(generate(type.pointeeType));
 	}
 
 	private IrType visit(SemaTypeNonNullablePointer type)
 	{
-		if(Types.isZeroSized(type.type))
+		if(Types.isZeroSized(type.pointeeType))
 			return IrTypes.ofPointer(IrTypes.I8);
 
-		return IrTypes.ofPointer(generate(type.type));
+		return IrTypes.ofPointer(generate(type.pointeeType));
 	}
 
 	private IrType visit(SemaTypeTuple tuple)
 	{
-		return IrTypes.ofLiteralStruct(tuple.types.stream()
-		                                          .map(this::generate)
-		                                          .collect(Collectors.toList()));
+		return IrTypes.ofLiteralStruct(tuple.fieldTypes.stream()
+		                                               .map(this::generate)
+		                                               .collect(Collectors.toList()));
 	}
 }

@@ -19,18 +19,18 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprSliceIndexAccess extends SimpleLValueExpr
 {
-	public final SemaExpr expr;
-	public final SemaExpr index;
+	public final SemaExpr sliceExpr;
+	public final SemaExpr indexExpr;
 
-	public SemaExprSliceIndexAccess(SemaExpr expr, SemaExpr index)
+	public SemaExprSliceIndexAccess(SemaExpr sliceExpr, SemaExpr indexExpr)
 	{
-		this.expr = expr;
-		this.index = index;
+		this.sliceExpr = sliceExpr;
+		this.indexExpr = indexExpr;
 	}
 
 	@Override
 	public SemaType type()
 	{
-		return Types.removeSlice(expr.type());
+		return Types.removeSlice(sliceExpr.type());
 	}
 }

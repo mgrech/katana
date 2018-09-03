@@ -4,18 +4,18 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprImplicitConversionSliceToByteSlice extends SimpleRValueExpr
 {
-	public final SemaExpr expr;
-	public final SemaType type;
+	public final SemaExpr nestedExpr;
+	public final SemaType targetType;
 
-	public SemaExprImplicitConversionSliceToByteSlice(SemaExpr expr, SemaType type)
+	public SemaExprImplicitConversionSliceToByteSlice(SemaExpr nestedExpr, SemaType targetType)
 	{
-		this.expr = expr;
-		this.type = type;
+		this.nestedExpr = nestedExpr;
+		this.targetType = targetType;
 	}
 
 	@Override
 	public SemaType type()
 	{
-		return type;
+		return targetType;
 	}
 }

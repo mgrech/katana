@@ -16,10 +16,10 @@ package io.katana.compiler.sema.stmt;
 
 public class SemaStmtGoto extends SemaStmt
 {
-	public SemaStmtLabel target;
+	public SemaStmtLabel targetLabel;
 
-	public SemaStmtGoto(SemaStmtLabel target)
+	public SemaStmtGoto(SemaStmtLabel targetLabel)
 	{
-		this.target = target;
+		this.targetLabel = targetLabel;
 	}
 }

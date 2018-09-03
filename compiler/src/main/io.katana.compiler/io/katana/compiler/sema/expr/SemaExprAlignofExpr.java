@@ -19,11 +19,11 @@ import io.katana.compiler.sema.type.SemaTypeBuiltin;
 
 public class SemaExprAlignofExpr extends SimpleRValueExpr
 {
-	public final SemaExpr expr;
+	public final SemaExpr nestedExpr;
 
-	public SemaExprAlignofExpr(SemaExpr expr)
+	public SemaExprAlignofExpr(SemaExpr nestedExpr)
 	{
-		this.expr = expr;
+		this.nestedExpr = nestedExpr;
 	}
 
 	@Override

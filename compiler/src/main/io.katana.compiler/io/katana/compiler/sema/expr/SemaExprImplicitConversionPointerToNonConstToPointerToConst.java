@@ -18,18 +18,18 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprImplicitConversionPointerToNonConstToPointerToConst extends SimpleRValueExpr
 {
-	public SemaExpr expr;
-	public SemaType type;
+	public SemaExpr nestedExpr;
+	public SemaType targetType;
 
-	public SemaExprImplicitConversionPointerToNonConstToPointerToConst(SemaExpr expr, SemaType type)
+	public SemaExprImplicitConversionPointerToNonConstToPointerToConst(SemaExpr nestedExpr, SemaType targetType)
 	{
-		this.expr = expr;
-		this.type = type;
+		this.nestedExpr = nestedExpr;
+		this.targetType = targetType;
 	}
 
 	@Override
 	public SemaType type()
 	{
-		return type;
+		return targetType;
 	}
 }

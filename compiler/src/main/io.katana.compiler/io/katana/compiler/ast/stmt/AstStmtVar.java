@@ -22,12 +22,12 @@ public class AstStmtVar extends AstStmt
 {
 	public Maybe<AstType> type;
 	public String name;
-	public Maybe<AstExpr> init;
+	public Maybe<AstExpr> initializerExpr;
 
-	public AstStmtVar(Maybe<AstType> type, String name, Maybe<AstExpr> init)
+	public AstStmtVar(Maybe<AstType> type, String name, Maybe<AstExpr> initializerExpr)
 	{
 		this.type = type;
 		this.name = name;
-		this.init = init;
+		this.initializerExpr = initializerExpr;
 	}
 }

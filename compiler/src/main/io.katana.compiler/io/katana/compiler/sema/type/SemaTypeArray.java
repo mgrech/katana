@@ -17,11 +17,11 @@ package io.katana.compiler.sema.type;
 public class SemaTypeArray extends SemaType
 {
 	public long length;
-	public SemaType type;
+	public SemaType elementType;
 
-	public SemaTypeArray(long length, SemaType type)
+	public SemaTypeArray(long length, SemaType elementType)
 	{
 		this.length = length;
-		this.type = type;
+		this.elementType = elementType;
 	}
 }

@@ -29,6 +29,10 @@ public abstract class SemaDeclFunction extends SemaDecl
 {
 	public class Param implements SemaSymbol
 	{
+		public SemaType type;
+		public String name;
+		public int index;
+
 		public Param(SemaType type, String name, int index)
 		{
 			this.type = type;
@@ -41,16 +45,12 @@ public abstract class SemaDeclFunction extends SemaDecl
 		{
 			return name;
 		}
-
-		public SemaType type;
-		public String name;
-		public int index;
 	}
 
 	private String name;
 	public List<Param> params = new ArrayList<>();
 	public Map<String, Param> paramsByName = new TreeMap<>();
-	public SemaType ret;
+	public SemaType returnType;
 	public SemaScopeFunction scope;
 
 	protected SemaDeclFunction(SemaModule module, ExportKind exportKind, String name)

@@ -19,11 +19,11 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprNamedRenamedImport extends SemaExpr
 {
-	public SemaDeclRenamedImport import_;
+	public SemaDeclRenamedImport decl;
 
-	public SemaExprNamedRenamedImport(SemaDeclRenamedImport import_)
+	public SemaExprNamedRenamedImport(SemaDeclRenamedImport decl)
 	{
-		this.import_ = import_;
+		this.decl = decl;
 	}
 
 	@Override

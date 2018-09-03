@@ -19,12 +19,12 @@ import java.util.List;
 
 public class SemaStmtCompound extends SemaStmt
 {
-	public List<SemaStmt> body = new ArrayList<>();
+	public List<SemaStmt> bodyStmts = new ArrayList<>();
 
 	public SemaStmtCompound() {}
 
-	public SemaStmtCompound(List<SemaStmt> body)
+	public SemaStmtCompound(List<SemaStmt> bodyStmts)
 	{
-		this.body = body;
+		this.bodyStmts = bodyStmts;
 	}
 }

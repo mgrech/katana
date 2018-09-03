@@ -38,18 +38,18 @@ public class ExprParser
 			return expr;
 
 		var list = new AstExprOpInfixList();
-		list.exprs.add(expr);
+		list.nestedExprs.add(expr);
 
 		do
 		{
 			var op = (String)ParseTools.consume(ctx).value;
-			list.ops.add(op);
-			list.exprs.add(parsePrefixExpr(ctx));
+			list.infixOps.add(op);
+			list.nestedExprs.add(parsePrefixExpr(ctx));
 		}
 		while(ParseTools.option(ctx, TokenType.OP_INFIX, false));
 
 		var proxy = new AstExprProxy(list);
-		ctx.lateParseExprs().infixLists.put(list, e -> proxy.expr = e);
+		ctx.lateParseExprs().infixLists.put(list, e -> proxy.nestedExpr = e);
 		return proxy;
 	}
 
@@ -60,7 +60,7 @@ public class ExprParser
 			var seq = (String)ParseTools.consume(ctx).value;
 			var prefixSeq = new AstExprOpPrefixSeq(seq, parsePrefixExpr(ctx));
 			var proxy = new AstExprProxy(prefixSeq);
-			ctx.lateParseExprs().prefixSeqs.put(prefixSeq, e -> proxy.expr = e);
+			ctx.lateParseExprs().prefixSeqs.put(prefixSeq, e -> proxy.nestedExpr = e);
 			return proxy;
 		}
 
@@ -78,7 +78,7 @@ public class ExprParser
 				var seq = (String)ParseTools.consume(ctx).value;
 				var postfixSeq = new AstExprOpPostfixSeq(expr, seq);
 				var proxy = new AstExprProxy(postfixSeq);
-				ctx.lateParseExprs().postfixSeqs.put(postfixSeq, e -> proxy.expr = e);
+				ctx.lateParseExprs().postfixSeqs.put(postfixSeq, e -> proxy.nestedExpr = e);
 				expr = proxy;
 			}
 			else if(ParseTools.option(ctx, TokenType.PUNCT_LPAREN, true))
@@ -289,8 +289,8 @@ public class ExprParser
 
 		switch(token.type)
 		{
-		case LIT_NULL: return new AstExprLitNull();
-		case LIT_BOOL: return new AstExprLitBool((boolean)token.value);
+		case LIT_NULL: return AstExprLitNull.INSTANCE;
+		case LIT_BOOL: return AstExprLitBool.of((boolean)token.value);
 
 		case LIT_INT:   return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.INT));
 		case LIT_INT8:  return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.INT8));

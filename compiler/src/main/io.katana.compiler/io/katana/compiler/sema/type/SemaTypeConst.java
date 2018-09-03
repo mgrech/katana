@@ -16,10 +16,10 @@ package io.katana.compiler.sema.type;
 
 public class SemaTypeConst extends SemaType
 {
-	public SemaType type;
+	public SemaType nestedType;
 
-	public SemaTypeConst(SemaType type)
+	public SemaTypeConst(SemaType nestedType)
 	{
-		this.type = type;
+		this.nestedType = nestedType;
 	}
 }

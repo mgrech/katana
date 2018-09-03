@@ -19,10 +19,10 @@ import io.katana.compiler.utils.Maybe;
 
 public class SemaStmtReturn extends SemaStmt
 {
-	public Maybe<SemaExpr> ret;
+	public Maybe<SemaExpr> returnValueExpr;
 
-	public SemaStmtReturn(Maybe<SemaExpr> ret)
+	public SemaStmtReturn(Maybe<SemaExpr> returnValueExpr)
 	{
-		this.ret = ret;
+		this.returnValueExpr = returnValueExpr;
 	}
 }

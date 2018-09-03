@@ -16,10 +16,10 @@ package io.katana.compiler.ast.stmt;
 
 public class AstStmtLoop extends AstStmt
 {
-	public AstStmt body;
+	public AstStmt bodyStmt;
 
-	public AstStmtLoop(AstStmt body)
+	public AstStmtLoop(AstStmt bodyStmt)
 	{
-		this.body = body;
+		this.bodyStmt = bodyStmt;
 	}
 }

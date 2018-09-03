@@ -16,4 +16,8 @@ package io.katana.compiler.ast.expr;
 
 public class AstExprLitNull extends AstExprLiteral
 {
+	public static final AstExprLitNull INSTANCE = new AstExprLitNull();
+
+	private AstExprLitNull()
+	{}
 }

@@ -19,14 +19,14 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprImplicitConversionArrayPointerToPointer extends SimpleRValueExpr
 {
-	public final SemaExpr expr;
+	public final SemaExpr nestedExpr;
 	private final transient SemaType cachedType;
 
-	public SemaExprImplicitConversionArrayPointerToPointer(SemaExpr expr)
+	public SemaExprImplicitConversionArrayPointerToPointer(SemaExpr nestedExpr)
 	{
-		this.expr = expr;
-		var elementType = Types.removeArray(Types.removePointer(expr.type()));
-		this.cachedType = Types.copyPointerKind(expr.type(), elementType);
+		this.nestedExpr = nestedExpr;
+		var elementType = Types.removeArray(Types.removePointer(nestedExpr.type()));
+		this.cachedType = Types.copyPointerKind(nestedExpr.type(), elementType);
 	}
 
 	@Override

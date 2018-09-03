@@ -19,13 +19,13 @@ import io.katana.compiler.sema.expr.SemaExpr;
 public class SemaStmtWhile extends SemaStmt
 {
 	public boolean negated;
-	public SemaExpr condition;
-	public SemaStmt body;
+	public SemaExpr conditionExpr;
+	public SemaStmt bodyStmt;
 
-	public SemaStmtWhile(boolean negated, SemaExpr condition, SemaStmt body)
+	public SemaStmtWhile(boolean negated, SemaExpr conditionExpr, SemaStmt bodyStmt)
 	{
 		this.negated = negated;
-		this.condition = condition;
-		this.body = body;
+		this.conditionExpr = conditionExpr;
+		this.bodyStmt = bodyStmt;
 	}
 }

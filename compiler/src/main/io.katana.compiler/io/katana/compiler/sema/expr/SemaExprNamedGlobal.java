@@ -19,16 +19,16 @@ import io.katana.compiler.sema.type.SemaType;
 
 public class SemaExprNamedGlobal extends SimpleLValueExpr
 {
-	public SemaDeclGlobal global;
+	public SemaDeclGlobal decl;
 
-	public SemaExprNamedGlobal(SemaDeclGlobal global)
+	public SemaExprNamedGlobal(SemaDeclGlobal decl)
 	{
-		this.global = global;
+		this.decl = decl;
 	}
 
 	@Override
 	public SemaType type()
 	{
-		return global.type;
+		return decl.type;
 	}
 }

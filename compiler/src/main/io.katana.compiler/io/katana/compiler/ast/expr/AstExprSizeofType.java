@@ -18,10 +18,10 @@ import io.katana.compiler.ast.type.AstType;
 
 public class AstExprSizeofType extends AstExpr
 {
-	public AstType type;
+	public AstType inspectedType;
 
-	public AstExprSizeofType(AstType type)
+	public AstExprSizeofType(AstType inspectedType)
 	{
-		this.type = type;
+		this.inspectedType = inspectedType;
 	}
 }

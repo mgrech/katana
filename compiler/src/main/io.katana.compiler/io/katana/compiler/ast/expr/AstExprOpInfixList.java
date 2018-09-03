@@ -19,6 +19,6 @@ import java.util.List;
 
 public class AstExprOpInfixList extends AstExpr
 {
-	public List<AstExpr> exprs = new ArrayList<>();
-	public List<String> ops = new ArrayList<>();
+	public List<AstExpr> nestedExprs = new ArrayList<>();
+	public List<String> infixOps = new ArrayList<>();
 }

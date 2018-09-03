@@ -149,7 +149,7 @@ public class FileParser implements IVisitor
 		return set;
 	}
 
-	private void visit(AstDeclDefinedFunction decl)
+	private void visit(AstDeclFunctionDef decl)
 	{
 		requireModule();
 		var set = findOrCreateOverloadSet(decl.name);
