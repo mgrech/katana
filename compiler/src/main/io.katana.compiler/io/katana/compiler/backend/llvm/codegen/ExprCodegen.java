@@ -33,9 +33,11 @@ import io.katana.compiler.sema.decl.SemaDeclExternFunction;
 import io.katana.compiler.sema.expr.*;
 import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.sema.type.SemaTypeBuiltin;
+import io.katana.compiler.utils.Fraction;
 import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -184,14 +186,195 @@ public class ExprCodegen implements IVisitor
 		return left;
 	}
 
+	private static String prefixForType(SemaType type, boolean distinguishSignedness)
+	{
+		if(Types.isFloatingPoint(type))
+			return "f";
+
+		if(distinguishSignedness)
+			return Types.isSigned(type) ? "s" : "u";
+
+		return "";
+	}
+
+	private IrValue generateBinary(String name, List<SemaExpr> args, boolean distinguishSigned)
+	{
+		var type = args.get(0).type();
+		var prefix = prefixForType(type, distinguishSigned);
+
+		var argsIr = args.stream()
+		                 .map(this::generate)
+		                 .collect(Collectors.toList());
+
+		var typeIr = generate(args.get(0).type());
+		return builder.binary(prefix + name, typeIr, argsIr.get(0), argsIr.get(1));
+	}
+
+	private IrValue generateCompare(String comparison, List<SemaExpr> args)
+	{
+		var type = args.get(0).type();
+
+		var instrPrefix = Types.isFloatingPoint(type) ? "f" : "i";
+		var cmpPrefix = Types.isFloatingPoint(type)
+		                ? "o"
+		                : "eq".equals(comparison) || "ne".equals(comparison)
+		                  ? ""
+		                  : Types.isSigned(type)
+		                    ? "s"
+		                    : "u";
+		var instr = String.format("%scmp %s%s", instrPrefix, cmpPrefix, comparison);
+
+		var left = generate(args.get(0));
+		var right = generate(args.get(1));
+		return builder.binary(instr, generate(type), left, right);
+	}
+
+	private IrValue generateRotate(String which, List<SemaExpr> argExprs)
+	{
+		var leftExpr = argExprs.get(0);
+		var leftIr = generate(leftExpr);
+		var rightExpr = argExprs.get(1);
+		var rightIr = generate(rightExpr);
+
+		var typeIr = generate(leftExpr.type());
+		var intrinsicName = IrValues.ofSymbol(String.format("llvm.%s.%s", which, typeIr));
+		var argTypesIr = List.of(typeIr, typeIr, typeIr);
+		var argsIr = List.of(leftIr, leftIr, rightIr);
+
+		return builder.call(typeIr, intrinsicName, argTypesIr, argsIr, Inlining.AUTO).get();
+	}
+
+	private IrValue generateIntrinsicCall(SemaType returnType, String name, List<SemaExpr> argExprs)
+	{
+		var returnTypeIr = generate(returnType);
+		var nameIr = IrValues.ofSymbol(name);
+
+		var argTypesIr = argExprs.stream()
+		                         .map(SemaExpr::type)
+		                         .map(this::generate)
+		                         .collect(Collectors.toList());
+
+		var argsIr = argExprs.stream()
+		                     .map(this::generate)
+		                     .collect(Collectors.toList());
+
+		return builder.call(returnTypeIr, nameIr, argTypesIr, argsIr, Inlining.AUTO).unwrap();
+	}
+
 	public IrValue visit(SemaExprBuiltinCall builtinCall)
 	{
-		var args = builtinCall.argExprs.stream()
-		                               .map(this::generate)
-		                               .collect(Collectors.toList());
+		switch(builtinCall.builtin)
+		{
+		case ADD: return generateBinary("add", builtinCall.argExprs, false);
+		case SUB: return generateBinary("sub", builtinCall.argExprs, false);
+		case MUL: return generateBinary("mul", builtinCall.argExprs, false);
+		case DIV: return generateBinary("div", builtinCall.argExprs, true);
+		case REM: return generateBinary("rem", builtinCall.argExprs, true);
 
-		var type = generate(builtinCall.argExprs.get(0).type());
-		return builder.binary(builtinCall.name, type, args.get(0), args.get(1));
+		case DIV_POW2:
+			{
+				var type = builtinCall.returnType;
+				var instr = Types.isSigned(type) ? "ashr" : "lshr";
+				return generateBinary(instr, builtinCall.argExprs, false);
+			}
+
+		case NEG:
+			{
+				var type = ((SemaTypeBuiltin)builtinCall.returnType).which;
+				var zero = type.kind == BuiltinType.Kind.INT
+				           ? new SemaExprLitInt(BigInteger.ZERO, type)
+				           : new SemaExprLitFloat(Fraction.of(0, 1), type);
+
+				// llvm does not have an instruction for negation, use 0-x instead
+				var argExprs = new ArrayList<>(builtinCall.argExprs);
+				argExprs.add(0, zero);
+				return generateBinary("sub", argExprs, false);
+			}
+
+		case CMP_EQ:  return generateCompare("eq", builtinCall.argExprs);
+		case CMP_NEQ: return generateCompare("ne", builtinCall.argExprs);
+		case CMP_LT:  return generateCompare("lt", builtinCall.argExprs);
+		case CMP_LTE: return generateCompare("le", builtinCall.argExprs);
+		case CMP_GT:  return generateCompare("gt", builtinCall.argExprs);
+		case CMP_GTE: return generateCompare("ge", builtinCall.argExprs);
+
+		case AND: return generateBinary("and",  builtinCall.argExprs, false);
+		case OR:  return generateBinary("or",   builtinCall.argExprs, false);
+		case XOR: return generateBinary("xor",  builtinCall.argExprs, false);
+		case SHL: return generateBinary("shl",  builtinCall.argExprs, false);
+		case SHR: return generateBinary("lshr", builtinCall.argExprs, false);
+
+		case ROL: return generateRotate("fshl", builtinCall.argExprs);
+		case ROR: return generateRotate("fshr", builtinCall.argExprs);
+
+		case NOT:
+			{
+				var type = ((SemaTypeBuiltin)builtinCall.returnType).which;
+				var neg1 = new SemaExprLitInt(BigInteger.valueOf(-1), type);
+
+				// llvm does not have an instruction for bitwise not, use x^-1 instead
+				var argExprs = new ArrayList<>(builtinCall.argExprs);
+				argExprs.add(neg1);
+				return generateBinary("xor", argExprs, false);
+			}
+
+		case CLZ:
+			{
+				var name = "llvm.ctlz." + generate(builtinCall.returnType);
+				var argExprs = new ArrayList<>(builtinCall.argExprs);
+				argExprs.add(SemaExprLitBool.FALSE); // undef when zero: false
+				return generateIntrinsicCall(builtinCall.returnType, name, argExprs);
+			}
+
+		case CTZ:
+			{
+
+				var name = "llvm.cttz." + generate(builtinCall.returnType);
+				var argExprs = new ArrayList<>(builtinCall.argExprs);
+				argExprs.add(SemaExprLitBool.FALSE); // undef when zero: false
+				return generateIntrinsicCall(builtinCall.returnType, name, argExprs);
+			}
+
+		case POPCNT:
+			{
+				var name = "llvm.ctpop." + generate(builtinCall.returnType);
+				return generateIntrinsicCall(builtinCall.returnType, name, builtinCall.argExprs);
+			}
+
+		case BSWAP:
+			{
+				var name = "llvm.bswap." + generate(builtinCall.returnType);
+				return generateIntrinsicCall(builtinCall.returnType, name, builtinCall.argExprs);
+			}
+
+		case MEMCPY:
+			{
+				var name = "llvm.memcpy.p0i8.p0i8." + generate(SemaTypeBuiltin.INT);
+				var argExprs = new ArrayList<>(builtinCall.argExprs);
+				argExprs.add(SemaExprLitBool.FALSE); // volatile: false
+				return generateIntrinsicCall(builtinCall.returnType, name, argExprs);
+			}
+
+		case MEMMOVE:
+			{
+				var name = "llvm.memmove.p0i8.p0i8." + generate(SemaTypeBuiltin.INT);
+				var argExprs = new ArrayList<>(builtinCall.argExprs);
+				argExprs.add(SemaExprLitBool.FALSE); // volatile: false
+				return generateIntrinsicCall(builtinCall.returnType, name, argExprs);
+			}
+
+		case MEMSET:
+			{
+				var name = "llvm.memset.p0i8." + generate(SemaTypeBuiltin.INT);
+				var argExprs = new ArrayList<>(builtinCall.argExprs);
+				argExprs.add(SemaExprLitBool.FALSE); // volatile: false
+				return generateIntrinsicCall(builtinCall.returnType, name, argExprs);
+			}
+
+		default: break;
+		}
+
+		throw new AssertionError("unreachable");
 	}
 
 	private IrInstrConversion.Kind generateCastKind(SemaExprCast.Kind kind, SemaType targetType)

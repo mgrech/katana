@@ -178,7 +178,7 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr visit(AstExprBuiltinCall builtinCall, Maybe<SemaType> deduce)
 	{
-		var maybeFunc = context.findBuiltin(builtinCall.name);
+		var maybeFunc = Builtins.tryFind(builtinCall.name);
 
 		if(maybeFunc.isNone())
 			throw new CompileException(String.format("builtin '%s' not found", builtinCall.name));
@@ -203,7 +203,16 @@ public class ExprValidator implements IVisitor
 		}
 
 		var builtin = maybeFunc.unwrap();
-		return builtin.validateCall(args);
+
+		var argTypes = args.stream()
+		                   .map(SemaExpr::type)
+		                   .collect(Collectors.toList());
+		var returnType = builtin.validateCall(argTypes);
+
+		if(returnType.isNone())
+			throw new CompileException(String.format("invalid arguments to builtin '%s'", builtin.which.sourceName));
+
+		return new SemaExprBuiltinCall(builtin.which, args, returnType.unwrap());
 	}
 
 	private SemaExpr visit(AstExprConst const_, Maybe<SemaType> deduce)

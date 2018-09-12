@@ -50,4 +50,12 @@ public enum BuiltinType
 	{
 		this.kind = kind;
 	}
+
+	public static final BuiltinType[] INTEGER_TYPES =
+	{
+		INT, INT8, INT16, INT32, INT64,
+		UINT, UINT8, UINT16, UINT32, UINT64,
+	};
+
+	public static final BuiltinType[] FLOAT_TYPES = {FLOAT32, FLOAT64};
 }

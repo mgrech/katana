@@ -14,15 +14,13 @@
 
 package io.katana.compiler.backend;
 
-import io.katana.compiler.BuiltinFunc;
 import io.katana.compiler.platform.TargetTriple;
-import io.katana.compiler.utils.Maybe;
 
-public abstract class PlatformContext
+public class PlatformContext
 {
 	private final TargetTriple triple;
 
-	protected PlatformContext(TargetTriple triple)
+	public PlatformContext(TargetTriple triple)
 	{
 		this.triple = triple;
 	}
@@ -31,6 +29,4 @@ public abstract class PlatformContext
 	{
 		return triple;
 	}
-
-	public abstract Maybe<BuiltinFunc> findBuiltin(String name);
 }

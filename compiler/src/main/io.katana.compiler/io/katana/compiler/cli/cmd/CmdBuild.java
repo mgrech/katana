@@ -17,7 +17,7 @@ package io.katana.compiler.cli.cmd;
 import com.github.rvesse.airline.annotations.Arguments;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
-import io.katana.compiler.backend.llvm.PlatformContextLlvm;
+import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.diag.DiagnosticsManager;
 import io.katana.compiler.platform.TargetTriple;
@@ -67,7 +67,7 @@ public class CmdBuild implements Runnable
 			var buildRoot = buildDir != null ? Paths.get(buildDir).toAbsolutePath().normalize()
 				: projectDir == null ? projectRoot.resolve("build") : Paths.get("").toRealPath();
 
-			var context = new PlatformContextLlvm(TargetTriple.NATIVE);
+			var context = new PlatformContext(TargetTriple.NATIVE);
 			var diag = new DiagnosticsManager(diagnosticTraces);
 
 			var buildProfiles = profiles == null ? new ArrayList<String>() : profiles;

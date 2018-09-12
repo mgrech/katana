@@ -22,6 +22,7 @@ import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.backend.llvm.FileCodegenContext;
 import io.katana.compiler.backend.llvm.ir.IrModuleBuilder;
 import io.katana.compiler.backend.llvm.ir.decl.*;
+import io.katana.compiler.backend.llvm.ir.type.IrType;
 import io.katana.compiler.backend.llvm.ir.type.IrTypes;
 import io.katana.compiler.backend.llvm.ir.value.IrValues;
 import io.katana.compiler.diag.CompileException;
@@ -32,15 +33,49 @@ import io.katana.compiler.sema.SemaProgram;
 import io.katana.compiler.sema.decl.SemaDecl;
 import io.katana.compiler.sema.decl.SemaDeclFunction;
 import io.katana.compiler.sema.decl.SemaDeclOverloadSet;
+import io.katana.compiler.sema.type.SemaTypeBuiltin;
 import io.katana.compiler.utils.FileUtils;
 import io.katana.compiler.utils.Maybe;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 public class ProgramCodegen
 {
+	private static void declareIntrinsic(IrModuleBuilder builder, IrType returnType, String name, IrType... parameterTypes)
+	{
+		var parameters = Arrays.stream(parameterTypes)
+		                       .map(IrFunctionParameter::new)
+		                       .collect(Collectors.toList());
+
+		var signature = new IrFunctionSignature(returnType, name, parameters);
+		builder.declareFunction(signature);
+	}
+
+	private static void generateIntrinsicDecls(IrModuleBuilder builder, PlatformContext platform)
+	{
+		for(var type : new IrType[]{IrTypes.I8, IrTypes.I16, IrTypes.I32, IrTypes.I64})
+		{
+			declareIntrinsic(builder, type, "llvm.fshl."  + type, type, type, type);
+			declareIntrinsic(builder, type, "llvm.fshr."  + type, type, type, type);
+			declareIntrinsic(builder, type, "llvm.ctpop." + type, type);
+			declareIntrinsic(builder, type, "llvm.ctlz."  + type, type, IrTypes.I1);
+			declareIntrinsic(builder, type, "llvm.cttz."  + type, type, IrTypes.I1);
+		}
+
+		for(var type : new IrType[]{IrTypes.I16, IrTypes.I32, IrTypes.I64})
+			declareIntrinsic(builder, type, "llvm.bswap." + type, type);
+
+		var byteptr = IrTypes.ofPointer(IrTypes.I8);
+		var nint = TypeCodegen.generate(SemaTypeBuiltin.INT, platform);
+		declareIntrinsic(builder, IrTypes.VOID, "llvm.memcpy.p0i8.p0i8."  + nint, byteptr, byteptr, nint, IrTypes.I1);
+		declareIntrinsic(builder, IrTypes.VOID, "llvm.memmove.p0i8.p0i8." + nint, byteptr, byteptr, nint, IrTypes.I1);
+		declareIntrinsic(builder, IrTypes.VOID, "llvm.memset.p0i8."       + nint, byteptr, IrTypes.I8, nint, IrTypes.I1);
+	}
+
 	private static void generateDecls(DeclCodegen codegen, SemaModule module)
 	{
 		for(var child : module.children().values())
@@ -114,6 +149,7 @@ public class ProgramCodegen
 		var context = new FileCodegenContext(build, platform, stringPool);
 
 		builder.declareTargetTriple(context.platform().target());
+		generateIntrinsicDecls(builder, platform);
 		generateDecls(new DeclCodegen(context, builder), program.rootModule);
 		stringPool.generate(builder);
 

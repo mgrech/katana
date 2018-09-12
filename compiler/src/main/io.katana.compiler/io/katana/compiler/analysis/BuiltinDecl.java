@@ -12,21 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler;
+package io.katana.compiler.analysis;
 
-import io.katana.compiler.sema.expr.SemaExpr;
-import io.katana.compiler.sema.expr.SemaExprBuiltinCall;
+import io.katana.compiler.Builtin;
+import io.katana.compiler.sema.type.SemaType;
+import io.katana.compiler.utils.Maybe;
 
 import java.util.List;
 
-public abstract class BuiltinFunc
+public abstract class BuiltinDecl
 {
-	public final String name;
+	public final Builtin which;
 
-	protected BuiltinFunc(String name)
+	protected BuiltinDecl(Builtin which)
 	{
-		this.name = name;
+		this.which = which;
 	}
 
-	public abstract SemaExprBuiltinCall validateCall(List<SemaExpr> args);
+	public abstract Maybe<SemaType> validateCall(List<SemaType> argTypes);
 }

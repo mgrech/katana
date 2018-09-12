@@ -14,19 +14,20 @@
 
 package io.katana.compiler.sema.expr;
 
+import io.katana.compiler.Builtin;
 import io.katana.compiler.sema.type.SemaType;
 
 import java.util.List;
 
 public class SemaExprBuiltinCall extends SimpleRValueExpr
 {
-	public String name;
+	public Builtin builtin;
 	public List<SemaExpr> argExprs;
 	public SemaType returnType;
 
-	public SemaExprBuiltinCall(String name, List<SemaExpr> argExprs, SemaType returnType)
+	public SemaExprBuiltinCall(Builtin builtin, List<SemaExpr> argExprs, SemaType returnType)
 	{
-		this.name = name;
+		this.builtin = builtin;
 		this.argExprs = argExprs;
 		this.returnType = returnType;
 	}

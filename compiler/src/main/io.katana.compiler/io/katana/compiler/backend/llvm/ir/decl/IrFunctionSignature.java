@@ -16,6 +16,7 @@ package io.katana.compiler.backend.llvm.ir.decl;
 
 import io.katana.compiler.backend.llvm.ir.type.IrType;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,18 +38,23 @@ public class IrFunctionSignature
 		this.parameters = parameters;
 	}
 
+	public IrFunctionSignature(IrType returnType, String name,
+	                           List<IrFunctionParameter> parameters)
+	{
+		this(Linkage.NONE, DllStorageClass.NONE, returnType, name, parameters);
+	}
+
 	private String attributesToString()
 	{
-		var builder = new StringBuilder();
-		builder.append(linkage.toString().toLowerCase());
+		var attributes = new ArrayList<String>();
+
+		if(linkage != Linkage.NONE)
+			attributes.add(linkage.toString().toLowerCase());
 
 		if(dllStorageClass != DllStorageClass.NONE)
-		{
-			builder.append(' ');
-			builder.append(dllStorageClass.toString().toLowerCase());
-		}
+			attributes.add(dllStorageClass.toString().toLowerCase());
 
-		return builder.toString();
+		return attributes.isEmpty() ? "" : String.join(" ", attributes) + " ";
 	}
 
 	@Override
@@ -58,6 +64,6 @@ public class IrFunctionSignature
 		                       .map(IrFunctionParameter::toString)
 		                       .collect(Collectors.joining(", "));
 
-		return String.format("%s %s @%s(%s)", attributesToString(), returnType, name, params);
+		return String.format("%s%s @%s(%s)", attributesToString(), returnType, name, params);
 	}
 }

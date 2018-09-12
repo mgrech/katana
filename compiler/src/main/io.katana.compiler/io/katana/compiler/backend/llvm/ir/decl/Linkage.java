@@ -16,6 +16,7 @@ package io.katana.compiler.backend.llvm.ir.decl;
 
 public enum Linkage
 {
+	NONE,
 	EXTERNAL,
 	PRIVATE,
 }

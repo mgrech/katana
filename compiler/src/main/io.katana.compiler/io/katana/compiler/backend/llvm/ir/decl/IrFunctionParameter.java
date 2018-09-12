@@ -16,6 +16,8 @@ package io.katana.compiler.backend.llvm.ir.decl;
 
 import io.katana.compiler.backend.llvm.ir.type.IrType;
 
+import java.util.ArrayList;
+
 public class IrFunctionParameter
 {
 	public final IrType type;
@@ -29,14 +31,24 @@ public class IrFunctionParameter
 		this.nonnull = nonnull;
 	}
 
+	public IrFunctionParameter(IrType type)
+	{
+		this(type, null, false);
+	}
+
 	@Override
 	public String toString()
 	{
-		var attributes = new StringBuilder();
+		var attributes = new ArrayList<String>();
 
 		if(nonnull)
-			attributes.append(" nonnull");
+			attributes.add("nonnull");
 
-		return String.format("%s%s %%%s", type, attributes, name);
+		var attributesString = attributes.isEmpty() ? "" : " " + String.join(" ", attributes);
+
+		if(name == null)
+			return String.format("%s%s", type, attributesString);
+
+		return String.format("%s%s %%%s", type, attributesString, name);
 	}
 }
