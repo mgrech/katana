@@ -31,7 +31,10 @@ import io.katana.compiler.sema.type.*;
 import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -49,20 +52,35 @@ public class ExprValidator implements IVisitor
 		this.validateDecl = validateDecl;
 	}
 
-	public static SemaExpr validate(AstExpr expr, SemaScope scope, PlatformContext context, Consumer<SemaDecl> validateDecl, Maybe<SemaType> deduce)
+	public static SemaExpr validate(AstExpr expr, SemaScope scope, PlatformContext context, Consumer<SemaDecl> validateDecl, Maybe<SemaType> expectedType)
 	{
 		var validator = new ExprValidator(scope, context, validateDecl);
-		var result = (SemaExpr)expr.accept(validator, deduce);
-
-		if(deduce.isNone())
-			return result;
-
-		return ImplicitConversions.perform(result, deduce.unwrap());
+		return validator.validate(expr, expectedType.unwrap());
 	}
 
-	private SemaExpr visit(AstExprProxy proxy, Maybe<SemaType> deduce)
+	private SemaExpr validate(AstExpr expr)
 	{
-		return (SemaExpr)proxy.nestedExpr.accept(this, deduce);
+		return validate(expr, null);
+	}
+
+	private SemaExpr validate(AstExpr expr, SemaType expectedType)
+	{
+		var result = (SemaExpr)expr.accept(this, expectedType);
+
+		if(expectedType == null)
+			return result;
+
+		return ImplicitConversions.perform(result, expectedType);
+	}
+
+	private SemaType validate(AstType type)
+	{
+		return TypeValidator.validate(type, scope, context, validateDecl);
+	}
+
+	private SemaExpr visit(AstExprProxy proxy, SemaType expectedType)
+	{
+		return validate(proxy.nestedExpr, expectedType);
 	}
 
 	private void checkArguments(List<SemaType> params, List<SemaExpr> args)
@@ -94,9 +112,9 @@ public class ExprValidator implements IVisitor
 		}
 	}
 
-	private SemaExpr visit(AstExprAddressof addressof, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprAddressof addressof, SemaType expectedType)
 	{
-		var expr = validate(addressof.pointeeExpr, scope, context, validateDecl, Maybe.none());
+		var expr = validate(addressof.pointeeExpr);
 
 		if(expr instanceof SemaExprNamedOverloadSet)
 		{
@@ -114,20 +132,20 @@ public class ExprValidator implements IVisitor
 		return new SemaExprAddressof(expr);
 	}
 
-	private SemaExpr visit(AstExprAlignofExpr alignof, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprAlignofExpr alignof, SemaType expectedType)
 	{
-		return new SemaExprAlignofExpr(validate(alignof.nestedExpr, scope, context, validateDecl, Maybe.none()));
+		return new SemaExprAlignofExpr(validate(alignof.nestedExpr));
 	}
 
-	private SemaExpr visit(AstExprAlignofType alignof, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprAlignofType alignof, SemaType expectedType)
 	{
-		return new SemaExprAlignofType(TypeValidator.validate(alignof.inspectedType, scope, context, validateDecl));
+		return new SemaExprAlignofType(validate(alignof.inspectedType));
 	}
 
-	private SemaExpr visit(AstExprIndexAccess indexAccess, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprIndexAccess indexAccess, SemaType expectedType)
 	{
-		var value = validate(indexAccess.indexeeExpr, scope, context, validateDecl, Maybe.none());
-		var index = validate(indexAccess.indexExpr, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.INT));
+		var value = validate(indexAccess.indexeeExpr);
+		var index = validate(indexAccess.indexExpr, SemaTypeBuiltin.INT);
 		var indexType = index.type();
 
 		value = autoDeref(value);
@@ -147,14 +165,14 @@ public class ExprValidator implements IVisitor
 		return new SemaExprArrayIndexAccess(value, index);
 	}
 
-	private SemaExpr visit(AstExprAssign assign, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprAssign assign, SemaType expectedType)
 	{
-		var left = validate(assign.leftExpr, scope, context, validateDecl, Maybe.none());
+		var left = validate(assign.leftExpr);
 
 		var leftType = left.type();
 		var leftTypeNoConst = Types.removeConst(leftType);
 
-		var right = validate(assign.rightExpr, scope, context, validateDecl, Maybe.some(leftTypeNoConst));
+		var right = validate(assign.rightExpr, leftTypeNoConst);
 
 		if(Types.isConst(leftType) || left.kind() != ExprKind.LVALUE)
 			throw new CompileException("non-const lvalue required on left side of assignment");
@@ -176,7 +194,7 @@ public class ExprValidator implements IVisitor
 		return new SemaExprAssign(left, right);
 	}
 
-	private SemaExpr visit(AstExprBuiltinCall builtinCall, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprBuiltinCall builtinCall, SemaType expectedType)
 	{
 		var maybeFunc = Builtins.tryFind(builtinCall.name);
 
@@ -187,7 +205,7 @@ public class ExprValidator implements IVisitor
 
 		for(var i = 0; i != builtinCall.args.size(); ++i)
 		{
-			var semaExpr = validate(builtinCall.args.get(i), scope, context, validateDecl, Maybe.none());
+			var semaExpr = validate(builtinCall.args.get(i));
 			var type = semaExpr.type();
 
 			if(Types.isVoid(type))
@@ -215,9 +233,9 @@ public class ExprValidator implements IVisitor
 		return new SemaExprBuiltinCall(builtin.which, args, returnType.unwrap());
 	}
 
-	private SemaExpr visit(AstExprConst const_, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprConst const_, SemaType expectedType)
 	{
-		var expr = validate(const_.nestedExpr, scope, context, validateDecl, deduce);
+		var expr = validate(const_.nestedExpr, expectedType);
 
 		if(Types.isFunction(expr.type()))
 			throw new CompileException("const symbol applied to value of function type");
@@ -225,9 +243,10 @@ public class ExprValidator implements IVisitor
 		return new SemaExprConst(expr);
 	}
 
-	private SemaExpr visit(AstExprDeref deref, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprDeref deref, SemaType expectedType)
 	{
-		var expr = validate(deref.pointerExpr, scope, context, validateDecl, deduce.map(Types::addNonNullablePointer));
+		var expectedPointerType = expectedType == null ? null : Types.addNonNullablePointer(expectedType);
+		var expr = validate(deref.pointerExpr, expectedPointerType);
 
 		if(!Types.isPointer(expr.type()))
 		{
@@ -241,176 +260,9 @@ public class ExprValidator implements IVisitor
 		return new SemaExprDeref(expr);
 	}
 
-	private boolean match(SemaDeclFunction function, List<AstExpr> args, List<Maybe<SemaExpr>> result)
+	private SemaExpr visit(AstExprFunctionCall call, SemaType expectedType)
 	{
-		var failed = false;
-
-		for(var i = 0; i != function.params.size(); ++i)
-		{
-			var paramType = function.params.get(i).type;
-			var paramTypeNoConst = Types.removeConst(paramType);
-
-			try
-			{
-				var arg = ExprValidator.validate(args.get(i), scope, context, validateDecl, Maybe.some(paramTypeNoConst));
-				var argTypeNoConst = Types.removeConst(arg.type());
-
-				if(!Types.equal(paramTypeNoConst, argTypeNoConst))
-					failed = true;
-
-				result.add(Maybe.some(arg));
-			}
-			catch(CompileException e)
-			{
-				failed = true;
-				result.add(Maybe.none());
-			}
-		}
-
-		return !failed;
-	}
-
-	private static void appendSignature(StringBuilder builder, SemaDeclFunction overload)
-	{
-		builder.append(overload.name());
-		builder.append('(');
-
-		if(!overload.params.isEmpty())
-		{
-			builder.append(TypeString.of(overload.params.get(0).type));
-
-			for(var i = 1; i != overload.params.size(); ++i)
-			{
-				builder.append(", ");
-				builder.append(TypeString.of(overload.params.get(i).type));
-			}
-		}
-
-		builder.append(')');
-	}
-
-	private static void appendArg(StringBuilder builder, Maybe<SemaExpr> arg)
-	{
-		if(arg.isSome())
-			builder.append(TypeString.of(arg.unwrap().type()));
-		else
-			builder.append("<deduction-failed>");
-	}
-
-	private static void appendArgs(StringBuilder builder, List<Maybe<SemaExpr>> args)
-	{
-		builder.append('(');
-
-		if(!args.isEmpty())
-		{
-			appendArg(builder, args.get(0));
-
-			for(var i = 1; i != args.size(); ++i)
-			{
-				builder.append(", ");
-				appendArg(builder, args.get(i));
-			}
-		}
-
-		builder.append(')');
-	}
-
-	private static void appendDeducedOverloads(StringBuilder builder, IdentityHashMap<SemaDeclFunction, List<Maybe<SemaExpr>>> overloads)
-	{
-		for(var entry : overloads.entrySet())
-		{
-			builder.append("\t\t");
-			appendSignature(builder, entry.getKey());
-			builder.append(" with arguments deduced to ");
-			appendArgs(builder, entry.getValue());
-			builder.append('\n');
-		}
-	}
-
-	private static void appendOverloadInfo(StringBuilder builder, IdentityHashMap<SemaDeclFunction, List<Maybe<SemaExpr>>> failed, Set<SemaDeclFunction> invalidNumArgs)
-	{
-		if(!failed.isEmpty())
-		{
-			builder.append("\tmatching failed for the following overloads:\n");
-			appendDeducedOverloads(builder, failed);
-		}
-
-		if(!invalidNumArgs.isEmpty())
-		{
-			builder.append("\tthe following overloads have a non-matching number of parameters:\n");
-
-			for(var overload : invalidNumArgs)
-			{
-				builder.append("\t\t");
-				appendSignature(builder, overload);
-				builder.append('\n');
-			}
-		}
-	}
-
-	private SemaExpr resolveOverloadedCall(List<SemaDeclFunction> set, String name, List<AstExpr> args, Inlining inline)
-	{
-		var candidates = new IdentityHashMap<SemaDeclFunction, List<Maybe<SemaExpr>>>();
-		var failed = new IdentityHashMap<SemaDeclFunction, List<Maybe<SemaExpr>>>();
-		var other = Collections.newSetFromMap(new IdentityHashMap<SemaDeclFunction, Boolean>());
-
-		for(var overload : set)
-		{
-			if(overload.params.size() != args.size())
-			{
-				other.add(overload);
-				continue;
-			}
-
-			var semaArgs = new ArrayList<Maybe<SemaExpr>>();
-
-			if(match(overload, args, semaArgs))
-				candidates.put(overload, semaArgs);
-			else
-				failed.put(overload, semaArgs);
-		}
-
-		if(candidates.isEmpty())
-		{
-			var builder = new StringBuilder();
-			builder.append(String.format("no matching function for call to '%s' out of %s overloads:\n", name, set.size()));
-			appendOverloadInfo(builder, failed, other);
-			throw new CompileException(builder.toString());
-		}
-
-		if(candidates.size() > 1)
-		{
-			var builder = new StringBuilder();
-			builder.append(String.format("ambiguous call to function '%s', %s candidates:\n", name, candidates.size()));
-
-			builder.append("\tmatching succeeded for the following overloads:\n");
-			appendDeducedOverloads(builder, candidates);
-
-			appendOverloadInfo(builder, failed, other);
-
-			throw new CompileException(builder.toString());
-		}
-
-		var first = candidates.entrySet().iterator().next();
-
-		var semaArgs = new ArrayList<SemaExpr>();
-
-		for(var maybeArg : first.getValue())
-		{
-			var arg = maybeArg.unwrap();
-
-			if(arg.kind() == ExprKind.LVALUE)
-				arg = new SemaExprImplicitConversionLValueToRValue(arg);
-
-			semaArgs.add(arg);
-		}
-
-		return new SemaExprDirectFunctionCall(first.getKey(), semaArgs, inline);
-	}
-
-	private SemaExpr visit(AstExprFunctionCall call, Maybe<SemaType> deduce)
-	{
-		var expr = validate(call.functionExpr, scope, context, validateDecl, Maybe.none());
+		var expr = validate(call.functionExpr);
 
 		if(expr instanceof SemaExprNamedImportedOverloadSet)
 		{
@@ -422,13 +274,13 @@ public class ExprValidator implements IVisitor
 				if(function.exportKind != ExportKind.HIDDEN)
 					candidates.add(function);
 
-			return resolveOverloadedCall(candidates, set.name(), call.argExprs, call.inline);
+			return Overloading.resolve(candidates, set.name(), call.argExprs, call.inline, this::validate);
 		}
 
 		if(expr instanceof SemaExprNamedOverloadSet)
 		{
 			var set = ((SemaExprNamedOverloadSet)expr).decl;
-			return resolveOverloadedCall(set.overloads, set.name(), call.argExprs, call.inline);
+			return Overloading.resolve(set.overloads, set.name(), call.argExprs, call.inline, this::validate);
 		}
 
 		expr = autoDeref(expr);
@@ -444,7 +296,7 @@ public class ExprValidator implements IVisitor
 			var arg = call.argExprs.get(i);
 			var type = ftype.paramTypes.get(i);
 
-			var semaArg = validate(call.argExprs.get(i), scope, context, validateDecl, Maybe.some(type));
+			var semaArg = validate(call.argExprs.get(i), type);
 
 			if(semaArg.kind() == ExprKind.LVALUE)
 				semaArg = new SemaExprImplicitConversionLValueToRValue(semaArg);
@@ -457,13 +309,13 @@ public class ExprValidator implements IVisitor
 		return new SemaExprIndirectFunctionCall(expr, args);
 	}
 
-	private SemaExpr visit(AstExprLitArray lit, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprLitArray lit, SemaType expectedType)
 	{
-		var maybeType = lit.elementType.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
+		var maybeType = lit.elementType.map(this::validate);
 
-		if(deduce.isSome() && deduce.unwrap() instanceof SemaTypeArray)
+		if(expectedType instanceof SemaTypeArray)
 		{
-			var array = (SemaTypeArray)deduce.unwrap();
+			var array = (SemaTypeArray)expectedType;
 
 			if(maybeType.isNone())
 				maybeType = Maybe.some(array.elementType);
@@ -479,7 +331,7 @@ public class ExprValidator implements IVisitor
 
 		for(var i = 0; i != lit.elementExprs.size(); ++i)
 		{
-			var semaExpr = validate(lit.elementExprs.get(i), scope, context, validateDecl, maybeType);
+			var semaExpr = validate(lit.elementExprs.get(i), type);
 			var elemTypeNoConst = Types.removeConst(semaExpr.type());
 
 			if(!Types.equal(elemTypeNoConst, typeNoConst))
@@ -494,7 +346,7 @@ public class ExprValidator implements IVisitor
 		return new SemaExprLitArray(maybeType.unwrap(), values);
 	}
 
-	private SemaExpr visit(AstExprLitBool lit, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprLitBool lit, SemaType expectedType)
 	{
 		return SemaExprLitBool.of(lit.value);
 	}
@@ -509,7 +361,7 @@ public class ExprValidator implements IVisitor
 		if(maybeType.isNone())
 			errorLiteralTypeDeduction();
 
-		var type = Types.removeConst(maybeType.unwrap());
+		var type = Types.removeConst(maybeType.get());
 
 		if(!Types.isBuiltin(type))
 			errorLiteralTypeDeduction();
@@ -530,12 +382,12 @@ public class ExprValidator implements IVisitor
 		return builtin.which;
 	}
 
-	private SemaExpr visit(AstExprLitFloat lit, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprLitFloat lit, SemaType expectedType)
 	{
 		var type = lit.type;
 
 		if(type.isNone())
-			type = Maybe.some(deduceLiteralType(deduce, true));
+			type = Maybe.some(deduceLiteralType(Maybe.some(expectedType), true));
 
 		if(lit.value == null)
 			return new SemaExprLitFloat(null, type.unwrap());
@@ -546,12 +398,12 @@ public class ExprValidator implements IVisitor
 		return new SemaExprLitFloat(lit.value, type.unwrap());
 	}
 
-	private SemaExpr visit(AstExprLitInt lit, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprLitInt lit, SemaType expectedType)
 	{
 		var type = lit.type;
 
 		if(type.isNone())
-			type = Maybe.some(deduceLiteralType(deduce, false));
+			type = Maybe.some(deduceLiteralType(Maybe.some(expectedType), false));
 
 		if(lit.value == null)
 			return new SemaExprLitInt(null, type.unwrap());
@@ -562,12 +414,12 @@ public class ExprValidator implements IVisitor
 		return new SemaExprLitInt(lit.value, type.unwrap());
 	}
 
-	private SemaExpr visit(AstExprLitNull lit, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprLitNull lit, SemaType expectedType)
 	{
 		return SemaExprLitNull.INSTANCE;
 	}
 
-	private SemaExpr visit(AstExprLitString lit, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprLitString lit, SemaType expectedType)
 	{
 		return new SemaExprLitString(lit.value);
 	}
@@ -617,9 +469,9 @@ public class ExprValidator implements IVisitor
 		return expr;
 	}
 
-	private SemaExpr visit(AstExprMemberAccess memberAccess, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprMemberAccess memberAccess, SemaType expectedType)
 	{
-		var expr = validate(memberAccess.accesseeExpr, scope, context, validateDecl, Maybe.none());
+		var expr = validate(memberAccess.accesseeExpr);
 
 		if(expr instanceof SemaExprNamedRenamedImport)
 		{
@@ -682,7 +534,7 @@ public class ExprValidator implements IVisitor
 		return new SemaExprFieldAccess(expr, field.unwrap(), Types.isConst(type));
 	}
 
-	private SemaExpr visit(AstExprNamedGlobal namedGlobal, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprNamedGlobal namedGlobal, SemaType expectedType)
 	{
 		var candidates = scope.find(namedGlobal.name);
 
@@ -700,7 +552,7 @@ public class ExprValidator implements IVisitor
 		return namedDeclExpr((SemaDecl)symbol, true);
 	}
 
-	private SemaExpr visit(AstExprNamedSymbol namedSymbol, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprNamedSymbol namedSymbol, SemaType expectedType)
 	{
 		var candidates = scope.find(namedSymbol.name);
 
@@ -729,8 +581,8 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr validateCast(AstType type, AstExpr expr, SemaExprCast.Kind kind)
 	{
-		var targetType = TypeValidator.validate(type, scope, context, validateDecl);
-		var semaExpr = validate(expr, scope, context, validateDecl, Maybe.none());
+		var targetType = validate(type);
+		var semaExpr = validate(expr);
 		var sourceType = semaExpr.type();
 
 		if(!CastValidator.isValidCast(sourceType, targetType, kind, context))
@@ -745,12 +597,12 @@ public class ExprValidator implements IVisitor
 		return new SemaExprCast(targetType, semaExpr, kind);
 	}
 
-	private SemaExpr visit(AstExprNarrowCast cast, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprNarrowCast cast, SemaType expectedType)
 	{
 		return validateCast(cast.targetType, cast.nestedExpr, SemaExprCast.Kind.NARROW_CAST);
 	}
 
-	private SemaExpr visit(AstExprOffsetof offsetof, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprOffsetof offsetof, SemaType expectedType)
 	{
 		var candidates = scope.find(offsetof.typeName);
 
@@ -773,7 +625,7 @@ public class ExprValidator implements IVisitor
 		return new SemaExprOffsetof(field.unwrap());
 	}
 
-	private SemaExpr handleOperatorCall(String op, Kind kind, List<AstExpr> args, Maybe<SemaType> deduce)
+	private SemaExpr handleOperatorCall(String op, Kind kind, List<AstExpr> args, SemaType expectedType)
 	{
 		var candidates = scope.find(Operator.implName(op, kind));
 
@@ -792,50 +644,50 @@ public class ExprValidator implements IVisitor
 		                             .filter(o -> o.exportKind != ExportKind.HIDDEN)
 		                             .collect(Collectors.toList());
 
-		return resolveOverloadedCall(overloads, set.name(), args, Inlining.AUTO);
+		return Overloading.resolve(overloads, set.name(), args, Inlining.AUTO, this::validate);
 	}
 
-	private SemaExpr visit(AstExprOpInfix op, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprOpInfix op, SemaType expectedType)
 	{
-		return handleOperatorCall(op.decl.operator.symbol, Kind.INFIX, Arrays.asList(op.left, op.right), deduce);
+		return handleOperatorCall(op.decl.operator.symbol, Kind.INFIX, Arrays.asList(op.left, op.right), expectedType);
 	}
 
-	private SemaExpr visit(AstExprOpPrefix op, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprOpPrefix op, SemaType expectedType)
 	{
-		return handleOperatorCall(op.decl.operator.symbol, Kind.PREFIX, Collections.singletonList(op.expr), deduce);
+		return handleOperatorCall(op.decl.operator.symbol, Kind.PREFIX, Collections.singletonList(op.expr), expectedType);
 	}
 
-	private SemaExpr visit(AstExprOpPostfix op, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprOpPostfix op, SemaType expectedType)
 	{
-		return handleOperatorCall(op.decl.operator.symbol, Kind.POSTFIX, Collections.singletonList(op.expr), deduce);
+		return handleOperatorCall(op.decl.operator.symbol, Kind.POSTFIX, Collections.singletonList(op.expr), expectedType);
 	}
 
-	private SemaExpr visit(AstExprParens parens, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprParens parens, SemaType expectedType)
 	{
-		return validate(parens.nestedExpr, scope, context, validateDecl, deduce);
+		return validate(parens.nestedExpr, expectedType);
 	}
 
-	private SemaExpr visit(AstExprPointerCast cast, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprPointerCast cast, SemaType expectedType)
 	{
 		return validateCast(cast.targetType, cast.nestedExpr, SemaExprCast.Kind.POINTER_CAST);
 	}
 
-	private SemaExpr visit(AstExprSignCast cast, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprSignCast cast, SemaType expectedType)
 	{
 		return validateCast(cast.targetType, cast.nestedExpr, SemaExprCast.Kind.SIGN_CAST);
 	}
 
-	private SemaExpr visit(AstExprSizeofExpr sizeof, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprSizeofExpr sizeof, SemaType expectedType)
 	{
-		return new SemaExprSizeofExpr(validate(sizeof.nestedExpr, scope, context, validateDecl, Maybe.none()));
+		return new SemaExprSizeofExpr(validate(sizeof.nestedExpr));
 	}
 
-	private SemaExpr visit(AstExprSizeofType sizeof, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprSizeofType sizeof, SemaType expectedType)
 	{
-		return new SemaExprSizeofType(TypeValidator.validate(sizeof.inspectedType, scope, context, validateDecl));
+		return new SemaExprSizeofType(validate(sizeof.inspectedType));
 	}
 
-	private SemaExpr visit(AstExprWidenCast cast, Maybe<SemaType> deduce)
+	private SemaExpr visit(AstExprWidenCast cast, SemaType expectedType)
 	{
 		return validateCast(cast.targetType, cast.nestedExpr, SemaExprCast.Kind.WIDEN_CAST);
 	}

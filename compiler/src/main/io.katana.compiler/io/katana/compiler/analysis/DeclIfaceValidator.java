@@ -15,14 +15,19 @@
 package io.katana.compiler.analysis;
 
 import io.katana.compiler.ast.decl.*;
+import io.katana.compiler.ast.expr.AstExpr;
+import io.katana.compiler.ast.type.AstType;
 import io.katana.compiler.ast.type.AstTypeBuiltin;
 import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.diag.TypeString;
 import io.katana.compiler.sema.decl.*;
+import io.katana.compiler.sema.expr.SemaExpr;
+import io.katana.compiler.sema.scope.SemaScope;
 import io.katana.compiler.sema.scope.SemaScopeFile;
 import io.katana.compiler.sema.scope.SemaScopeFunction;
 import io.katana.compiler.sema.scope.SemaScopeFunctionBody;
+import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
 
@@ -46,11 +51,21 @@ public class DeclIfaceValidator implements IVisitor
 		semaDecl.accept(validator, info.astDecl, info.scope);
 	}
 
+	private SemaExpr validate(AstExpr expr, SemaScope scope, SemaType expectedType)
+	{
+		return ExprValidator.validate(expr, scope, context, validateDecl, Maybe.wrap(expectedType));
+	}
+
+	private SemaType validate(AstType type, SemaScope scope)
+	{
+		return TypeValidator.validate(type, scope, context, validateDecl);
+	}
+
 	private void visit(SemaDeclStruct semaStruct, AstDeclStruct struct, SemaScopeFile scope)
 	{
 		for(var field : struct.fields)
 		{
-			var type = TypeValidator.validate(field.type, scope, context, validateDecl);
+			var type = validate(field.type, scope);
 
 			if(!semaStruct.defineField(field.name, type))
 				throw new CompileException(String.format("duplicate field '%s' in type '%s'", field.name, semaStruct.name()));
@@ -73,13 +88,13 @@ public class DeclIfaceValidator implements IVisitor
 
 		for(var param : function.params)
 		{
-			var type = TypeValidator.validate(param.type, semaFunction.scope, context, validateDecl);
+			var type = validate(param.type, semaFunction.scope);
 
 			if(!semaFunction.defineParam(param.name, type))
 				throw new CompileException(String.format("duplicate parameter name '%s' in function '%s'", param.name, function.name));
 		}
 
-		semaFunction.returnType = TypeValidator.validate(function.returnType.or(AstTypeBuiltin.VOID), semaFunction.scope, context, validateDecl);
+		semaFunction.returnType = validate(function.returnType.or(AstTypeBuiltin.VOID), semaFunction.scope);
 	}
 
 	private boolean sameSignatures(SemaDeclFunction a, SemaDeclFunction b)
@@ -126,7 +141,7 @@ public class DeclIfaceValidator implements IVisitor
 
 	private void visit(SemaDeclGlobal semaGlobal, AstDeclGlobal global, SemaScopeFile scope)
 	{
-		var maybeDeclaredType = global.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
+		var maybeDeclaredType = global.type.map(type -> validate(type, scope));
 		var maybeDeclaredTypeNoConst = maybeDeclaredType.map(Types::removeConst);
 
 		if(global.initializerExpr.isNone())
@@ -139,7 +154,7 @@ public class DeclIfaceValidator implements IVisitor
 			return;
 		}
 
-		var init = ExprValidator.validate(global.initializerExpr.unwrap(), scope, context, validateDecl, maybeDeclaredTypeNoConst);
+		var init = validate(global.initializerExpr.unwrap(), scope, maybeDeclaredTypeNoConst.unwrap());
 
 		if(Types.isVoid(init.type()))
 			throw new CompileException(String.format("initializer for global '%s' yields 'void'", global.name));
@@ -160,7 +175,7 @@ public class DeclIfaceValidator implements IVisitor
 
 	private void visit(SemaDeclTypeAlias semaAlias, AstDeclTypeAlias alias, SemaScopeFile scope)
 	{
-		semaAlias.aliasedType = TypeValidator.validate(alias.aliasedType, scope, context, validateDecl);
+		semaAlias.aliasedType = validate(alias.aliasedType, scope);
 	}
 
 	private void visit(SemaDeclOperator semaDecl, AstDeclOperator decl, SemaScopeFile scope)

@@ -17,6 +17,7 @@ package io.katana.compiler.analysis;
 import io.katana.compiler.BuiltinType;
 import io.katana.compiler.ast.expr.AstExpr;
 import io.katana.compiler.ast.stmt.*;
+import io.katana.compiler.ast.type.AstType;
 import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.diag.TypeString;
@@ -25,6 +26,7 @@ import io.katana.compiler.sema.decl.SemaDeclFunctionDef;
 import io.katana.compiler.sema.expr.*;
 import io.katana.compiler.sema.scope.SemaScopeFunction;
 import io.katana.compiler.sema.stmt.*;
+import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.sema.type.SemaTypeBuiltin;
 import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
@@ -52,6 +54,21 @@ public class StmtValidator implements IVisitor
 	public SemaStmt validate(AstStmt stmt)
 	{
 		return (SemaStmt)stmt.accept(this);
+	}
+
+	private SemaExpr validate(AstExpr expr)
+	{
+		return validate(expr, null);
+	}
+
+	private SemaExpr validate(AstExpr expr, SemaType expectedType)
+	{
+		return ExprValidator.validate(expr, scope, context, validateDecl, Maybe.wrap(expectedType));
+	}
+
+	private SemaType validate(AstType type)
+	{
+		return TypeValidator.validate(type, scope, context, validateDecl);
 	}
 
 	public void validateGotoTargets()
@@ -103,7 +120,7 @@ public class StmtValidator implements IVisitor
 
 	private SemaExpr validateCondition(AstExpr expr, ConditionKind kind)
 	{
-		var condition = ExprValidator.validate(expr, scope, context, validateDecl, Maybe.some(SemaTypeBuiltin.BOOL));
+		var condition = validate(expr, SemaTypeBuiltin.BOOL);
 
 		if(!Types.isBuiltin(condition.type(), BuiltinType.BOOL))
 		{
@@ -140,7 +157,7 @@ public class StmtValidator implements IVisitor
 
 	private SemaStmt visit(AstStmtReturn return_)
 	{
-		var value = return_.returnValueExpr.map(retval -> ExprValidator.validate(retval, scope, context, validateDecl, Maybe.some(function.returnType)));
+		var value = return_.returnValueExpr.map(retval -> validate(retval, function.returnType));
 		var retTypeNoConst = Types.removeConst(function.returnType);
 
 		if(value.isNone())
@@ -166,13 +183,12 @@ public class StmtValidator implements IVisitor
 
 	private SemaStmt visit(AstStmtExprStmt exprStmt)
 	{
-		var expr = ExprValidator.validate(exprStmt.nestedExpr, scope, context, validateDecl, Maybe.none());
-		return new SemaStmtExprStmt(expr);
+		return new SemaStmtExprStmt(validate(exprStmt.nestedExpr));
 	}
 
 	private SemaStmt visit(AstStmtVar var_)
 	{
-		var maybeDeclaredType = var_.type.map(type -> TypeValidator.validate(type, scope, context, validateDecl));
+		var maybeDeclaredType = var_.type.map(this::validate);
 		var maybeDeclaredTypeNoConst = maybeDeclaredType.map(Types::removeConst);
 
 		if(var_.initializerExpr.isNone())
@@ -186,7 +202,7 @@ public class StmtValidator implements IVisitor
 			return new SemaStmtNullStmt();
 		}
 
-		var init = ExprValidator.validate(var_.initializerExpr.unwrap(), scope, context, validateDecl, maybeDeclaredTypeNoConst);
+		var init = validate(var_.initializerExpr.unwrap(), maybeDeclaredTypeNoConst.unwrap());
 		var initTypeNoConst = Types.removeConst(init.type());
 		var varType = maybeDeclaredType.or(initTypeNoConst);
 		var varTypeNoConst = Types.removeConst(varType);

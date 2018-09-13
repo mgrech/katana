@@ -45,7 +45,12 @@ public class TypeValidator implements IVisitor
 	public static SemaType validate(AstType type, SemaScope scope, PlatformContext context, Consumer<SemaDecl> validateDecl)
 	{
 		var validator = new TypeValidator(scope, context, validateDecl);
-		return (SemaType)type.accept(validator);
+		return validator.validate(type);
+	}
+
+	private SemaType validate(AstType type)
+	{
+		return (SemaType)type.accept(this);
 	}
 
 	private SemaType visit(AstTypeBuiltin builtin)
@@ -60,7 +65,7 @@ public class TypeValidator implements IVisitor
 
 		for(var type : tuple.fieldTypes)
 		{
-			var semaType = validate(type, scope, context, validateDecl);
+			var semaType = validate(type);
 			types.add(semaType);
 			builder.appendField(semaType);
 		}
@@ -70,7 +75,7 @@ public class TypeValidator implements IVisitor
 
 	private SemaType visit(AstTypeSlice slice)
 	{
-		return Types.addSlice(validate(slice.elementType, scope, context, validateDecl));
+		return Types.addSlice(validate(slice.elementType));
 	}
 
 	private SemaType visit(AstTypeArray array)
@@ -78,7 +83,7 @@ public class TypeValidator implements IVisitor
 		if(array.length < 0)
 			throw new CompileException(String.format("negative array length: %s", array.length));
 
-		return Types.addArray(array.length, validate(array.elementType, scope, context, validateDecl));
+		return Types.addArray(array.length, validate(array.elementType));
 	}
 
 	private SemaType visit(AstTypeFunction functionType)
@@ -86,10 +91,10 @@ public class TypeValidator implements IVisitor
 		var params = new ArrayList<SemaType>();
 
 		for(var param : functionType.paramTypes)
-			params.add(validate(param, scope, context, validateDecl));
+			params.add(validate(param));
 
-		var ret = functionType.returnType.map(type -> validate(type, scope, context, validateDecl));
-		return new SemaTypeFunction(ret.or(SemaTypeBuiltin.VOID), params);
+		var ret = functionType.returnType.map(this::validate).or(SemaTypeBuiltin.VOID);
+		return new SemaTypeFunction(ret, params);
 	}
 
 	private SemaType visit(AstTypeUserDefined user)
@@ -118,7 +123,7 @@ public class TypeValidator implements IVisitor
 
 	private SemaType visit(AstTypeConst const_)
 	{
-		var type = validate(const_.nestedType, scope, context, validateDecl);
+		var type = validate(const_.nestedType);
 
 		if(type instanceof SemaTypeFunction)
 			throw new CompileException("forming const function type");
@@ -137,11 +142,11 @@ public class TypeValidator implements IVisitor
 
 	private SemaType visit(AstTypeNullablePointer pointer)
 	{
-		return Types.addNullablePointer(validate(pointer.pointeeType, scope, context, validateDecl));
+		return Types.addNullablePointer(validate(pointer.pointeeType));
 	}
 
 	private SemaType visit(AstTypeNonNullablePointer pointer)
 	{
-		return Types.addNonNullablePointer(validate(pointer.pointeeType, scope, context, validateDecl));
+		return Types.addNonNullablePointer(validate(pointer.pointeeType));
 	}
 }
