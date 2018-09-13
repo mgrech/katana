@@ -121,4 +121,9 @@ public class SourceFile
 		var line = lineEntry.getValue();
 		return new SourceLocation(this, line.number, offset - lineOffset, length, offset);
 	}
+
+	public String slice(int offset, int length)
+	{
+		return new String(codepoints, offset, length);
+	}
 }

@@ -130,13 +130,15 @@ public class ParseTools
 
 	public static <T> void unexpectedToken(ParseContext ctx, T expected)
 	{
-		ctx.error(ParserDiagnostics.UNEXPECTED_TOKEN_EXPECTED, ctx.token().value, expected);
+		var tokenString = ctx.file().slice(ctx.token().offset, ctx.token().length);
+		ctx.error(ParserDiagnostics.UNEXPECTED_TOKEN_EXPECTED, tokenString, expected);
 		throw new CompileException(ctx.diagnostics().summary());
 	}
 
 	public static void unexpectedToken(ParseContext ctx)
 	{
-		ctx.error(ParserDiagnostics.UNEXPECTED_TOKEN, ctx.token().value);
+		var tokenString = ctx.file().slice(ctx.token().offset, ctx.token().length);
+		ctx.error(ParserDiagnostics.UNEXPECTED_TOKEN, tokenString);
 		throw new CompileException(ctx.diagnostics().summary());
 	}
 }
