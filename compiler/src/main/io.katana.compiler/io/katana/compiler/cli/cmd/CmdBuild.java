@@ -21,6 +21,7 @@ import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.diag.DiagnosticsManager;
 import io.katana.compiler.platform.TargetTriple;
+import io.katana.compiler.project.BuildOptions;
 import io.katana.compiler.project.BuildTarget;
 import io.katana.compiler.project.ProjectBuilder;
 import io.katana.compiler.project.ProjectManager;
@@ -42,6 +43,9 @@ public class CmdBuild implements Runnable
 
 	@Option(name = {"-B", "--build-dir"}, description = "Build directory")
 	public String buildDir;
+
+	@Option(name = {"-Bm", "--print-build-metrics"}, description = "Print build metrics")
+	public boolean printBuildMetrics;
 
 	@Option(name = {"-Bp", "--build-profiles"}, description = "Build profiles")
 	public List<String> profiles;
@@ -90,7 +94,9 @@ public class CmdBuild implements Runnable
 			else
 				targets.addAll(project.targets.values());
 
-			ProjectBuilder.buildTargets(diag, projectRoot, buildRoot, targets, context);
+			var options = new BuildOptions();
+			options.printBuildMetrics = printBuildMetrics;
+			ProjectBuilder.buildTargets(diag, projectRoot, buildRoot, targets, context, options);
 		}
 		catch(CompileException ex)
 		{

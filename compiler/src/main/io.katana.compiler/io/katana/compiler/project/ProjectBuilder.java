@@ -284,7 +284,12 @@ public class ProjectBuilder
 		}
 	}
 
-	private static Maybe<Path> compileKatanaSources(DiagnosticsManager diag, BuildTarget build, PlatformContext context, Path buildDir) throws IOException
+	private static String formatAsSeconds(long nanos)
+	{
+		return String.format("%.3f s", nanos / 1000 / 1000 / 1000.f);
+	}
+
+	private static Maybe<Path> compileKatanaSources(DiagnosticsManager diag, BuildTarget build, PlatformContext context, Path buildDir, BuildOptions options) throws IOException
 	{
 		var katanaFiles = build.sourceFiles.get(FileType.KATANA);
 
@@ -294,18 +299,37 @@ public class ProjectBuilder
 		var katanaOutputFile = buildDir.resolve(build.name + ".ll");
 		System.out.printf("[%s] Compiling Katana sources: %s\n", build.name, katanaOutputFile);
 
+		var startTime = System.nanoTime();
+
 		var sourceManager = SourceManager.loadFiles(build.sourceFiles.get(FileType.KATANA));
+		var loadTime = System.nanoTime();
+
 		var ast = ProgramParser.parse(sourceManager, diag);
+		var parseTime = System.nanoTime();
+
 		var program = ProgramValidator.validate(ast, context);
+		var analysisTime = System.nanoTime();
 
 		if(!diag.successful())
 			throw new CompileException(diag.summary());
 
 		ProgramCodegen.generate(build, program, context, katanaOutputFile);
+		var codegenTime = System.nanoTime();
+
+		if(options.printBuildMetrics)
+		{
+			System.out.printf("[%s] Katana compile-time breakdown:\n", build.name);
+			System.out.printf("[%s] Loading:  %s\n", build.name, formatAsSeconds(loadTime - startTime));
+			System.out.printf("[%s] Parsing:  %s\n", build.name, formatAsSeconds(parseTime - loadTime));
+			System.out.printf("[%s] Analysis: %s\n", build.name, formatAsSeconds(analysisTime - parseTime));
+			System.out.printf("[%s] Codegen:  %s\n", build.name, formatAsSeconds(codegenTime - analysisTime));
+			System.out.printf("[%s] Total:    %s\n", build.name, formatAsSeconds(codegenTime - startTime));
+		}
+
 		return Maybe.some(katanaOutputFile);
 	}
 
-	private static void buildTarget(DiagnosticsManager diag, Path root, Path buildDir, BuildTarget build, PlatformContext context) throws IOException
+	private static void buildTarget(DiagnosticsManager diag, Path root, Path buildDir, BuildTarget build, PlatformContext context, BuildOptions options) throws IOException
 	{
 		var tmpDir = buildDir.resolve(BUILD_TMPDIR);
 		var outDir = buildDir.resolve(BUILD_OUTDIR);
@@ -314,7 +338,7 @@ public class ProjectBuilder
 		Files.createDirectories(tmpDir);
 		Files.createDirectories(outDir);
 
-		var katanaOutput = compileKatanaSources(diag, build, context, tmpDir);
+		var katanaOutput = compileKatanaSources(diag, build, context, tmpDir, options);
 		var objectFiles = new ArrayList<Path>();
 
 		if(!build.resourceFiles.isEmpty())
@@ -377,7 +401,7 @@ public class ProjectBuilder
 		return removeDuplicates(order);
 	}
 
-	public static void buildTargets(DiagnosticsManager diag, Path root, Path buildDir, List<BuildTarget> targets, PlatformContext context) throws IOException
+	public static void buildTargets(DiagnosticsManager diag, Path root, Path buildDir, List<BuildTarget> targets, PlatformContext context, BuildOptions options) throws IOException
 	{
 		if(buildDir.startsWith(root))
 			buildDir = root.relativize(buildDir);
@@ -388,7 +412,7 @@ public class ProjectBuilder
 		System.out.printf("[*] Building the following targets in order: %s\n", targetListing);
 
 		for(var target : targetsInBuildOrder)
-			ProjectBuilder.buildTarget(diag, root, buildDir.resolve(target.name), target, context);
+			ProjectBuilder.buildTarget(diag, root, buildDir.resolve(target.name), target, context, options);
 
 		System.out.println("[*] All targets built successfully.");
 	}
