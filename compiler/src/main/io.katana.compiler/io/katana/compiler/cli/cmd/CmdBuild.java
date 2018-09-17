@@ -27,6 +27,7 @@ import io.katana.compiler.project.ProjectBuilder;
 import io.katana.compiler.project.ProjectManager;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -53,23 +54,37 @@ public class CmdBuild implements Runnable
 	@Option(name = {"-Dt", "--diagnostic-traces"}, description = "Stack traces in diagnostics")
 	public boolean diagnosticTraces;
 
+	private Path determineProjectRoot() throws IOException
+	{
+		if(projectDir != null)
+			return Paths.get(projectDir).toRealPath();
+
+		var result = ProjectManager.locateProjectRoot();
+
+		if(result != null)
+			return result;
+
+		throw new CompileException("project root could not be found");
+	}
+
+	private Path determineBuildRoot(Path projectRoot) throws IOException
+	{
+		if(buildDir != null)
+			return Paths.get(buildDir).toAbsolutePath().normalize();
+
+		if(projectDir == null)
+			return projectRoot.resolve("build");
+
+		return Paths.get("").toRealPath();
+	}
+
 	@Override
 	public void run()
 	{
 		try
 		{
-			var projectRoot = projectDir == null ? null : Paths.get(projectDir).toRealPath();
-
-			if(projectRoot == null)
-			{
-				projectRoot = ProjectManager.locateProjectRoot();
-
-				if(projectRoot == null)
-					throw new CompileException("project root could not be found");
-			}
-
-			var buildRoot = buildDir != null ? Paths.get(buildDir).toAbsolutePath().normalize()
-				: projectDir == null ? projectRoot.resolve("build") : Paths.get("").toRealPath();
+			var projectRoot = determineProjectRoot();
+			var buildRoot = determineBuildRoot(projectRoot);
 
 			var context = new PlatformContext(TargetTriple.NATIVE);
 			var diag = new DiagnosticsManager(diagnosticTraces);
