@@ -20,7 +20,6 @@ import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.sema.decl.SemaDecl;
 import io.katana.compiler.sema.decl.SemaDeclFunctionDef;
 import io.katana.compiler.sema.decl.SemaDeclOverloadSet;
-import io.katana.compiler.visitor.IVisitor;
 
 import java.util.IdentityHashMap;
 
