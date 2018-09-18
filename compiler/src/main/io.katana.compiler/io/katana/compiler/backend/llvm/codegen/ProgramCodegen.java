@@ -20,6 +20,7 @@ import io.katana.compiler.analysis.Types;
 import io.katana.compiler.ast.AstPath;
 import io.katana.compiler.backend.PlatformContext;
 import io.katana.compiler.backend.llvm.FileCodegenContext;
+import io.katana.compiler.backend.llvm.ir.IrModule;
 import io.katana.compiler.backend.llvm.ir.IrModuleBuilder;
 import io.katana.compiler.backend.llvm.ir.decl.*;
 import io.katana.compiler.backend.llvm.ir.type.IrType;
@@ -34,11 +35,8 @@ import io.katana.compiler.sema.decl.SemaDecl;
 import io.katana.compiler.sema.decl.SemaDeclFunction;
 import io.katana.compiler.sema.decl.SemaDeclOverloadSet;
 import io.katana.compiler.sema.type.SemaTypeBuiltin;
-import io.katana.compiler.utils.FileUtils;
 import io.katana.compiler.utils.Maybe;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.stream.Collectors;
@@ -142,7 +140,7 @@ public class ProgramCodegen
 		throw new CompileException(String.format("entry point must return 'void' or 'int32', got '%s'", TypeString.of(func.returnType)));
 	}
 
-	public static void generate(BuildTarget build, SemaProgram program, PlatformContext platform, Path outputFile) throws IOException
+	public static IrModule generate(BuildTarget build, SemaProgram program, PlatformContext platform)
 	{
 		var builder = new IrModuleBuilder();
 		var stringPool = new StringPool();
@@ -160,6 +158,6 @@ public class ProgramCodegen
 			builder.append(wrapper);
 		}
 
-		FileUtils.writeFile(builder.build().toString(), outputFile);
+		return builder.build();
 	}
 }

@@ -25,6 +25,7 @@ import io.katana.compiler.parser.ProgramParser;
 import io.katana.compiler.platform.Os;
 import io.katana.compiler.platform.TargetTriple;
 import io.katana.compiler.scanner.SourceManager;
+import io.katana.compiler.utils.FileUtils;
 import io.katana.compiler.utils.Maybe;
 
 import java.io.IOException;
@@ -313,17 +314,21 @@ public class ProjectBuilder
 		if(!diag.successful())
 			throw new CompileException(diag.summary());
 
-		ProgramCodegen.generate(build, program, context, katanaOutputFile);
+		var module = ProgramCodegen.generate(build, program, context);
 		var codegenTime = System.nanoTime();
+
+		FileUtils.writeFile(module.toString(), katanaOutputFile);
+		var writeTime = System.nanoTime();
 
 		if(options.printBuildMetrics)
 		{
 			System.out.printf("[%s] Katana compile-time breakdown:\n", build.name);
-			System.out.printf("[%s] Loading:  %s\n", build.name, formatAsSeconds(loadTime - startTime));
-			System.out.printf("[%s] Parsing:  %s\n", build.name, formatAsSeconds(parseTime - loadTime));
-			System.out.printf("[%s] Analysis: %s\n", build.name, formatAsSeconds(analysisTime - parseTime));
-			System.out.printf("[%s] Codegen:  %s\n", build.name, formatAsSeconds(codegenTime - analysisTime));
-			System.out.printf("[%s] Total:    %s\n", build.name, formatAsSeconds(codegenTime - startTime));
+			System.out.printf("[%s] Loading/Scanner: %s\n", build.name, formatAsSeconds(loadTime - startTime));
+			System.out.printf("[%s] Parser:          %s\n", build.name, formatAsSeconds(parseTime - loadTime));
+			System.out.printf("[%s] Analysis:        %s\n", build.name, formatAsSeconds(analysisTime - parseTime));
+			System.out.printf("[%s] Codegen:         %s\n", build.name, formatAsSeconds(codegenTime - analysisTime));
+			System.out.printf("[%s] Writing output:  %s\n", build.name, formatAsSeconds(writeTime - codegenTime));
+			System.out.printf("[%s] Total:           %s\n", build.name, formatAsSeconds(writeTime - startTime));
 		}
 
 		return Maybe.some(katanaOutputFile);
