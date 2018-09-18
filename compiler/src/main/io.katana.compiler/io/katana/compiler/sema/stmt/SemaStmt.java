@@ -14,8 +14,6 @@
 
 package io.katana.compiler.sema.stmt;
 
-import io.katana.compiler.visitor.IVisitable;
-
-public class SemaStmt implements IVisitable
+public class SemaStmt
 {
 }

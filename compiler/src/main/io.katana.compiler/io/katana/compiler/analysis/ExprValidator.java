@@ -39,7 +39,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
-public class ExprValidator implements IVisitor
+public class ExprValidator extends IVisitor<SemaExpr>
 {
 	private SemaScope scope;
 	private PlatformContext context;
@@ -65,7 +65,7 @@ public class ExprValidator implements IVisitor
 
 	private SemaExpr validate(AstExpr expr, SemaType expectedType)
 	{
-		var result = (SemaExpr)expr.accept(this, expectedType);
+		var result = invokeSelf(expr, expectedType);
 
 		if(expectedType == null)
 			return result;

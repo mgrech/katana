@@ -18,7 +18,7 @@ import io.katana.compiler.sema.type.*;
 import io.katana.compiler.visitor.IVisitor;
 
 @SuppressWarnings("unused")
-public class TypeNameMangling implements IVisitor
+public class TypeNameMangling extends IVisitor<String>
 {
 	private static final TypeNameMangling INSTANCE = new TypeNameMangling();
 
@@ -26,7 +26,7 @@ public class TypeNameMangling implements IVisitor
 
 	public static String of(SemaType type)
 	{
-		return (String)type.accept(INSTANCE);
+		return INSTANCE.invokeSelf(type);
 	}
 
 	private String visit(SemaTypeSlice slice)

@@ -24,7 +24,7 @@ import io.katana.compiler.visitor.IVisitor;
 
 import java.util.IdentityHashMap;
 
-public class DeclImplValidator implements IVisitor
+public class DeclImplValidator
 {
 	public static void validate(IdentityHashMap<SemaDecl, DeclInfo> decls, PlatformContext context)
 	{

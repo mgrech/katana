@@ -14,8 +14,6 @@
 
 package io.katana.compiler.ast.expr;
 
-import io.katana.compiler.visitor.IVisitable;
-
-public abstract class AstExpr implements IVisitable
+public abstract class AstExpr
 {
 }

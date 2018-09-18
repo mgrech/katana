@@ -14,8 +14,6 @@
 
 package io.katana.compiler.sema.type;
 
-import io.katana.compiler.visitor.IVisitable;
-
-public abstract class SemaType implements IVisitable
+public abstract class SemaType
 {
 }

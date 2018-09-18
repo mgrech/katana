@@ -20,7 +20,7 @@ import io.katana.compiler.visitor.IVisitor;
 import java.util.List;
 
 @SuppressWarnings("unused")
-public class TypesEqualVisitor implements IVisitor
+public class TypesEqualVisitor extends IVisitor<Boolean>
 {
 	private static final TypesEqualVisitor INSTANCE = new TypesEqualVisitor();
 
@@ -31,7 +31,7 @@ public class TypesEqualVisitor implements IVisitor
 		if(left.getClass() != right.getClass())
 			return false;
 
-		return (boolean)left.accept(INSTANCE, right);
+		return INSTANCE.invokeSelf(left, right);
 	}
 
 	private boolean visit(SemaTypeSlice left, SemaTypeSlice right)

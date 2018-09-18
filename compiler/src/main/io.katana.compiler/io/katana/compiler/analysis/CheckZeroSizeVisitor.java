@@ -19,7 +19,7 @@ import io.katana.compiler.sema.type.*;
 import io.katana.compiler.visitor.IVisitor;
 
 @SuppressWarnings("unused")
-public class CheckZeroSizeVisitor implements IVisitor
+public class CheckZeroSizeVisitor extends IVisitor<Boolean>
 {
 	private static final CheckZeroSizeVisitor INSTANCE = new CheckZeroSizeVisitor();
 
@@ -27,7 +27,7 @@ public class CheckZeroSizeVisitor implements IVisitor
 
 	public static boolean apply(SemaType type)
 	{
-		return (boolean)type.accept(INSTANCE);
+		return INSTANCE.invokeSelf(type);
 	}
 
 	private boolean visit(SemaTypeSlice slice)

@@ -26,7 +26,7 @@ import io.katana.compiler.scanner.SourceFile;
 import io.katana.compiler.visitor.IVisitor;
 
 @SuppressWarnings("unused")
-public class FileParser implements IVisitor
+public class FileParser extends IVisitor
 {
 	private AstFile file;
 	private AstModule module = null;
@@ -47,7 +47,7 @@ public class FileParser implements IVisitor
 		while(ctx.token() != null)
 		{
 			var decl = DeclParser.parse(ctx);
-			decl.accept(parser);
+			parser.invokeSelf(decl);
 		}
 
 		ast.lateParseExprs = ctx.lateParseExprs();

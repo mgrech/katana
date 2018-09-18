@@ -20,7 +20,7 @@ import io.katana.compiler.sema.type.*;
 import io.katana.compiler.visitor.IVisitor;
 
 @SuppressWarnings("unused")
-public class TypeSizeofVisitor implements IVisitor
+public class TypeSizeofVisitor extends IVisitor<Long>
 {
 	private final PlatformContext context;
 
@@ -109,6 +109,6 @@ public class TypeSizeofVisitor implements IVisitor
 
 	public static long apply(SemaType type, PlatformContext context)
 	{
-		return (long)type.accept(new TypeSizeofVisitor(context));
+		return new TypeSizeofVisitor(context).invokeSelf(type);
 	}
 }

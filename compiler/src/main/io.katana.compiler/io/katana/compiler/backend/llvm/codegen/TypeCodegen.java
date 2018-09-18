@@ -24,7 +24,7 @@ import io.katana.compiler.visitor.IVisitor;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
-public class TypeCodegen implements IVisitor
+public class TypeCodegen extends IVisitor<IrType>
 {
 	private PlatformContext context;
 
@@ -41,7 +41,7 @@ public class TypeCodegen implements IVisitor
 
 	private IrType generate(SemaType type)
 	{
-		return (IrType)type.accept(this);
+		return invokeSelf(type);
 	}
 
 	private IrType visit(SemaTypeBuiltin type)

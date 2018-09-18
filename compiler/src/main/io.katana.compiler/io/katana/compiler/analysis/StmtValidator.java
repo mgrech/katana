@@ -35,7 +35,7 @@ import java.util.IdentityHashMap;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class StmtValidator implements IVisitor
+public class StmtValidator extends IVisitor<SemaStmt>
 {
 	private IdentityHashMap<SemaStmtGoto, String> gotos = new IdentityHashMap<>();
 	private SemaDeclFunctionDef function;
@@ -53,7 +53,7 @@ public class StmtValidator implements IVisitor
 
 	public SemaStmt validate(AstStmt stmt)
 	{
-		return (SemaStmt)stmt.accept(this);
+		return invokeSelf(stmt);
 	}
 
 	private SemaExpr validate(AstExpr expr)

@@ -32,7 +32,7 @@ import io.katana.compiler.visitor.IVisitor;
 import java.util.ArrayList;
 
 @SuppressWarnings("unused")
-public class StmtCodegen implements IVisitor
+public class StmtCodegen extends IVisitor<Void>
 {
 	private final FileCodegenContext context;
 	private final IrFunctionBuilder builder;
@@ -47,7 +47,7 @@ public class StmtCodegen implements IVisitor
 
 	public void generate(SemaStmt stmt)
 	{
-		stmt.accept(this);
+		invokeSelf(stmt);
 	}
 
 	public void finish(SemaDeclFunctionDef func)

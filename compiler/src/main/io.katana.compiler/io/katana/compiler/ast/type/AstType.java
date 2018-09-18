@@ -14,8 +14,6 @@
 
 package io.katana.compiler.ast.type;
 
-import io.katana.compiler.visitor.IVisitable;
-
-public abstract class AstType implements IVisitable
+public abstract class AstType
 {
 }

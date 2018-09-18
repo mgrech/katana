@@ -27,7 +27,7 @@ import io.katana.compiler.visitor.IVisitor;
 import java.util.IdentityHashMap;
 
 @SuppressWarnings("unused")
-public class DeclRegisterer implements IVisitor
+public class DeclRegisterer extends IVisitor<SemaDecl>
 {
 	public static IdentityHashMap<SemaDecl, AstDecl> process(SemaProgram semaProgram, AstFile file, SemaScopeFile scope)
 	{
@@ -42,7 +42,7 @@ public class DeclRegisterer implements IVisitor
 			{
 				if(!(decl instanceof AstDeclOperator))
 				{
-					var semaDecl = (SemaDecl)decl.accept(registerer, scope, semaModule);
+					var semaDecl = registerer.invokeSelf(decl, scope, semaModule);
 					decls.put(semaDecl, decl);
 				}
 			}

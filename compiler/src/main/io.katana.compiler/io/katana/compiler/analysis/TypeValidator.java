@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class TypeValidator implements IVisitor
+public class TypeValidator extends IVisitor<SemaType>
 {
 	private SemaScope scope;
 	private PlatformContext context;
@@ -50,7 +50,7 @@ public class TypeValidator implements IVisitor
 
 	private SemaType validate(AstType type)
 	{
-		return (SemaType)type.accept(this);
+		return invokeSelf(type);
 	}
 
 	private SemaType visit(AstTypeBuiltin builtin)

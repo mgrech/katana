@@ -20,7 +20,7 @@ import io.katana.compiler.sema.type.*;
 import io.katana.compiler.visitor.IVisitor;
 
 @SuppressWarnings("unused")
-public class TypeAlignofVisitor implements IVisitor
+public class TypeAlignofVisitor extends IVisitor<Long>
 {
 	private final PlatformContext context;
 
@@ -93,6 +93,6 @@ public class TypeAlignofVisitor implements IVisitor
 
 	public static long apply(SemaType type, PlatformContext context)
 	{
-		return (long)type.accept(new TypeAlignofVisitor(context));
+		return new TypeAlignofVisitor(context).invokeSelf(type);
 	}
 }

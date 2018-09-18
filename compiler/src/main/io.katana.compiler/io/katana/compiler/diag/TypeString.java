@@ -20,7 +20,7 @@ import io.katana.compiler.sema.type.*;
 import io.katana.compiler.visitor.IVisitor;
 
 @SuppressWarnings("unused")
-public class TypeString implements IVisitor
+public class TypeString extends IVisitor<String>
 {
 	private static final TypeString INSTANCE = new TypeString();
 
@@ -28,7 +28,7 @@ public class TypeString implements IVisitor
 
 	public static String of(SemaType type)
 	{
-		return (String)type.accept(INSTANCE);
+		return INSTANCE.invokeSelf(type);
 	}
 
 	private String visit(SemaTypeStruct type)

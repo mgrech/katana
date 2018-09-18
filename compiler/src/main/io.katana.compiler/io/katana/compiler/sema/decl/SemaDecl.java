@@ -18,9 +18,8 @@ import io.katana.compiler.ExportKind;
 import io.katana.compiler.ast.AstPath;
 import io.katana.compiler.sema.SemaModule;
 import io.katana.compiler.sema.SemaSymbol;
-import io.katana.compiler.visitor.IVisitable;
 
-public abstract class SemaDecl implements SemaSymbol, IVisitable
+public abstract class SemaDecl implements SemaSymbol
 {
 	private SemaModule module;
 	public ExportKind exportKind;

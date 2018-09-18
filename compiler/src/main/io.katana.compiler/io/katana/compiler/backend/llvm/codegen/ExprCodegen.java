@@ -43,7 +43,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
-public class ExprCodegen implements IVisitor
+public class ExprCodegen extends IVisitor<IrValue>
 {
 	private static final int SLICE_POINTER_FIELD_INDEX = 0;
 	private static final int SLICE_LENGTH_FIELD_INDEX = 1;
@@ -65,7 +65,7 @@ public class ExprCodegen implements IVisitor
 
 	private IrValue generate(SemaExpr expr)
 	{
-		return (IrValue)expr.accept(this);
+		return invokeSelf(expr);
 	}
 
 	private IrType generate(SemaType type)

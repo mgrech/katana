@@ -34,7 +34,7 @@ import io.katana.compiler.visitor.IVisitor;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class DeclIfaceValidator implements IVisitor
+public class DeclIfaceValidator extends IVisitor<Void>
 {
 	private PlatformContext context;
 	private Consumer<SemaDecl> validateDecl;
@@ -48,7 +48,7 @@ public class DeclIfaceValidator implements IVisitor
 	public static void validate(SemaDecl semaDecl, DeclInfo info, PlatformContext context, Consumer<SemaDecl> validateDecl)
 	{
 		var validator = new DeclIfaceValidator(context, validateDecl);
-		semaDecl.accept(validator, info.astDecl, info.scope);
+		validator.invokeSelf(semaDecl, info.astDecl, info.scope);
 	}
 
 	private SemaExpr validate(AstExpr expr, SemaScope scope, SemaType expectedType)

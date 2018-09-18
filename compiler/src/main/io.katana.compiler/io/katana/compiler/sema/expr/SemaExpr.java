@@ -15,9 +15,8 @@
 package io.katana.compiler.sema.expr;
 
 import io.katana.compiler.sema.type.SemaType;
-import io.katana.compiler.visitor.IVisitable;
 
-public abstract class SemaExpr implements IVisitable
+public abstract class SemaExpr
 {
 	public abstract SemaType type();
 	public abstract ExprKind kind();

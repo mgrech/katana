@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
-public class DeclCodegen implements IVisitor
+public class DeclCodegen extends IVisitor<Void>
 {
 	private final FileCodegenContext context;
 	private final IrModuleBuilder builder;
@@ -49,7 +49,7 @@ public class DeclCodegen implements IVisitor
 
 	public void generate(SemaDecl decl)
 	{
-		decl.accept(this);
+		invokeSelf(decl);
 	}
 
 	private Maybe<IrValue> generate(SemaExpr expr)

@@ -14,59 +14,73 @@
 
 package io.katana.compiler.visitor;
 
+import io.katana.compiler.utils.Rethrow;
+
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class ReflectionUtils
 {
-	public static Method findMatchingMethod(Class clazz, String name, Class[] args)
+	public static Method[] findVisitMethods(Class clazz)
 	{
-		var candidates = Arrays.stream(clazz.getDeclaredMethods())
-		                       .filter(m -> m.getParameterCount() == args.length)
-		                       .filter(m -> m.getName().equals(name))
-		                       .filter(m -> isCallable(m, args))
-		                       .collect(Collectors.toList());
-
-		if(candidates.isEmpty())
-		{
-			var argsDesc = Arrays.stream(args)
-			                     .map(a -> a == null ? "null" : '\'' + a.getName() + '\'')
-			                     .collect(Collectors.joining(", "));
-
-			var fmt = "no matching method found in class '%s' for argument(s) %s";
-			throw new RuntimeException(String.format(fmt, clazz.getName(), argsDesc));
-		}
-
-		if(candidates.size() > 1)
-			return tryFindExactMatch(clazz, candidates, args);
-
-		return candidates.get(0);
+		return Arrays.stream(clazz.getDeclaredMethods())
+		             .filter(m -> m.getName().equals("visit"))
+		             .peek(m -> m.setAccessible(true))
+		             .toArray(Method[]::new);
 	}
 
-	private static boolean isCallable(Method method, Class[] args)
+	private static Method resolve(Method[] methods, Object... args)
 	{
-		var params = method.getParameterTypes();
-
-		return IntStream.range(0, args.length)
-		                .allMatch(i -> args[i] == null || params[i].isAssignableFrom(args[i]));
-	}
-
-	private static Method tryFindExactMatch(Class clazz, List<Method> matches, Class[] args)
-	{
-		for(var method : matches)
+		for(var method : methods)
 		{
+			if(method.getParameterCount() != args.length)
+				continue;
+
 			var params = method.getParameterTypes();
 
-			var exactMatch = IntStream.of(0, args.length)
-			                          .allMatch(i -> args[i] == null || params[i] == args[i]);
+			if(!IntStream.range(0, args.length)
+			             .allMatch(i -> args[i] == null || params[i].isAssignableFrom(args[i].getClass())))
+				continue;
 
-			if(exactMatch)
-				return method;
+			return method;
 		}
 
-		throw new RuntimeException(String.format("ambiguous method call in '%s'", clazz.getName()));
+		return null;
+	}
+
+	private static void noMatchingMethodFound(IVisitor self, Object... args)
+	{
+		var argsDesc = Arrays.stream(args)
+		                     .map(a -> a == null ? "null" : '\'' + a.getClass().getName() + '\'')
+		                     .collect(Collectors.joining(", "));
+
+		var fmt = "no matching method found in class '%s' for argument(s) %s";
+		throw new RuntimeException(String.format(fmt, self.getClass().getName(), argsDesc));
+	}
+
+	public static Object resolveAndInvoke(Method[] methods, IVisitor self, Object... args)
+	{
+		var method = resolve(methods, args);
+
+		if(method == null)
+			noMatchingMethodFound(self, args);
+
+		try
+		{
+			return method.invoke(self, args);
+		}
+		catch(IllegalAccessException ex)
+		{
+			throw new RuntimeException(ex);
+		}
+		catch(InvocationTargetException ex)
+		{
+			Rethrow.of(ex.getTargetException());
+		}
+
+		throw new AssertionError("unreachable");
 	}
 }

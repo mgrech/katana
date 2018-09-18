@@ -14,9 +14,7 @@
 
 package io.katana.compiler.ast.stmt;
 
-import io.katana.compiler.visitor.IVisitable;
-
-public abstract class AstStmt implements IVisitable
+public abstract class AstStmt
 {
 	@Override
 	public String toString()

@@ -14,6 +14,18 @@
 
 package io.katana.compiler.visitor;
 
-public interface IVisitor
+import java.lang.reflect.Method;
+import java.util.IdentityHashMap;
+
+public abstract class IVisitor<R>
 {
+	private static final IdentityHashMap<Class<?>, Method[]> CLASS_TO_VISITS = new IdentityHashMap<>();
+
+	private final Method[] visits = CLASS_TO_VISITS.computeIfAbsent(getClass(), ReflectionUtils::findVisitMethods);
+
+	@SuppressWarnings("unchecked")
+	protected R invokeSelf(Object... args)
+	{
+		return (R)ReflectionUtils.resolveAndInvoke(visits, this, args);
+	}
 }

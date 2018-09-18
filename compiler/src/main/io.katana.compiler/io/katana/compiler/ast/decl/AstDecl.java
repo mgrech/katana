@@ -15,9 +15,8 @@
 package io.katana.compiler.ast.decl;
 
 import io.katana.compiler.ExportKind;
-import io.katana.compiler.visitor.IVisitable;
 
-public abstract class AstDecl implements IVisitable
+public abstract class AstDecl
 {
 	public ExportKind exportKind;
 
