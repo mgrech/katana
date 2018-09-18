@@ -39,10 +39,4 @@ public class SemaExprLitBool extends SimpleRValueExpr
 	{
 		return SemaTypeBuiltin.BOOL;
 	}
-
-	@Override
-	public boolean isLiteral()
-	{
-		return true;
-	}
 }

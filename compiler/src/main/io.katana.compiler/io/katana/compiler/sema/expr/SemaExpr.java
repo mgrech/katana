@@ -20,9 +20,4 @@ public abstract class SemaExpr
 {
 	public abstract SemaType type();
 	public abstract ExprKind kind();
-
-	public boolean isLiteral()
-	{
-		return false;
-	}
 }

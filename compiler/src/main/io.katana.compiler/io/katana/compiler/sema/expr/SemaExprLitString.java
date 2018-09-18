@@ -40,10 +40,4 @@ public class SemaExprLitString extends SimpleRValueExpr
 	{
 		return cachedType;
 	}
-
-	@Override
-	public boolean isLiteral()
-	{
-		return true;
-	}
 }

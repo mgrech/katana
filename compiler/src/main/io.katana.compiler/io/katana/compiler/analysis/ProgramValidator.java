@@ -49,13 +49,7 @@ public class ProgramValidator
 						var path = module.getKey();
 						var opDecl = (AstDeclOperator)decl;
 
-						var map = result.get(path);
-
-						if(map == null)
-						{
-							map = new HashMap<>();
-							result.put(path, map);
-						}
+						var map = result.computeIfAbsent(path, p -> new HashMap<>());
 
 						var semaModule = program.findOrCreateModule(path);
 						var semaDecl = new SemaDeclOperator(semaModule, opDecl.exportKind, opDecl.operator);

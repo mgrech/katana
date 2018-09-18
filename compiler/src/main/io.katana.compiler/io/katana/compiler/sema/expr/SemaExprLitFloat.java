@@ -35,10 +35,4 @@ public class SemaExprLitFloat extends SimpleRValueExpr
 	{
 		return SemaTypeBuiltin.of(type);
 	}
-
-	@Override
-	public boolean isLiteral()
-	{
-		return true;
-	}
 }

@@ -35,10 +35,4 @@ public class SemaExprLitArray extends SimpleRValueExpr
 	{
 		return Types.addArray(elementExprs.size(), elementType);
 	}
-
-	@Override
-	public boolean isLiteral()
-	{
-		return true;
-	}
 }

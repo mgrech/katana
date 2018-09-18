@@ -29,10 +29,4 @@ public class SemaExprLitNull extends SimpleRValueExpr
 	{
 		return SemaTypeBuiltin.NULL;
 	}
-
-	@Override
-	public boolean isLiteral()
-	{
-		return true;
-	}
 }
