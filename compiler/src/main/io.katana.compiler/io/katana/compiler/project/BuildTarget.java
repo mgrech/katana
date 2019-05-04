@@ -15,22 +15,20 @@
 package io.katana.compiler.project;
 
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class BuildTarget
 {
 	public String name;
 	public BuildType type;
 	public String entryPoint;
-	public Map<FileType, Set<Path>> sourceFiles;
-	public List<String> asmOptions;
-	public List<String> cOptions;
-	public List<String> cppOptions;
-	public List<String> llvmOptions;
-	public List<String> linkOptions;
-	public List<BuildTarget> dependencies;
-	public List<String> systemLibraries;
-	public Map<String, Path> resourceFiles;
+	public Map<FileType, Set<Path>> sourceFiles = new TreeMap<>();
+	public List<String> asmOptions = new ArrayList<>();
+	public List<String> cOptions = new ArrayList<>();
+	public List<String> cppOptions = new ArrayList<>();
+	public List<String> llvmOptions = new ArrayList<>();
+	public List<String> linkOptions = new ArrayList<>();
+	public List<BuildTarget> dependencies = new ArrayList<>();
+	public List<String> systemLibraries = new ArrayList<>();
+	public Map<String, Path> resourceFiles = new TreeMap<>();
 }

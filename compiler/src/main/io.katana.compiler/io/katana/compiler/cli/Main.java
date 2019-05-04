@@ -19,13 +19,14 @@ import com.github.rvesse.airline.help.Help;
 import com.github.rvesse.airline.parser.errors.ParseException;
 import io.katana.compiler.cli.cmd.CmdBuild;
 import io.katana.compiler.cli.cmd.CmdInit;
+import io.katana.compiler.cli.cmd.CmdQuickBuild;
 import io.katana.compiler.cli.cmd.CmdVersion;
 
 @com.github.rvesse.airline.annotations.Cli(
 	name = "katana",
 	description = "Katana compiler",
 	defaultCommand = Help.class,
-	commands = {CmdBuild.class, CmdInit.class, CmdVersion.class})
+	commands = {CmdBuild.class, CmdInit.class, CmdQuickBuild.class, CmdVersion.class})
 public class Main
 {
 	public static void main(String[] args)

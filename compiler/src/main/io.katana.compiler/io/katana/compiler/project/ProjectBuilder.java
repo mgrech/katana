@@ -215,9 +215,10 @@ public class ProjectBuilder
 				findDependenciesRecursively(dependency, result);
 	}
 
-	private static void link(Path root, Path buildDir, BuildTarget build, List<Path> filePaths, TargetTriple target)
+	private static Path link(Path root, Path buildDir, BuildTarget build, List<Path> filePaths, TargetTriple target)
 	{
 		var binaryName = build.name + fileExtensionFor(build.type, target);
+		var buildPath = buildDir.resolve(binaryName);
 		var command = new ArrayList<String>();
 
 		if(build.type == BuildType.LIBRARY_STATIC)
@@ -264,12 +265,13 @@ public class ProjectBuilder
 			command.add("-o");
 		}
 
-		command.add(buildDir.resolve(binaryName).toString());
+		command.add(buildPath.toString());
 
 		// append all source files
 		filePaths.stream().map(Path::toString).forEach(command::add);
 
 		runBuildCommand(root, build, "Linking", command);
+		return buildPath;
 	}
 
 	private static Path compileFile(Path root, Path buildDir, BuildTarget build, FileType fileType, Path path, TargetTriple target)
@@ -334,7 +336,7 @@ public class ProjectBuilder
 		return Maybe.some(katanaOutputFile);
 	}
 
-	private static void buildTarget(DiagnosticsManager diag, Path root, Path buildDir, BuildTarget build, PlatformContext context, BuildOptions options) throws IOException
+	public static Path buildTarget(DiagnosticsManager diag, Path root, Path buildDir, BuildTarget build, PlatformContext context, BuildOptions options) throws IOException
 	{
 		var tmpDir = buildDir.resolve(BUILD_TMPDIR);
 		var outDir = buildDir.resolve(BUILD_OUTDIR);
@@ -367,8 +369,9 @@ public class ProjectBuilder
 					objectFiles.add(compileFile(root, tmpDir, build, type, path, context.target()));
 		}
 
-		link(root, outDir, build, objectFiles, context.target());
+		var outputPath = link(root, outDir, build, objectFiles, context.target());
 		System.out.println(String.format("[%s] Target built successfully.", build.name));
+		return outputPath;
 	}
 
 	private static void addTargetsRecursively(List<BuildTarget> order, BuildTarget target)

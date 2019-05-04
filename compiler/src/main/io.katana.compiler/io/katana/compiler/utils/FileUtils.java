@@ -48,11 +48,44 @@ public class FileUtils
 		});
 	}
 
+	public static void deleteDirectory(Path directory) throws IOException
+	{
+		Files.walkFileTree(directory, new SimpleFileVisitor<>()
+		{
+			@Override
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
+			{
+				Files.delete(file);
+				return FileVisitResult.CONTINUE;
+			}
+
+			@Override
+			public FileVisitResult postVisitDirectory(Path dir, IOException ex) throws IOException
+			{
+				if(ex != null)
+					throw ex;
+
+				Files.delete(dir);
+				return FileVisitResult.CONTINUE;
+			}
+		});
+	}
+
 	public static void writeFile(String content, Path destination) throws IOException
 	{
 		try(var stream = new FileOutputStream(destination.toFile()))
 		{
 			stream.write(content.getBytes(StandardCharsets.UTF_8));
 		}
+	}
+
+	public static String stripExtension(String name)
+	{
+		var dotpos = name.lastIndexOf('.');
+
+		if(dotpos == -1)
+			return name;
+
+		return name.substring(0, dotpos);
 	}
 }
