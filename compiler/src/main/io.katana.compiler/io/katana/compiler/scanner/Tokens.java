@@ -28,7 +28,6 @@ public class Tokens
 	public static final Token KW_GOTO         = new Token(TokenCategory.KW, TokenType.KW_GOTO);
 	public static final Token KW_IF           = new Token(TokenCategory.KW, TokenType.KW_IF);
 	public static final Token KW_IMPORT       = new Token(TokenCategory.KW, TokenType.KW_IMPORT);
-	public static final Token KW_INFIX        = new Token(TokenCategory.KW, TokenType.KW_INFIX);
 	public static final Token KW_INLINE       = new Token(TokenCategory.KW, TokenType.KW_INLINE);
 	public static final Token KW_LOOP         = new Token(TokenCategory.KW, TokenType.KW_LOOP);
 	public static final Token KW_MODULE       = new Token(TokenCategory.KW, TokenType.KW_MODULE);
@@ -37,8 +36,6 @@ public class Tokens
 	public static final Token KW_OPERATOR     = new Token(TokenCategory.KW, TokenType.KW_OPERATOR);
 	public static final Token KW_OPAQUE       = new Token(TokenCategory.KW, TokenType.KW_OPAQUE);
 	public static final Token KW_POINTER_CAST = new Token(TokenCategory.KW, TokenType.KW_POINTER_CAST);
-	public static final Token KW_POSTFIX      = new Token(TokenCategory.KW, TokenType.KW_POSTFIX);
-	public static final Token KW_PREFIX       = new Token(TokenCategory.KW, TokenType.KW_PREFIX);
 	public static final Token KW_RETURN       = new Token(TokenCategory.KW, TokenType.KW_RETURN);
 	public static final Token KW_SIGN_CAST    = new Token(TokenCategory.KW, TokenType.KW_SIGN_CAST);
 	public static final Token KW_SIZEOF       = new Token(TokenCategory.KW, TokenType.KW_SIZEOF);

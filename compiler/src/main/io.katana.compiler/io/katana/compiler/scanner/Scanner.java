@@ -303,7 +303,6 @@ public class Scanner
 		case "goto":         return Tokens.KW_GOTO;
 		case "if":           return Tokens.KW_IF;
 		case "import":       return Tokens.KW_IMPORT;
-		case "infix":        return Tokens.KW_INFIX;
 		case "inline":       return Tokens.KW_INLINE;
 		case "loop":         return Tokens.KW_LOOP;
 		case "module":       return Tokens.KW_MODULE;
@@ -312,8 +311,6 @@ public class Scanner
 		case "opaque":       return Tokens.KW_OPAQUE;
 		case "operator":     return Tokens.KW_OPERATOR;
 		case "pointer_cast": return Tokens.KW_POINTER_CAST;
-		case "postfix":      return Tokens.KW_POSTFIX;
-		case "prefix":       return Tokens.KW_PREFIX;
 		case "return":       return Tokens.KW_RETURN;
 		case "sign_cast":    return Tokens.KW_SIGN_CAST;
 		case "sizeof":       return Tokens.KW_SIZEOF;

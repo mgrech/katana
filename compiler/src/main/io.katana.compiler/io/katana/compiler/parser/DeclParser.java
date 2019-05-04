@@ -77,13 +77,13 @@ public class DeclParser
 
 	private static Kind parseOpKind(ParseContext ctx)
 	{
-		if(ParseTools.option(ctx, TokenType.KW_PREFIX, true))
+		if(ParseTools.option(ctx, "prefix", true))
 			return Kind.PREFIX;
 
-		if(ParseTools.option(ctx, TokenType.KW_INFIX, true))
+		if(ParseTools.option(ctx, "infix", true))
 			return Kind.INFIX;
 
-		else if(ParseTools.option(ctx, TokenType.KW_POSTFIX, true))
+		else if(ParseTools.option(ctx, "postfix", true))
 			return Kind.POSTFIX;
 
 		ParseTools.unexpectedToken(ctx);
