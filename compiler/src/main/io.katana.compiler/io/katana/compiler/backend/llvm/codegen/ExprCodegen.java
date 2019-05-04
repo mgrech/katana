@@ -476,6 +476,10 @@ public class ExprCodegen extends IVisitor<IrValue>
 
 	private IrValue generateFunctionCall(IrValue function, List<SemaExpr> args, SemaType returnType, Inlining inline)
 	{
+		args = args.stream()
+		           .filter(a -> !Types.isZeroSized(a.type()))
+		           .collect(Collectors.toList());
+
 		var returnTypeIr = generate(returnType);
 
 		var argsIr = args.stream()
