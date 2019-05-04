@@ -14,10 +14,29 @@
 
 package io.katana.compiler.project;
 
+import io.katana.compiler.utils.Maybe;
+
 public enum FileType
 {
-	KATANA,
-	C,
-	CPP,
-	ASM,
+	ASM   (".asm"),
+	C     (".c"),
+	CPP   (".cpp"),
+	KATANA(".k"),
+	;
+
+	public final String extension;
+
+	FileType(String extension)
+	{
+		this.extension = extension;
+	}
+
+	public static Maybe<FileType> of(String fileName)
+	{
+		for(var type : values())
+			if(fileName.endsWith(type.extension))
+				return Maybe.some(type);
+
+		return Maybe.none();
+	}
 }

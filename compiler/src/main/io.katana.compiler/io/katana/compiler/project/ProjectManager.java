@@ -80,23 +80,6 @@ public class ProjectManager
 		return root.relativize(path);
 	}
 
-	private static FileType fileTypefromName(String name)
-	{
-		if(name.endsWith(".ks"))
-			return FileType.KATANA;
-
-		if(name.endsWith(".asm"))
-			return FileType.ASM;
-
-		if(name.endsWith(".c"))
-			return FileType.C;
-
-		if(name.endsWith(".cpp"))
-			return FileType.CPP;
-
-		return null;
-	}
-
 	private static void addFile(Map<FileType, Set<Path>> files, FileType type, Path path)
 	{
 		var paths = files.computeIfAbsent(type, (t) -> new TreeSet<>());
@@ -119,10 +102,10 @@ public class ProjectManager
 				{
 					if(attrs.isRegularFile())
 					{
-						var type = fileTypefromName(path.getFileName().toString());
+						var type = FileType.of(path.getFileName().toString());
 
-						if(type != null)
-							addFile(files, type, path);
+						if(type.isSome())
+							addFile(files, type.unwrap(), path);
 					}
 
 					return FileVisitResult.CONTINUE;
@@ -131,12 +114,12 @@ public class ProjectManager
 		}
 		else
 		{
-			var type = fileTypefromName(file.getName());
+			var type = FileType.of(file.getName());
 
-			if(type == null)
+			if(type.isNone())
 				configError("source file path '%s' refers to unknown file type", path);
 
-			addFile(files, type, path);
+			addFile(files, type.unwrap(), path);
 		}
 	}
 
