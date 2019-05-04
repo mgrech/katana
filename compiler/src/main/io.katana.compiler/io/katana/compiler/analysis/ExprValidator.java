@@ -400,6 +400,9 @@ public class ExprValidator extends IVisitor<SemaExpr>
 
 	private SemaExpr visit(AstExprLitInt lit, SemaType expectedType)
 	{
+		if(expectedType == null)
+			expectedType = SemaTypeBuiltin.INT;
+
 		var type = lit.type;
 
 		if(type.isNone())
