@@ -66,16 +66,14 @@ public class Limits
 		var isSigned = type.kind == BuiltinType.Kind.INT;
 		var size = Types.sizeof(SemaTypeBuiltin.of(type), context);
 
-		switch((int)size)
+		return switch((int)size)
 		{
-		case 1: return isSigned ? BuiltinType.INT8  : BuiltinType.UINT8;
-		case 2: return isSigned ? BuiltinType.INT16 : BuiltinType.UINT16;
-		case 4: return isSigned ? BuiltinType.INT32 : BuiltinType.UINT32;
-		case 8: return isSigned ? BuiltinType.INT64 : BuiltinType.UINT64;
-		default: break;
-		}
-
-		throw new AssertionError("unreachable");
+		case 1  -> isSigned ? BuiltinType.INT8  : BuiltinType.UINT8;
+		case 2  -> isSigned ? BuiltinType.INT16 : BuiltinType.UINT16;
+		case 4  -> isSigned ? BuiltinType.INT32 : BuiltinType.UINT32;
+		case 8  -> isSigned ? BuiltinType.INT64 : BuiltinType.UINT64;
+		default -> throw new AssertionError("unreachable");
+		};
 	}
 
 	public static BigInteger intMinValue(BuiltinType type, PlatformContext context)

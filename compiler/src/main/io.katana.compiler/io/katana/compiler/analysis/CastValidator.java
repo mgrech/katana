@@ -83,15 +83,12 @@ public class CastValidator
 
 	public static boolean isValidCast(SemaType sourceType, SemaType targetType, SemaExprCast.Kind kind, PlatformContext context)
 	{
-		switch(kind)
+		return switch(kind)
 		{
-		case SIGN_CAST:    return isValidSignCast(sourceType, targetType, context);
-		case WIDEN_CAST:   return isValidWidenCast(sourceType, targetType, context);
-		case NARROW_CAST:  return isValidNarrowCast(sourceType, targetType, context);
-		case POINTER_CAST: return isValidPointerCast(sourceType, targetType);
-		default: break;
-		}
-
-		throw new AssertionError("unreachable");
+		case SIGN_CAST -> isValidSignCast(sourceType, targetType, context);
+		case WIDEN_CAST -> isValidWidenCast(sourceType, targetType, context);
+		case NARROW_CAST -> isValidNarrowCast(sourceType, targetType, context);
+		case POINTER_CAST -> isValidPointerCast(sourceType, targetType);
+		};
 	}
 }

@@ -23,19 +23,20 @@ import java.util.Map;
 
 public class BuiltinOps
 {
-	public static final Map<String, SemaDeclOperator> PREFIX_OPS = new HashMap<>();
-	public static final Map<String, SemaDeclOperator> INFIX_OPS = new HashMap<>();
+	public static final Map<String, SemaDeclOperator> PREFIX_OPS  = new HashMap<>();
+	public static final Map<String, SemaDeclOperator> INFIX_OPS   = new HashMap<>();
 	public static final Map<String, SemaDeclOperator> POSTFIX_OPS = new HashMap<>();
 
 	private static void registerBuiltinOp(Operator op)
 	{
-		switch(op.kind)
+		var map = switch(op.kind)
 		{
-		case PREFIX:  PREFIX_OPS .put(op.symbol, new SemaDeclOperator(null, ExportKind.FULL, Operator.prefix(op.symbol))); break;
-		case INFIX:   INFIX_OPS  .put(op.symbol, new SemaDeclOperator(null, ExportKind.FULL, Operator.infix(op.symbol, op.associativity, op.precedence))); break;
-		case POSTFIX: POSTFIX_OPS.put(op.symbol, new SemaDeclOperator(null, ExportKind.FULL, Operator.postfix(op.symbol))); break;
-		default: throw new AssertionError("unreachable");
-		}
+		case PREFIX  -> PREFIX_OPS;
+		case INFIX   -> INFIX_OPS;
+		case POSTFIX -> POSTFIX_OPS;
+		};
+
+		map.put(op.symbol, new SemaDeclOperator(null, ExportKind.FULL, op));
 	}
 
 	static
@@ -47,14 +48,13 @@ public class BuiltinOps
 
 	public static Maybe<SemaDeclOperator> find(String symbol, Kind kind)
 	{
-		switch(kind)
+		var decl = switch(kind)
 		{
-		case PREFIX:  return Maybe.wrap(PREFIX_OPS .get(symbol));
-		case INFIX:   return Maybe.wrap(INFIX_OPS  .get(symbol));
-		case POSTFIX: return Maybe.wrap(POSTFIX_OPS.get(symbol));
-		default: break;
-		}
+		case PREFIX  -> PREFIX_OPS.get(symbol);
+		case INFIX   -> INFIX_OPS.get(symbol);
+		case POSTFIX -> POSTFIX_OPS.get(symbol);
+		};
 
-		throw new AssertionError("unreachable");
+		return Maybe.wrap(decl);
 	}
 }

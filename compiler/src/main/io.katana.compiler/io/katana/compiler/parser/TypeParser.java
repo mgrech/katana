@@ -190,24 +190,24 @@ public class TypeParser
 	{
 		var type = ParseTools.consumeExpected(ctx, TokenCategory.TYPE).type;
 
-		switch(type)
+		return switch(type)
 		{
-		case TYPE_VOID:    return AstTypeBuiltin.VOID;
-		case TYPE_BYTE:    return AstTypeBuiltin.BYTE;
-		case TYPE_BOOL:    return AstTypeBuiltin.BOOL;
-		case TYPE_INT8:    return AstTypeBuiltin.INT8;
-		case TYPE_INT16:   return AstTypeBuiltin.INT16;
-		case TYPE_INT32:   return AstTypeBuiltin.INT32;
-		case TYPE_INT64:   return AstTypeBuiltin.INT64;
-		case TYPE_INT:     return AstTypeBuiltin.INT;
-		case TYPE_UINT8:   return AstTypeBuiltin.UINT8;
-		case TYPE_UINT16:  return AstTypeBuiltin.UINT16;
-		case TYPE_UINT32:  return AstTypeBuiltin.UINT32;
-		case TYPE_UINT64:  return AstTypeBuiltin.UINT64;
-		case TYPE_UINT:    return AstTypeBuiltin.UINT;
-		case TYPE_FLOAT32: return AstTypeBuiltin.FLOAT32;
-		case TYPE_FLOAT64: return AstTypeBuiltin.FLOAT64;
-		default: throw new AssertionError("unreachable");
-		}
+		case TYPE_VOID    -> AstTypeBuiltin.VOID;
+		case TYPE_BYTE    -> AstTypeBuiltin.BYTE;
+		case TYPE_BOOL    -> AstTypeBuiltin.BOOL;
+		case TYPE_INT8    -> AstTypeBuiltin.INT8;
+		case TYPE_INT16   -> AstTypeBuiltin.INT16;
+		case TYPE_INT32   -> AstTypeBuiltin.INT32;
+		case TYPE_INT64   -> AstTypeBuiltin.INT64;
+		case TYPE_INT     -> AstTypeBuiltin.INT;
+		case TYPE_UINT8   -> AstTypeBuiltin.UINT8;
+		case TYPE_UINT16  -> AstTypeBuiltin.UINT16;
+		case TYPE_UINT32  -> AstTypeBuiltin.UINT32;
+		case TYPE_UINT64  -> AstTypeBuiltin.UINT64;
+		case TYPE_UINT    -> AstTypeBuiltin.UINT;
+		case TYPE_FLOAT32 -> AstTypeBuiltin.FLOAT32;
+		case TYPE_FLOAT64 -> AstTypeBuiltin.FLOAT64;
+		default -> throw new AssertionError("unreachable");
+		};
 	}
 }

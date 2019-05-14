@@ -41,18 +41,12 @@ public class ConditionParser
 			var junction = context.current();
 			context.advance();
 
-			switch(junction)
+			result = switch(junction)
 			{
-			case '&':
-				result = new AndJunction(result, parsePrimary(context));
-				break;
-
-			case '|':
-				result = new OrJunction(result, parsePrimary(context));
-				break;
-
-			default: throw new CompileException(String.format("unexpected character '%s' in input", (char)junction));
-			}
+			case '&' -> new AndJunction(result, parsePrimary(context));
+			case '|' -> new OrJunction(result, parsePrimary(context));
+			default  -> throw new CompileException(String.format("unexpected character '%s' in input", (char)junction));
+			};
 		}
 
 		return result;

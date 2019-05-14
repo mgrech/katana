@@ -62,13 +62,12 @@ public class IrInstrCall extends IrInstr
 
 		builder.append(')');
 
-		switch(inline)
+		builder.append(switch(inline)
 		{
-		case AUTO:   break;
-		case ALWAYS: builder.append(" alwaysinline");
-		case NEVER:  builder.append(" noinline");
-		default: throw new AssertionError("unreachable");
-		}
+		case AUTO   -> "";
+		case ALWAYS -> " alwaysinline";
+		case NEVER  -> " noinline";
+		});
 
 		return builder.toString();
 	}

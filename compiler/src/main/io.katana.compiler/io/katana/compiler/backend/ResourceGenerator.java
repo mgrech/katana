@@ -36,16 +36,14 @@ public class ResourceGenerator
 
 	private String intDirective()
 	{
-		switch((int)target.arch.pointerSize)
+		return switch((int)target.arch.pointerSize)
 		{
-		case 1: return "byte";
-		case 2: return "word";
-		case 4: return "int";
-		case 8: return "quad";
-		default: break;
-		}
-
-		throw new CompileException("unknown pointer size");
+		case 1  -> "byte";
+		case 2  -> "word";
+		case 4  -> "int";
+		case 8  -> "quad";
+		default -> throw new CompileException("unknown pointer size");
+		};
 	}
 
 	private void append(String format, Object... args)
@@ -81,17 +79,15 @@ public class ResourceGenerator
 	// we want our section to be readable and writable
 	private String resourceSectionDirective()
 	{
-		switch(target.os)
+		return switch(target.os)
 		{
 		// on windows sections names are truncated to 8 bytes for executables, see
 		// https://msdn.microsoft.com/en-us/library/windows/desktop/ms680547(v=vs.85).aspx#section_table__section_headers_
-		case WINDOWS: return ".section .ktrsrcs, \"d\"\n";
-		case LINUX:   return ".section .kt_resources, \"aw\"\n";
-		case MACOS:   return ".section __KT, __resources\n";
-		default: break;
-		}
-
-		throw new AssertionError("unknown os");
+		case WINDOWS -> ".section .ktrsrcs, \"d\"\n";
+		case LINUX   -> ".section .kt_resources, \"aw\"\n";
+		case MACOS   -> ".section __KT, __resources\n";
+		default      -> throw new AssertionError("unknown os");
+		};
 	}
 
 	private void generateHeader()

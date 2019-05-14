@@ -59,20 +59,21 @@ public class DeclParser
 		if(extern.isSome() && ctx.token().type != TokenType.KW_FN)
 			throw new CompileException("extern can only be applied to overloads");
 
-		switch(ctx.token().type)
+		return switch(ctx.token().type)
 		{
-		case KW_FN:       return parseFunction(ctx, exportKind, extern);
-		case KW_DATA:     return parseStruct(ctx, exportKind);
-		case KW_GLOBAL:   return parseGlobal(ctx, exportKind);
-		case KW_OPERATOR: return parseOperator(ctx, exportKind);
-		case KW_IMPORT:   return parseImport(ctx, exportKind);
-		case KW_MODULE:   return parseModule(ctx, exportKind);
-		case KW_TYPE:     return parseTypeAlias(ctx, exportKind);
-		default: break;
-		}
-
-		ParseTools.unexpectedToken(ctx);
-		throw new AssertionError("unreachable");
+		case KW_FN       -> parseFunction(ctx, exportKind, extern);
+		case KW_DATA     -> parseStruct(ctx, exportKind);
+		case KW_GLOBAL   -> parseGlobal(ctx, exportKind);
+		case KW_OPERATOR -> parseOperator(ctx, exportKind);
+		case KW_IMPORT   -> parseImport(ctx, exportKind);
+		case KW_MODULE   -> parseModule(ctx, exportKind);
+		case KW_TYPE     -> parseTypeAlias(ctx, exportKind);
+		default ->
+			{
+				ParseTools.unexpectedToken(ctx);
+				throw new AssertionError("unreachable");
+			}
+		};
 	}
 
 	private static Kind parseOpKind(ParseContext ctx)

@@ -81,14 +81,11 @@ public class ImplicitConversions
 
 	private static SemaExpr ensureRValue(SemaExpr expr)
 	{
-		switch(expr.kind())
+		return switch(expr.kind())
 		{
-		case RVALUE: return expr;
-		case LVALUE: return new SemaExprImplicitConversionLValueToRValue(expr);
-		default: break;
-		}
-
-		throw new AssertionError("unreachable");
+		case RVALUE -> expr;
+		case LVALUE -> new SemaExprImplicitConversionLValueToRValue(expr);
+		};
 	}
 
 	public static SemaExpr perform(SemaExpr expr, SemaType targetType)

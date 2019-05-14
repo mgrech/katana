@@ -169,37 +169,31 @@ public class ProjectBuilder
 
 	private static String fileExtensionFor(BuildType type, TargetTriple target)
 	{
-		switch(type)
+		return switch(type)
 		{
-		case EXECUTABLE:
+		case EXECUTABLE -> switch(target.os)
+			{
+			case WINDOWS      -> ".exe";
+			case LINUX, MACOS -> "";
+			default -> throw new AssertionError("unreachable");
+			};
+
+		case LIBRARY_STATIC -> switch(target.os)
+			{
+			case WINDOWS      -> ".lib";
+			case LINUX, MACOS -> ".a";
+			default -> throw new AssertionError("unreachable");
+			};
+
+		case LIBRARY_SHARED ->
 			switch(target.os)
 			{
-			case WINDOWS: return ".exe";
-			default:      return "";
-			}
-
-		case LIBRARY_STATIC:
-			switch(target.os)
-			{
-			case WINDOWS: return ".lib";
-			case LINUX:
-			case MACOS:   return ".a";
-			default: throw new AssertionError("unreachable");
-			}
-
-		case LIBRARY_SHARED:
-			switch(target.os)
-			{
-			case WINDOWS: return ".dll";
-			case MACOS:   return ".dylib";
-			case LINUX:   return ".so";
-			default: throw new AssertionError("unreachable");
-			}
-
-		default: break;
-		}
-
-		throw new AssertionError("unreachable");
+			case WINDOWS -> ".dll";
+			case LINUX   -> ".so";
+			case MACOS   -> ".dylib";
+			default -> throw new AssertionError("unreachable");
+			};
+		};
 	}
 
 	private static void findDependenciesRecursively(BuildTarget build, List<BuildTarget> result)
@@ -276,15 +270,13 @@ public class ProjectBuilder
 
 	private static Path compileFile(Path root, Path buildDir, BuildTarget build, FileType fileType, Path path, TargetTriple target)
 	{
-		switch(fileType)
+		return switch(fileType)
 		{
-		case ASM: return compileAsmFile(root, buildDir, build, path, target);
-		case C:   return compileCFile  (root, buildDir, build, path, target);
-		case CPP: return compileCppFile(root, buildDir, build, path, target);
-
-		default:
-			throw new AssertionError("unreachable");
-		}
+		case ASM -> compileAsmFile(root, buildDir, build, path, target);
+		case C   -> compileCFile  (root, buildDir, build, path, target);
+		case CPP -> compileCppFile(root, buildDir, build, path, target);
+		default  -> throw new AssertionError("unreachable");
+		};
 	}
 
 	private static String formatAsSeconds(long nanos)

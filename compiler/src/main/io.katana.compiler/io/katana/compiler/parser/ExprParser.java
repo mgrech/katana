@@ -204,16 +204,14 @@ public class ExprParser
 		ParseTools.expect(ctx, TokenType.PUNCT_RBRACKET, true);
 		var expr = parsePrefixExpr(ctx);
 
-		switch(castType)
+		return switch(castType)
 		{
-		case KW_WIDEN_CAST:   return new AstExprWidenCast  (type, expr);
-		case KW_NARROW_CAST:  return new AstExprNarrowCast (type, expr);
-		case KW_SIGN_CAST:    return new AstExprSignCast   (type, expr);
-		case KW_POINTER_CAST: return new AstExprPointerCast(type, expr);
-		default: break;
-		}
-
-		throw new AssertionError("unreachable");
+		case KW_WIDEN_CAST   -> new AstExprWidenCast  (type, expr);
+		case KW_NARROW_CAST  -> new AstExprNarrowCast (type, expr);
+		case KW_SIGN_CAST    -> new AstExprSignCast   (type, expr);
+		case KW_POINTER_CAST -> new AstExprPointerCast(type, expr);
+		default -> throw new AssertionError("unreachable");
+		};
 	}
 
 	private static Inlining parseInlineSpecifier(ParseContext ctx)
@@ -287,33 +285,33 @@ public class ExprParser
 	{
 		var token = ParseTools.consume(ctx);
 
-		switch(token.type)
+		return switch(token.type)
 		{
-		case LIT_NULL: return AstExprLitNull.INSTANCE;
-		case LIT_BOOL: return AstExprLitBool.of((boolean)token.value);
+		case LIT_NULL -> AstExprLitNull.INSTANCE;
+		case LIT_BOOL -> AstExprLitBool.of((boolean)token.value);
 
-		case LIT_INT:   return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.INT));
-		case LIT_INT8:  return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.INT8));
-		case LIT_INT16: return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.INT16));
-		case LIT_INT32: return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.INT32));
-		case LIT_INT64: return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.INT64));
+		case LIT_INT   -> new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.INT));
+		case LIT_INT8  -> new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.INT8));
+		case LIT_INT16 -> new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.INT16));
+		case LIT_INT32 -> new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.INT32));
+		case LIT_INT64 -> new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.INT64));
 
-		case LIT_UINT:   return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.UINT));
-		case LIT_UINT8:  return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.UINT8));
-		case LIT_UINT16: return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.UINT16));
-		case LIT_UINT32: return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.UINT32));
-		case LIT_UINT64: return new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.UINT64));
+		case LIT_UINT   -> new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.UINT));
+		case LIT_UINT8  -> new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.UINT8));
+		case LIT_UINT16 -> new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.UINT16));
+		case LIT_UINT32 -> new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.UINT32));
+		case LIT_UINT64 -> new AstExprLitInt((BigInteger)token.value, Maybe.some(BuiltinType.UINT64));
 
-		case LIT_FLOAT32: return new AstExprLitFloat((Fraction)token.value, Maybe.some(BuiltinType.FLOAT32));
-		case LIT_FLOAT64: return new AstExprLitFloat((Fraction)token.value, Maybe.some(BuiltinType.FLOAT64));
+		case LIT_FLOAT32 -> new AstExprLitFloat((Fraction)token.value, Maybe.some(BuiltinType.FLOAT32));
+		case LIT_FLOAT64 -> new AstExprLitFloat((Fraction)token.value, Maybe.some(BuiltinType.FLOAT64));
 
-		case LIT_STRING: return new AstExprLitString((String)token.value);
+		case LIT_STRING -> new AstExprLitString((String)token.value);
 
-		case LIT_INT_DEDUCE:   return new AstExprLitInt((BigInteger)token.value, Maybe.none());
-		case LIT_FLOAT_DEDUCE: return new AstExprLitFloat((Fraction)token.value, Maybe.none());
+		case LIT_INT_DEDUCE   -> new AstExprLitInt((BigInteger)token.value, Maybe.none());
+		case LIT_FLOAT_DEDUCE -> new AstExprLitFloat((Fraction)token.value, Maybe.none());
 
-		default: throw new AssertionError("unreachable");
-		}
+		default -> throw new AssertionError("unreachable");
+		};
 	}
 
 	private static AstExprBuiltinCall parseBuiltinCall(ParseContext ctx)

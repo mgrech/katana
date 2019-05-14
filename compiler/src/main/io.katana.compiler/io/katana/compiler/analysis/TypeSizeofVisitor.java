@@ -41,40 +41,15 @@ public class TypeSizeofVisitor extends IVisitor<Long>
 
 	private long visit(SemaTypeBuiltin builtinType)
 	{
-		switch(builtinType.which)
+		return switch(builtinType.which)
 		{
-		case VOID:
-		case NULL:
-			return 0;
-
-		case BYTE:
-		case BOOL:
-		case INT8:
-		case UINT8:
-			return 1;
-
-		case INT16:
-		case UINT16:
-			return 2;
-
-		case INT32:
-		case UINT32:
-		case FLOAT32:
-			return 4;
-
-		case INT64:
-		case UINT64:
-		case FLOAT64:
-			return 8;
-
-		case INT:
-		case UINT:
-			return context.target().arch.pointerSize;
-
-		default: break;
-		}
-
-		throw new AssertionError("unreachable");
+		case VOID, NULL               -> 0;
+		case INT8,  UINT8, BYTE, BOOL -> 1;
+		case INT16, UINT16            -> 2;
+		case INT32, UINT32, FLOAT32   -> 4;
+		case INT64, UINT64, FLOAT64   -> 8;
+		case INT,   UINT              -> context.target().arch.pointerSize;
+		};
 	}
 
 	private long visit(SemaTypeConst constType)

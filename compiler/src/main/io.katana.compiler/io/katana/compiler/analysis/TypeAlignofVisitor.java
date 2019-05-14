@@ -43,22 +43,17 @@ public class TypeAlignofVisitor extends IVisitor<Long>
 	{
 		var arch = context.target().arch;
 
-		switch(builtinType.which)
+		return switch(builtinType.which)
 		{
-		case VOID:
-		case BYTE:
-		case BOOL:
-		case INT8:  case UINT8:
-			return 1;
-
-		case INT16: case UINT16: return arch.int16Align;
-		case INT32: case UINT32: return arch.int32Align;
-		case INT64: case UINT64: return arch.int64Align;
-		case INT:   case UINT:   return arch.pointerAlign;
-		case FLOAT32: return arch.float32Align;
-		case FLOAT64: return arch.float64Align;
-		default: throw new AssertionError("unreachable");
-		}
+		case VOID, NULL, BYTE, BOOL,
+		     INT8,  UINT8  -> 1;
+		case INT16, UINT16 -> arch.int16Align;
+		case INT32, UINT32 -> arch.int32Align;
+		case INT64, UINT64 -> arch.int64Align;
+		case INT,   UINT   -> arch.pointerAlign;
+		case FLOAT32       -> arch.float32Align;
+		case FLOAT64       -> arch.float64Align;
+		};
 	}
 
 	private long visit(SemaTypeConst constType)

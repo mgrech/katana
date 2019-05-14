@@ -289,64 +289,64 @@ public class Scanner
 
 	private Token checkForKeywords(String value)
 	{
-		switch(value)
+		return switch(value)
 		{
-		case "abi":          return Tokens.KW_ABI;
-		case "alignof":      return Tokens.KW_ALIGNOF;
-		case "builtin":      return Tokens.KW_BUILTIN;
-		case "data":         return Tokens.KW_DATA;
-		case "else":         return Tokens.KW_ELSE;
-		case "export":       return Tokens.KW_EXPORT;
-		case "extern":       return Tokens.KW_EXTERN;
-		case "fn":           return Tokens.KW_FN;
-		case "global":       return Tokens.KW_GLOBAL;
-		case "goto":         return Tokens.KW_GOTO;
-		case "if":           return Tokens.KW_IF;
-		case "import":       return Tokens.KW_IMPORT;
-		case "inline":       return Tokens.KW_INLINE;
-		case "loop":         return Tokens.KW_LOOP;
-		case "module":       return Tokens.KW_MODULE;
-		case "narrow_cast":  return Tokens.KW_NARROW_CAST;
-		case "offsetof":     return Tokens.KW_OFFSETOF;
-		case "opaque":       return Tokens.KW_OPAQUE;
-		case "operator":     return Tokens.KW_OPERATOR;
-		case "pointer_cast": return Tokens.KW_POINTER_CAST;
-		case "return":       return Tokens.KW_RETURN;
-		case "sign_cast":    return Tokens.KW_SIGN_CAST;
-		case "sizeof":       return Tokens.KW_SIZEOF;
-		case "type":         return Tokens.KW_TYPE;
-		case "undef":        return Tokens.KW_UNDEF;
-		case "unless":       return Tokens.KW_UNLESS;
-		case "unreachable":  return Tokens.KW_UNREACHABLE;
-		case "until":        return Tokens.KW_UNTIL;
-		case "var":          return Tokens.KW_VAR;
-		case "while":        return Tokens.KW_WHILE;
-		case "widen_cast":   return Tokens.KW_WIDEN_CAST;
+		case "abi"          -> Tokens.KW_ABI;
+		case "alignof"      -> Tokens.KW_ALIGNOF;
+		case "builtin"      -> Tokens.KW_BUILTIN;
+		case "data"         -> Tokens.KW_DATA;
+		case "else"         -> Tokens.KW_ELSE;
+		case "export"       -> Tokens.KW_EXPORT;
+		case "extern"       -> Tokens.KW_EXTERN;
+		case "fn"           -> Tokens.KW_FN;
+		case "global"       -> Tokens.KW_GLOBAL;
+		case "goto"         -> Tokens.KW_GOTO;
+		case "if"           -> Tokens.KW_IF;
+		case "import"       -> Tokens.KW_IMPORT;
+		case "inline"       -> Tokens.KW_INLINE;
+		case "loop"         -> Tokens.KW_LOOP;
+		case "module"       -> Tokens.KW_MODULE;
+		case "narrow_cast"  -> Tokens.KW_NARROW_CAST;
+		case "offsetof"     -> Tokens.KW_OFFSETOF;
+		case "opaque"       -> Tokens.KW_OPAQUE;
+		case "operator"     -> Tokens.KW_OPERATOR;
+		case "pointer_cast" -> Tokens.KW_POINTER_CAST;
+		case "return"       -> Tokens.KW_RETURN;
+		case "sign_cast"    -> Tokens.KW_SIGN_CAST;
+		case "sizeof"       -> Tokens.KW_SIZEOF;
+		case "type"         -> Tokens.KW_TYPE;
+		case "undef"        -> Tokens.KW_UNDEF;
+		case "unless"       -> Tokens.KW_UNLESS;
+		case "unreachable"  -> Tokens.KW_UNREACHABLE;
+		case "until"        -> Tokens.KW_UNTIL;
+		case "var"          -> Tokens.KW_VAR;
+		case "while"        -> Tokens.KW_WHILE;
+		case "widen_cast"   -> Tokens.KW_WIDEN_CAST;
 
-		case "false": return Tokens.LIT_BOOL_F;
-		case "true":  return Tokens.LIT_BOOL_T;
-		case "null":  return Tokens.LIT_NULL;
+		case "false" -> Tokens.LIT_BOOL_F;
+		case "true"  -> Tokens.LIT_BOOL_T;
+		case "null"  -> Tokens.LIT_NULL;
 
-		case "bool":    return Tokens.TYPE_BOOL;
-		case "byte":    return Tokens.TYPE_BYTE;
-		case "const":   return Tokens.TYPE_CONST;
-		case "float32": return Tokens.TYPE_FLOAT32;
-		case "float64": return Tokens.TYPE_FLOAT64;
-		case "int":     return Tokens.TYPE_INT;
-		case "int8":    return Tokens.TYPE_INT8;
-		case "int16":   return Tokens.TYPE_INT16;
-		case "int32":   return Tokens.TYPE_INT32;
-		case "int64":   return Tokens.TYPE_INT64;
-		case "uint":    return Tokens.TYPE_UINT;
-		case "uint8":   return Tokens.TYPE_UINT8;
-		case "uint16":  return Tokens.TYPE_UINT16;
-		case "uint32":  return Tokens.TYPE_UINT32;
-		case "uint64":  return Tokens.TYPE_UINT64;
-		case "typeof":  return Tokens.TYPE_TYPEOF;
-		case "void":    return Tokens.TYPE_VOID;
+		case "bool"    -> Tokens.TYPE_BOOL;
+		case "byte"    -> Tokens.TYPE_BYTE;
+		case "const"   -> Tokens.TYPE_CONST;
+		case "float32" -> Tokens.TYPE_FLOAT32;
+		case "float64" -> Tokens.TYPE_FLOAT64;
+		case "int"     -> Tokens.TYPE_INT;
+		case "int8"    -> Tokens.TYPE_INT8;
+		case "int16"   -> Tokens.TYPE_INT16;
+		case "int32"   -> Tokens.TYPE_INT32;
+		case "int64"   -> Tokens.TYPE_INT64;
+		case "uint"    -> Tokens.TYPE_UINT;
+		case "uint8"   -> Tokens.TYPE_UINT8;
+		case "uint16"  -> Tokens.TYPE_UINT16;
+		case "uint32"  -> Tokens.TYPE_UINT32;
+		case "uint64"  -> Tokens.TYPE_UINT64;
+		case "typeof"  -> Tokens.TYPE_TYPEOF;
+		case "void"    -> Tokens.TYPE_VOID;
 
-		default: return Tokens.identifier(value);
-		}
+		default -> Tokens.identifier(value);
+		};
 	}
 
 	private Token numericLiteral()

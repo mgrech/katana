@@ -45,14 +45,12 @@ public class IrTypes
 
 	public static IrTypeScalar ofFloat(long width)
 	{
-		switch((int)width)
+		return switch((int)width)
 		{
-		case 32: return FLOAT;
-		case 64: return DOUBLE;
-		default: break;
-		}
-
-		throw new AssertionError("unreachable");
+		case 32 -> FLOAT;
+		case 64 -> DOUBLE;
+		default -> throw new AssertionError("unreachable");
+		};
 	}
 
 	public static IrTypePointer ofPointer(IrType pointeeType)
