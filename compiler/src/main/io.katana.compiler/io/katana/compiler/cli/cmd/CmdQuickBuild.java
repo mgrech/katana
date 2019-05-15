@@ -31,7 +31,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 
-@Command(name = "quickbuild")
+@Command(name = "quickbuild", description = "Create executable from source files without project")
 public class CmdQuickBuild implements Runnable
 {
 	@Arguments(description = "Files to build")
