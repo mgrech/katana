@@ -28,7 +28,7 @@ public class AstDeclOperatorDef extends AstDeclFunctionDef
 	public final String operator;
 	public final Kind kind;
 
-	public AstDeclOperatorDef(ExportKind exportKind, String operator, Kind kind, List<Param> params, Maybe<AstType> returnType, List<AstStmt> body)
+	public AstDeclOperatorDef(ExportKind exportKind, String operator, Kind kind, ParamList params, Maybe<AstType> returnType, List<AstStmt> body)
 	{
 		super(exportKind, Operator.implName(operator, kind), params, returnType, body);
 		this.operator = operator;

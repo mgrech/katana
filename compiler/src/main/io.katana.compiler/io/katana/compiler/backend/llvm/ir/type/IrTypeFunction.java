@@ -21,11 +21,13 @@ public class IrTypeFunction extends IrType
 {
 	public final IrType returnType;
 	public final List<IrType> parameterTypes;
+	public final boolean isVariadic;
 
-	public IrTypeFunction(IrType returnType, List<IrType> parameterTypes)
+	public IrTypeFunction(IrType returnType, List<IrType> parameterTypes, boolean isVariadic)
 	{
 		this.returnType = returnType;
 		this.parameterTypes = parameterTypes;
+		this.isVariadic = isVariadic;
 	}
 
 	@Override
@@ -34,6 +36,14 @@ public class IrTypeFunction extends IrType
 		var parameterList = parameterTypes.stream()
 		                                  .map(IrType::toString)
 		                                  .collect(Collectors.joining(", "));
+
+		if(isVariadic)
+		{
+			if(!parameterTypes.isEmpty())
+				parameterList += ", ";
+
+			parameterList += "...";
+		}
 
 		return String.format("%s(%s)", returnType, parameterList);
 	}

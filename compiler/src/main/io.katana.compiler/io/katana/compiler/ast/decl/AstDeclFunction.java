@@ -34,11 +34,23 @@ public class AstDeclFunction extends AstDecl
 		}
 	}
 
+	public static class ParamList
+	{
+		public List<Param> fixedParams;
+		public boolean isVariadic;
+
+		public ParamList(List<Param> fixedParams, boolean isVariadic)
+		{
+			this.fixedParams = fixedParams;
+			this.isVariadic = isVariadic;
+		}
+	}
+
 	public String name;
-	public List<Param> params;
+	public ParamList params;
 	public Maybe<AstType> returnType;
 
-	protected AstDeclFunction(ExportKind exportKind, String name, List<Param> params, Maybe<AstType> returnType)
+	protected AstDeclFunction(ExportKind exportKind, String name, ParamList params, Maybe<AstType> returnType)
 	{
 		super(exportKind);
 		this.name = name;

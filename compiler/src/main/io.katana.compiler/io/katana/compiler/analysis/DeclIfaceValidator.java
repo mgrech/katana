@@ -86,7 +86,7 @@ public class DeclIfaceValidator extends IVisitor<Void>
 		else
 			semaFunction.scope = new SemaScopeFunction(scope, semaFunction);
 
-		for(var param : function.params)
+		for(var param : function.params.fixedParams)
 		{
 			var type = validate(param.type, semaFunction.scope);
 
@@ -94,18 +94,22 @@ public class DeclIfaceValidator extends IVisitor<Void>
 				throw new CompileException(String.format("duplicate parameter name '%s' in function '%s'", param.name, function.name));
 		}
 
+		semaFunction.isVariadic = function.params.isVariadic;
 		semaFunction.returnType = validate(function.returnType.or(AstTypeBuiltin.VOID), semaFunction.scope);
 	}
 
 	private boolean sameSignatures(SemaDeclFunction a, SemaDeclFunction b)
 	{
-		if(a.params.size() != b.params.size())
+		if(a.isVariadic != b.isVariadic)
 			return false;
 
-		for(var i = 0; i != a.params.size(); ++i)
+		if(a.fixedParams.size() != b.fixedParams.size())
+			return false;
+
+		for(var i = 0; i != a.fixedParams.size(); ++i)
 		{
-			var paramTypeA = Types.removeConst(a.params.get(i).type);
-			var paramTypeB = Types.removeConst(b.params.get(i).type);
+			var paramTypeA = Types.removeConst(a.fixedParams.get(i).type);
+			var paramTypeB = Types.removeConst(b.fixedParams.get(i).type);
 
 			if(!Types.equal(paramTypeA, paramTypeB))
 				return false;

@@ -27,6 +27,7 @@ import io.katana.compiler.visitor.IVisitor;
 
 import java.util.ArrayList;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 public class TypeValidator extends IVisitor<SemaType>
@@ -88,13 +89,13 @@ public class TypeValidator extends IVisitor<SemaType>
 
 	private SemaType visit(AstTypeFunction functionType)
 	{
-		var params = new ArrayList<SemaType>();
+		var fixedParamTypes = functionType.params.fixedParamTypes.stream()
+		                                                         .map(this::validate)
+		                                                         .collect(Collectors.toList());
 
-		for(var param : functionType.paramTypes)
-			params.add(validate(param));
-
-		var ret = functionType.returnType.map(this::validate).or(SemaTypeBuiltin.VOID);
-		return new SemaTypeFunction(ret, params);
+		var returnType = functionType.returnType.map(this::validate).or(SemaTypeBuiltin.VOID);
+		var params = new SemaTypeFunction.ParamList(fixedParamTypes, functionType.params.isVariadic);
+		return new SemaTypeFunction(params, returnType);
 	}
 
 	private SemaType visit(AstTypeUserDefined user)

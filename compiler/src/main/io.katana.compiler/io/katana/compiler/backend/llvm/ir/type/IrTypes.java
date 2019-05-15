@@ -78,8 +78,8 @@ public class IrTypes
 		return new IrTypeStructLiteral(fields);
 	}
 
-	public static IrTypeFunction ofFunction(IrType returnType, List<IrType> parameterTypes)
+	public static IrTypeFunction ofFunction(IrType returnType, List<IrType> parameterTypes, boolean isVariadic)
 	{
-		return new IrTypeFunction(returnType, parameterTypes);
+		return new IrTypeFunction(returnType, parameterTypes, isVariadic);
 	}
 }

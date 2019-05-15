@@ -96,7 +96,7 @@ public class DeclCodegen extends IVisitor<Void>
 	{
 		var builder = new IrFunctionBuilder();
 
-		for(var param : function.params)
+		for(var param : function.fixedParams)
 		{
 			if(Types.isZeroSized(param.type))
 				continue;
@@ -142,12 +142,12 @@ public class DeclCodegen extends IVisitor<Void>
 		var returnType = generate(function.returnType);
 		var name = FunctionNameMangling.of(function);
 
-		var params = function.params.stream()
-		                            .filter(p -> !Types.isZeroSized(p.type))
-		                            .map(p -> generate(p, false))
-		                            .collect(Collectors.toList());
+		var params = function.fixedParams.stream()
+		                                 .filter(p -> !Types.isZeroSized(p.type))
+		                                 .map(p -> generate(p, false))
+		                                 .collect(Collectors.toList());
 
-		var signature = new IrFunctionSignature(linkage, dllStorageClass, returnType, name, params);
+		var signature = new IrFunctionSignature(linkage, dllStorageClass, returnType, name, params, function.isVariadic);
 		builder.defineFunction(signature, generateBody(function));
 	}
 
@@ -156,12 +156,12 @@ public class DeclCodegen extends IVisitor<Void>
 		var returnType = generate(function.returnType);
 		var name = function.externName.or(function.name());
 
-		var params = function.params.stream()
-		                            .filter(p -> !Types.isZeroSized(p.type))
-		                            .map(p -> generate(p, true))
-		                            .collect(Collectors.toList());
+		var params = function.fixedParams.stream()
+		                                 .filter(p -> !Types.isZeroSized(p.type))
+		                                 .map(p -> generate(p, true))
+		                                 .collect(Collectors.toList());
 
-		var signature = new IrFunctionSignature(Linkage.EXTERNAL, DllStorageClass.NONE, returnType, name, params);
+		var signature = new IrFunctionSignature(Linkage.EXTERNAL, DllStorageClass.NONE, returnType, name, params, function.isVariadic);
 		builder.declareFunction(signature);
 	}
 

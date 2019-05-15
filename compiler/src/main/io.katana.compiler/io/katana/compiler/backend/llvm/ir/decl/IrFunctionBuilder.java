@@ -18,6 +18,7 @@ import io.katana.compiler.Inlining;
 import io.katana.compiler.backend.llvm.ir.IrLabel;
 import io.katana.compiler.backend.llvm.ir.instr.*;
 import io.katana.compiler.backend.llvm.ir.type.IrType;
+import io.katana.compiler.backend.llvm.ir.type.IrTypeFunction;
 import io.katana.compiler.backend.llvm.ir.type.IrTypes;
 import io.katana.compiler.backend.llvm.ir.value.IrValue;
 import io.katana.compiler.backend.llvm.ir.value.IrValueSsa;
@@ -100,12 +101,12 @@ public class IrFunctionBuilder
 		return result;
 	}
 
-	public Maybe<IrValueSsa> call(IrType returnType, IrValue function, List<IrType> argTypes, List<IrValue> args, Inlining inline)
+	public Maybe<IrValueSsa> call(IrTypeFunction type, IrValue function, List<IrType> argTypes, List<IrValue> args, Inlining inline)
 	{
-		var result = returnType == IrTypes.VOID
+		var result = type.returnType == IrTypes.VOID
 		             ? Maybe.<IrValueSsa>none()
 		             : Maybe.some(allocateSsa());
-		instrs.add(new IrInstrCall(result, returnType, function, argTypes, args, inline));
+		instrs.add(new IrInstrCall(result, type, function, argTypes, args, inline));
 		return result;
 	}
 

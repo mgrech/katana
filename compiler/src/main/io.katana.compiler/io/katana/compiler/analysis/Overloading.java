@@ -34,9 +34,9 @@ public class Overloading
 	{
 		var failed = false;
 
-		for(var i = 0; i != function.params.size(); ++i)
+		for(var i = 0; i != function.fixedParams.size(); ++i)
 		{
-			var paramType = function.params.get(i).type;
+			var paramType = function.fixedParams.get(i).type;
 			var paramTypeNoConst = Types.removeConst(paramType);
 
 			try
@@ -56,6 +56,23 @@ public class Overloading
 			}
 		}
 
+		if(function.isVariadic)
+		{
+			for(var i = function.fixedParams.size(); i != args.size(); ++i)
+			{
+				try
+				{
+					var arg = validate.apply(args.get(i), null);
+					result.add(Maybe.some(arg));
+				}
+				catch(CompileException ex)
+				{
+					failed = true;
+					result.add(Maybe.none());
+				}
+			}
+		}
+
 		return !failed;
 	}
 
@@ -64,15 +81,23 @@ public class Overloading
 		builder.append(overload.name());
 		builder.append('(');
 
-		if(!overload.params.isEmpty())
+		if(!overload.fixedParams.isEmpty())
 		{
-			builder.append(TypeString.of(overload.params.get(0).type));
+			builder.append(TypeString.of(overload.fixedParams.get(0).type));
 
-			for(var i = 1; i != overload.params.size(); ++i)
+			for(var i = 1; i != overload.fixedParams.size(); ++i)
 			{
 				builder.append(", ");
-				builder.append(TypeString.of(overload.params.get(i).type));
+				builder.append(TypeString.of(overload.fixedParams.get(i).type));
 			}
+		}
+
+		if(overload.isVariadic)
+		{
+			if(!overload.fixedParams.isEmpty())
+				builder.append(", ");
+
+			builder.append("...");
 		}
 
 		builder.append(')');
@@ -146,7 +171,7 @@ public class Overloading
 
 		for(var overload : set)
 		{
-			if(overload.params.size() != args.size())
+			if(overload.fixedParams.size() != args.size() && !overload.isVariadic)
 			{
 				other.add(overload);
 				continue;

@@ -63,15 +63,23 @@ public class TypeString extends IVisitor<String>
 	{
 		var params = new StringBuilder();
 
-		if(!type.paramTypes.isEmpty())
+		if(!type.params.fixedParamTypes.isEmpty())
 		{
-			params.append(of(type.paramTypes.get(0)));
+			params.append(of(type.params.fixedParamTypes.get(0)));
 
-			for(var i = 1; i != type.paramTypes.size(); ++i)
+			for(var i = 1; i != type.params.fixedParamTypes.size(); ++i)
 			{
 				params.append(", ");
-				params.append(of(type.paramTypes.get(i)));
+				params.append(of(type.params.fixedParamTypes.get(i)));
 			}
+		}
+
+		if(type.params.isVariadic)
+		{
+			if(!type.params.fixedParamTypes.isEmpty())
+				params.append(", ");
+
+			params.append("...");
 		}
 
 		var ret = Types.isVoid(type.returnType) ? "" : " => " + of(type.returnType);

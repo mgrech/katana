@@ -80,14 +80,17 @@ public class FunctionNameMangling
 
 	public static String of(SemaDeclFunction function)
 	{
-		var builder = new StringBuilder();
+		var params = new StringBuilder();
 
-		for(var param : function.params)
+		for(var param : function.fixedParams)
 		{
-			builder.append('$');
-			builder.append(TypeNameMangling.of(param.type));
+			params.append('$');
+			params.append(TypeNameMangling.of(param.type));
 		}
 
-		return mangleFunctionName(function) + builder.toString();
+		if(function.isVariadic)
+			params.append("$$");
+
+		return mangleFunctionName(function) + params.toString();
 	}
 }

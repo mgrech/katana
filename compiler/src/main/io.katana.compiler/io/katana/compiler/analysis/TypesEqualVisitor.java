@@ -56,10 +56,13 @@ public class TypesEqualVisitor extends IVisitor<Boolean>
 
 	private boolean visit(SemaTypeFunction left, SemaTypeFunction right)
 	{
+		if(left.params.isVariadic != right.params.isVariadic)
+			return false;
+
 		if(!apply(left.returnType, right.returnType))
 			return false;
 
-		return typeListsEqual(left.paramTypes, right.paramTypes);
+		return typeListsEqual(left.params.fixedParamTypes, right.params.fixedParamTypes);
 	}
 
 	private boolean visit(SemaTypeNonNullablePointer left, SemaTypeNonNullablePointer right)

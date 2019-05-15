@@ -282,13 +282,13 @@ public class ExprValidator extends IVisitor<SemaExpr>
 		for(var i = 0; i != call.argExprs.size(); ++i)
 		{
 			var arg = call.argExprs.get(i);
-			var type = ftype.paramTypes.get(i);
+			var type = ftype.params.fixedParamTypes.get(i);
 
 			var semaArg = validate(call.argExprs.get(i), type).asRValue();
 			args.add(semaArg);
 		}
 
-		checkArguments(ftype.paramTypes, args);
+		checkArguments(ftype.params.fixedParamTypes, args);
 
 		return new SemaExprIndirectFunctionCall(expr, args);
 	}

@@ -19,11 +19,13 @@ import io.katana.compiler.sema.SemaModule;
 import io.katana.compiler.sema.SemaSymbol;
 import io.katana.compiler.sema.scope.SemaScopeFunction;
 import io.katana.compiler.sema.type.SemaType;
+import io.katana.compiler.sema.type.SemaTypeFunction;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 public abstract class SemaDeclFunction extends SemaDecl
 {
@@ -48,8 +50,9 @@ public abstract class SemaDeclFunction extends SemaDecl
 	}
 
 	private String name;
-	public List<Param> params = new ArrayList<>();
+	public List<Param> fixedParams = new ArrayList<>();
 	public Map<String, Param> paramsByName = new TreeMap<>();
+	public boolean isVariadic;
 	public SemaType returnType;
 	public SemaScopeFunction scope;
 
@@ -65,13 +68,23 @@ public abstract class SemaDeclFunction extends SemaDecl
 		return name;
 	}
 
+	public SemaTypeFunction type()
+	{
+		var fixedParamTypes = fixedParams.stream()
+		                                 .map(p -> p.type)
+		                                 .collect(Collectors.toList());
+
+		var params = new SemaTypeFunction.ParamList(fixedParamTypes, isVariadic);
+		return new SemaTypeFunction(params, returnType);
+	}
+
 	public boolean defineParam(String name, SemaType type)
 	{
 		if(paramsByName.containsKey(name))
 			return false;
 
-		var param = new Param(type, name, params.size());
-		params.add(param);
+		var param = new Param(type, name, fixedParams.size());
+		fixedParams.add(param);
 		paramsByName.put(name, param);
 		return true;
 	}

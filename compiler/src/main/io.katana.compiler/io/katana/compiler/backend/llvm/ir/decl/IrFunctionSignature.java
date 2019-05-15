@@ -27,21 +27,23 @@ public class IrFunctionSignature
 	public final IrType returnType;
 	public final String name;
 	public final List<IrFunctionParameter> parameters;
+	public final boolean isVariadic;
 
 	public IrFunctionSignature(Linkage linkage, DllStorageClass dllStorageClass, IrType returnType, String name,
-	                           List<IrFunctionParameter> parameters)
+	                           List<IrFunctionParameter> parameters, boolean isVariadic)
 	{
 		this.linkage = linkage;
 		this.dllStorageClass = dllStorageClass;
 		this.returnType = returnType;
 		this.name = name;
 		this.parameters = parameters;
+		this.isVariadic = isVariadic;
 	}
 
 	public IrFunctionSignature(IrType returnType, String name,
-	                           List<IrFunctionParameter> parameters)
+	                           List<IrFunctionParameter> parameters, boolean isVariadic)
 	{
-		this(Linkage.NONE, DllStorageClass.NONE, returnType, name, parameters);
+		this(Linkage.NONE, DllStorageClass.NONE, returnType, name, parameters, isVariadic);
 	}
 
 	private String attributesToString()
@@ -63,6 +65,14 @@ public class IrFunctionSignature
 		var params = parameters.stream()
 		                       .map(IrFunctionParameter::toString)
 		                       .collect(Collectors.joining(", "));
+
+		if(isVariadic)
+		{
+			if(!params.isEmpty())
+				params += ", ";
+
+			params += "...";
+		}
 
 		return String.format("%s%s @%s(%s)", attributesToString(), returnType, name, params);
 	}

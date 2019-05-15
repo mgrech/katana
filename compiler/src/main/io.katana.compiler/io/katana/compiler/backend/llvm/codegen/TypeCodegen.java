@@ -77,11 +77,11 @@ public class TypeCodegen extends IVisitor<IrType>
 	private IrType visit(SemaTypeFunction type)
 	{
 		var returnType = generate(type.returnType);
-		var parameterTypes = type.paramTypes.stream()
-		                                    .map(this::generate)
-		                                    .collect(Collectors.toList());
+		var parameterTypes = type.params.fixedParamTypes.stream()
+		                                                .map(this::generate)
+		                                                .collect(Collectors.toList());
 
-		return IrTypes.ofFunction(returnType, parameterTypes);
+		return IrTypes.ofFunction(returnType, parameterTypes, type.params.isVariadic);
 	}
 
 	private IrType visit(SemaTypeStruct type)

@@ -24,6 +24,7 @@ import io.katana.compiler.backend.llvm.ir.decl.IrFunctionBuilder;
 import io.katana.compiler.backend.llvm.ir.instr.IrInstrConversion;
 import io.katana.compiler.backend.llvm.ir.instr.IrInstrGetElementPtr;
 import io.katana.compiler.backend.llvm.ir.type.IrType;
+import io.katana.compiler.backend.llvm.ir.type.IrTypeFunction;
 import io.katana.compiler.backend.llvm.ir.type.IrTypeStructLiteral;
 import io.katana.compiler.backend.llvm.ir.type.IrTypes;
 import io.katana.compiler.backend.llvm.ir.value.IrValue;
@@ -33,6 +34,7 @@ import io.katana.compiler.sema.decl.SemaDeclExternFunction;
 import io.katana.compiler.sema.expr.*;
 import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.sema.type.SemaTypeBuiltin;
+import io.katana.compiler.sema.type.SemaTypeFunction;
 import io.katana.compiler.utils.Fraction;
 import io.katana.compiler.utils.Maybe;
 import io.katana.compiler.visitor.IVisitor;
@@ -241,7 +243,8 @@ public class ExprCodegen extends IVisitor<IrValue>
 		var argTypesIr = List.of(typeIr, typeIr, typeIr);
 		var argsIr = List.of(leftIr, leftIr, rightIr);
 
-		return builder.call(typeIr, intrinsicName, argTypesIr, argsIr, Inlining.AUTO).get();
+		var functionTypeIr = IrTypes.ofFunction(typeIr, argTypesIr, false);
+		return builder.call(functionTypeIr, intrinsicName, argTypesIr, argsIr, Inlining.AUTO).get();
 	}
 
 	private IrValue generateIntrinsicCall(SemaType returnType, String name, List<SemaExpr> argExprs)
@@ -258,7 +261,8 @@ public class ExprCodegen extends IVisitor<IrValue>
 		                     .map(this::generate)
 		                     .collect(Collectors.toList());
 
-		return builder.call(returnTypeIr, nameIr, argTypesIr, argsIr, Inlining.AUTO).unwrap();
+		var functionTypeIr = IrTypes.ofFunction(returnTypeIr, argTypesIr, false);
+		return builder.call(functionTypeIr, nameIr, argTypesIr, argsIr, Inlining.AUTO).unwrap();
 	}
 
 	public IrValue visit(SemaExprBuiltinCall builtinCall)
@@ -474,24 +478,20 @@ public class ExprCodegen extends IVisitor<IrValue>
 		return generate(deref.pointerExpr);
 	}
 
-	private IrValue generateFunctionCall(IrValue function, List<SemaExpr> args, SemaType returnType, Inlining inline)
+	private IrValue generateFunctionCall(IrValue function, List<SemaExpr> args, SemaTypeFunction functionType, Inlining inline)
 	{
-		args = args.stream()
-		           .filter(a -> !Types.isZeroSized(a.type()))
-		           .collect(Collectors.toList());
-
-		var returnTypeIr = generate(returnType);
-
-		var argsIr = args.stream()
-		                 .map(this::generate)
-		                 .collect(Collectors.toList());
-
 		var argTypesIr = args.stream()
 		                     .map(SemaExpr::type)
 		                     .map(this::generate)
 		                     .collect(Collectors.toList());
 
-		return builder.call(returnTypeIr, function, argTypesIr, argsIr, inline).unwrap();
+		var argsIr = args.stream()
+		                 .filter(a -> !Types.isZeroSized(a.type()))
+		                 .map(this::generate)
+		                 .collect(Collectors.toList());
+
+		var functionTypeIr = (IrTypeFunction)generate(functionType);
+		return builder.call(functionTypeIr, function, argTypesIr, argsIr, inline).unwrap();
 	}
 
 	private IrValue visit(SemaExprDirectFunctionCall call)
@@ -507,7 +507,7 @@ public class ExprCodegen extends IVisitor<IrValue>
 			name = FunctionNameMangling.of(call.function);
 
 		var function = IrValues.ofSymbol(name);
-		return generateFunctionCall(function, call.args, call.function.returnType, call.inline);
+		return generateFunctionCall(function, call.args, call.function.type(), call.inline);
 	}
 
 	private IrValue visit(SemaExprImplicitConversionArrayPointerToPointer conversion)
@@ -607,7 +607,8 @@ public class ExprCodegen extends IVisitor<IrValue>
 	private IrValue visit(SemaExprIndirectFunctionCall functionCall)
 	{
 		var function = generate(functionCall.functionExpr);
-		return generateFunctionCall(function, functionCall.argExprs, functionCall.type(), Inlining.AUTO);
+		var functionType = (SemaTypeFunction)functionCall.functionExpr.type();
+		return generateFunctionCall(function, functionCall.argExprs, functionType, Inlining.AUTO);
 	}
 
 	private IrValue visit(SemaExprFieldAccess fieldAccess)

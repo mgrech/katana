@@ -16,6 +16,7 @@ package io.katana.compiler.backend.llvm.ir.instr;
 
 import io.katana.compiler.Inlining;
 import io.katana.compiler.backend.llvm.ir.type.IrType;
+import io.katana.compiler.backend.llvm.ir.type.IrTypeFunction;
 import io.katana.compiler.backend.llvm.ir.value.IrValue;
 import io.katana.compiler.backend.llvm.ir.value.IrValueSsa;
 import io.katana.compiler.utils.Maybe;
@@ -25,17 +26,16 @@ import java.util.List;
 public class IrInstrCall extends IrInstr
 {
 	public final Maybe<IrValueSsa> result;
-	public final IrType returnType;
+	public final IrTypeFunction type;
 	public final IrValue function;
 	public final List<IrType> argTypes;
 	public final List<IrValue> args;
 	public final Inlining inline;
 
-	public IrInstrCall(Maybe<IrValueSsa> result, IrType returnType, IrValue function, List<IrType> argTypes,
-	                   List<IrValue> args, Inlining inline)
+	public IrInstrCall(Maybe<IrValueSsa> result, IrTypeFunction type, IrValue function, List<IrType> argTypes, List<IrValue> args, Inlining inline)
 	{
 		this.result = result;
-		this.returnType = returnType;
+		this.type = type;
 		this.function = function;
 		this.argTypes = argTypes;
 		this.args = args;
@@ -50,7 +50,7 @@ public class IrInstrCall extends IrInstr
 		if(result.isSome())
 			builder.append(String.format("%s = ", result.get()));
 
-		builder.append(String.format("call %s %s(", returnType, function));
+		builder.append(String.format("call %s %s(", type, function));
 
 		if(!args.isEmpty())
 		{

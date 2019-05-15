@@ -18,12 +18,24 @@ import java.util.List;
 
 public class SemaTypeFunction extends SemaType
 {
-	public SemaType returnType;
-	public List<SemaType> paramTypes;
-
-	public SemaTypeFunction(SemaType returnType, List<SemaType> paramTypes)
+	public static class ParamList
 	{
+		public List<SemaType> fixedParamTypes;
+		public boolean isVariadic;
+
+		public ParamList(List<SemaType> fixedParamTypes, boolean isVariadic)
+		{
+			this.fixedParamTypes = fixedParamTypes;
+			this.isVariadic = isVariadic;
+		}
+	}
+
+	public ParamList params;
+	public SemaType returnType;
+
+	public SemaTypeFunction(ParamList params, SemaType returnType)
+	{
+		this.params = params;
 		this.returnType = returnType;
-		this.paramTypes = paramTypes;
 	}
 }

@@ -25,7 +25,7 @@ public class AstDeclFunctionDef extends AstDeclFunction
 {
 	public List<AstStmt> body;
 
-	public AstDeclFunctionDef(ExportKind exportKind, String name, List<Param> params, Maybe<AstType> returnType, List<AstStmt> body)
+	public AstDeclFunctionDef(ExportKind exportKind, String name, ParamList params, Maybe<AstType> returnType, List<AstStmt> body)
 	{
 		super(exportKind, name, params, returnType);
 		this.body = body;

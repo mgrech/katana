@@ -20,12 +20,24 @@ import java.util.List;
 
 public class AstTypeFunction extends AstType
 {
-	public Maybe<AstType> returnType;
-	public List<AstType> paramTypes;
-
-	public AstTypeFunction(Maybe<AstType> returnType, List<AstType> paramTypes)
+	public static class ParamList
 	{
+		public List<AstType> fixedParamTypes;
+		public boolean isVariadic;
+
+		public ParamList(List<AstType> fixedParamTypes, boolean isVariadic)
+		{
+			this.fixedParamTypes = fixedParamTypes;
+			this.isVariadic = isVariadic;
+		}
+	}
+
+	public ParamList params;
+	public Maybe<AstType> returnType;
+
+	public AstTypeFunction(ParamList params, Maybe<AstType> returnType)
+	{
+		this.params = params;
 		this.returnType = returnType;
-		this.paramTypes = paramTypes;
 	}
 }

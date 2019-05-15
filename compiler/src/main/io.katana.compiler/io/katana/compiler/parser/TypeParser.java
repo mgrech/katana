@@ -22,7 +22,6 @@ import io.katana.compiler.utils.Maybe;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.List;
 
 public class TypeParser
 {
@@ -128,25 +127,33 @@ public class TypeParser
 		if(ParseTools.option(ctx, "=>", true))
 			ret = Maybe.some(parse(ctx));
 
-		return new AstTypeFunction(ret, params);
+		return new AstTypeFunction(params, ret);
 	}
 
-	private static List<AstType> parseParameters(ParseContext ctx)
+	private static AstTypeFunction.ParamList parseParameters(ParseContext ctx)
 	{
-		return ParseTools.parenthesized(ctx, () ->
+		ParseTools.expect(ctx, TokenType.PUNCT_LPAREN, true);
+
+		if(ParseTools.option(ctx, TokenType.PUNCT_RPAREN, true))
+			return new AstTypeFunction.ParamList(new ArrayList<>(), false);
+
+		var fixedParamTypes = new ArrayList<AstType>();
+		var isVariadic = false;
+
+		do
 		{
-			var params = new ArrayList<AstType>();
-
-			if(!ParseTools.option(ctx, TokenType.PUNCT_RPAREN, false))
+			if(ParseTools.option(ctx, TokenType.PUNCT_ELLIPSIS, true))
 			{
-				params.add(parse(ctx));
-
-				while(!ParseTools.option(ctx, TokenType.PUNCT_RPAREN, false))
-					params.add(parse(ctx));
+				isVariadic = true;
+				break;
 			}
 
-			return params;
-		});
+			fixedParamTypes.add(parse(ctx));
+		}
+		while(ParseTools.option(ctx, TokenType.PUNCT_COMMA, true));
+
+		ParseTools.expect(ctx, TokenType.PUNCT_RPAREN, true);
+		return new AstTypeFunction.ParamList(fixedParamTypes, isVariadic);
 	}
 
 	private static AstTypeTuple parseTuple(ParseContext ctx)

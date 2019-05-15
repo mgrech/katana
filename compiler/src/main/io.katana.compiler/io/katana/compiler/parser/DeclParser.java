@@ -166,10 +166,10 @@ public class DeclParser
 
 		var params = parseParameterList(ctx);
 
-		if((kind == Kind.PREFIX || kind == Kind.POSTFIX) && params.size() != 1)
+		if((kind == Kind.PREFIX || kind == Kind.POSTFIX) && (params.fixedParams.size() != 1 || params.isVariadic))
 			throw new CompileException("unary operator requires exactly one parameter");
 
-		if(kind == Kind.INFIX && params.size() != 2)
+		if(kind == Kind.INFIX && (params.fixedParams.size() != 2 || params.isVariadic))
 			throw new CompileException("binary operator requires exactly two parameters");
 
 		Maybe<AstType> ret = Maybe.none();
@@ -190,19 +190,30 @@ public class DeclParser
 			: new AstDeclFunctionDef(exportKind, name, params, ret, body);
 	}
 
-	private static List<AstDeclFunction.Param> parseParameterList(ParseContext ctx)
+	private static AstDeclFunction.ParamList parseParameterList(ParseContext ctx)
 	{
 		ParseTools.expect(ctx, TokenType.PUNCT_LPAREN, true);
 
-		List<AstDeclFunction.Param> params = new ArrayList<>();
+		if(ParseTools.option(ctx, TokenType.PUNCT_RPAREN, true))
+			return new AstDeclFunction.ParamList(new ArrayList<>(), false);
 
-		if(!ParseTools.option(ctx, TokenType.PUNCT_RPAREN, true))
+		List<AstDeclFunction.Param> fixedParams = new ArrayList<>();
+		boolean variadic = false;
+
+		do
 		{
-			params = ParseTools.separated(ctx, TokenType.PUNCT_COMMA, () -> parseParameter(ctx));
-			ParseTools.expect(ctx, TokenType.PUNCT_RPAREN, true);
-		}
+			if(ParseTools.option(ctx, TokenType.PUNCT_ELLIPSIS, true))
+			{
+				variadic = true;
+				break;
+			}
 
-		return params;
+			fixedParams.add(parseParameter(ctx));
+		}
+		while(ParseTools.option(ctx, TokenType.PUNCT_COMMA, true));
+
+		ParseTools.expect(ctx, TokenType.PUNCT_RPAREN, true);
+		return new AstDeclFunction.ParamList(fixedParams, variadic);
 	}
 
 	private static AstDeclFunction.Param parseParameter(ParseContext ctx)

@@ -61,6 +61,7 @@ public class Tokens
 	public static final Token PUNCT_RBRACKET = new Token(TokenCategory.PUNCT, TokenType.PUNCT_RBRACKET);
 	public static final Token PUNCT_RPAREN   = new Token(TokenCategory.PUNCT, TokenType.PUNCT_RPAREN);
 	public static final Token PUNCT_SCOLON   = new Token(TokenCategory.PUNCT, TokenType.PUNCT_SCOLON);
+	public static final Token PUNCT_ELLIPSIS = new Token(TokenCategory.PUNCT, TokenType.PUNCT_ELLIPSIS);
 
 	public static final Token TYPE_BOOL    = new Token(TokenCategory.TYPE, TokenType.TYPE_BOOL);
 	public static final Token TYPE_BYTE    = new Token(TokenCategory.TYPE, TokenType.TYPE_BYTE);

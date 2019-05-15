@@ -49,7 +49,7 @@ public class ProgramCodegen
 		                       .map(IrFunctionParameter::new)
 		                       .collect(Collectors.toList());
 
-		var signature = new IrFunctionSignature(returnType, name, parameters);
+		var signature = new IrFunctionSignature(returnType, name, parameters, false);
 		builder.declareFunction(signature);
 	}
 
@@ -89,14 +89,15 @@ public class ProgramCodegen
 		var returnType = ((SemaDeclFunction)func).returnType;
 		var returnTypeIr = TypeCodegen.generate(returnType, context);
 		var function = IrValues.ofSymbol(func.qualifiedName().toString());
-		var result = builder.call(returnTypeIr, function, Collections.emptyList(), Collections.emptyList(), Inlining.AUTO);
+		var functionTypeIr = IrTypes.ofFunction(returnTypeIr, Collections.emptyList(), false);
+		var result = builder.call(functionTypeIr, function, Collections.emptyList(), Collections.emptyList(), Inlining.AUTO);
 
 		if(result.isNone())
 			builder.ret(IrTypes.I32, Maybe.some(IrValues.ofConstant(0)));
 		else
 			builder.ret(IrTypes.I32, result.map(v -> v));
 
-		var signature = new IrFunctionSignature(Linkage.EXTERNAL, DllStorageClass.NONE, IrTypes.I32, "main", Collections.emptyList());
+		var signature = new IrFunctionSignature(Linkage.EXTERNAL, DllStorageClass.NONE, IrTypes.I32, "main", Collections.emptyList(), false);
 		return new IrDeclFunctionDef(signature, builder.build());
 	}
 

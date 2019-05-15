@@ -106,6 +106,9 @@ public class Scanner
 		do builder.appendCodePoint(consume());
 		while(!eof() && CharClassifier.isOpChar(peek()));
 
+		if(builder.toString().equals("..."))
+			return Tokens.PUNCT_ELLIPSIS;
+
 		var after = eof() ? ' ' : peek();
 
 		var leftws  = " \t\r\n([{;,".indexOf(before) != -1;
