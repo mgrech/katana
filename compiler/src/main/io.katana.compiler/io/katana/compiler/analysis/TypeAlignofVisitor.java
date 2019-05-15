@@ -53,6 +53,8 @@ public class TypeAlignofVisitor extends IVisitor<Long>
 		case INT,   UINT   -> arch.pointerAlign;
 		case FLOAT32       -> arch.float32Align;
 		case FLOAT64       -> arch.float64Align;
+		// TODO: compiler complains about missing cases, bug?
+		default -> throw new AssertionError("unreachable");
 		};
 	}
 

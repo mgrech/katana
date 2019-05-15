@@ -49,6 +49,8 @@ public class TypeSizeofVisitor extends IVisitor<Long>
 		case INT32, UINT32, FLOAT32   -> 4;
 		case INT64, UINT64, FLOAT64   -> 8;
 		case INT,   UINT              -> context.target().arch.pointerSize;
+		// TODO: compiler complains about missing cases, bug?
+		default -> throw new AssertionError("unreachable");
 		};
 	}
 
