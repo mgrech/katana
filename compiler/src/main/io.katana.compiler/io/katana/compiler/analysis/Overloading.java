@@ -19,10 +19,8 @@ import io.katana.compiler.ast.expr.AstExpr;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.diag.TypeString;
 import io.katana.compiler.sema.decl.SemaDeclFunction;
-import io.katana.compiler.sema.expr.ExprKind;
 import io.katana.compiler.sema.expr.SemaExpr;
 import io.katana.compiler.sema.expr.SemaExprDirectFunctionCall;
-import io.katana.compiler.sema.expr.SemaExprImplicitConversionLValueToRValue;
 import io.katana.compiler.sema.type.SemaType;
 import io.katana.compiler.utils.Maybe;
 
@@ -187,15 +185,8 @@ public class Overloading
 
 		var semaArgs = new ArrayList<SemaExpr>();
 
-		for(var maybeArg : first.getValue())
-		{
-			var arg = maybeArg.unwrap();
-
-			if(arg.kind() == ExprKind.LVALUE)
-				arg = new SemaExprImplicitConversionLValueToRValue(arg);
-
-			semaArgs.add(arg);
-		}
+		for(var arg : first.getValue())
+			semaArgs.add(arg.unwrap().asRValue());
 
 		return new SemaExprDirectFunctionCall(first.getKey(), semaArgs, inline);
 	}

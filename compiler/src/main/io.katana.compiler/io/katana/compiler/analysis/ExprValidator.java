@@ -145,7 +145,7 @@ public class ExprValidator extends IVisitor<SemaExpr>
 	private SemaExpr visit(AstExprIndexAccess indexAccess, SemaType expectedType)
 	{
 		var value = validate(indexAccess.indexeeExpr);
-		var index = validate(indexAccess.indexExpr, SemaTypeBuiltin.INT);
+		var index = validate(indexAccess.indexExpr, SemaTypeBuiltin.INT).asRValue();
 		var indexType = index.type();
 
 		value = autoDeref(value);
@@ -155,9 +155,6 @@ public class ExprValidator extends IVisitor<SemaExpr>
 
 		if(!Types.isArray(value.type()) && !Types.isSlice(value.type()))
 			throw new CompileException(String.format("index access requires expression yielding array or slice type, got '%s'", TypeString.of(value.type())));
-
-		if(index.kind() == ExprKind.LVALUE)
-			index = new SemaExprImplicitConversionLValueToRValue(index);
 
 		if(Types.isSlice(value.type()))
 			return new SemaExprSliceIndexAccess(value, index);
@@ -172,7 +169,7 @@ public class ExprValidator extends IVisitor<SemaExpr>
 		var leftType = left.type();
 		var leftTypeNoConst = Types.removeConst(leftType);
 
-		var right = validate(assign.rightExpr, leftTypeNoConst);
+		var right = validate(assign.rightExpr, leftTypeNoConst).asRValue();
 
 		if(Types.isConst(leftType) || left.kind() != ExprKind.LVALUE)
 			throw new CompileException("non-const lvalue required on left side of assignment");
@@ -188,9 +185,6 @@ public class ExprValidator extends IVisitor<SemaExpr>
 			throw new CompileException(String.format(fmt, TypeString.of(leftTypeNoConst), TypeString.of(rightTypeNoConst)));
 		}
 
-		if(right.kind() == ExprKind.LVALUE)
-			right = new SemaExprImplicitConversionLValueToRValue(right);
-
 		return new SemaExprAssign(left, right);
 	}
 
@@ -205,7 +199,7 @@ public class ExprValidator extends IVisitor<SemaExpr>
 
 		for(var i = 0; i != builtinCall.args.size(); ++i)
 		{
-			var semaExpr = validate(builtinCall.args.get(i));
+			var semaExpr = validate(builtinCall.args.get(i)).asRValue();
 			var type = semaExpr.type();
 
 			if(Types.isVoid(type))
@@ -213,9 +207,6 @@ public class ExprValidator extends IVisitor<SemaExpr>
 				var fmt = "expression passed to builtin '%s' as argument %s yields 'void'";
 				throw new CompileException(String.format(fmt, builtinCall.name, i + 1));
 			}
-
-			if(semaExpr.kind() == ExprKind.LVALUE)
-				semaExpr = new SemaExprImplicitConversionLValueToRValue(semaExpr);
 
 			args.add(semaExpr);
 		}
@@ -246,16 +237,13 @@ public class ExprValidator extends IVisitor<SemaExpr>
 	private SemaExpr visit(AstExprDeref deref, SemaType expectedType)
 	{
 		var expectedPointerType = expectedType == null ? null : Types.addNonNullablePointer(expectedType);
-		var expr = validate(deref.pointerExpr, expectedPointerType);
+		var expr = validate(deref.pointerExpr, expectedPointerType).asRValue();
 
 		if(!Types.isPointer(expr.type()))
 		{
 			var fmt = "expected expression of pointer type in dereference operator ('prefix *'), got '%s'";
 			throw new CompileException(String.format(fmt, TypeString.of(expr.type())));
 		}
-
-		if(expr.kind() == ExprKind.LVALUE)
-			expr = new SemaExprImplicitConversionLValueToRValue(expr);
 
 		return new SemaExprDeref(expr);
 	}
@@ -296,11 +284,7 @@ public class ExprValidator extends IVisitor<SemaExpr>
 			var arg = call.argExprs.get(i);
 			var type = ftype.paramTypes.get(i);
 
-			var semaArg = validate(call.argExprs.get(i), type);
-
-			if(semaArg.kind() == ExprKind.LVALUE)
-				semaArg = new SemaExprImplicitConversionLValueToRValue(semaArg);
-
+			var semaArg = validate(call.argExprs.get(i), type).asRValue();
 			args.add(semaArg);
 		}
 
@@ -462,10 +446,7 @@ public class ExprValidator extends IVisitor<SemaExpr>
 
 		while(Types.isPointer(type))
 		{
-			if(expr.kind() == ExprKind.LVALUE)
-				expr = new SemaExprImplicitConversionLValueToRValue(expr);
-
-			expr = new SemaExprDeref(expr);
+			expr = new SemaExprDeref(expr.asRValue());
 			type = expr.type();
 		}
 
@@ -585,7 +566,7 @@ public class ExprValidator extends IVisitor<SemaExpr>
 	private SemaExpr validateCast(AstType type, AstExpr expr, SemaExprCast.Kind kind)
 	{
 		var targetType = validate(type);
-		var semaExpr = validate(expr);
+		var semaExpr = validate(expr).asRValue();
 		var sourceType = semaExpr.type();
 
 		if(!CastValidator.isValidCast(sourceType, targetType, kind, context))
@@ -593,9 +574,6 @@ public class ExprValidator extends IVisitor<SemaExpr>
 			var fmt = "%s from expression of type '%s' to type '%s' is not valid";
 			throw new CompileException(String.format(fmt, kind.toString().toLowerCase(), TypeString.of(sourceType), TypeString.of(targetType)));
 		}
-
-		if(semaExpr.kind() == ExprKind.LVALUE)
-			semaExpr = new SemaExprImplicitConversionLValueToRValue(semaExpr);
 
 		return new SemaExprCast(targetType, semaExpr, kind);
 	}

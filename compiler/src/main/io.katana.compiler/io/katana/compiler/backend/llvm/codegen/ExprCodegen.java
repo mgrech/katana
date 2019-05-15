@@ -736,11 +736,7 @@ public class ExprCodegen extends IVisitor<IrValue>
 
 	private IrValue visit(SemaExprSliceIndexAccess sliceIndexAccess)
 	{
-		SemaExpr pointer = new SemaExprSliceGetPointer(sliceIndexAccess.sliceExpr);
-
-		if(pointer.kind() == ExprKind.LVALUE)
-			pointer = new SemaExprImplicitConversionLValueToRValue(pointer);
-
+		var pointer = new SemaExprSliceGetPointer(sliceIndexAccess.sliceExpr).asRValue();
 		var indexType = generate(sliceIndexAccess.indexExpr.type());
 		var index = generate(sliceIndexAccess.indexExpr);
 		return generateGetElementPtr(pointer, false, indexType, index);

@@ -20,4 +20,12 @@ public abstract class SemaExpr
 {
 	public abstract SemaType type();
 	public abstract ExprKind kind();
+
+	public SemaExpr asRValue()
+	{
+		if(kind() == ExprKind.RVALUE)
+			return this;
+
+		return new SemaExprImplicitConversionLValueToRValue(this);
+	}
 }

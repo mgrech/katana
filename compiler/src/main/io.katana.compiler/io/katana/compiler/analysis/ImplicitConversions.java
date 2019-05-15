@@ -79,19 +79,10 @@ public class ImplicitConversions
 		return expr;
 	}
 
-	private static SemaExpr ensureRValue(SemaExpr expr)
-	{
-		return switch(expr.kind())
-		{
-		case RVALUE -> expr;
-		case LVALUE -> new SemaExprImplicitConversionLValueToRValue(expr);
-		};
-	}
-
 	public static SemaExpr perform(SemaExpr expr, SemaType targetType)
 	{
 		var sourceType = expr.type();
-		var rvalueExpr = ensureRValue(expr);
+		var rvalueExpr = expr.asRValue();
 
 		// float32 -> float64
 		if(Types.isBuiltin(sourceType, BuiltinType.FLOAT32) && Types.isBuiltin(targetType, BuiltinType.FLOAT64))

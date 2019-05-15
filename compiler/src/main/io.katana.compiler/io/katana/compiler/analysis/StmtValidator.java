@@ -23,7 +23,9 @@ import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.diag.TypeString;
 import io.katana.compiler.sema.decl.SemaDecl;
 import io.katana.compiler.sema.decl.SemaDeclFunctionDef;
-import io.katana.compiler.sema.expr.*;
+import io.katana.compiler.sema.expr.SemaExpr;
+import io.katana.compiler.sema.expr.SemaExprAssign;
+import io.katana.compiler.sema.expr.SemaExprNamedVar;
 import io.katana.compiler.sema.scope.SemaScopeFunction;
 import io.katana.compiler.sema.stmt.*;
 import io.katana.compiler.sema.type.SemaType;
@@ -120,7 +122,7 @@ public class StmtValidator extends IVisitor<SemaStmt>
 
 	private SemaExpr validateCondition(AstExpr expr, ConditionKind kind)
 	{
-		var condition = validate(expr, SemaTypeBuiltin.BOOL);
+		var condition = validate(expr, SemaTypeBuiltin.BOOL).asRValue();
 
 		if(!Types.isBuiltin(condition.type(), BuiltinType.BOOL))
 		{
@@ -157,7 +159,7 @@ public class StmtValidator extends IVisitor<SemaStmt>
 
 	private SemaStmt visit(AstStmtReturn return_)
 	{
-		var value = return_.returnValueExpr.map(retval -> validate(retval, function.returnType));
+		var value = return_.returnValueExpr.map(retval -> validate(retval, function.returnType).asRValue());
 		var retTypeNoConst = Types.removeConst(function.returnType);
 
 		if(value.isNone())
@@ -202,7 +204,7 @@ public class StmtValidator extends IVisitor<SemaStmt>
 			return new SemaStmtNullStmt();
 		}
 
-		var init = validate(var_.initializerExpr.unwrap(), maybeDeclaredTypeNoConst.unwrap());
+		var init = validate(var_.initializerExpr.unwrap(), maybeDeclaredTypeNoConst.unwrap()).asRValue();
 		var initTypeNoConst = Types.removeConst(init.type());
 		var varType = maybeDeclaredType.or(initTypeNoConst);
 		var varTypeNoConst = Types.removeConst(varType);
@@ -215,9 +217,6 @@ public class StmtValidator extends IVisitor<SemaStmt>
 
 		if(!function.defineVariable(var_.name, varType))
 			throw new CompileException(String.format("redefinition of variable '%s'", var_.name));
-
-		if(init.kind() == ExprKind.LVALUE)
-			init = new SemaExprImplicitConversionLValueToRValue(init);
 
 		var semaVar = function.variablesByName.get(var_.name);
 		var varRef = new SemaExprNamedVar(semaVar);
