@@ -54,6 +54,9 @@ public class CmdBuild implements Runnable
 	@Option(name = {"-Dt", "--diagnostic-traces"}, description = "Stack traces in diagnostics")
 	public boolean diagnosticTraces;
 
+	@Option(name = {"-Dedc", "--eval-dump-classfiles"}, description = "Dump class files generated for 'eval'")
+	public boolean evalDumpClassFiles;
+
 	private Path determineProjectRoot() throws IOException
 	{
 		if(projectDir != null)
@@ -111,6 +114,7 @@ public class CmdBuild implements Runnable
 
 			var options = new BuildOptions();
 			options.printBuildMetrics = printBuildMetrics;
+			options.evalDumpClassFiles = evalDumpClassFiles;
 			ProjectBuilder.buildTargets(diag, projectRoot, buildRoot, targets, context, options);
 		}
 		catch(CompileException ex)

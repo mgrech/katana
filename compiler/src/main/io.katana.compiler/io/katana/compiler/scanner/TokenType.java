@@ -21,6 +21,7 @@ public enum TokenType
 	KW_BUILTIN,
 	KW_DATA,
 	KW_ELSE,
+	KW_EVAL,
 	KW_EXPORT,
 	KW_EXTERN,
 	KW_FN,

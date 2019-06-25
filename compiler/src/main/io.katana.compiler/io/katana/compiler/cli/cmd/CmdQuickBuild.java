@@ -43,6 +43,9 @@ public class CmdQuickBuild implements Runnable
 	@Option(name = {"-Dt", "--diagnostic-traces"}, description = "Stack traces in diagnostics")
 	public boolean diagnosticTraces;
 
+	@Option(name = {"-Dedc", "--eval-dump-classfiles"}, description = "Dump class files generated for 'eval'")
+	public boolean evalDumpClassFiles;
+
 	private static Map<FileType, Set<Path>> fileNamesToSourceFiles(List<String> fileNames)
 	{
 		Map<FileType, Set<Path>> result = new EnumMap<>(FileType.class);
@@ -80,6 +83,7 @@ public class CmdQuickBuild implements Runnable
 
 		var options = new BuildOptions();
 		options.printBuildMetrics = printBuildMetrics;
+		options.evalDumpClassFiles = evalDumpClassFiles;
 
 		try
 		{

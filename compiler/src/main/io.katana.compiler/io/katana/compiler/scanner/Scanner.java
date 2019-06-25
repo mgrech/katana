@@ -299,6 +299,7 @@ public class Scanner
 		case "builtin"      -> Tokens.KW_BUILTIN;
 		case "data"         -> Tokens.KW_DATA;
 		case "else"         -> Tokens.KW_ELSE;
+		case "eval"         -> Tokens.KW_EVAL;
 		case "export"       -> Tokens.KW_EXPORT;
 		case "extern"       -> Tokens.KW_EXTERN;
 		case "fn"           -> Tokens.KW_FN;

@@ -21,6 +21,7 @@ public class Tokens
 	public static final Token KW_BUILTIN      = new Token(TokenCategory.KW, TokenType.KW_BUILTIN);
 	public static final Token KW_DATA         = new Token(TokenCategory.KW, TokenType.KW_DATA);
 	public static final Token KW_ELSE         = new Token(TokenCategory.KW, TokenType.KW_ELSE);
+	public static final Token KW_EVAL         = new Token(TokenCategory.KW, TokenType.KW_EVAL);
 	public static final Token KW_EXPORT       = new Token(TokenCategory.KW, TokenType.KW_EXPORT);
 	public static final Token KW_EXTERN       = new Token(TokenCategory.KW, TokenType.KW_EXTERN);
 	public static final Token KW_FN           = new Token(TokenCategory.KW, TokenType.KW_FN);

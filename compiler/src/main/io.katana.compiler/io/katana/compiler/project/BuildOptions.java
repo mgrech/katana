@@ -17,4 +17,5 @@ package io.katana.compiler.project;
 public class BuildOptions
 {
 	public boolean printBuildMetrics;
+	public boolean evalDumpClassFiles;
 }

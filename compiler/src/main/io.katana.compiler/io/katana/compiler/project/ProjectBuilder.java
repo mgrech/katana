@@ -21,6 +21,7 @@ import io.katana.compiler.backend.ResourceGenerator;
 import io.katana.compiler.backend.llvm.codegen.ProgramCodegen;
 import io.katana.compiler.diag.CompileException;
 import io.katana.compiler.diag.DiagnosticsManager;
+import io.katana.compiler.eval.Replacer;
 import io.katana.compiler.parser.ProgramParser;
 import io.katana.compiler.platform.Os;
 import io.katana.compiler.platform.TargetTriple;
@@ -308,6 +309,9 @@ public class ProjectBuilder
 		if(!diag.successful())
 			throw new CompileException(diag.summary());
 
+		Replacer.apply(program, context.target(), options);
+		var evalTime = System.nanoTime();
+
 		var module = ProgramCodegen.generate(build, program, context);
 		var codegenTime = System.nanoTime();
 
@@ -320,7 +324,8 @@ public class ProjectBuilder
 			System.out.printf("[%s] Loading/Scanner: %s\n", build.name, formatAsSeconds(loadTime - startTime));
 			System.out.printf("[%s] Parser:          %s\n", build.name, formatAsSeconds(parseTime - loadTime));
 			System.out.printf("[%s] Analysis:        %s\n", build.name, formatAsSeconds(analysisTime - parseTime));
-			System.out.printf("[%s] Codegen:         %s\n", build.name, formatAsSeconds(codegenTime - analysisTime));
+			System.out.printf("[%s] Evaluator:       %s\n", build.name, formatAsSeconds(evalTime - analysisTime));
+			System.out.printf("[%s] Codegen:         %s\n", build.name, formatAsSeconds(codegenTime - evalTime));
 			System.out.printf("[%s] Writing output:  %s\n", build.name, formatAsSeconds(writeTime - codegenTime));
 			System.out.printf("[%s] Total:           %s\n", build.name, formatAsSeconds(writeTime - startTime));
 		}

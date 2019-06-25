@@ -56,4 +56,16 @@ public class SemaTypeBuiltin extends SemaType
 	{
 		return INSTANCES.get(type);
 	}
+
+	public static SemaTypeBuiltin ofSignedInteger(long width)
+	{
+		return switch((int)width)
+		{
+			case 1 -> INT8;
+			case 2 -> INT16;
+			case 4 -> INT32;
+			case 8 -> INT64;
+			default -> throw new AssertionError("invalid integer width: " + width);
+		};
+	}
 }

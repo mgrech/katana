@@ -273,6 +273,9 @@ public class ExprParser
 		case KW_POINTER_CAST:
 			return parseCast(ctx, token.type);
 
+		case KW_EVAL:
+			return new AstExprEval(parsePrefixExpr(ctx));
+
 		default: break;
 		}
 

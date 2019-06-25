@@ -248,6 +248,11 @@ public class ExprValidator extends IVisitor<SemaExpr>
 		return new SemaExprDeref(expr);
 	}
 
+	private SemaExpr visit(AstExprEval eval, SemaType expectedType)
+	{
+		return new SemaExprEval(invokeSelf(eval.nestedExpr, expectedType));
+	}
+
 	private SemaExpr visit(AstExprFunctionCall call, SemaType expectedType)
 	{
 		var expr = validate(call.functionExpr);

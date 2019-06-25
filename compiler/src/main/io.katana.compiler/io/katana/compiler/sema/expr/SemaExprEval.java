@@ -1,4 +1,4 @@
-// Copyright 2016-2019 Markus Grech
+// Copyright 2019 Markus Grech
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,20 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package io.katana.compiler.visitor;
+package io.katana.compiler.sema.expr;
 
-import java.lang.reflect.Method;
-import java.util.IdentityHashMap;
+import io.katana.compiler.sema.type.SemaType;
 
-public abstract class IVisitor<R>
+public class SemaExprEval extends SemaExpr
 {
-	private static final IdentityHashMap<Class<?>, Method[]> CLASS_TO_VISITS = new IdentityHashMap<>();
+	public SemaExpr nestedExpr;
 
-	private final Method[] visits = CLASS_TO_VISITS.computeIfAbsent(getClass(), ReflectionUtils::findVisitMethods);
-
-	@SuppressWarnings("unchecked")
-	public R invokeSelf(Object... args)
+	public SemaExprEval(SemaExpr nestedExpr)
 	{
-		return (R)ReflectionUtils.resolveAndInvoke(visits, this, args);
+		this.nestedExpr = nestedExpr;
+	}
+
+	@Override
+	public SemaType type()
+	{
+		return nestedExpr.type();
+	}
+
+	@Override
+	public ExprKind kind()
+	{
+		return nestedExpr.kind();
 	}
 }
